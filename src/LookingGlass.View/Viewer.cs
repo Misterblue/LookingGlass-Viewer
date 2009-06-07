@@ -223,6 +223,7 @@ public class Viewer : ModuleBase, IViewProvider {
         return;
     }
 
+    #region user IO
     // called from the renderer when the mouse moves
     private void UserInterface_OnMouseMove(int param, float x, float y) {
         float sinceLastMouse = (float)System.DateTime.UtcNow.Subtract(m_lastMouseMoveTime).Milliseconds;
@@ -230,6 +231,9 @@ public class Viewer : ModuleBase, IViewProvider {
         //             + " x=" + x.ToString() + ", y=" + y.ToString()
         //             + "time since last = " + sinceLastMouse.ToString() );
         if (m_mainCamera != null) {
+            if (((Renderer.UserInterface.LastKeyCode & Keys.Control) == 0)
+                    && ((Renderer.UserInterface.LastKeyCode & Keys.Alt) != 0)) {
+            }
             if ( ((Renderer.UserInterface.LastKeyCode & Keys.Control) != 0)
                     && ((Renderer.UserInterface.LastKeyCode & Keys.Alt) != 0) ) {
                 // if ALT+CNTL is held down, movement is on view plain
@@ -276,7 +280,9 @@ public class Viewer : ModuleBase, IViewProvider {
         }
         return;
     }
+    #endregion user IO
 
+    #region Agent management
     // When an agent is added to the scene
     // At the moment we don't have good control for associating an agent with the viewer.
     // Assume the last agent is the one we are tracking.
@@ -301,6 +307,7 @@ public class Viewer : ModuleBase, IViewProvider {
         m_log.Log(LogLevel.DVIEWDETAIL, "OnAgentRemoved: ");
         return;
     }
+    #endregion Agent management
 
 
 }

@@ -55,6 +55,15 @@ public class UserInterfaceOgre : IUserInterfaceProvider {
         set { m_lastKeycode = value; }
     }
 
+    /// <summary>
+    /// Remember the last (current) mouse button positions for easy checking
+    /// </summary>
+    private MouseButtons m_lastButtons = 0;
+    public MouseButtons LastMouseButtons {
+        get { return m_lastButtons; }
+        set { m_lastButtons = value; }
+    }
+
     // the key codes as they come from OIS
     public enum OISKeyCode {
 		KC_UNASSIGNED  = 0x00,
@@ -292,6 +301,14 @@ public class UserInterfaceOgre : IUserInterfaceProvider {
         m_workQueue = new BasicWorkQueue("UIOgreWork");
     }
 
+    /// <summary>
+    /// Called from Ogre with the ui operation. We pass the work to a thread in the pool so
+    /// we don't tie up the renderer.
+    /// </summary>
+    /// <param name="type">on of Ogr.IOType*</param>
+    /// <param name="param1"></param>
+    /// <param name="param2"></param>
+    /// <param name="param3"></param>
     public void ReceiveUserIO(int type, int param1, float param2, float param3) {
         // m_log.Log(LogLevel.DRENDERDETAIL, "User input:"
         //     +  " " + type.ToString()
@@ -330,10 +347,12 @@ public class UserInterfaceOgre : IUserInterfaceProvider {
                         m_uinterface.OnUserInterfaceKeypress(m_uinterface.LastKeyCode, false);
                     break;
                 case Ogr.IOTypeMouseButtonDown:
+                    m_uinterface.UpdateMouseModifier(m_param1, true);
                     if (m_uinterface.OnUserInterfaceMouseButton != null) m_uinterface.OnUserInterfaceMouseButton(
                                     m_param1, false);
                     break;
                 case Ogr.IOTypeMouseButtonUp:
+                    m_uinterface.UpdateMouseModifier(m_param1, true);
                     if (m_uinterface.OnUserInterfaceMouseButton != null) m_uinterface.OnUserInterfaceMouseButton(
                                     m_param1, true);
                     break;
@@ -345,6 +364,11 @@ public class UserInterfaceOgre : IUserInterfaceProvider {
         }
     }
 
+    /// <summary>
+    /// Keep the modifier key information in a place that is easy to check later
+    /// </summary>
+    /// <param name="param1">OISKeyCode of the key pressed</param>
+    /// <param name="updown">true if the key is down, false otherwise</param>
     public void UpdateModifier(int param1, bool updown) {
         if (param1 == (int)OISKeyCode.KC_RMENU || param1 == (int)OISKeyCode.KC_LMENU) {
             if (updown && ((LastKeyCode & Keys.Alt) == 0)) {
@@ -369,6 +393,26 @@ public class UserInterfaceOgre : IUserInterfaceProvider {
             if (!updown && ((LastKeyCode & Keys.Control) != 0)) {
                 LastKeyCode ^= Keys.Control;
             }
+        }
+    }
+
+    /// <summary>
+    /// Keep the mouse button state in a varaible for easy reference
+    /// </summary>
+    /// <param name="param1">OISKeyCode of the key pressed</param>
+    /// <param name="updown">true if the key is down, false otherwise</param>
+    public void UpdateMouseModifier(int param1, bool updown) {
+        if (param1 == Ogr.IOMouseButtonLeft) {
+            if (updown) m_lastButtons |= MouseButtons.Left;
+            if (!updown && (m_lastButtons & MouseButtons.Left) != 0) m_lastButtons ^= MouseButtons.Left;
+        }
+        if (param1 == Ogr.IOMouseButtonRight) {
+            if (updown) m_lastButtons |= MouseButtons.Right;
+            if (!updown && (m_lastButtons & MouseButtons.Right) != 0) m_lastButtons ^= MouseButtons.Right;
+        }
+        if (param1 == Ogr.IOMouseButtonMiddle) {
+            if (updown) m_lastButtons |= MouseButtons.Middle;
+            if (!updown && (m_lastButtons & MouseButtons.Middle) != 0) m_lastButtons ^= MouseButtons.Middle;
         }
     }
 
