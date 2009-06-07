@@ -28,9 +28,26 @@ using System.Windows.Forms;
 
 namespace LookingGlass.Renderer {
 
+    /// <summary>
+    /// Key changed state. Fired on state change
+    /// </summary>
+    /// <param name="key">key code</param>
+    /// <param name="updown">true if key down, false if key up</param>
     public delegate void UserInterfaceKeypressCallback(System.Windows.Forms.Keys key, bool updown);
+    /// <summary>
+    /// Mouse moved
+    /// </summary>
+    /// <param name="param">Mouse selection (only zero these days)</param>
+    /// <param name="x">relative mouse movement in X direction</param>
+    /// <param name="y">relative mouse movement in Y direction</param>
     public delegate void UserInterfaceMouseMoveCallback(int param, float x, float y);
-    public delegate void UserInterfaceMouseButtonCallback(int param, bool updown);
+    /// <summary>
+    /// Mouse button changed state. This tells you about one button changing. The OR of the button
+    /// states is kept in LastMouseButtons
+    /// </summary>
+    /// <param name="param">button codes OR'ed together</param>
+    /// <param name="updown">true means down, false means went off</param>
+    public delegate void UserInterfaceMouseButtonCallback(System.Windows.Forms.MouseButtons param, bool updown);
     public delegate void UserInterfaceEntitySelectedCallback(IEntity ent);
 
     public enum InputEventTypeCode {
@@ -51,5 +68,6 @@ namespace LookingGlass.Renderer {
 
         InputModeCode InputMode { get; set; }
         Keys LastKeyCode { get; set; }
+        MouseButtons LastMouseButtons { get; set; }
     }
 }

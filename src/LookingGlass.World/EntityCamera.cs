@@ -28,6 +28,9 @@ using OMV = OpenMetaverse;
 namespace LookingGlass.World {
     public class EntityCamera : EntityBase {
 
+        // we use the OMV.CoordinateFrame code. Our camera is always at global 0,0,0
+        protected OMV.CoordinateFrame m_frame = new OMV.CoordinateFrame(new OMV.Vector3(0f, 0f, 0f));
+
         protected OMV.Vector3 m_initialDirection;
         public OMV.Vector3 InitDirection { 
             get { return m_initialDirection; }
@@ -76,6 +79,12 @@ namespace LookingGlass.World {
             }
         }
 
+        protected OMV.Vector3 m_globalFocalPoint = new OMV.Vector3();
+        public OMV.Vector3 GlobalFocalPoint {
+            get { return m_globalFocalPoint; }
+            set { m_globalFocalPoint = value; }
+        }
+
         // public void lookAt(OMV.Vector3 target) {
         //     setDirection(target - m_position);
         // }
@@ -89,7 +98,7 @@ namespace LookingGlass.World {
         public EntityCamera(RegionContextBase rcontext, AssetContextBase acontext) 
                     : base(rcontext, acontext) {
             m_yawFixed = true;
-            m_globalPosition = new OMV.Vector3d(10f, 10f, 10f);
+            m_globalPosition = new OMV.Vector3d(10d, 10d, 10d);
             m_heading = new OMV.Quaternion(0f, 1f, 0f);
         }
 

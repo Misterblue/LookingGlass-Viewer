@@ -240,7 +240,7 @@ public class UserInterfaceOgre : IUserInterfaceProvider {
                    Keys.NumPad5, Keys.NumPad6, Keys.Add, Keys.NumPad1,
                    /* 0x50 */
                    Keys.NumPad2, Keys.NumPad3, Keys.NumPad0, Keys.Decimal,
-                   (Keys)0x54, (Keys)0x55, Keys.Oem102, Keys.F11, 
+                   (Keys)0x54, (Keys)0x55, Keys.Oem102, Keys.F11,
                    Keys.F12, (Keys)0x59, (Keys)0x5A, (Keys)0x5B,
                    (Keys)0x5C, (Keys)0x5D, (Keys)0x5E, (Keys)0x5F,
                    /* 0x60 */
@@ -337,27 +337,32 @@ public class UserInterfaceOgre : IUserInterfaceProvider {
                 case Ogr.IOTypeKeyPressed:
                     m_uinterface.UpdateModifier(m_param1, true);
                     m_uinterface.LastKeyCode = m_uinterface.ConvertScanCodeModifiers(m_param1);
-                    if (m_uinterface.OnUserInterfaceKeypress != null) 
+                    if (m_uinterface.OnUserInterfaceKeypress != null)
                         m_uinterface.OnUserInterfaceKeypress(m_uinterface.LastKeyCode, true);
                     break;
                 case Ogr.IOTypeKeyReleased:
                     m_uinterface.UpdateModifier(m_param1, false);
                     m_uinterface.LastKeyCode = m_uinterface.ConvertScanCodeModifiers(m_param1);
-                    if (m_uinterface.OnUserInterfaceKeypress != null) 
+                    if (m_uinterface.OnUserInterfaceKeypress != null)
                         m_uinterface.OnUserInterfaceKeypress(m_uinterface.LastKeyCode, false);
                     break;
                 case Ogr.IOTypeMouseButtonDown:
                     m_uinterface.UpdateMouseModifier(m_param1, true);
                     if (m_uinterface.OnUserInterfaceMouseButton != null) m_uinterface.OnUserInterfaceMouseButton(
-                                    m_param1, false);
+                                    ThisMouseButtonCode(m_param1), false);
                     break;
                 case Ogr.IOTypeMouseButtonUp:
                     m_uinterface.UpdateMouseModifier(m_param1, true);
                     if (m_uinterface.OnUserInterfaceMouseButton != null) m_uinterface.OnUserInterfaceMouseButton(
-                                    m_param1, true);
+                                    ThisMouseButtonCode(m_param1), true);
                     break;
                 case Ogr.IOTypeMouseMove:
-                    if (m_uinterface.OnUserInterfaceMouseMove != null) m_uinterface.OnUserInterfaceMouseMove(m_param1, m_param2, m_param3);
+                    // pass the routine tracking the raw position information
+                    // param1 is usually zero (actually mouse selector but we have only one at the moment)
+                    // param2 is the X movement
+                    // param3 is the Y movement
+                    if (m_uinterface.OnUserInterfaceMouseMove != null) m_uinterface.OnUserInterfaceMouseMove(
+                                    m_param1, m_param2, m_param3);
                     break;
             }
             return true;
@@ -394,6 +399,22 @@ public class UserInterfaceOgre : IUserInterfaceProvider {
                 LastKeyCode ^= Keys.Control;
             }
         }
+    }
+
+    private static MouseButtons ThisMouseButtonCode(int iosCode) {
+        MouseButtons ret = MouseButtons.None;
+        switch (iosCode) {
+            case Ogr.IOMouseButtonLeft:
+                ret = MouseButtons.Left;
+                break;
+            case Ogr.IOMouseButtonRight:
+                ret = MouseButtons.Right;
+                break;
+            case Ogr.IOMouseButtonMiddle:
+                ret = MouseButtons.Middle;
+                break;
+        }
+        return ret;
     }
 
     /// <summary>

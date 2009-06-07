@@ -38,7 +38,7 @@ public sealed class LLRegionContext : RegionContextBase {
         m_size = new OMV.Vector3(256f, 256f, 8000f);
         uint x, y;
         OMV.Utils.LongToUInts(sim.Handle, out x, out y);
-        m_worldBase = new OMV.Vector3d((double)x, (double)y, 0f);
+        m_worldBase = new OMV.Vector3d((double)x, (double)y, 0d);
         m_simulator = sim;
         // this should be more general as "GRID/SIM"
         m_name = new EntityName(sim.Name);

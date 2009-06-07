@@ -40,11 +40,11 @@ namespace LookingGlass.View {
     /// In general, the viewer subscribes to world events and maps these
     ///   events into what the renderer needs to make the user's display.
     /// The goal is to make the viewer as world independent as possible.
-    ///   
+    ///
     /// The viewer's resposibility is:
     /// Mapping of world coordinates into any renderer coordinates
     /// User input
-    /// 
+    ///
     /// </summary>
 public class Viewer : ModuleBase, IViewProvider {
 
@@ -83,7 +83,7 @@ public class Viewer : ModuleBase, IViewProvider {
     private DateTime m_lastMouseMoveTime = System.DateTime.UtcNow;
     private float m_cameraSpeed = 100f;     // world units per second to move
     private float m_cameraRotationSpeed = 0.1f;     // degrees to rotate
-    
+
     /// <summary>
     /// Constructor called in instance of main and not in own thread. This is only
     /// good for setting up structures.
@@ -118,7 +118,7 @@ public class Viewer : ModuleBase, IViewProvider {
         m_cameraRotationSpeed = (float)ModuleParams.ParamInt(m_moduleName + ".Camera.RotationSpeed")/1000;
         m_mainCamera = new EntityCamera(null, null);
         // m_MainCamera.Position = new OMV.Vector3(128f, -192f, 90f); // from OpenGL code
-        m_mainCamera.GlobalPosition = new OMV.Vector3d(0f, 20f, 30f);   // World coordinates (Z up)
+        m_mainCamera.GlobalPosition = new OMV.Vector3d(0d, 20d, 30d);   // World coordinates (Z up)
         // camera starts pointing down Y axis
         m_mainCamera.InitDirection = new OMV.Vector3(0f, 1f, 0f);
         m_mainCamera.Heading = new OMV.Quaternion(OMV.Vector3.UnitY, 0f);
@@ -146,6 +146,7 @@ public class Viewer : ModuleBase, IViewProvider {
         // start getting IO stuff from the user
         Renderer.UserInterface.OnUserInterfaceKeypress += new UserInterfaceKeypressCallback(UserInterface_OnKeypress);
         Renderer.UserInterface.OnUserInterfaceMouseMove += new UserInterfaceMouseMoveCallback(UserInterface_OnMouseMove);
+        Renderer.UserInterface.OnUserInterfaceMouseButton += new UserInterfaceMouseButtonCallback(UserInterface_OnMouseButton);
 
         // start the renderer
         ((IModule)Renderer).Start();
@@ -162,7 +163,7 @@ public class Viewer : ModuleBase, IViewProvider {
     #region IViewProvider methods
     // Special kludge to pass the main execution thread to the renderer if it's the
     // the kind of renderer that needs the main event thread to work.
-    // return true if 
+    // return true if
     public bool RendererThreadEntry() {
         return m_Renderer.RendererThread();
     }
@@ -239,20 +240,14 @@ public class Viewer : ModuleBase, IViewProvider {
                 // if ALT+CNTL is held down, movement is on view plain
                 float xMove = x * m_cameraSpeed;
                 float yMove = y * m_cameraSpeed;
-                OMV.Vector3d movement = new OMV.Vector3d(
-                            0,
-                            (double)xMove, 
-                            (double)yMove);
+                OMV.Vector3d movement = new OMV.Vector3d( 0, xMove, yMove);
                 m_mainCamera.GlobalPosition -= movement;
             }
             else if ((Renderer.UserInterface.LastKeyCode & Keys.Control) != 0) {
                 // if CNTL is held down, movement is on land plane
                 float xMove = x * m_cameraSpeed;
                 float yMove = y * m_cameraSpeed;
-                OMV.Vector3d movement = new OMV.Vector3d(
-                            (double)yMove,
-                            (double)xMove, 
-                            (double)0);
+                OMV.Vector3d movement = new OMV.Vector3d( yMove, xMove, 0f);
                 m_mainCamera.GlobalPosition -= movement;
             }
             else {
@@ -267,7 +262,11 @@ public class Viewer : ModuleBase, IViewProvider {
         return;
     }
 
-    // callsed from the renderer when the state of the keyboard changes
+    private void UserInterface_OnMouseButton(MouseButtons param, bool updown) {
+        return;
+    }
+
+    // called from the renderer when the state of the keyboard changes
     private void UserInterface_OnKeypress(Keys key, bool updown) {
         if (key == (Keys.Control | Keys.C) ) Globals.KeepRunning = false;
         if (key == Keys.Escape) {
@@ -291,7 +290,7 @@ public class Viewer : ModuleBase, IViewProvider {
         m_trackedAgent = agnt;
         if (m_mainCamera != null) {
             m_mainCamera.GlobalPosition = agnt.GlobalPosition;
-            m_log.Log(LogLevel.DVIEWDETAIL, "OnAgentNew: Camera to {0}, {1}, {2}", 
+            m_log.Log(LogLevel.DVIEWDETAIL, "OnAgentNew: Camera to {0}, {1}, {2}",
                 m_mainCamera.GlobalPosition.X, m_mainCamera.GlobalPosition.Y, m_mainCamera.GlobalPosition.Z);
             m_Renderer.UpdateCamera(m_mainCamera);
         }

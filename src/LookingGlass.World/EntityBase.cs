@@ -125,9 +125,9 @@ public abstract class EntityBase : IEntity {
             if (m_relativeMode) {
                 if (m_regionContext != null) {
                     return new OMV.Vector3d(
-                        m_regionContext.WorldBase.X + RelativePosition.X,
-                        m_regionContext.WorldBase.Y + RelativePosition.Y,
-                        m_regionContext.WorldBase.Z + RelativePosition.Z);
+                        m_regionContext.WorldBase.X + (double)RelativePosition.X,
+                        m_regionContext.WorldBase.Y + (double)RelativePosition.Y,
+                        m_regionContext.WorldBase.Z + (double)RelativePosition.Z);
                 }
                 return new OMV.Vector3d(10d, 10d, 10d);
             }
