@@ -492,7 +492,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
             if (updatedEntity.RelativePosition != update.Position) {
                 updatedEntity.RelativePosition = update.Position;
                 updatedEntity.Heading = update.Rotation;
-                World.World.Instance.UpdateEntity(updatedEntity, UpdateCodes.Location);
+                World.World.Instance.UpdateEntity(updatedEntity, UpdateCodes.Position);
             }
         }
         if (update.Avatar) {
