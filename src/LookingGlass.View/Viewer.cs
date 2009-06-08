@@ -122,8 +122,8 @@ public class Viewer : ModuleBase, IViewProvider {
         // camera starts pointing down Y axis
         m_mainCamera.InitDirection = new OMV.Vector3(0f, 1f, 0f);
         m_mainCamera.Heading = new OMV.Quaternion(OMV.Vector3.UnitY, 0f);
-        m_mainCamera.Zoom = 1.0d;
-        m_mainCamera.Far = 3000.0d;
+        m_mainCamera.Zoom = 1.0f;
+        m_mainCamera.Far = 300.0f;
 
         // connect me to the world so I can know when things change in the world
         TheWorld.OnWorldRegionConnected += new WorldRegionConnectedCallback(OnRegionConnected);
@@ -247,6 +247,7 @@ public class Viewer : ModuleBase, IViewProvider {
                 // if CNTL is held down, movement is on land plane
                 float xMove = x * m_cameraSpeed;
                 float yMove = y * m_cameraSpeed;
+                m_log.Log(LogLevel.DVIEWDETAIL, "OnMouseMove: Move camera x={0}, y={1}", xMove, yMove);
                 OMV.Vector3d movement = new OMV.Vector3d( yMove, xMove, 0f);
                 m_mainCamera.GlobalPosition -= movement;
             }
@@ -255,6 +256,7 @@ public class Viewer : ModuleBase, IViewProvider {
                 float xMove = (-x * m_cameraRotationSpeed * Constants.DEGREETORADIAN) % Constants.TWOPI;
                 float yMove = (-y * m_cameraRotationSpeed * Constants.DEGREETORADIAN) % Constants.TWOPI;
                 // rotate around local axis
+                m_log.Log(LogLevel.DVIEWDETAIL, "OnMouseMove: Rotate camera x={0}, y={1}", xMove, yMove);
                 m_mainCamera.rotate(yMove, 0f, xMove);
             }
             m_Renderer.UpdateCamera(m_mainCamera);
@@ -268,7 +270,10 @@ public class Viewer : ModuleBase, IViewProvider {
 
     // called from the renderer when the state of the keyboard changes
     private void UserInterface_OnKeypress(Keys key, bool updown) {
-        if (key == (Keys.Control | Keys.C) ) Globals.KeepRunning = false;
+        if (key == (Keys.Control | Keys.C)) {
+            // CNTL-C says to stop everything now
+            Globals.KeepRunning = false;
+        }
         if (key == Keys.Escape) {
             // force the camera to the client position
             if (m_trackedAgent != null) {
