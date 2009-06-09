@@ -28,38 +28,24 @@ using OMV = OpenMetaverse;
 namespace LookingGlass.World {
     public class EntityCamera : EntityBase {
 
-        // we use the OMV.CoordinateFrame code. Our camera is always at global 0,0,0
-        protected OMV.CoordinateFrame m_frame = new OMV.CoordinateFrame(new OMV.Vector3(0f, 0f, 0f));
-
+        protected OMV.Vector3 m_initialDirection;
         public OMV.Vector3 InitDirection { 
-            get { return m_frame.Origin; }
-            set { m_frame.Origin = value; }
+            get { return m_initialDirection; }
+            set { m_initialDirection = value; }
         }
 
         // true if the camera does not tilt side to side
+        protected OMV.Vector3 m_yawFixedAxis = OMV.Vector3.UnitY;
         protected bool m_yawFixed;
         public bool YawFixed {
             get { return m_yawFixed; }
             set { m_yawFixed = value; }
         }
 
-        public override OMV.Quaternion Heading {
-            get {
-                OMV.Matrix4 head = new OMV.Matrix4();
-                head.AtAxis = m_frame.YAxis;
-                head.LeftAxis = m_frame.XAxis;
-                head.UpAxis = m_frame.ZAxis;
-                return head.GetQuaternion();
-            }
-            set {
-                m_frame.ResetAxes();
-                m_frame.Rotate(Heading);
-            }
-        }
-
         // rotate the camera by the given quaternion
         public void rotate(OMV.Quaternion rot) {
-            m_frame.Rotate(rot);
+            rot.Normalize();
+            m_heading = rot * m_heading;
         }
 
         public void rotate(OMV.Vector3 dir) {
@@ -73,38 +59,38 @@ namespace LookingGlass.World {
         /// <param name="Y"></param>
         /// <param name="Z"></param>
         public void rotate(float X, float Y, float Z) {
-            m_frame.Roll(X);
-            if (!YawFixed) {
-                m_frame.Pitch(Y);
+            if (YawFixed) {
+                // some of the rotation is around X
+                OMV.Quaternion xvec = OMV.Quaternion.CreateFromAxisAngle(OMV.Vector3.UnitX, X);
+                xvec.Normalize();
+                // some of the rotation is around Z
+                OMV.Quaternion zvec = OMV.Quaternion.CreateFromAxisAngle(OMV.Vector3.UnitY, Z);
+                zvec.Normalize();
+                m_heading = zvec * m_heading;
+                m_heading = m_heading * xvec;
             }
-            m_frame.Pitch(Z);
+            else {
+                OMV.Quaternion rot = new OMV.Quaternion(X, Y, Z);
+                rot.Normalize();
+                rotate(rot);
+            }
         }
 
-        protected OMV.Vector3 m_globalFocalPoint = new OMV.Vector3();
-        public OMV.Vector3 GlobalFocalPoint {
-            get { return m_globalFocalPoint; }
-            set { m_globalFocalPoint = value; }
-        }
+        // public void lookAt(OMV.Vector3 target) {
+        //     setDirection(target - m_position);
+        // }
 
-        public void LookAtFocalPoint() {
-            m_frame.LookAt(m_frame.Origin, m_globalFocalPoint);
-        }
+        protected double m_zoom;
+        public double Zoom { get { return m_zoom; } set { m_zoom = value; } }
 
-        public void LookAt(OMV.Vector3 target) {
-            m_frame.LookAt(m_frame.Origin, target);
-        }
-
-        protected float m_zoom;
-        public float Zoom { get { return m_zoom; } set { m_zoom = value; } }
-
-        protected float m_far;
-        public float Far { get { return m_far; } set { m_far = value; } }
+        protected double m_far;
+        public double Far { get { return m_far; } set { m_far = value; } }
 
         public EntityCamera(RegionContextBase rcontext, AssetContextBase acontext) 
                     : base(rcontext, acontext) {
             m_yawFixed = true;
-            m_globalPosition = new OMV.Vector3d(10d, 10d, 10d);
-            // m_heading = new OMV.Quaternion(0f, 1f, 0f);
+            m_globalPosition = new OMV.Vector3d(10f, 10f, 10f);
+            m_heading = new OMV.Quaternion(0f, 1f, 0f);
         }
 
         public override void Dispose() {
