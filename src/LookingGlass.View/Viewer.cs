@@ -80,7 +80,7 @@ public class Viewer : ModuleBase, IViewProvider {
     private IAgent m_trackedAgent;
 
     // mouse control
-    private DateTime m_lastMouseMoveTime = System.DateTime.UtcNow;
+    private int m_lastMouseMoveTime = System.Environment.TickCount;
     private float m_cameraSpeed = 100f;     // world units per second to move
     private float m_cameraRotationSpeed = 0.1f;     // degrees to rotate
 
@@ -237,7 +237,7 @@ public class Viewer : ModuleBase, IViewProvider {
     #region user IO
     // called from the renderer when the mouse moves
     private void UserInterface_OnMouseMove(int param, float x, float y) {
-        float sinceLastMouse = (float)System.DateTime.UtcNow.Subtract(m_lastMouseMoveTime).Milliseconds;
+        int sinceLastMouse = System.Environment.TickCount - m_lastMouseMoveTime;
         // m_log.Log(LogLevel.DVIEWDETAIL, "OnMouseMove:"
         //             + " x=" + x.ToString() + ", y=" + y.ToString()
         //             + "time since last = " + sinceLastMouse.ToString() );
