@@ -76,7 +76,7 @@ public class Viewer : ModuleBase, IViewProvider {
     }
 
     // the viewer manages the camera
-    private EntityCamera m_mainCamera;
+    private CameraControl m_mainCamera;
     private IAgent m_trackedAgent;
 
     // mouse control
@@ -116,11 +116,9 @@ public class Viewer : ModuleBase, IViewProvider {
 
         m_cameraSpeed = (float)ModuleParams.ParamInt(m_moduleName + ".Camera.Speed");
         m_cameraRotationSpeed = (float)ModuleParams.ParamInt(m_moduleName + ".Camera.RotationSpeed")/1000;
-        m_mainCamera = new EntityCamera(null, null);
-        // m_MainCamera.Position = new OMV.Vector3(128f, -192f, 90f); // from OpenGL code
+        m_mainCamera = new CameraControl();
         m_mainCamera.GlobalPosition = new OMV.Vector3d(0d, 20d, 30d);   // World coordinates (Z up)
         // camera starts pointing down Y axis
-        m_mainCamera.InitDirection = new OMV.Vector3(0f, 1f, 0f);
         m_mainCamera.Heading = new OMV.Quaternion(OMV.Vector3.UnitY, 0f);
         m_mainCamera.Zoom = 1.0f;
         m_mainCamera.Far = 300.0f;
@@ -141,6 +139,10 @@ public class Viewer : ModuleBase, IViewProvider {
     }
 
     override public void Start() {
+        m_mainCamera.OnCameraUpdate += new CameraControlUpdateCallback(Renderer.UpdateCamera);
+        m_mainCamera.OnCameraUpdate += new CameraControlUpdateCallback(OnCameraUpdate);
+
+        // force an initial update to position the displayed camera
         Renderer.UpdateCamera(m_mainCamera);
 
         // start getting IO stuff from the user
@@ -224,6 +226,14 @@ public class Viewer : ModuleBase, IViewProvider {
         return;
     }
 
+    // called when the camera changes position or orientation
+    private void OnCameraUpdate(CameraControl cam) {
+        if (m_trackedAgent != null) {
+            // tell the agent the camera moved if it cares
+            m_trackedAgent.UpdateCamera(cam.GlobalPosition, cam.Heading);
+        }
+    }
+
     #region user IO
     // called from the renderer when the mouse moves
     private void UserInterface_OnMouseMove(int param, float x, float y) {
@@ -259,7 +269,6 @@ public class Viewer : ModuleBase, IViewProvider {
                 m_log.Log(LogLevel.DVIEWDETAIL, "OnMouseMove: Rotate camera x={0}, y={1}", xMove, yMove);
                 m_mainCamera.rotate(yMove, 0f, xMove);
             }
-            m_Renderer.UpdateCamera(m_mainCamera);
         }
         return;
     }
@@ -270,17 +279,33 @@ public class Viewer : ModuleBase, IViewProvider {
 
     // called from the renderer when the state of the keyboard changes
     private void UserInterface_OnKeypress(Keys key, bool updown) {
-        if (key == (Keys.Control | Keys.C)) {
-            // CNTL-C says to stop everything now
-            Globals.KeepRunning = false;
-        }
-        if (key == Keys.Escape) {
-            // force the camera to the client position
-            if (m_trackedAgent != null) {
-                m_log.Log(LogLevel.DVIEWDETAIL, "OnKeyPress: ESC: restoring camera position");
-                m_mainCamera.GlobalPosition = m_trackedAgent.GlobalPosition;
-                m_Renderer.UpdateCamera(m_mainCamera);
+        try {   // we let exceptions test for null
+            switch (key) {
+                case (Keys.Control | Keys.C):
+                    // CNTL-C says to stop everything now
+                    Globals.KeepRunning = false;
+                    break;
+                case Keys.Right:
+                    m_trackedAgent.TurnRight();
+                    break;
+                case Keys.Left:
+                    m_trackedAgent.TurnLeft();
+                    break;
+                case Keys.Up:
+                    m_trackedAgent.MoveForward();
+                    break;
+                case Keys.Down:
+                    m_trackedAgent.MoveBackward();
+                    break;
+                case Keys.Escape:
+                    // force the camera to the client position
+                    m_log.Log(LogLevel.DVIEWDETAIL, "OnKeyPress: ESC: restoring camera position");
+                    m_mainCamera.GlobalPosition = m_trackedAgent.GlobalPosition;
+                    break;
             }
+        }
+        catch {
+            // don't do anything, the user will type again later
         }
         return;
     }

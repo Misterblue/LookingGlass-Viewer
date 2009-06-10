@@ -24,6 +24,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using LookingGlass.Comm;
+using OMV = OpenMetaverse;
 
 namespace LookingGlass.World {
 
@@ -126,6 +127,7 @@ public interface IWorld {
     void RemoveAgent(IAgent agnt);
     void ForEachAgent(Action<IAgent> action);
     IAgent FindAgent(Predicate<IAgent> pred);
+
 }
 
 }

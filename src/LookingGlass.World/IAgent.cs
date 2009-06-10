@@ -51,5 +51,22 @@ public interface IAgent {
     OMV.Vector3 RelativePosition { get; set; }   // position relative to RegionContext
     OMV.Vector3d GlobalPosition { get; }
     #endregion POSITION
+
+    // This is a call from the viewer telling the agent the camera has moved. The
+    // agent can use this for anything it wishes but it's mostly used by data sources
+    // to generate culling or update ordering.
+    void UpdateCamera(OMV.Vector3d position, OMV.Quaternion direction);
+
+    // A number between 0..10 which give hints as to the user's interaction with the viewer.
+    // Can be used by the agent to control update frequency and LOD.
+    // Since stupid C# doesn't allow me to define constants in an interface
+    //   definition, here are some values:
+    // enum Interest {
+    //     None = 0,     // user just doesn't care
+    //     NoFocus = 2,  // viewer window does not have focus
+    //     Idle = 6,     // user has been idle for a period
+    //     Most = 10,    // user is active and doing stuff
+    // };
+    void UpdateInterest(int interest);
 }
 }

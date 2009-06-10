@@ -31,6 +31,7 @@ using LookingGlass.Framework.Parameters;
 using LookingGlass.Framework.Modules;
 using LookingGlass.Renderer;
 using LookingGlass.Framework.WorkQueue;
+using LookingGlass.View;
 using LookingGlass.World;
 using OMV = OpenMetaverse;
 
@@ -337,7 +338,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     /// (Y up).
     /// </summary>
     /// <param name="cam"></param>
-    public void UpdateCamera(EntityCamera cam) {
+    public void UpdateCamera(CameraControl cam) {
         // OMV.Quaternion orient = new OMV.Quaternion(OMV.Vector3.UnitX, -Globals.PI / 2)
                     // * new OMV.Quaternion(OMV.Vector3.UnitZ, -Globals.PI / 2)
                     // * cam.Direction;

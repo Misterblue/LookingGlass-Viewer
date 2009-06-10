@@ -24,6 +24,7 @@ using System;
 using System.Collections.Generic;
 // using System.Drawing;
 using System.Text;
+using LookingGlass.View;
 using LookingGlass.World;
 using OMV = OpenMetaverse;
 
@@ -89,7 +90,7 @@ public struct FaceData {
         void UnRender(IEntity ent);
 
         // tell the renderer about the camera position
-        void UpdateCamera(EntityCamera cam);
+        void UpdateCamera(CameraControl cam);
         void UpdateEnvironmentalLights(EntityLight sun, EntityLight moon);
         // TODO: ambient setting
 

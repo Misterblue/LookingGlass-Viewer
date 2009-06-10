@@ -287,6 +287,10 @@ public sealed class World : ModuleBase, IWorld, IProvider {
         return null;
     }
 
+    void UpdateAgentCamera(IAgent agnt, OMV.Vector3 position, OMV.Quaternion direction) {
+        return;
+    }
+
     #endregion Agent Management
     #endregion IWorld methods
 

@@ -95,7 +95,12 @@ public class LLAgent : IAgent {
     }
     #endregion POSITION
 
+    public void UpdateCamera(OMV.Vector3d position, OMV.Quaternion direction) {
+        return;
+    }
 
-
+    public void UpdateInterest(int interest) {
+        return;
+    }
 }
 }
