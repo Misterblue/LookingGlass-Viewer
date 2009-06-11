@@ -344,7 +344,9 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     // * cam.Direction;
         OMV.Quaternion orient = cam.Heading;
         OMV.Vector3d pos = cam.GlobalPosition * m_sceneMagnification;
-        Ogr.UpdateCamera((float)pos.X, (float)pos.Z, (float)-pos.Y, orient.W, orient.X, orient.Y, orient.Z);
+        Ogr.UpdateCamera((float)pos.X, (float)pos.Z, (float)-pos.Y, 
+            orient.W, orient.X, orient.Y, orient.Z,
+            1.0f, (float)cam.Far*m_sceneMagnification, 1.0f);
         // m_log.Log(LogLevel.DRENDERDETAIL, "UpdateCamera: Camera to {0}, {1}, {2}",
         //     (float)pos.X, (float)pos.Z, (float)-pos.Y);
         return;

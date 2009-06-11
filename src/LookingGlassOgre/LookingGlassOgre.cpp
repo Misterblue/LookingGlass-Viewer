@@ -79,8 +79,10 @@ extern "C" DLLExport void SetBetweenFramesCallback(BetweenFramesCallback* bf) {
 }
 // ==========================================================
 // update the camera position with a position and a direction
-extern "C" DLLExport void UpdateCamera(float px, float py, float pz, float dw, float dx, float dy, float dz) {
-	m_ro->updateCamera(px, py, pz, dw, dx, dy, dz);
+extern "C" DLLExport void UpdateCamera(float px, float py, float pz, 
+									   float dw, float dx, float dy, float dz,
+									   float nearClip, float farClip, float aspect) {
+	m_ro->updateCamera(px, py, pz, dw, dx, dy, dz, nearClip, farClip, aspect);
 	return;
 }
 extern "C" DLLExport void RefreshResource(int rType, char* resourceName) {
@@ -230,7 +232,8 @@ void LookingGlassOgr::RequestResource(const char* contextEntName, const char* pa
 void LookingGlassOgr::RefreshResourceI(const Ogre::String& resName, const int rType) {
 	if (rType == LookingGlassOgr::ResourceTypeMesh) {
 		Ogre::MeshPtr theMesh = (Ogre::MeshPtr)Ogre::MeshManager::getSingleton().getByName(resName);
-		if (!theMesh.isNull()) theMesh->reload();
+		// unload it and let the renderer decide if it needs to be loaded again
+		if (!theMesh.isNull()) theMesh->unload();
 	}
 	if (rType == LookingGlassOgr::ResourceTypeMaterial) {
 		// mark it so the work happens later between frames (more queues to manage correctly someday)

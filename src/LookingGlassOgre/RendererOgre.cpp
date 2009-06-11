@@ -65,10 +65,24 @@ namespace RendererOgre {
 	}
 
 	// Update the camera position given an location and a direction
-	void RendererOgre::updateCamera(float px, float py, float pz, float dw, float dx, float dy, float dz) {
+	void RendererOgre::updateCamera(float px, float py, float pz, 
+				float dw, float dx, float dy, float dz,
+				float nearClip, float farClip, float aspect) {
+		bool changed = FALSE;
 		if (m_camera) {
 			m_camera->setPosition(px, py, pz);
 			m_camera->setOrientation(Ogre::Quaternion(dw, dx, dy, dz));
+			if (nearClip != m_camera->getNearClipDistance()) {
+				m_camera->setNearClipDistance(nearClip);
+				changed = TRUE;
+			}
+			if (farClip != m_camera->getFarClipDistance()) {
+				m_camera->setFarClipDistance(farClip);
+				changed = TRUE;
+			}
+			if (changed) {
+				// Ogre::ResourceGroupManager::getSingleton().unloadResourceGroup(OLResourceGroupName);
+			}
 		}
 		return;
 	}
@@ -220,6 +234,7 @@ namespace RendererOgre {
 		m_camera->setPosition(0.0, 0.0, 0.0);
 		m_camera->setDirection(0.0, 0.0, -1.0);
 		m_camera->setNearClipDistance(2.0);
+		m_camera->setFarClipDistance(1500.0);
 		m_camera->setAutoAspectRatio(true);
 		AssertNonNull(m_camera, "createCamera: m_camera is NULL");
 	}
@@ -238,7 +253,6 @@ namespace RendererOgre {
 		m_sun->setVisible(true);
 	}
 
-    // RendererOgre::createDefaultTerrain();
 	void RendererOgre::createViewport() {
 		Log("DEBUG: LookingGlassOrge: createViewport");
 		m_viewport = m_window->addViewport(m_camera);
@@ -494,6 +508,7 @@ void RendererOgre::GenTerrainMesh(Ogre::SceneManager* sceneMgr, Ogre::SceneNode*
 		mob->setDynamic(true);
 		mob->setCastShadows(false);
 		mob->setVisible(true);
+		mob->setQueryFlags(Ogre::SceneManager::WORLD_GEOMETRY_TYPE_MASK);
 		node->attachObject(mob);
 	}
 
@@ -548,6 +563,7 @@ void RendererOgre::AddOceanToRegion(Ogre::SceneManager* sceneMgr, Ogre::SceneNod
 		Log("AddOceanToRegion: passed null scene manager");
 	}
 	Ogre::Entity* oceanEntity = sceneMgr->createEntity("WaterEntity/" + waterName, oceanMesh->getName());
+	oceanEntity->setQueryFlags(Ogre::SceneManager::WORLD_GEOMETRY_TYPE_MASK);
 	Ogre::SceneNode* oceanNode = regionNode->createChildSceneNode("WaterSceneNode/" + waterName);
 	oceanNode->setInheritOrientation(true);
 	oceanNode->setInheritScale(true);

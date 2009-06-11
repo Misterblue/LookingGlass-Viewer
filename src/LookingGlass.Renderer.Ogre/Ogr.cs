@@ -88,7 +88,10 @@ static class Ogr {
 
     // =============================================================================
     [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
-    public static extern void UpdateCamera(float px, float py, float pz, float dw, float dx, float dy, float dz);
+    public static extern void UpdateCamera(
+        float px, float py, float pz, 
+        float dw, float dx, float dy, float dz,
+        float nearClip, float farClip, float aspect);
     [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
     public static extern void RefreshResource(int type, [MarshalAs(UnmanagedType.LPStr)]string resourceName);
     [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]

@@ -53,7 +53,7 @@ public:
 	Ogre::SceneNode* getRootNode();
 
 	// update objects anvironment routines
-	void updateCamera(float, float, float, float, float, float, float);
+	void updateCamera(float, float, float, float, float, float, float, float, float, float);
 
 	void AddEntity(Ogre::SceneManager*, Ogre::SceneNode*, char*, char*);
 	void CreateMeshResource(const char*, const int[], const float[]);
