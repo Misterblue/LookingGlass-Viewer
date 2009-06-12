@@ -22,9 +22,15 @@
  */
 #pragma once
 
+// uncomment to use Caelum as the sky
+// #define CAELUM
+
 #include "LGOCommon.h"
 #include "UserIO.h"
 #include "OLMaterialTracker.h"
+#ifdef CAELUM
+#include "Caelum.h"
+#endif
 
 namespace RendererOgre {
 
@@ -84,6 +90,7 @@ private:
     void createLookingGlassResourceGroups();
     void initOgreResources();
     void createScene();
+    void createSky();
     void createCamera();
     void createLight();
     // void createDefaultTerrain();
@@ -99,8 +106,12 @@ private:
 	UserIO* m_userio;
 	OLMaterialTracker::OLMaterialTracker* m_materialTracker;
 
+#ifdef CAELUM
+	Caelum::CaelumSystem* m_caelumSystem;
+#else
 	Ogre::Light* m_sun;				// the light that is the sun
 	Ogre::Light* m_moon;			// the light that is the moon
+#endif // CAELUM
 
 	Ogre::String m_cacheDir; 
 	Ogre::String m_preloadedDir; 

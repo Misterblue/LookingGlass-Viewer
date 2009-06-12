@@ -264,7 +264,7 @@ void OLMaterialTracker::CreateMaterialResource(const char* mName, const char* tN
 		// TODO: somehow check to see if texture has transparency in it
 	}
 	pass->setShininess(((float)shiny)/256.0f);	// origionally a byte
-	pass->setAmbient(0.8f, 0.8f, 0.8f);
+	pass->setAmbient(0.05f, 0.05f, 0.05f);
 	pass->setVertexColourTracking(Ogre::TVC_AMBIENT);
 	pass->setDiffuse(colorR, colorG, colorB, colorA);// this isn't right. color is a base color and not a lighting effect
 	// we might need to make another pass for the base color
@@ -307,14 +307,14 @@ void OLMaterialTracker::CreateMaterialResource2(const char* mName, const char* t
 		tus->setTextureRotate(Ogre::Radian(parms[CreateMaterialRotate]));
 	}
 	pass->setShininess(parms[CreateMaterialShiny]/256.0f);	// origionally a byte
-	pass->setAmbient(0.8f, 0.8f, 0.8f);
+	pass->setAmbient(0.05f, 0.05f, 0.05f);
 	pass->setVertexColourTracking(Ogre::TVC_AMBIENT);
 
 	// this isn't right. color is a base color and not a lighting effect
 	pass->setDiffuse(parms[CreateMaterialColorR], 
-		parms[CreateMaterialColorG], 
-		parms[CreateMaterialColorB], 
-		parms[CreateMaterialColorA]
+			parms[CreateMaterialColorG], 
+			parms[CreateMaterialColorB], 
+			parms[CreateMaterialColorA]
 	);
 
 	// we might need to make another pass for the base color

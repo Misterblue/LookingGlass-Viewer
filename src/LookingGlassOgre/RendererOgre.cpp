@@ -76,10 +76,12 @@ namespace RendererOgre {
 				m_camera->setNearClipDistance(nearClip);
 				changed = TRUE;
 			}
+			/*	don't fool with far for the moment
 			if (farClip != m_camera->getFarClipDistance()) {
 				m_camera->setFarClipDistance(farClip);
 				changed = TRUE;
 			}
+			*/
 			if (changed) {
 				// Ogre::ResourceGroupManager::getSingleton().unloadResourceGroup(OLResourceGroupName);
 			}
@@ -118,6 +120,7 @@ namespace RendererOgre {
         createCamera();
         createLight();
         createViewport();
+        createSky();
         createFrameListener();
         createInput();
 
@@ -216,16 +219,6 @@ namespace RendererOgre {
 			Log("Exception in createScene: %s", e.what());
 			return;
 		}
-
-		try {
-			// Ogre::String skyboxName = "LookingGlass/CloudyNoonSkyBox";
-			Ogre::String skyboxName = GetParameter("Renderer.Ogre.SkyboxName");
-			m_sceneMgr->setSkyBox(true, skyboxName);
-		}
-		catch (Ogre::Exception e) {
-			Log("Failed to set scene skybox");
-			m_sceneMgr->setSkyBox(false, "");
-		}
 	}
 
 	void RendererOgre::createCamera() {
@@ -234,12 +227,14 @@ namespace RendererOgre {
 		m_camera->setPosition(0.0, 0.0, 0.0);
 		m_camera->setDirection(0.0, 0.0, -1.0);
 		m_camera->setNearClipDistance(2.0);
-		m_camera->setFarClipDistance(1500.0);
+		// m_camera->setFarClipDistance(1500.0);
+		m_camera->setFarClipDistance(0.0);
 		m_camera->setAutoAspectRatio(true);
 		AssertNonNull(m_camera, "createCamera: m_camera is NULL");
 	}
 
 	void RendererOgre::createLight() {
+#ifndef CAELUM
 		Log("DEBUG: LookingGlassOrge: createLight");
         // TODO: decide if I should connect  this to a scene node
         //    might make moving and control easier
@@ -251,6 +246,7 @@ namespace RendererOgre {
 		m_sun->setDirection(0.0f, -1.0f, 0.0f);
 		m_sun->setCastShadows(true);
 		m_sun->setVisible(true);
+#endif // CAELUM
 	}
 
 	void RendererOgre::createViewport() {
@@ -258,6 +254,100 @@ namespace RendererOgre {
 		m_viewport = m_window->addViewport(m_camera);
 		m_viewport->setBackgroundColour(Ogre::ColourValue(0.0f, 0.0f, 0.25f));
 		m_camera->setAspectRatio((float)m_viewport->getActualWidth() / (float)m_viewport->getActualHeight());
+	}
+
+	void RendererOgre::createSky() {
+#ifdef CAELUM
+        Caelum::CaelumSystem::CaelumComponent componentMask;
+		/*
+        componentMask = static_cast<Caelum::CaelumSystem::CaelumComponent> (
+                Caelum::CaelumSystem::CAELUM_COMPONENT_SUN |				
+                Caelum::CaelumSystem::CAELUM_COMPONENT_MOON |
+                Caelum::CaelumSystem::CAELUM_COMPONENT_SKY_DOME |
+                //Caelum::CaelumSystem::CAELUM_COMPONENT_IMAGE_STARFIELD |
+                Caelum::CaelumSystem::CAELUM_COMPONENT_POINT_STARFIELD |
+                Caelum::CaelumSystem::CAELUM_COMPONENT_CLOUDS |
+                0);
+		*/
+        componentMask = Caelum::CaelumSystem::CAELUM_COMPONENTS_NONE;
+		m_caelumSystem = new Caelum::CaelumSystem(m_root, m_sceneMgr, componentMask);
+
+	    // Create subcomponents (and allow individual subcomponents to fail).
+	    try {
+			m_caelumSystem->setSkyDome (new Caelum::SkyDome (m_sceneMgr, m_caelumSystem->getCaelumCameraNode ()));
+	    } catch (Caelum::UnsupportedException& ex) {
+			Log("Failed initialization of Caelum skyDome: %s", ex.getFullDescription().c_str());
+	    }
+	    try {
+	        m_caelumSystem->setSun (new Caelum::SphereSun(m_sceneMgr, m_caelumSystem->getCaelumCameraNode ()));
+	    } catch (Caelum::UnsupportedException& ex) {
+			Log("Failed initialization of Caelum sun: %s", ex.getFullDescription().c_str());
+	    }
+	    try {
+	        m_caelumSystem->setMoon (new Caelum::Moon(m_sceneMgr, m_caelumSystem->getCaelumCameraNode ()));
+	    } catch (Caelum::UnsupportedException& ex) {
+			Log("Failed initialization of Caelum moon: %s", ex.getFullDescription().c_str());
+	    }
+	    try {
+	        m_caelumSystem->setCloudSystem (new Caelum::CloudSystem (m_sceneMgr, m_caelumSystem->getCaelumGroundNode ()));
+	    } catch (Caelum::UnsupportedException& ex) {
+			Log("Failed initialization of Caelum cloud system: %s", ex.getFullDescription().c_str());
+	    }
+	    try {
+			m_caelumSystem->setPointStarfield (new Caelum::PointStarfield (m_sceneMgr, m_caelumSystem->getCaelumCameraNode ()));
+	    } catch (Caelum::UnsupportedException& ex) {
+			Log("Failed initialization of Caelum cloud starfield: %s", ex.getFullDescription().c_str());
+	    }
+
+		m_root->addFrameListener(m_caelumSystem);
+	    m_caelumSystem->attachViewport(m_camera->getViewport());
+
+		m_caelumSystem->setPrecipitationController (new Caelum::PrecipitationController (m_sceneMgr));
+
+	    // m_caelumSystem->setSceneFogDensityMultiplier (0.0015);
+		m_caelumSystem->setManageSceneFog(false);
+	    m_caelumSystem->setManageAmbientLight (true);
+	    m_caelumSystem->setMinimumAmbientLight (Ogre::ColourValue (0.1, 0.1, 0.1));
+
+	    // Setup sun options
+	    if (m_caelumSystem->getSun()) {
+	        m_caelumSystem->getSun()->setAutoDisableThreshold(0.05);
+	        m_caelumSystem->getSun()->setAutoDisable(false);
+	    }
+
+	    if (m_caelumSystem->getMoon()) {
+	        m_caelumSystem->getMoon()->setAutoDisableThreshold (0.05);
+	        m_caelumSystem->getMoon()->setAutoDisable (false);
+	    }
+
+	    if (m_caelumSystem->getCloudSystem()) {
+	        m_caelumSystem->getCloudSystem()->createLayerAtHeight(2000);
+	        m_caelumSystem->getCloudSystem()->createLayerAtHeight(5000);
+	        m_caelumSystem->getCloudSystem()->getLayer(0)->setCloudSpeed(Ogre::Vector2(0.000005, -0.000009));
+	        m_caelumSystem->getCloudSystem()->getLayer(1)->setCloudSpeed(Ogre::Vector2(0.0000045, -0.0000085));
+	    }
+
+	    if (m_caelumSystem->getPrecipitationController()) {
+	        m_caelumSystem->getPrecipitationController()->setIntensity (0);
+	    }
+
+	    // Set time acceleration.
+	    m_caelumSystem->getUniversalClock()->setTimeScale (0);
+
+	    // Sunrise with visible moon.
+	    m_caelumSystem->getUniversalClock()->setGregorianDateTime(2007, 4, 9, 9, 33, 0);
+
+#else
+		try {
+			// Ogre::String skyboxName = "LookingGlass/CloudyNoonSkyBox";
+			Ogre::String skyboxName = GetParameter("Renderer.Ogre.SkyboxName");
+			m_sceneMgr->setSkyBox(true, skyboxName);
+		}
+		catch (Ogre::Exception e) {
+			Log("Failed to set scene skybox");
+			m_sceneMgr->setSkyBox(false, "");
+		}
+#endif	// CALEUM
 	}
 
 	void RendererOgre::createFrameListener() {
