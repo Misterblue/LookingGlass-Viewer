@@ -143,6 +143,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "Write out materials to files (replace with DB someday)");
         ModuleParams.AddDefaultParameter("Renderer.Ogre.SerializeMeshes", "true",
                     "Write out meshes to files");
+        ModuleParams.AddDefaultParameter("Renderer.Ogre.CaelumScript", "RainWindScriptTest",
+                    "Write out meshes to files");
 
         // renderer keeps rendering specific data in an entity's addition/subsystem slots
         AddSceneNode = EntityBase.AddAdditionSubsystem(RendererOgre.AddSceneNodeName);

@@ -98,6 +98,10 @@ namespace RendererOgre {
 		m_preloadedDir = LookingGlassOgr::GetParameter("Renderer.Ogre.PreLoadedDir");
 		m_defaultTerrainMaterial = LookingGlassOgr::GetParameter("Renderer.Ogre.DefaultTerrainMaterial");
 		m_serializeMeshes = LookingGlassOgr::isTrue(LookingGlassOgr::GetParameter("Renderer.Ogre.SerializeMeshes"));
+#ifdef CAELUM
+		m_caelumScript = LookingGlassOgr::isTrue(LookingGlassOgr::GetParameter("Renderer.Ogre.CaelumScript"));
+#endif
+
 
 		m_root = new Ogre::Root(GetParameter("Renderer.Ogre.PluginFilename"));
 		Log("DEBUG: LookingGlassOrge: after new Ogre::Root()");
@@ -271,7 +275,10 @@ namespace RendererOgre {
 		*/
         componentMask = Caelum::CaelumSystem::CAELUM_COMPONENTS_NONE;
 		m_caelumSystem = new Caelum::CaelumSystem(m_root, m_sceneMgr, componentMask);
+		LookingGlassOgr::Log("CreateSky: loading caelum script %s", m_caelumScript.c_ptr());
+		Caelum::CaelumPlugin::getSingleton().loadCaelumSystemFromScript(m_caelumSystem, m_caelumScript);
 
+		/*
 	    // Create subcomponents (and allow individual subcomponents to fail).
 	    try {
 			m_caelumSystem->setSkyDome (new Caelum::SkyDome (m_sceneMgr, m_caelumSystem->getCaelumCameraNode ()));
@@ -336,6 +343,7 @@ namespace RendererOgre {
 
 	    // Sunrise with visible moon.
 	    m_caelumSystem->getUniversalClock()->setGregorianDateTime(2007, 4, 9, 9, 33, 0);
+		*/
 
 #else
 		try {

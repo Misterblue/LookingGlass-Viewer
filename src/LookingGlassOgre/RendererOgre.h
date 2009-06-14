@@ -30,6 +30,7 @@
 #include "OLMaterialTracker.h"
 #ifdef CAELUM
 #include "Caelum.h"
+#include "CaelumPlugin.h"
 #endif
 
 namespace RendererOgre {
@@ -108,6 +109,7 @@ private:
 
 #ifdef CAELUM
 	Caelum::CaelumSystem* m_caelumSystem;
+	Ogre::String m_caelumScript;
 #else
 	Ogre::Light* m_sun;				// the light that is the sun
 	Ogre::Light* m_moon;			// the light that is the moon
