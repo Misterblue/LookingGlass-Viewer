@@ -648,6 +648,10 @@ void RendererOgre::GenTerrainMesh(Ogre::SceneManager* sceneMgr, Ogre::SceneNode*
 
 void RendererOgre::AddOceanToRegion(Ogre::SceneManager* sceneMgr, Ogre::SceneNode* regionNode,
 									const float width, const float length, const float waterHeight, const char* wName) {
+	if (sceneMgr == 0) {
+		Log("AddOceanToRegion: passed null scene manager");
+		return;
+	}
 	Log("AddOceanToRegion: r=%s, w=%f, l=%f, h=%f, n=%s", regionNode->getName().c_str(), width, length, waterHeight, wName);
 	Ogre::String waterName = wName;
 	Ogre::Plane* oceanPlane = new Ogre::Plane(0.0, 0.0, 1.0, 0);
@@ -657,14 +661,11 @@ void RendererOgre::AddOceanToRegion(Ogre::SceneManager* sceneMgr, Ogre::SceneNod
 					2, 2.0, 2.0, Ogre::Vector3::UNIT_Y);
 	Ogre::String oceanMaterialName = LookingGlassOgr::GetParameter("Renderer.Ogre.OceanMaterialName");
 	oceanMesh->getSubMesh(0)->setMaterialName(oceanMaterialName);
-	if (sceneMgr == 0) {
-		Log("AddOceanToRegion: passed null scene manager");
-	}
 	Ogre::Entity* oceanEntity = sceneMgr->createEntity("WaterEntity/" + waterName, oceanMesh->getName());
 	oceanEntity->setQueryFlags(Ogre::SceneManager::WORLD_GEOMETRY_TYPE_MASK);
 	Ogre::SceneNode* oceanNode = regionNode->createChildSceneNode("WaterSceneNode/" + waterName);
 	oceanNode->setInheritOrientation(true);
-	oceanNode->setInheritScale(true);
+	oceanNode->setInheritScale(false);
 	oceanNode->translate(width/2.0, length/2.0, waterHeight);
 	oceanNode->attachObject(oceanEntity);
 	return;

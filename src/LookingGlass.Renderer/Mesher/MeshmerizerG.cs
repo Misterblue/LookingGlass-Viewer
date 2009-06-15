@@ -55,7 +55,6 @@ public class MeshmerizerG : OMVR.IRendering {
     /// </summary>
     /// <param name="prim">Primitive to generate the mesh from</param>
     /// <param name="lod">Level of detail to generate the mesh at</param>
-    /// <param name="shouldScale">'true' if the mesh should be scaled by the prim's scale parameters</param>
     /// <returns>The generated mesh</returns// >
     public OMVR.FacetedMesh GenerateFacetedMesh(OMV.Primitive prim, OMVR.DetailLevel lod) {
         OMV.Primitive.ConstructionData primData = prim.PrimData;

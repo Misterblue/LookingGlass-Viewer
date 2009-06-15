@@ -77,6 +77,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
 
     // this shouldn't be here... this is a feature of the LL renderer
     protected float m_sceneMagnification;
+    public float SceneMagnification { get { return m_sceneMagnification; } }
 
     protected BasicWorkQueue m_workQueue = new BasicWorkQueue("OgreRendererWork");
     protected OnDemandWorkQueue m_betweenFramesQueue = new OnDemandWorkQueue("OgreBetweenFrames");
@@ -302,7 +303,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
 
                     // Create the scene node for this entity
                     OgreSceneNode node = m_sceneMgr.CreateSceneNode(m_ent.Name.ToString(),
-                                parentNode, true, true,
+                                parentNode, false, true,
                                 m_ri.position.X, m_ri.position.Y, m_ri.position.Z,
                                 m_ri.scale.X, m_ri.scale.Y, m_ri.scale.Z,
                                 m_ri.rotation.W, m_ri.rotation.X, m_ri.rotation.Y, m_ri.rotation.Z
@@ -419,22 +420,22 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                 sn = RendererOgre.GetTerrainSceneNode(m_rcontext);
             }
             else {
+                OgreSceneNode regionSceneNode = RendererOgre.GetRegionSceneNode(m_rcontext);
                 // no existing scene node, create one
-                if (RendererOgre.GetRegionSceneNode(m_rcontext) == null) {
+                if (regionSceneNode == null) {
                     // we have to wait until there is a region root before placing texture
                     m_log.Log(LogLevel.DRENDERDETAIL, "RendererOgre: UpdateTerrain: waiting for region root");
                     return false;
                 }
                 else {
                     // m_log.Log(LogLevel.DRENDERDETAIL, "RenderOgre: UpdateTerrain: Using world specific root node");
-                    OgreSceneNode regionSceneNode = RendererOgre.GetRegionSceneNode(m_rcontext);
                     string terrainNodeName = "Terrain/" + m_rcontext.Name + "/" + OMV.UUID.Random().ToString();
-                    sn = m_sceneMgr.CreateSceneNode(terrainNodeName,
-                                regionSceneNode, true, true, 
-                                0f, 0f, 0f,
+                    sn = m_sceneMgr.CreateSceneNode(terrainNodeName, regionSceneNode, 
+                                false, true, 
                                 // the terrain is attached to the region node so it's at relative address
-                                //(float)m_rcontext.WorldBase.X, (float)m_rcontext.WorldBase.Y, (float)m_rcontext.WorldBase.Z,
-                                1f, 1f, 1f,
+                                0f, 0f, 0f,
+                                // scaling matches the LL to Ogre map
+                                m_renderer.SceneMagnification, m_renderer.SceneMagnification, m_renderer.SceneMagnification,
                                 OMV.Quaternion.Identity.W, OMV.Quaternion.Identity.X,
                                 OMV.Quaternion.Identity.Y, OMV.Quaternion.Identity.Z
                     );

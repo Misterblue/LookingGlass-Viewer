@@ -36,12 +36,12 @@ namespace LookingGlass.Renderer.Ogr {
 public class RendererOgreLL : IWorldRenderConv {
     private ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
 
-    private float m_sceneMagnification = 5.0f;
+    private float m_sceneMagnification = 10.0f;
     bool m_buildMaterialsAtMeshCreationTime = true;
 
     private OMVR.IRendering m_meshMaker = null;
     // some of the mesh conversion routines include the scale calculation
-    private bool m_meshmerizerNodeScale = false;
+    private bool m_usePrimScaleFactor = false;
 
     static RendererOgreLL m_instance = null;
     public static RendererOgreLL Instance {
@@ -58,13 +58,10 @@ public class RendererOgreLL : IWorldRenderConv {
             Renderer.Mesher.MeshmerizerG amesher = new Renderer.Mesher.MeshmerizerG();
             // There is two ways to do scaling: in the mesh or in Ogre. We choose the latter here
             // so we can create shared vertices for the standard shapes (the cubes  that are everywhere)
-            // TODO: disabled at the moment. We configure all the Ogre things to inherit scaling
-            // (mostly for the region scaling) but this messes things up since linked objects
-            // have independent scaling. This setting sets Ogre scaling to 1.0 and scales the
-            // mesh based on the prim's scaling
-            amesher.ShouldScaleMesh = true;
+            // this causes the mesherizer to not scale the node coordinates by the prim scaling factor
+            amesher.ShouldScaleMesh = false;
+            m_usePrimScaleFactor = true; // use Ogre scaling rather than mesh scaling
             m_meshMaker = amesher;
-            m_meshmerizerNodeScale = false; // use Ogre scaling rather than mesh scaling
         }
 
         // magnification of passed World coordinates into Ogre coordinates
@@ -79,7 +76,7 @@ public class RendererOgreLL : IWorldRenderConv {
         OMV.Primitive prim;
         string newMeshName = EntityNameOgre.ConvertToOgreNameX(ent.Name, ".mesh");
         // true if we should do the scaling with the rendering parameters
-        bool shouldScale = m_meshmerizerNodeScale;
+        bool shouldScale = m_usePrimScaleFactor;
 
         try {
             llent = (LLEntityPhysical)ent;
@@ -106,13 +103,13 @@ public class RendererOgreLL : IWorldRenderConv {
         // if the prim has a parent, we must hang this scene node off the parent's scene node
         ri.parentID = prim.ParentID;
         ri.rotation = prim.Rotation;
-        ri.position = prim.Position;
         // some of the mesh creators include the scale calculations
+        ri.position = prim.Position;
         if (shouldScale) {
-            ri.scale = new OMV.Vector3(prim.Scale.X, prim.Scale.Y, prim.Scale.Z);   // swap
+            ri.scale = prim.Scale * m_sceneMagnification;
         }
         else {
-            ri.scale = new OMV.Vector3(1f, 1f, 1f);
+            ri.scale = new OMV.Vector3(m_sceneMagnification, m_sceneMagnification, m_sceneMagnification);
         }
 
         // The region has a root node. Dig through the LL specific data structures to find it
@@ -439,21 +436,26 @@ public class RendererOgreLL : IWorldRenderConv {
 
                 OgreSceneNode node = m_sceneMgr.CreateSceneNode("RegionSceneNode/" + rcontext.Name,
                         null,        // because NULL, will add to root
-                        true, true,
+                        false, true,
                         (float)rcontext.WorldBase.X * m_sceneMagnification,
                         (float)rcontext.WorldBase.Z * m_sceneMagnification,
                         -(float)rcontext.WorldBase.Y * m_sceneMagnification,
                         m_sceneMagnification, m_sceneMagnification, m_sceneMagnification,
+                        // 1f, 1f, 1f,
                         orient.W, orient.X, orient.Y, orient.Z);
 
                 // the region scene node is saved in the region context additions
                 llrcontext.SetAddition(RendererOgre.AddRegionSceneNode, node);
 
+                // Terrain will be added as we get the messages describing same
+
                 // if the region has water, add that
                 if (rcontext.TerrainInfo.WaterHeight != TerrainInfoBase.NOWATER) {
                     Ogr.AddOceanToRegion(m_sceneMgr.BasePtr, node.BasePtr,
-                                rcontext.Size.X, rcontext.Size.Y,
-                                rcontext.TerrainInfo.WaterHeight, "Water/" + rcontext.Name);
+                                rcontext.Size.X * m_sceneMagnification, 
+                                rcontext.Size.Y * m_sceneMagnification,
+                                rcontext.TerrainInfo.WaterHeight, 
+                                "Water/" + rcontext.Name);
                 }
             }
         }

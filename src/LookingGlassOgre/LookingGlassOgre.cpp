@@ -138,8 +138,8 @@ extern "C" DLLExport Ogre::SceneNode* CreateSceneNode(
 	else {
 		node = parentNode->createChildSceneNode(nodeName);
 	}
-	node->setInheritOrientation(inheritOrientation);
 	node->setInheritScale(inheritScale);
+	node->setInheritOrientation(inheritOrientation);
 	node->setScale(sx, sy, sz);
 	node->translate(px, py, pz);
 	node->rotate(Ogre::Quaternion(ow, ox, oy, oz));
