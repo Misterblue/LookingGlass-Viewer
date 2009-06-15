@@ -48,6 +48,7 @@ static const int ResourceTypeTexture = 2;	// Texture
 static const int ResourceTypeMaterial = 3;	// Material
 
 #define OLArchiveTypeName "OLFileSystem"
+#define OLPreloadTypeName "OLPreloadFileSystem"
 #define OLResourceGroupName "OLResource"
 
 // #define OLMeshResourceGroupName "OLMeshResource"

@@ -257,7 +257,7 @@ public class Viewer : ModuleBase, IViewProvider {
                 // if CNTL is held down, movement is on land plane
                 float xMove = x * m_cameraSpeed;
                 float yMove = y * m_cameraSpeed;
-                m_log.Log(LogLevel.DVIEWDETAIL, "OnMouseMove: Move camera x={0}, y={1}", xMove, yMove);
+                // m_log.Log(LogLevel.DVIEWDETAIL, "OnMouseMove: Move camera x={0}, y={1}", xMove, yMove);
                 OMV.Vector3d movement = new OMV.Vector3d( yMove, xMove, 0f);
                 m_mainCamera.GlobalPosition -= movement;
             }
@@ -266,7 +266,7 @@ public class Viewer : ModuleBase, IViewProvider {
                 float xMove = (-x * m_cameraRotationSpeed * Constants.DEGREETORADIAN) % Constants.TWOPI;
                 float yMove = (-y * m_cameraRotationSpeed * Constants.DEGREETORADIAN) % Constants.TWOPI;
                 // rotate around local axis
-                m_log.Log(LogLevel.DVIEWDETAIL, "OnMouseMove: Rotate camera x={0}, y={1}", xMove, yMove);
+                // m_log.Log(LogLevel.DVIEWDETAIL, "OnMouseMove: Rotate camera x={0}, y={1}", xMove, yMove);
                 m_mainCamera.rotate(yMove, 0f, xMove);
             }
         }

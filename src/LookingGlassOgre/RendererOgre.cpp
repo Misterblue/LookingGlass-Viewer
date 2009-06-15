@@ -29,6 +29,7 @@
 #include "RendererOgre.h"
 #include "LookingGlassOgre.h"
 #include "OLArchive.h"
+#include "OLPreloadArchive.h"
 #include "ResourceListeners.h"
 
 namespace RendererOgre {
@@ -168,14 +169,15 @@ namespace RendererOgre {
 		// Ogre::ScriptCompilerManager::getSingleton().setListener(new OLScriptCompilerListener(this));
 
 		// Create the archive system that will find our meshes
-		Ogre::ArchiveManager::getSingleton().addArchiveFactory( new OLArchiveFactory() );
+		Ogre::ArchiveManager::getSingleton().addArchiveFactory(new OLPreloadArchiveFactory() );
 
 		// Where predefined textures and such are stored
-        // TODO: This really doesn't work because LLLP asset numbers are qualified by
-		//   by the grid name. Should create a new archive that strips that off before looking
 		Log("createLookingGlassResourceGroups: addResourceLocation %s", m_preloadedDir.c_str());
 		Ogre::ResourceGroupManager::getSingleton().addResourceLocation(m_preloadedDir,
-						"FileSystem", OLResourceGroupName, true);
+						OLPreloadTypeName, OLResourceGroupName, true);
+
+		// Create the archive system that will find our meshes
+		Ogre::ArchiveManager::getSingleton().addArchiveFactory(new OLArchiveFactory() );
 
 		// Where the meshes are to be stored
 		Log("createLookingGlassResourceGroups: addResourceLocation %s", m_cacheDir.c_str());
@@ -666,7 +668,7 @@ void RendererOgre::AddOceanToRegion(Ogre::SceneManager* sceneMgr, Ogre::SceneNod
 	Ogre::SceneNode* oceanNode = regionNode->createChildSceneNode("WaterSceneNode/" + waterName);
 	oceanNode->setInheritOrientation(true);
 	oceanNode->setInheritScale(false);
-	oceanNode->translate(width/2.0, length/2.0, waterHeight);
+	oceanNode->translate(width/20.0, length/20.0, waterHeight);
 	oceanNode->attachObject(oceanEntity);
 	return;
 }
