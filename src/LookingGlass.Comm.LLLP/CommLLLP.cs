@@ -217,13 +217,15 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
             m_client.Settings.OBJECT_TRACKING = false; // We use our own object tracking system
             m_client.Settings.AVATAR_TRACKING = true; //but we want to use the libsl avatar system
             m_client.Settings.PARCEL_TRACKING = false;
-            m_client.Settings.SEND_AGENT_UPDATES = false;
+            m_client.Settings.USE_INTERPOLATION_TIMER = false;  // don't need the library helping
+            m_client.Settings.SEND_AGENT_UPDATES = true;
             m_client.Self.Movement.AutoResetControls = true;
             m_client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = true;
             m_client.Settings.USE_TEXTURE_CACHE = true;
             m_client.Settings.TEXTURE_CACHE_DIR = ModuleParams.ParamString(ModuleName + ".Assets.CacheDir");
             m_client.Settings.ALWAYS_REQUEST_PARCEL_ACL = false;
             m_client.Settings.ALWAYS_REQUEST_PARCEL_DWELL = false;
+            // m_client.Settings.Apply();
             // Crank up the throttle on texture downloads
             m_client.Throttle.Texture = 446000.0f;
 
@@ -431,6 +433,10 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         m_log.Log(LogLevel.DWORLDDETAIL, "Simulator connected {0}", sim.Name);
         LLRegionContext regionContext = FindRegion(sim);
         World.World.Instance.AddRegion(regionContext);
+        // this is needed to make the avatar appear
+        // TODO: figure out if the linking between agent and appearance is right
+        m_client.Appearance.SetPreviousAppearance(true);
+        m_client.Self.Movement.UpdateFromHeading(0.0, true);
     }
 
     // ===============================================================

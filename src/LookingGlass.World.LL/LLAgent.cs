@@ -46,22 +46,19 @@ public class LLAgent : IAgent {
     #region MOVEMENT
     public void MoveForward() {
         m_client.Self.Movement.AtPos = true;
-        m_client.Self.Movement.SendUpdate();
+        // updates are sent automatically by the movement framework
     }
 
     public void MoveBackward() {
         m_client.Self.Movement.AtNeg = true;
-        m_client.Self.Movement.SendUpdate();
     }
 
     public void TurnLeft() {
         m_client.Self.Movement.TurnLeft = true;
-        m_client.Self.Movement.SendUpdate();
     }
 
     public void TurnRight() {
         m_client.Self.Movement.TurnRight = true;
-        m_client.Self.Movement.SendUpdate();
     }
 
     #endregion MOVEMENT
@@ -95,6 +92,7 @@ public class LLAgent : IAgent {
     }
     #endregion POSITION
 
+    #region INTEREST
     public void UpdateCamera(OMV.Vector3d position, OMV.Quaternion direction) {
         return;
     }
@@ -102,5 +100,6 @@ public class LLAgent : IAgent {
     public void UpdateInterest(int interest) {
         return;
     }
+    #endregion INTEREST
 }
 }

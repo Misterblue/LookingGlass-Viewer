@@ -233,7 +233,7 @@ void LookingGlassOgr::RefreshResourceI(const Ogre::String& resName, const int rT
 	if (rType == LookingGlassOgr::ResourceTypeMesh) {
 		Ogre::MeshPtr theMesh = (Ogre::MeshPtr)Ogre::MeshManager::getSingleton().getByName(resName);
 		// unload it and let the renderer decide if it needs to be loaded again
-		if (!theMesh.isNull()) theMesh->unload();
+		if (!theMesh.isNull()) theMesh->reload();
 	}
 	if (rType == LookingGlassOgr::ResourceTypeMaterial) {
 		// mark it so the work happens later between frames (more queues to manage correctly someday)

@@ -299,7 +299,7 @@ public class Viewer : ModuleBase, IViewProvider {
                     break;
                 case Keys.Escape:
                     // force the camera to the client position
-                    m_log.Log(LogLevel.DVIEWDETAIL, "OnKeyPress: ESC: restoring camera position");
+                    m_log.Log(LogLevel.DVIEWDETAIL, "OnKeypress: ESC: restoring camera position");
                     m_mainCamera.GlobalPosition = m_trackedAgent.GlobalPosition;
                     break;
             }

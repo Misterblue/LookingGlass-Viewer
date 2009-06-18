@@ -104,8 +104,8 @@ void OLMaterialTracker::MakeMaterialDefault(Ogre::MaterialPtr matPtr) {
 	Ogre::Technique* tech = mat->createTechnique();
 	Ogre::Pass* pass = tech->createPass();
 	pass->setShininess(0.0f);
-	pass->setAmbient(0.1f, 0.1f, 0.1f);
-	pass->setVertexColourTracking(Ogre::TVC_AMBIENT);
+	pass->setAmbient(0.05f, 0.05f, 0.05f);
+	// pass->setVertexColourTracking(Ogre::TVC_AMBIENT);
 	pass->setDiffuse(0.582f, 0.5703f, 0.7578f, 0.7f); // blue gray from girl's shirt
 	pass->setSceneBlending(Ogre::SBT_REPLACE);
 	// pass->createTextureUnitState(m_defaultTextureName);	// we need a resolvable texture filename

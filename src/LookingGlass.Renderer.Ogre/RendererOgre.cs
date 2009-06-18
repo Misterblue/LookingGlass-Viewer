@@ -116,6 +116,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "File that lists Ogre plugins to load");
         ModuleParams.AddDefaultParameter("Renderer.Ogre.ResourcesFilename", "resources.cfg",
                     "File that lists the Ogre resources to load");
+        ModuleParams.AddDefaultParameter("Renderer.Ogre.DefaultNumMipmaps", "3",
+                    "Default number of mip maps created for a texture (usually 6)");
         ModuleParams.AddDefaultParameter("Renderer.Ogre.CacheDir", Globals.GetDefaultApplicationStorageDir(null),
                     "Directory to store cached meshs, textures, etc");
         ModuleParams.AddDefaultParameter("Renderer.Ogre.PreLoadedDir", 

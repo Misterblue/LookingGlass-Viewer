@@ -203,7 +203,8 @@ namespace RendererOgre {
 
 	void RendererOgre::initOgreResources() {
 		Log("DEBUG: LookingGlassOrge: InitOgreResources");
-		Ogre::TextureManager::getSingleton().setDefaultNumMipmaps(6);
+		Ogre::TextureManager::getSingleton().setDefaultNumMipmaps(
+			atoi(GetParameter("Renderer.Ogre.DefaultNumMipmaps")));
 		Ogre::ResourceGroupManager::getSingleton().initialiseAllResourceGroups();
 	}
 
