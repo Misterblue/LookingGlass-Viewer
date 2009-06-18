@@ -69,10 +69,12 @@ public class OnDemandWorkQueue : IWorkQueue {
     // requeuing the work item. Since requeuing, add the delay
     public void DoLaterRequeue(ref DoLaterBase w) {
         w.timesRequeued++;
-        long nextTime = Math.Min(w.requeueWait * w.timesRequeued, 20000);
-        w.remainingWait = (DateTime.Now.ToFileTimeUtc() / 10000) + nextTime;
+        int nextTime = Math.Min(w.requeueWait * w.timesRequeued, 5000);
+        w.remainingWait = System.Environment.TickCount + nextTime;
         LogManager.Log.Log(LogLevel.DRENDERDETAIL, "{0}.DoLater: Requeuing. times={1}, wait={2}",
                 m_queueName, w.timesRequeued, nextTime);
+        LogManager.Log.Log(LogLevel.DRENDERDETAIL, "{0}.DoLater: now={0}, rem={1}",
+            System.Environment.TickCount, w.remainingWait);
         lock (m_workQueue) m_workQueue.Add(w);
     }
 
@@ -89,9 +91,11 @@ public class OnDemandWorkQueue : IWorkQueue {
     public void ProcessQueue(int maximumCost) {
         int totalCost = 0;
         int totalCounter = 100;
-        long now = DateTime.Now.ToFileTimeUtc() / 10000;
+        int now = System.Environment.TickCount;
         DoLaterBase found = null;
         while ((totalCost < maximumCost) && (totalCounter > 0) && (m_workQueue.Count > 0)) {
+            now = System.Environment.TickCount;
+            found = null;
             lock (m_workQueue) {
                 // find an entry in the list who's time has come
                 foreach (DoLaterBase ww in m_workQueue) {

@@ -77,14 +77,12 @@ public class BasicWorkQueue : IWorkQueue {
     /// </summary>
     private static List<DoLaterBase> doEvenLater = new List<DoLaterBase>();
     private static Thread doEvenLaterThread = null;
-    private static int lastSleepTime = 0;
     private static void DoItEvenLater(DoLaterBase w) {
         lock (doEvenLater) {
-            w.remainingWait = w.requeueWait;    // wait at least the total time
+            w.remainingWait = System.Environment.TickCount + w.requeueWait;    // wait at least the total time
             doEvenLater.Add(w);
             if (doEvenLaterThread == null) {    // is there another thread doing the requeuing?
                 doEvenLaterThread = Thread.CurrentThread;   // no, looks like I'm stuck
-                lastSleepTime = 0;              // initialize variables I will need
                 LogManager.Log.Log(LogLevel.DRENDERDETAIL, "DoItEvenLater: becoming the one thread");
             }
         }
@@ -93,13 +91,13 @@ public class BasicWorkQueue : IWorkQueue {
         while (doEvenLaterThread != null && doEvenLaterThread == Thread.CurrentThread) {
             List<DoLaterBase> doneWaiting = null;
             int sleepTime = 0;
+            int now = System.Environment.TickCount;
             lock (doEvenLater) {    // protects both doEvenLater and doEvenLaterThread
                 if (doEvenLater.Count > 0) {
                     // remove the last waiting time from each waiter
                     // if waiting is up, remember which ones to remove
                     foreach (DoLaterBase ii in doEvenLater) {
-                        ii.remainingWait -= lastSleepTime;
-                        if (ii.remainingWait < 0) {
+                        if (ii.remainingWait < now) {
                             if (doneWaiting == null) doneWaiting = new List<DoLaterBase>();
                             doneWaiting.Add(ii);
                         }
@@ -117,7 +115,7 @@ public class BasicWorkQueue : IWorkQueue {
                     // find how much time to wait for the remaining
                     sleepTime = int.MaxValue;
                     foreach (DoLaterBase jj in doEvenLater) {
-                        sleepTime = Math.Min(sleepTime, (int)jj.remainingWait);
+                        sleepTime = Math.Min(sleepTime, jj.remainingWait - now);
                     }
                 }
                 else {
@@ -137,8 +135,9 @@ public class BasicWorkQueue : IWorkQueue {
             if (doEvenLaterThread == Thread.CurrentThread) {
                 // wait the remaining time
                 LogManager.Log.Log(LogLevel.DRENDERDETAIL, "DoEvenLater: Sleep for {0}", sleepTime);
-                Thread.Sleep(sleepTime);
-                lastSleepTime = sleepTime;
+                if (sleepTime > 0) {
+                    Thread.Sleep(sleepTime);
+                }
             }
         }
     }

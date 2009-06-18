@@ -33,17 +33,21 @@ namespace LookingGlass.Framework.WorkQueue {
     /// </summary>
 
     public abstract class DoLaterBase {
+        static long baseSequence = 0;
+
         abstract public bool DoIt();
 
         public DoLaterBase() {
             requeueWait = 500;
             cost = 10;
+            sequence = ++baseSequence;
         }
 
         public int requeueWait;
-        public long remainingWait;
+        public int remainingWait;
         public int timesRequeued;
         public object containingClass;
         public int cost;
+        public long sequence;
     }
 }

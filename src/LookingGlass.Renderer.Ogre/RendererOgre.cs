@@ -286,8 +286,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                             parentNode = RendererOgre.GetSceneNode(parentEnt);
                         }
                         if (parentNode == null) {
-                            m_log.Log(LogLevel.DRENDERDETAIL, "Delaying rendering waiting for parent: " 
-                                + (parentEnt == null ? "NULL" : parentEnt.Name.Name));
+                            m_log.Log(LogLevel.DRENDERDETAIL, "Delaying rendering {0}. {1} waiting for parent {2}",
+                                this.sequence, m_ent.Name.Name, (parentEnt == null ? "NULL" : parentEnt.Name.Name));
                             return false;   // if I must have parent, requeue if no parent
                         }
                     }
@@ -673,6 +673,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
 
         // the texture is loaded so get to the right time to tell the renderer
         private void TextureLoadedCallback(string textureEntityName) {
+            LogManager.Log.Log(LogLevel.DRENDERDETAIL, 
+                    "TextureLoadedCallback {0}: Load complete. Name: {1}", this.sequence, textureEntityName);
             EntityNameOgre entName = new EntityNameOgre(textureEntityName);
             m_renderer.m_betweenFramesQueue.DoLater(new RequestTextureCompletionLater(entName));
             return;
@@ -687,7 +689,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             override public bool DoIt() {
                 string ogreResourceName = m_entName.OgreResourceName;
                 LogManager.Log.Log(LogLevel.DRENDERDETAIL, 
-                    "RequestTextureCompleteLater: Load complete. Refreshing texture {0}", ogreResourceName);
+                    "RequestTextureCompleteLater {0}: Load complete. Refreshing texture {1}", 
+                            this.sequence, ogreResourceName);
                 Ogr.RefreshResource(Ogr.ResourceTypeTexture, ogreResourceName);
                 return true;
             }

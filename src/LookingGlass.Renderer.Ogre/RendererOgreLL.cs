@@ -59,8 +59,15 @@ public class RendererOgreLL : IWorldRenderConv {
             // There is two ways to do scaling: in the mesh or in Ogre. We choose the latter here
             // so we can create shared vertices for the standard shapes (the cubes  that are everywhere)
             // this causes the mesherizer to not scale the node coordinates by the prim scaling factor
-            amesher.ShouldScaleMesh = false;
-            m_usePrimScaleFactor = true; // use Ogre scaling rather than mesh scaling
+            // Update: scaling with Ogre has proved problematic: the scaling effects the mesh and
+            // the position coordinates around the object. This is a problem for child nodes.
+            // It also effects the texture mapping so texture scaling factors would have to be
+            // scaled by the scale of teh face that they appear on. Ugh.
+            // For the moment, turned off while I figure that stuff out.
+            // amesher.ShouldScaleMesh = false;
+            // m_usePrimScaleFactor = true; // use Ogre scaling rather than mesh scaling
+            amesher.ShouldScaleMesh = true;
+            m_usePrimScaleFactor = false; // use Ogre scaling rather than mesh scaling
             m_meshMaker = amesher;
         }
 
