@@ -164,7 +164,7 @@ public class RendererOgreLL : IWorldRenderConv {
         else {
             OMVR.FacetedMesh mesh;
             try {
-                mesh = m_meshMaker.GenerateFacetedMesh(prim, OMVR.DetailLevel.High);
+                mesh = m_meshMaker.GenerateFacetedMesh(prim, OMVR.DetailLevel.Low);
             }
             catch (Exception e) {
                 m_log.Log(LogLevel.DRENDERDETAIL, "RenderingInfoLL: failed generating mesh: " + e.ToString());
