@@ -29,8 +29,9 @@ using System.Windows.Forms;     // used for the Keys class
 using LookingGlass.Framework.Logging;
 using LookingGlass.Framework.Parameters;
 using LookingGlass.Framework.Modules;
-using LookingGlass.Renderer;
+using LookingGlass.Framework.Statistics;
 using LookingGlass.Framework.WorkQueue;
+using LookingGlass.Renderer;
 using LookingGlass.View;
 using LookingGlass.World;
 using OMV = OpenMetaverse;
@@ -92,6 +93,13 @@ public class RendererOgre : ModuleBase, IRenderProvider {
 
     protected Thread m_rendererThread = null;
 
+    protected StatisticManager m_stats;
+    protected IIntervalCounter m_statRefreshMaterialInterval;
+    protected IIntervalCounter m_statCreateMaterialInterval;
+    protected ICounter m_statMaterialsRequested;
+    protected ICounter m_statMeshesRequested;
+    protected ICounter m_statTexturesRequested;
+
     // ==========================================================================
     public RendererOgre() {
     }
@@ -148,6 +156,13 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "Write out meshes to files");
         ModuleParams.AddDefaultParameter("Renderer.Ogre.CaelumScript", "RainWindScriptTest",
                     "Write out meshes to files");
+
+        m_stats = new StatisticManager(m_moduleName);
+        m_statRefreshMaterialInterval = m_stats.GetIntervalCounter("UpdateTexture");
+        m_statCreateMaterialInterval = m_stats.GetIntervalCounter("CreateMaterial");
+        m_statMaterialsRequested = m_stats.GetCounter("MaterialsRequested");
+        m_statMeshesRequested = m_stats.GetCounter("MeshesRequested");
+        m_statTexturesRequested = m_stats.GetCounter("TexturesRequested");
 
         // renderer keeps rendering specific data in an entity's addition/subsystem slots
         AddSceneNode = EntityBase.AddAdditionSubsystem(RendererOgre.AddSceneNodeName);
@@ -474,12 +489,15 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     private void RequestResource(string resourceContext, string resourceName, int resourceType) {
         switch (resourceType) {
             case Ogr.ResourceTypeMesh:
+                m_statMeshesRequested.Event();
                 RequestMesh(resourceContext, resourceName);
                 break;
             case Ogr.ResourceTypeMaterial:
+                m_statMaterialsRequested.Event();
                 RequestMaterial(resourceContext, resourceName);
                 break;
             case Ogr.ResourceTypeTexture:
+                m_statTexturesRequested.Event();
                 RequestTexture(resourceContext, resourceName);
                 break;
         }
@@ -625,8 +643,13 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     }
                     else {
                         // Create the material resource and then make the rendering redisplay
+                        int interval = m_statCreateMaterialInterval.In();
                         RendererOgre.GetWorldRenderConv(ent).CreateMaterialResource(m_sceneMgr, ent, wm.materialName);
+                        m_statCreateMaterialInterval.Out(interval);
+
+                        interval = m_statRefreshMaterialInterval.In();
                         Ogr.RefreshResource(Ogr.ResourceTypeMaterial, wm.materialName);
+                        m_statRefreshMaterialInterval.Out(interval);
                     }
                 }
                 else {

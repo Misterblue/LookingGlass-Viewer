@@ -23,48 +23,47 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using OMVSD = OpenMetaverse.StructuredData;
 
 namespace LookingGlass.Framework.Statistics {
-    /// <summary>
-    /// Manages a group of counters and presents one REST interface to read
-    /// this group of counters.
-    /// </summary>
-public class StatisticManager {
-    private List<ICounter> m_counters = new List<ICounter>();
-
-    public StatisticManager(string statisticGroupName) {
-    }
-
-    public ICounter GetCounter(string counterName) {
-        ICounter newCounter = new StatCounter(counterName);
-        m_counters.Add(newCounter);
-        return newCounter;
-    }
-
-    public IIntervalCounter GetIntervalCounter(string counterName) {
-        IIntervalCounter newCounter = new IntervalCounter(counterName);
-        m_counters.Add(newCounter);
-        return newCounter;
-    }
-
-    public OMVSD.OSDMap GetCounterInformation() {
-        OMVSD.OSDMap values = new OMVSD.OSDMap();
-        foreach (ICounter cntr in m_counters) {
-            OMVSD.OSDMap ivals = new OMVSD.OSDMap();
-            ivals.Add("count", new OMVSD.OSDInteger((int)cntr.Count));
-            if (cntr is IIntervalCounter) {
-                IIntervalCounter icntr = (IIntervalCounter)cntr;
-                ivals.Add("average", new OMVSD.OSDInteger((int)icntr.Average));
-                ivals.Add("low", new OMVSD.OSDInteger((int)icntr.Low));
-                ivals.Add("high", new OMVSD.OSDInteger((int)icntr.High));
-                ivals.Add("last", new OMVSD.OSDInteger((int)icntr.Last));
-                ivals.Add("total", new OMVSD.OSDInteger((int)icntr.Total));
-            }
-            values.Add(cntr.Name, ivals);
+    class IntervalCounter : StatCounter, IIntervalCounter {
+        public IntervalCounter(string name) : base(name) {
         }
-        return values;
-    }
 
-}
+        // called when entering a timed region
+        public int In() {
+            return System.Environment.TickCount;
+        }
+
+        // called when exiting a timed region
+        private Object lockThing = new Object();
+        public void Out(int inValue) {
+            lock (lockThing) {
+                int period = System.Environment.TickCount - inValue;
+                m_total += period;
+                m_last = period;
+                m_low = Math.Min(m_low, period);
+                m_high = Math.Max(m_high, period);
+                m_count++;
+            }
+        }
+
+        private long m_total = 0;
+        public long Total { get { return m_total; } }  // total amount of time spent (in ticks)
+
+        private long m_last = 0;
+        public long Last { get { return m_last; } }   // the length of the last period (in ticks)
+
+        // the average period
+        public long Average { 
+            get {
+                return m_total / m_count;
+            } 
+        }
+
+        private long m_high = 0;
+        public long High { get { return m_high; } }   // the largest period
+
+        private long m_low = 0;
+        public long Low { get { return m_low; } }    // the smallest period
+    }
 }

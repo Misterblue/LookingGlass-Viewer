@@ -28,6 +28,7 @@ using System.Text;
 using LookingGlass.Framework.Logging;
 using LookingGlass.Framework.Modules;
 using LookingGlass.Framework.Parameters;
+using LookingGlass.Framework.Statistics;
 using OMV = OpenMetaverse;
 using OMVSD = OpenMetaverse.StructuredData;
 using HttpServer;
@@ -60,6 +61,7 @@ public class RestHandler {
     ProcessGetCallback m_processGet = null;
     ProcessPostCallback m_processPost = null;
     ParameterSet m_parameterSet = null;
+    StatisticManager m_stats = null;
     bool m_parameterSetWritable = false;
 
     /// <summary>
@@ -91,6 +93,20 @@ public class RestHandler {
         m_parameterSetWritable = writable;
         RestMgr.Server.AddHandler("GET", null, "^/" + APINAME + urlBase, ParamGetHandler);
         RestMgr.Server.AddHandler("POST", null, "^/" + APINAME + urlBase, ParamPostHandler);
+    }
+
+    /// <summary>
+    /// Setup a REST handler that returns the values from a ParameterSet.
+    /// </summary>
+    /// <param name="urlBase">base of the url for this parameter set</param>
+    /// <param name="parms">the parameter set to read and write</param>
+    /// <param name="writable">if 'true', it allows POST operations to change the parameter set</param>
+    public RestHandler(string urlBase, ref StatisticManager stats) {
+        m_baseUrl = urlBase;
+        m_processGet = null;
+        m_processPost = null;
+        m_stats = stats;
+        RestMgr.Server.AddHandler("GET", null, "^/" + APINAME + urlBase, StatsGetHandler);
     }
 
     private void APIGetHandler(IHttpClientContext context, IHttpRequest reqContext, IHttpResponse respContext) {
@@ -204,22 +220,31 @@ public class RestHandler {
     }
 
     private void ParamGetHandler(IHttpClientContext context, IHttpRequest reqContext, IHttpResponse respContext) {
-        m_log.Log(LogLevel.DRESTDETAIL, "APIGetHandler: " + reqContext.Uri);
+        m_log.Log(LogLevel.DRESTDETAIL, "ParamGetHandler: " + reqContext.Uri);
+        OMVSD.OSDMap paramValues = m_parameterSet.BuildCurrentParams();
+        ReturnGetResponse(paramValues, context, reqContext, respContext);
+        return;
+    }
+
+    private void ReturnGetResponse(OMVSD.OSDMap paramValues, IHttpClientContext context, IHttpRequest reqContext, IHttpResponse respContext) {
         try {
             string absURL = reqContext.Uri.AbsolutePath.ToLower();
             string[] segments = absURL.Split('/');
             int afterPos = absURL.IndexOf(m_baseUrl.ToLower());
             string afterString = absURL.Substring(afterPos + m_baseUrl.Length);
             if (afterString.Length > 0) {
-                if (m_parameterSet.HasParameter(afterString)) {
-                    // didn't specify a name. Return the whole parameter set
+                // look to see if asking for one particular value
+                OMVSD.OSD oneValue;
+                if (paramValues.TryGetValue(afterString, out oneValue)) {
+                    // asking for one value from the set
                     RestMgr.ConstructSimpleResponse(respContext, "text/json",
                         delegate(ref StringBuilder buff) {
-                            buff.Append(OMVSD.OSDParser.SerializeJsonString(m_parameterSet.ParamValue(afterString)));
+                            buff.Append(OMVSD.OSDParser.SerializeJsonString(oneValue));
                         }
                     );
                 }
                 else {
+                    // asked for a specific value but we don't have one of those. return empty
                     RestMgr.ConstructSimpleResponse(respContext, "text/json",
                         delegate(ref StringBuilder buff) {
                             buff.Append("{}");
@@ -231,7 +256,7 @@ public class RestHandler {
                 // didn't specify a name. Return the whole parameter set
                 RestMgr.ConstructSimpleResponse(respContext, "text/json",
                     delegate(ref StringBuilder buff) {
-                        buff.Append(OMVSD.OSDParser.SerializeJsonString(m_parameterSet.BuildCurrentParams()));
+                        buff.Append(OMVSD.OSDParser.SerializeJsonString(paramValues));
                     }
                 );
             }
@@ -293,6 +318,13 @@ public class RestHandler {
                 // make up a response
             }
         }
+        return;
+    }
+
+    private void StatsGetHandler(IHttpClientContext context, IHttpRequest reqContext, IHttpResponse respContext) {
+        m_log.Log(LogLevel.DRESTDETAIL, "StatsGetHandler: " + reqContext.Uri);
+        OMVSD.OSDMap statValues = m_stats.GetCounterInformation();
+        ReturnGetResponse(statValues, context, reqContext, respContext);
         return;
     }
 

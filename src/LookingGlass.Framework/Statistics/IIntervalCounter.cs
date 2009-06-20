@@ -23,48 +23,24 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using OMVSD = OpenMetaverse.StructuredData;
 
 namespace LookingGlass.Framework.Statistics {
     /// <summary>
-    /// Manages a group of counters and presents one REST interface to read
-    /// this group of counters.
+    /// Counters have names. Someone wishing to create a counter calls the
+    /// StatisticsManager to get one.
+    /// To use the interval counter, one calls In() to get a
+    /// starting value and then calls Out() with that value when the work
+    /// is done. The passing of the value helps keep threads from stepping
+    /// on each other.
     /// </summary>
-public class StatisticManager {
-    private List<ICounter> m_counters = new List<ICounter>();
+    public interface IIntervalCounter : ICounter {
+        int In();           // called when entering a timed region
+        void Out(int x);    // called when exiting a timed region
 
-    public StatisticManager(string statisticGroupName) {
+        long Total { get; }  // total amount of time spent (in ticks)
+        long Last { get; }   // the length of the last period (in ticks)
+        long Average { get; }// the average period
+        long High { get; }   // the largest period
+        long Low { get; }    // the smallest period
     }
-
-    public ICounter GetCounter(string counterName) {
-        ICounter newCounter = new StatCounter(counterName);
-        m_counters.Add(newCounter);
-        return newCounter;
-    }
-
-    public IIntervalCounter GetIntervalCounter(string counterName) {
-        IIntervalCounter newCounter = new IntervalCounter(counterName);
-        m_counters.Add(newCounter);
-        return newCounter;
-    }
-
-    public OMVSD.OSDMap GetCounterInformation() {
-        OMVSD.OSDMap values = new OMVSD.OSDMap();
-        foreach (ICounter cntr in m_counters) {
-            OMVSD.OSDMap ivals = new OMVSD.OSDMap();
-            ivals.Add("count", new OMVSD.OSDInteger((int)cntr.Count));
-            if (cntr is IIntervalCounter) {
-                IIntervalCounter icntr = (IIntervalCounter)cntr;
-                ivals.Add("average", new OMVSD.OSDInteger((int)icntr.Average));
-                ivals.Add("low", new OMVSD.OSDInteger((int)icntr.Low));
-                ivals.Add("high", new OMVSD.OSDInteger((int)icntr.High));
-                ivals.Add("last", new OMVSD.OSDInteger((int)icntr.Last));
-                ivals.Add("total", new OMVSD.OSDInteger((int)icntr.Total));
-            }
-            values.Add(cntr.Name, ivals);
-        }
-        return values;
-    }
-
-}
 }

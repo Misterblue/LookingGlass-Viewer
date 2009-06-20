@@ -34,14 +34,9 @@ namespace LookingGlass.Framework.Statistics {
     /// </summary>
     public interface ICounter {
         string Name { get; }
-        int In();           // called when entering a timed region
-        void Out(int x);    // called when exiting a timed region
 
-        long Count { get; }  // total number of In/Out calls
-        long Total { get; }  // total amount of time spent (in ticks)
-        long Last { get; }   // the length of the last period (in ticks)
-        long Average { get; }// the average period
-        long High { get; }   // the largest period
-        long Low { get; }    // the smallest period
+        void Event();       // count an event
+
+        long Count { get; }  // total number of events
     }
 }
