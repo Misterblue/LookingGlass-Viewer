@@ -30,7 +30,8 @@ namespace LookingGlass.Framework.Statistics {
     /// Manages a group of counters and presents one REST interface to read
     /// this group of counters.
     /// </summary>
-public class StatisticManager {
+public class StatisticManager : IDisplayable {
+
     private List<ICounter> m_counters = new List<ICounter>();
 
     public StatisticManager(string statisticGroupName) {
@@ -48,20 +49,32 @@ public class StatisticManager {
         return newCounter;
     }
 
-    public OMVSD.OSDMap GetCounterInformation() {
+    /// <summary>
+    /// A statistics collection returns an OSD structure which is a map
+    /// of maps. The top level map are the individual counters and
+    /// their value is a map of the variables that make up the counter.
+    /// </summary>
+    /// <returns></returns>
+    public OMVSD.OSDMap GetDisplayable() {
         OMVSD.OSDMap values = new OMVSD.OSDMap();
         foreach (ICounter cntr in m_counters) {
-            OMVSD.OSDMap ivals = new OMVSD.OSDMap();
-            ivals.Add("count", new OMVSD.OSDInteger((int)cntr.Count));
-            if (cntr is IIntervalCounter) {
-                IIntervalCounter icntr = (IIntervalCounter)cntr;
-                ivals.Add("average", new OMVSD.OSDInteger((int)icntr.Average));
-                ivals.Add("low", new OMVSD.OSDInteger((int)icntr.Low));
-                ivals.Add("high", new OMVSD.OSDInteger((int)icntr.High));
-                ivals.Add("last", new OMVSD.OSDInteger((int)icntr.Last));
-                ivals.Add("total", new OMVSD.OSDInteger((int)icntr.Total));
+            try {
+                OMVSD.OSDMap ivals = new OMVSD.OSDMap();
+                ivals.Add("count", new OMVSD.OSDInteger((int)cntr.Count));
+                if (cntr is IIntervalCounter) {
+                    IIntervalCounter icntr = (IIntervalCounter)cntr;
+                    ivals.Add("average", new OMVSD.OSDInteger((int)icntr.Average));
+                    ivals.Add("low", new OMVSD.OSDInteger((int)icntr.Low));
+                    ivals.Add("high", new OMVSD.OSDInteger((int)icntr.High));
+                    ivals.Add("last", new OMVSD.OSDInteger((int)icntr.Last));
+                    ivals.Add("total", new OMVSD.OSDInteger((int)icntr.Total));
+                }
+                values.Add(cntr.Name, ivals);
             }
-            values.Add(cntr.Name, ivals);
+            catch (Exception e) {
+                Logging.LogManager.Log.Log(LookingGlass.Framework.Logging.LogLevel.DBADERROR,
+                    "FAILURE getting Displayable value: n={0}, {1}", cntr.Name, e.ToString());
+            }
         }
         return values;
     }

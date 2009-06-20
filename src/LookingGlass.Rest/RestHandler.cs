@@ -25,10 +25,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Text;
+using LookingGlass.Framework;
 using LookingGlass.Framework.Logging;
 using LookingGlass.Framework.Modules;
 using LookingGlass.Framework.Parameters;
-using LookingGlass.Framework.Statistics;
 using OMV = OpenMetaverse;
 using OMVSD = OpenMetaverse.StructuredData;
 using HttpServer;
@@ -61,12 +61,12 @@ public class RestHandler {
     ProcessGetCallback m_processGet = null;
     ProcessPostCallback m_processPost = null;
     ParameterSet m_parameterSet = null;
-    StatisticManager m_stats = null;
+    IDisplayable m_displayable = null;
     bool m_parameterSetWritable = false;
 
     /// <summary>
     /// Setup a rest handler that calls back for gets and posts to the specified urlBase.
-    /// The 'urlBase' is like "/login/*". This will create the rest interface "^/api/login/*"
+    /// The 'urlBase' is like "/login/". This will create the rest interface "^/api/login/"
     /// </summary>
     /// <param name="urlBase">base of the url that's us</param>
     /// <param name="pget">called on GET operations</param>
@@ -101,12 +101,12 @@ public class RestHandler {
     /// <param name="urlBase">base of the url for this parameter set</param>
     /// <param name="parms">the parameter set to read and write</param>
     /// <param name="writable">if 'true', it allows POST operations to change the parameter set</param>
-    public RestHandler(string urlBase, ref StatisticManager stats) {
+    public RestHandler(string urlBase, IDisplayable displayable) {
         m_baseUrl = urlBase;
         m_processGet = null;
         m_processPost = null;
-        m_stats = stats;
-        RestMgr.Server.AddHandler("GET", null, "^/" + APINAME + urlBase, StatsGetHandler);
+        m_displayable = displayable;
+        RestMgr.Server.AddHandler("GET", null, "^/" + APINAME + urlBase, DisplayableGetHandler);
     }
 
     private void APIGetHandler(IHttpClientContext context, IHttpRequest reqContext, IHttpResponse respContext) {
@@ -221,7 +221,7 @@ public class RestHandler {
 
     private void ParamGetHandler(IHttpClientContext context, IHttpRequest reqContext, IHttpResponse respContext) {
         m_log.Log(LogLevel.DRESTDETAIL, "ParamGetHandler: " + reqContext.Uri);
-        OMVSD.OSDMap paramValues = m_parameterSet.BuildCurrentParams();
+        OMVSD.OSDMap paramValues = m_parameterSet.GetDisplayable();
         ReturnGetResponse(paramValues, context, reqContext, respContext);
         return;
     }
@@ -298,7 +298,7 @@ public class RestHandler {
                 }
                 RestMgr.ConstructSimpleResponse(respContext, "text/json",
                     delegate(ref StringBuilder buff) {
-                        buff.Append(OMVSD.OSDParser.SerializeJsonString(m_parameterSet.BuildCurrentParams()));
+                        buff.Append(OMVSD.OSDParser.SerializeJsonString(m_parameterSet.GetDisplayable()));
                     }
                 );
             }
@@ -321,9 +321,9 @@ public class RestHandler {
         return;
     }
 
-    private void StatsGetHandler(IHttpClientContext context, IHttpRequest reqContext, IHttpResponse respContext) {
-        m_log.Log(LogLevel.DRESTDETAIL, "StatsGetHandler: " + reqContext.Uri);
-        OMVSD.OSDMap statValues = m_stats.GetCounterInformation();
+    private void DisplayableGetHandler(IHttpClientContext context, IHttpRequest reqContext, IHttpResponse respContext) {
+        m_log.Log(LogLevel.DRESTDETAIL, "DisplayableGetHandler: " + reqContext.Uri);
+        OMVSD.OSDMap statValues = m_displayable.GetDisplayable();
         ReturnGetResponse(statValues, context, reqContext, respContext);
         return;
     }

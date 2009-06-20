@@ -26,12 +26,14 @@ using System.Text;
 using System.Threading;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;     // used for the Keys class
+using LookingGlass.Framework;
 using LookingGlass.Framework.Logging;
 using LookingGlass.Framework.Parameters;
 using LookingGlass.Framework.Modules;
 using LookingGlass.Framework.Statistics;
 using LookingGlass.Framework.WorkQueue;
 using LookingGlass.Renderer;
+using LookingGlass.Rest;
 using LookingGlass.View;
 using LookingGlass.World;
 using OMV = OpenMetaverse;
@@ -91,14 +93,15 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     private static int m_betweenFrameUpdateTerrainCost = 50;
     private static int m_betweenFrameMapTextureCost = 10;
 
-    protected Thread m_rendererThread = null;
+    private Thread m_rendererThread = null;
 
-    protected StatisticManager m_stats;
-    protected IIntervalCounter m_statRefreshMaterialInterval;
-    protected IIntervalCounter m_statCreateMaterialInterval;
-    protected ICounter m_statMaterialsRequested;
-    protected ICounter m_statMeshesRequested;
-    protected ICounter m_statTexturesRequested;
+    private RestHandler m_restHandler;
+    private StatisticManager m_stats;
+    private IIntervalCounter m_statRefreshMaterialInterval;
+    private IIntervalCounter m_statCreateMaterialInterval;
+    private ICounter m_statMaterialsRequested;
+    private ICounter m_statMeshesRequested;
+    private ICounter m_statTexturesRequested;
 
     // ==========================================================================
     public RendererOgre() {
@@ -180,6 +183,9 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     private Ogr.BetweenFramesCallback betweenFramesCallbackHandle;
     // ==========================================================================
     override public bool AfterAllModulesLoaded() {
+        // allow others to get our statistics
+        m_restHandler = new RestHandler("/" + m_moduleName + "/detailStats/", m_stats);
+
         m_userInterface = new UserInterfaceOgre();
 
         if (m_log.WouldLog(LogLevel.DRENDERDETAIL)) {

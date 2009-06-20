@@ -33,7 +33,9 @@ namespace LookingGlass.World.LL {
 public class LLAgent : IAgent {
     private ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
 
+# pragma warning disable 0067   // disable unused event warning
     public event AgentUpdatedCallback OnAgentUpdated;
+# pragma warning restore 0067
 
     // since agents and avatars are so intertwined in LLLP, we just get a handle
     //   back to the real controller

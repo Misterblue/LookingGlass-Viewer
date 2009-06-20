@@ -30,7 +30,10 @@ using OMVSD = OpenMetaverse.StructuredData;
 namespace LookingGlass.Framework.Parameters {
 public class AppParameters : IAppParameters, IParameterPersist {
 
+
+#pragma warning disable 0067    // disable unused event warning
     public event ParamValueModifiedCallback OnModifiedCallback;
+#pragma warning restore 0067
 
     protected paramErrorType paramErrorMethod = paramErrorType.eException;
     public paramErrorType ParamErrorMethod {

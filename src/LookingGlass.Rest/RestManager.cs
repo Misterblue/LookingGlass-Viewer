@@ -60,9 +60,11 @@ public class RestManager : ModuleBase, HttpServer.ILogWriter {
 
     protected HttpServer.HttpListener m_Server;
     public HttpServer.HttpListener Server { get { return m_Server; } }
+#pragma warning disable 414 // I know these are set and never referenced
     FileHandler m_staticHandler = null;
     FileHandler m_stdHandler = null;
     FileHandler m_faviconHandler = null;
+#pragma warning restore 414
 
     public const string MIMEDEFAULT = "text/html";
 

@@ -30,7 +30,7 @@ using OMVSD = OpenMetaverse.StructuredData;
 
 namespace LookingGlass.Framework.Parameters {
     
-public class ParameterSet : IParameters {
+public class ParameterSet : IParameters, IDisplayable {
 
     public event ParamValueModifiedCallback OnModifiedCallback;
     
@@ -366,7 +366,7 @@ public class ParameterSet : IParameters {
     /// view of teh parameterset.
     /// </summary>
     /// <returns></returns>
-    public OMVSD.OSDMap BuildCurrentParams() {
+    public OMVSD.OSDMap GetDisplayable() {
         if (m_runtimeValues.Count == 0) {
             // shortcut if there are no delegates
             return m_params;

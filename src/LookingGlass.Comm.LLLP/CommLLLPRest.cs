@@ -102,7 +102,7 @@ public class CommLLLPRest : ModuleBase, IRestUser {
         }
         else {
             // they want the whole set
-            ret = m_comm.ConnectionParams.BuildCurrentParams();
+            ret = m_comm.ConnectionParams.GetDisplayable();
         }
         return ret;
     }

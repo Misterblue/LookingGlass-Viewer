@@ -36,7 +36,7 @@ namespace LookingGlass.Framework.Statistics {
         protected string m_name;
         public string Name { get { return m_name; } }
 
-        protected long m_count = 0;
+        protected long m_count = 1;     // starts at one to elimiate any divide by zeros
         public long Count { get { return m_count; } }  // total number of In/Out calls
     }
 }
