@@ -302,8 +302,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     OgreSceneNode parentNode = null;
                     if (m_ri.parentID != 0) {
                         // this entity has a parent entity. find him and create scene node off his
-                        IEntity parentEnt = World.World.Instance.GetEntityLocal(m_ri.parentID);
-                        if (parentEnt != null) {
+                        IEntity parentEnt;
+                        if (World.World.Instance.TryGetEntityLocalID(m_ri.parentID, out parentEnt)) {
                             parentNode = RendererOgre.GetSceneNode(parentEnt);
                         }
                         if (parentNode == null) {
@@ -542,8 +542,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             // the terrible kludge here is that the name of the mesh is the name of
             //   the entity. We reach back into the worlds and find the underlying
             //   entity then we can construct the mesh.
-            IEntity ent = World.World.Instance.GetEntity(eName);
-            if (ent == null) {
+            IEntity ent;
+            if (!World.World.Instance.TryGetEntity(eName, out ent)) {
                 LogManager.Log.Log(LogLevel.DBADERROR, "RendererOgre.RequestMeshLater: could not find entity " + eName);
                 return true;
             }
@@ -596,8 +596,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         m_log.Log(LogLevel.DRENDERDETAIL, "Request for materialX " + matName);
         try{
             EntityNameOgre entName = EntityNameOgre.ConvertOgreResourceToEntityName(contextEntity);
-            IEntity ent = World.World.Instance.GetEntity(entName);
-            if (ent != null) {
+            IEntity ent;
+            if (World.World.Instance.TryGetEntity(entName, out ent)) {
                 if (RendererOgre.GetWorldRenderConv(ent) == null) {
                     // the rendering context is not set up. Odd but not fatal
                     // try again later
@@ -639,8 +639,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             // the manual ways it's thread safe. Throws if the queue is empty
             try {
                 AWaitingMaterial wm = waitingMaterials.Dequeue();
-                IEntity ent = World.World.Instance.GetEntity(wm.contextEntity);
-                if (ent != null) {
+                IEntity ent;
+                if (World.World.Instance.TryGetEntity(wm.contextEntity, out ent)) {
                     // LogManager.Log.Log(LogLevel.DRENDERDETAIL, "RequestMaterialLater.DoIt(): converting {0}", entName);
                     if (RendererOgre.GetWorldRenderConv(ent) == null) {
                         // the rendering context is not set up. Odd but not fatal

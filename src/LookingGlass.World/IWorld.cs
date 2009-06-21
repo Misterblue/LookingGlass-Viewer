@@ -32,11 +32,13 @@ public delegate void WorldRegionConnectedCallback(RegionContextBase rcontext);
 public delegate void WorldRegionChangingCallback(RegionContextBase rcontext);
 public delegate void WorldEntityNewCallback(IEntity ent);
 public delegate void WorldEntityUpdateCallback(IEntity ent, UpdateCodes what);
-public delegate void WorldEntityKilledCallback(IEntity ent);
+public delegate void WorldEntityRemovedCallback(IEntity ent);
 public delegate void WorldTerrainUpdateCallback(RegionContextBase rcontext);
 public delegate void WorldAgentNewCallback(IAgent agnt);
 public delegate void WorldAgentUpdateCallback(IAgent agnt, UpdateCodes what);
 public delegate void WorldAgentRemovedCallback(IAgent agnt);
+
+public delegate IEntity WorldCreateEntityCallback();
 
 public enum WorldGroupCode {
     LLWorld,
@@ -92,7 +94,7 @@ public interface IWorld {
     // when a prim is updated
     event WorldEntityUpdateCallback OnWorldEntityUpdate;
     // when an object is killed
-    event WorldEntityKilledCallback OnWorldEntityKilled;
+    event WorldEntityRemovedCallback OnWorldEntityRemoved;
     // when the terrain information is changed
     event WorldTerrainUpdateCallback OnWorldTerrainUpdated;
     // when a new agent is added to the system
@@ -116,14 +118,16 @@ public interface IWorld {
     void UpdateEntity(IEntity entity, UpdateCodes detail);
     void RemoveEntity(IEntity entity);
 
-    IEntity GetEntity(ulong lgid);
-    IEntity GetEntity(string entName);
-    IEntity GetEntity(EntityName entName);
-    IEntity GetEntityLocal(uint localID);
+    bool TryGetEntity(ulong lgid, out IEntity ent);
+    bool TryGetEntity(string entName, out IEntity ent);
+    bool TryGetEntity(EntityName entName, out IEntity ent);
+    bool TryGetEntityLocalID(uint entName, out IEntity ent);
+    bool TryGetCreateEntityLocalID(uint localID, out IEntity ent, WorldCreateEntityCallback creater);
     IEntity FindEntity(Predicate<IEntity> pred);
 
     // AGENT MANAGEMENT
     void AddAgent(IAgent agnt);
+    void UpdateAgent(IAgent agnt, UpdateCodes changed);
     void RemoveAgent(IAgent agnt);
     void ForEachAgent(Action<IAgent> action);
     IAgent FindAgent(Predicate<IAgent> pred);

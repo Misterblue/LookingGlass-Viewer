@@ -71,7 +71,7 @@ public sealed class World : ModuleBase, IWorld, IProvider {
     public event WorldEntityUpdateCallback OnWorldEntityUpdate;
 
     // when an object is killed
-    public event WorldEntityKilledCallback OnWorldEntityKilled;
+    public event WorldEntityRemovedCallback OnWorldEntityRemoved;
 
     // when the terrain information is changed
     public event WorldTerrainUpdateCallback OnWorldTerrainUpdated;
@@ -107,33 +107,50 @@ public sealed class World : ModuleBase, IWorld, IProvider {
 
     #region IWorldProvider methods
 
-    public IEntity GetEntity(ulong lgid) {
-        IEntity ret = null;
-        m_entityDictionary.TryGetValue(lgid, out ret);
-        return ret;
+    public bool TryGetEntity(ulong lgid, out IEntity ent) {
+        return m_entityDictionary.TryGetValue(lgid, out ent);
     }
 
-    public IEntity GetEntity(string entName) {
-        IEntity ret = null;
-        m_entityDictionary.TryGetValue(entName, out ret);
-        return ret;
+    public bool TryGetEntity(string entName, out IEntity ent) {
+        return m_entityDictionary.TryGetValue(entName, out ent);
     }
 
-    public IEntity GetEntity(EntityName entName) {
-        IEntity ret = null;
-        m_entityDictionary.TryGetValue(entName.Name, out ret);
-        return ret;
+    public bool TryGetEntity(EntityName entName, out IEntity ent) {
+        return m_entityDictionary.TryGetValue(entName.Name, out ent);
     }
 
-    public IEntity GetEntityLocal(uint localID) {
+    public bool TryGetEntityLocalID(uint localID, out IEntity ent) {
         // it's a kludge, but localID is the same as global ID
-        return GetEntity((ulong)localID);
+        return TryGetEntity((ulong)localID, out ent);
+    }
+
+    /// <summary>
+    /// </summary>
+    /// <param name="localID"></param>
+    /// <param name="ent"></param>
+    /// <param name="createIt"></param>
+    /// <returns></returns>
+    public bool TryGetCreateEntityLocalID(uint localID, out IEntity ent, WorldCreateEntityCallback createIt) {
+        try {
+            lock (m_entityDictionary) {
+                if (!TryGetEntityLocalID(localID, out ent)) {
+                    IEntity newEntity = createIt();
+                    AddEntity(newEntity);
+                    ent = newEntity;
+                }
+            }
+            return true;
+        }
+        catch (Exception e) {
+            m_log.Log(LogLevel.DBADERROR, "TryGetCreateEntityLocalID: Failed to create entity: {0}", e.ToString());
+        }
+        ent = null;
+        return false;
     }
 
     public IEntity FindEntity(Predicate<IEntity> pred) {
         return m_entityDictionary.FindValue(pred);
     }
-
     #endregion IWorldProvider methods
 
     #region IModule methods
@@ -221,10 +238,13 @@ public sealed class World : ModuleBase, IWorld, IProvider {
 
     public void UpdateEntity(IEntity entity, UpdateCodes detail) {
         m_log.Log(LogLevel.DWORLDDETAIL, "UpdateEntity: " + entity.Name);
-
+        if (OnWorldEntityUpdate != null) OnWorldEntityUpdate(entity, detail);
     }
 
-    public void RemoveEntity(IEntity entity) {}
+    public void RemoveEntity(IEntity entity) {
+        m_log.Log(LogLevel.DWORLDDETAIL, "RemoveEntity: " + entity.Name);
+        if (OnWorldEntityRemoved != null) OnWorldEntityRemoved(entity);
+    }
 
     private void SelectEntity(IEntity ent) {
     }
@@ -257,11 +277,18 @@ public sealed class World : ModuleBase, IWorld, IProvider {
 
     #region Agent Management
     public void AddAgent(IAgent agnt) {
+        m_log.Log(LogLevel.DWORLDDETAIL, "AddAgent: ");
         lock (m_agentList) m_agentList.Add(agnt);
         if (OnAgentNew != null) OnAgentNew(agnt);
     }
 
+    public void UpdateAgent(IAgent agnt, UpdateCodes what) {
+        m_log.Log(LogLevel.DWORLDDETAIL, "UpdateAgent: ");
+        if (OnAgentUpdate != null) OnAgentUpdate(agnt, what);
+    }
+
     public void RemoveAgent(IAgent agnt) {
+        m_log.Log(LogLevel.DWORLDDETAIL, "RemoveAgent: ");
         if (OnAgentRemoved != null) OnAgentRemoved(agnt);
         lock (m_agentList) {
             if (m_agentList.Contains(agnt)) {

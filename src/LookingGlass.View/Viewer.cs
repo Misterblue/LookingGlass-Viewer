@@ -128,7 +128,7 @@ public class Viewer : ModuleBase, IViewProvider {
         TheWorld.OnWorldRegionChanging += new WorldRegionChangingCallback(OnRegionChanged);
         TheWorld.OnWorldEntityNew += new WorldEntityNewCallback(OnEntityNew);
         TheWorld.OnWorldEntityUpdate += new WorldEntityUpdateCallback(OnEntityUpdate);
-        TheWorld.OnWorldEntityKilled += new WorldEntityKilledCallback(OnEntityKilled);
+        TheWorld.OnWorldEntityRemoved += new WorldEntityRemovedCallback(OnEntityRemoved);
         TheWorld.OnWorldTerrainUpdated += new WorldTerrainUpdateCallback(OnTerrainUpdated);
         TheWorld.OnAgentNew += new WorldAgentNewCallback(OnAgentNew);
         TheWorld.OnAgentUpdate += new WorldAgentUpdateCallback(OnAgentUpdate);
@@ -191,8 +191,8 @@ public class Viewer : ModuleBase, IViewProvider {
         return;
     }
 
-    private void OnEntityKilled(IEntity ent) {
-        m_log.Log(LogLevel.DVIEWDETAIL, "OnEntityKilled: ");
+    private void OnEntityRemoved(IEntity ent) {
+        m_log.Log(LogLevel.DVIEWDETAIL, "OnEntityRemoved: ");
         return;
     }
 

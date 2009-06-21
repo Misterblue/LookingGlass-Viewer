@@ -477,11 +477,18 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     private void Objects_OnNewPrim(OMV.Simulator sim, OMV.Primitive prim, ulong regionHandle, ushort timeDilation) {
         LLRegionContext rcontext = FindRegion(sim);
         try {
-            IEntity ent = new LLEntityPhysical(rcontext.AssetContext,
-                            rcontext, regionHandle, prim.LocalID, prim);
-            m_log.Log(LogLevel.DWORLDDETAIL, "New entity: " + ent.Name + ", lid=" + ent.LGID);
-            // keep a handle to this prim in the world
-            World.World.Instance.AddEntity(ent);
+            IEntity ent;
+            if (World.World.Instance.TryGetCreateEntityLocalID(prim.LocalID, out ent, delegate() {
+                        IEntity newEnt = new LLEntityPhysical(rcontext.AssetContext,
+                                        rcontext, regionHandle, prim.LocalID, prim);
+                        return newEnt;
+                    }) ) {
+                // if new or not, assume everything about this entity has changed
+                World.World.Instance.UpdateEntity(ent, UpdateCodes.FullUpdate);
+            }
+            else {
+                m_log.Log(LogLevel.DBADERROR, "FAILED CREATION OF NEW PRIM");
+            }
         }
         catch (Exception e) {
             m_log.Log(LogLevel.DBADERROR, "FAILED CREATION OF NEW PRIM: " + e.ToString());
@@ -493,27 +500,50 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     private void Objects_OnObjectUpdated(OMV.Simulator sim, OMV.ObjectUpdate update, ulong regionHandle, ushort timeDilation) {
         m_log.Log(LogLevel.DWORLDDETAIL, "Object update:");
         LLRegionContext rcontext = FindRegion(sim);
-        IEntity updatedEntity = World.World.Instance.GetEntityLocal(update.LocalID);
-        if (updatedEntity != null) {
-            if (updatedEntity.RelativePosition != update.Position) {
+        IEntity updatedEntity;
+            // assume somethings changed no matter what
+            UpdateCodes updateFlags = UpdateCodes.Acceleration | UpdateCodes.AngularVelocity
+                    | UpdateCodes.Position | UpdateCodes.Rotation | UpdateCodes.Velocity;
+            if (update.Avatar) updateFlags |= UpdateCodes.CollisionPlane;
+            if (update.Textures != null) updateFlags |= UpdateCodes.Textures;
+
+        if (World.World.Instance.TryGetEntityLocalID(update.LocalID, out updatedEntity)) {
+            if ((updateFlags & UpdateCodes.Position) != 0) {
                 updatedEntity.RelativePosition = update.Position;
-                updatedEntity.Heading = update.Rotation;
-                World.World.Instance.UpdateEntity(updatedEntity, UpdateCodes.Position);
             }
+            if ((updateFlags & UpdateCodes.Rotation) != 0) {
+                updatedEntity.Heading = update.Rotation;
+            }
+            World.World.Instance.UpdateEntity(updatedEntity, updateFlags);
         }
         if (update.Avatar) {
             // this is an update to an avatar. See if it's an update to our agent.
+            if (update.LocalID == m_client.Self.LocalID) {
+                UpdateCodes agentUpdated = 0;
+                if ((updateFlags & UpdateCodes.Position) != 0) {
+                    agentUpdated |= UpdateCodes.Position;
+                    m_myAgent.RelativePosition = update.Position;
+                }
+                if ((updateFlags & UpdateCodes.Rotation) != 0) {
+                    agentUpdated |= UpdateCodes.Rotation;
+                    m_myAgent.Heading = update.Rotation;
+                }
+                World.World.Instance.UpdateAgent(m_myAgent, agentUpdated);
+            }
         }
         return;
     }
 
     // ===============================================================
     private void Objects_OnObjectKilled(OMV.Simulator sim, uint objectID) {
+        m_log.Log(LogLevel.DWORLDDETAIL, "Object killed:");
         LLRegionContext rcontext = FindRegion(sim);
         try {
-            // we need a handle to the objectID
-            // World.World.Instance.RemoveEntity(ent);
-            m_log.Log(LogLevel.DBADERROR, "ASKED TO DELETE OBJECT " + objectID.ToString());
+            IEntity removedEntity;
+            if (World.World.Instance.TryGetEntityLocalID(objectID, out removedEntity)) {
+                // we need a handle to the objectID
+                World.World.Instance.RemoveEntity(removedEntity);
+            }
         }
         catch (Exception e) {
             m_log.Log(LogLevel.DBADERROR, "FAILED DELETION OF OBJECT: " + e.ToString());
