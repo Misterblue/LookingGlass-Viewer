@@ -71,10 +71,6 @@ public class OnDemandWorkQueue : IWorkQueue {
         w.timesRequeued++;
         int nextTime = Math.Min(w.requeueWait * w.timesRequeued, 5000);
         w.remainingWait = System.Environment.TickCount + nextTime;
-        LogManager.Log.Log(LogLevel.DRENDERDETAIL, "{0}.DoLater: Requeuing. times={1}, wait={2}",
-                m_queueName, w.timesRequeued, nextTime);
-        LogManager.Log.Log(LogLevel.DRENDERDETAIL, "{0}.DoLater: now={0}, rem={1}",
-            System.Environment.TickCount, w.remainingWait);
         lock (m_workQueue) m_workQueue.Add(w);
     }
 

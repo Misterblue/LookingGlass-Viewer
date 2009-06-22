@@ -109,8 +109,8 @@ public class BasicWorkQueue : IWorkQueue {
                         }
                     }
                 }
-                LogManager.Log.Log(LogLevel.DRENDERDETAIL, "DoEvenLater: Removing {0} from list of size {1}",
-                            doneWaiting.Count, doEvenLater.Count);
+                // LogManager.Log.Log(LogLevel.DRENDERDETAIL, "DoEvenLater: Removing {0} from list of size {1}",
+                //             doneWaiting.Count, doEvenLater.Count);
                 if (doEvenLater.Count > 0) {
                     // find how much time to wait for the remaining
                     sleepTime = int.MaxValue;
@@ -134,7 +134,7 @@ public class BasicWorkQueue : IWorkQueue {
             // if this thread is still working on sleeping, do the sleeping
             if (doEvenLaterThread == Thread.CurrentThread) {
                 // wait the remaining time
-                LogManager.Log.Log(LogLevel.DRENDERDETAIL, "DoEvenLater: Sleep for {0}", sleepTime);
+                // LogManager.Log.Log(LogLevel.DRENDERDETAIL, "DoEvenLater: Sleep for {0}", sleepTime);
                 if (sleepTime > 0) {
                     Thread.Sleep(sleepTime);
                 }

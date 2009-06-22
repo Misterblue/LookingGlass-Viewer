@@ -75,10 +75,17 @@ public class Viewer : ModuleBase, IViewProvider {
         }
     }
 
-    // the viewer manages the camera
-    private CameraControl m_mainCamera;
     private IAgent m_trackedAgent;
 
+    // the viewer manages the camera
+    private CameraControl m_mainCamera;
+    private enum CameraMode {
+        TrackingAgent = 1,
+        LookingAt
+    }
+    private CameraMode m_cameraMode;
+    private OMV.Vector3d m_cameraLookAt;
+        
     // mouse control
     private int m_lastMouseMoveTime = System.Environment.TickCount;
     private float m_cameraSpeed = 100f;     // world units per second to move
@@ -122,6 +129,8 @@ public class Viewer : ModuleBase, IViewProvider {
         m_mainCamera.Heading = new OMV.Quaternion(OMV.Vector3.UnitY, 0f);
         m_mainCamera.Zoom = 1.0f;
         m_mainCamera.Far = 300.0f;
+        m_cameraMode = CameraMode.TrackingAgent;
+        m_cameraLookAt = new OMV.Vector3d(0d, 0d, 0d);
 
         // connect me to the world so I can know when things change in the world
         TheWorld.OnWorldRegionConnected += new WorldRegionConnectedCallback(OnRegionConnected);
@@ -139,7 +148,9 @@ public class Viewer : ModuleBase, IViewProvider {
     }
 
     override public void Start() {
+        // this will cause the renderer to move it's camera whenever the main camera is moved
         m_mainCamera.OnCameraUpdate += new CameraControlUpdateCallback(Renderer.UpdateCamera);
+        // this will cause camera direction to be sent back  to the server for interest management
         m_mainCamera.OnCameraUpdate += new CameraControlUpdateCallback(OnCameraUpdate);
 
         // force an initial update to position the displayed camera
@@ -183,10 +194,10 @@ public class Viewer : ModuleBase, IViewProvider {
 
     private void OnEntityUpdate(IEntity ent, World.UpdateCodes what) {
         if (ent is IEntityAvatar) {
-            m_log.Log(LogLevel.DVIEWDETAIL, "OnEntityUpdate: Avatar. Reason={0}", World.World.UpdateCodeName(what));
+            m_log.Log(LogLevel.DVIEWDETAIL, "OnEntityUpdate: Avatar.");
         }
         else {
-            m_log.Log(LogLevel.DVIEWDETAIL, "OnEntityUpdate: Other. Reason={0}", World.World.UpdateCodeName(what));
+            m_log.Log(LogLevel.DVIEWDETAIL, "OnEntityUpdate: Other");
         }
         return;
     }
@@ -230,6 +241,8 @@ public class Viewer : ModuleBase, IViewProvider {
     private void OnCameraUpdate(CameraControl cam) {
         if (m_trackedAgent != null) {
             // tell the agent the camera moved if it cares
+            // This is an outgoing message that tells the world where the camera is
+            //   pointing so the server can do interest management
             m_trackedAgent.UpdateCamera(cam.GlobalPosition, cam.Heading);
         }
     }
@@ -301,6 +314,7 @@ public class Viewer : ModuleBase, IViewProvider {
                     // force the camera to the client position
                     m_log.Log(LogLevel.DVIEWDETAIL, "OnKeypress: ESC: restoring camera position");
                     m_mainCamera.GlobalPosition = m_trackedAgent.GlobalPosition;
+                    m_cameraMode = CameraMode.TrackingAgent;
                     break;
             }
         }
@@ -328,7 +342,15 @@ public class Viewer : ModuleBase, IViewProvider {
     }
 
     private void OnAgentUpdate(IAgent agnt, UpdateCodes what) {
-        m_log.Log(LogLevel.DVIEWDETAIL, "OnAgentUpdate: ");
+        m_log.Log(LogLevel.DVIEWDETAIL, "OnAgentUpdate: p={0}, h={1}", 
+                agnt.GlobalPosition.ToString(), agnt.Heading.ToString());
+        if ((what & (UpdateCodes.Rotation | UpdateCodes.Position)) != 0) {
+            if (m_cameraMode == CameraMode.TrackingAgent) {
+                if (m_mainCamera != null) {
+                    m_mainCamera.Update(agnt.GlobalPosition, agnt.Heading);
+                }
+            }
+        }
         return;
     }
 

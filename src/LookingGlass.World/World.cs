@@ -42,13 +42,6 @@ public sealed class World : ModuleBase, IWorld, IProvider {
     get { return m_instance; }
     }
 
-    public static string[] UpdateCodeString = {
-        "Anything", "Terrain", "DisplayAttributes", "Location", "ProfileData"
-    };
-    public static string UpdateCodeName(UpdateCodes cod) {
-        return UpdateCodeString[(int)cod];
-    }
-
     private OMV.DoubleDictionary<string, ulong, IEntity> m_entityDictionary;
 
     private List<IAgent> m_agentList;

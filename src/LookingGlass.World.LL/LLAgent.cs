@@ -56,11 +56,18 @@ public class LLAgent : IAgent {
     }
 
     public void TurnLeft() {
-        m_client.Self.Movement.TurnLeft = true;
+        // m_client.Self.Movement.LeftPos = true;
+        OMV.Quaternion Yturn = OMV.Quaternion.CreateFromAxisAngle(OMV.Vector3.UnitY, Globals.PI/18);
+        Yturn.Normalize();
+        m_client.Self.Movement.BodyRotation *= Yturn;
+
     }
 
     public void TurnRight() {
-        m_client.Self.Movement.TurnRight = true;
+        // m_client.Self.Movement.LeftNeg = true;
+        OMV.Quaternion Yturn = OMV.Quaternion.CreateFromAxisAngle(OMV.Vector3.UnitY, -Globals.PI/18);
+        Yturn.Normalize();
+        m_client.Self.Movement.BodyRotation *= Yturn;
     }
 
     #endregion MOVEMENT

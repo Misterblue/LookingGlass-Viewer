@@ -41,6 +41,7 @@ public class CameraControl {
         m_yawFixed = true;
     }
 
+    // Global position of the camera
     protected OMV.Vector3d m_globalPosition;
     public OMV.Vector3d GlobalPosition { 
         get { return m_globalPosition; } 
@@ -59,6 +60,19 @@ public class CameraControl {
             m_heading = value;
             if (changed && (OnCameraUpdate != null)) OnCameraUpdate(this);
         } 
+    }
+
+    /// <summary>
+    /// Update both position and heading with one call. Remember that the position
+    /// is a global position.
+    /// </summary>
+    /// <param name="pos"></param>
+    /// <param name="heading"></param>
+    public void Update(OMV.Vector3d pos, OMV.Quaternion heading) {
+        bool changed = (m_heading != heading) | (m_globalPosition != pos);
+        m_globalPosition = pos;
+        m_heading = heading;
+        if (changed && (OnCameraUpdate != null)) OnCameraUpdate(this);
     }
 
     protected float m_zoom;

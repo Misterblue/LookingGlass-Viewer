@@ -99,9 +99,9 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     public const string FIELDCURRENTGRID = "currentgrid"; // the current simulator
     public const string FIELDLOGINSTATE = "loginstate"; // the current login state
     public const string FIELDPOSSIBLEGRIDS = "possiblegrids"; // the list of possible grids
-    public const string FIELDPOSITIONX = "PositionX"; // the client relative location
-    public const string FIELDPOSITIONY = "PositionY";
-    public const string FIELDPOSITIONZ = "PositionZ";
+    public const string FIELDPOSITIONX = "positionx"; // the client relative location
+    public const string FIELDPOSITIONY = "positiony";
+    public const string FIELDPOSITIONZ = "positionz";
 
 
     private GridLists m_gridLists = null;
@@ -154,8 +154,17 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
             return new OMVSD.OSDString("logout");
         });
         m_connectionParams.Add(FIELDPOSITIONX, RuntimeValueFetch);
+        m_connectionParams.Add(FIELDPOSITIONY, RuntimeValueFetch);
+        m_connectionParams.Add(FIELDPOSITIONZ, RuntimeValueFetch);
     }
 
+    /// <summary>
+    /// The statistics ParameterSet has some delegated values that are only valid
+    /// when logging in, etc. When the values are asked for, this routine is called
+    /// delegate which calculates the current values of the statistic.
+    /// </summary>
+    /// <param name="key"></param>
+    /// <returns></returns>
     private OMVSD.OSD RuntimeValueFetch(string key) {
         OMVSD.OSD ret = null;
         try {
@@ -197,7 +206,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
                     Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "../LookingGlassResources/NoTexture.png"),
                     "Filesystem location to build the texture cache");
         ModuleParams.AddDefaultParameter(ModuleName + ".Texture.MaxRequests", 
-                    "4",
+                    "8",
                     "Maximum number of outstanding textures requests");
         ModuleParams.AddDefaultParameter(ModuleName + ".Settings.MultipleSims", 
                     "false",
@@ -340,8 +349,42 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
             m_loginPassword,
             Globals.ApplicationName, 
             Globals.ApplicationVersion);
-        // build the parameter name for the selected grid
-        if (m_loginSim != null && m_loginSim.Length > 0) loginParams.Start = m_loginSim;
+
+        // Select sim in the grid
+        // the format that we must pass is "uri:sim&x&y&z" or the strings "home" or "last"
+        // The user inputs either "home", "last", "sim" or "sim/x/y/z"
+        string loginSetting = null;
+        if (m_loginSim != null && m_loginSim.Length > 0) {
+            try {
+                char sep = '/';
+                string[] parts = System.Uri.UnescapeDataString(m_loginSim).ToLower().Split(sep);
+                if (parts.Length == 1) {
+                    // just specifying last or home or just a simulator
+                    if (parts[0] == "last" || parts[0] == "home") {
+                        m_log.Log(LogLevel.DCOMMDETAIL, "StartLogin: prev location of {0}", parts[0]);
+                        loginSetting = parts[0];
+                    }
+                    else {
+                        // put the user in the center of teh specified sim
+                        m_log.Log(LogLevel.DCOMMDETAIL, "StartLogin: user spec middle of {0}", parts[0]);
+                        loginSetting = OMV.NetworkManager.StartLocation(parts[0], 128, 128, 40);
+                    }
+                }
+                else if (parts.Length == 4) {
+                    int posX = int.Parse(parts[1]);
+                    int posY = int.Parse(parts[2]);
+                    int posZ = int.Parse(parts[3]);
+                    m_log.Log(LogLevel.DCOMMDETAIL, "StartLogin: user spec start at {0}/{1}/{2}/{3}",
+                        parts[0], posX, posY, posZ);
+                    loginSetting = OMV.NetworkManager.StartLocation(parts[0], posX, posY, posZ);
+                }
+            }
+            catch {
+                loginSetting = null;
+            }
+        }
+        loginParams.Start = (loginSetting == null) ? "last" : loginSetting;
+
         loginParams.URI = m_gridLists.GridLoginURI(m_loginGrid);
         if (loginParams.URI == null) {
             m_log.Log(LogLevel.DBADERROR, "COULD NOT FIND URL OF GRID. Grid=" + m_loginGrid);
@@ -498,7 +541,10 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
 
     // ===============================================================
     private void Objects_OnObjectUpdated(OMV.Simulator sim, OMV.ObjectUpdate update, ulong regionHandle, ushort timeDilation) {
-        m_log.Log(LogLevel.DWORLDDETAIL, "Object update:");
+        m_log.Log(LogLevel.DCOMMDETAIL, "Object update: id={0}, p={1}, r={2}", 
+            update.LocalID, update.Position.ToString(), update.Rotation.ToString());
+        m_log.Log(LogLevel.DCOMMDETAIL, "Object update: self.relRot={0}, self.simRot={1}",
+            m_client.Self.RelativeRotation, m_client.Self.SimRotation);
         LLRegionContext rcontext = FindRegion(sim);
         IEntity updatedEntity;
             // assume somethings changed no matter what
@@ -522,11 +568,13 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
                 UpdateCodes agentUpdated = 0;
                 if ((updateFlags & UpdateCodes.Position) != 0) {
                     agentUpdated |= UpdateCodes.Position;
-                    m_myAgent.RelativePosition = update.Position;
+                    // the underlying libomv has already changed this value
+                    // m_myAgent.RelativePosition = update.Position;
                 }
                 if ((updateFlags & UpdateCodes.Rotation) != 0) {
                     agentUpdated |= UpdateCodes.Rotation;
-                    m_myAgent.Heading = update.Rotation;
+                    // the underlying libomv has already changed this value
+                    // m_myAgent.Heading = update.Rotation;
                 }
                 World.World.Instance.UpdateAgent(m_myAgent, agentUpdated);
             }
