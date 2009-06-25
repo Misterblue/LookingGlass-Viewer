@@ -543,8 +543,6 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     private void Objects_OnObjectUpdated(OMV.Simulator sim, OMV.ObjectUpdate update, ulong regionHandle, ushort timeDilation) {
         m_log.Log(LogLevel.DCOMMDETAIL, "Object update: id={0}, p={1}, r={2}", 
             update.LocalID, update.Position.ToString(), update.Rotation.ToString());
-        m_log.Log(LogLevel.DCOMMDETAIL, "Object update: self.relRot={0}, self.simRot={1}",
-            m_client.Self.RelativeRotation, m_client.Self.SimRotation);
         LLRegionContext rcontext = FindRegion(sim);
         IEntity updatedEntity;
             // assume somethings changed no matter what

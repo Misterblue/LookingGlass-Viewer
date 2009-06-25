@@ -164,7 +164,8 @@ public class RendererOgreLL : IWorldRenderConv {
         else {
             OMVR.FacetedMesh mesh;
             try {
-                mesh = m_meshMaker.GenerateFacetedMesh(prim, OMVR.DetailLevel.Low);
+                // we really should use Low for boxes, med for most things and high for megaprim curves
+                mesh = m_meshMaker.GenerateFacetedMesh(prim, OMVR.DetailLevel.High);
             }
             catch (Exception e) {
                 m_log.Log(LogLevel.DRENDERDETAIL, "RenderingInfoLL: failed generating mesh: " + e.ToString());

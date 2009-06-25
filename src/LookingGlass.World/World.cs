@@ -276,7 +276,7 @@ public sealed class World : ModuleBase, IWorld, IProvider {
     }
 
     public void UpdateAgent(IAgent agnt, UpdateCodes what) {
-        m_log.Log(LogLevel.DWORLDDETAIL, "UpdateAgent: ");
+        // m_log.Log(LogLevel.DWORLDDETAIL, "UpdateAgent: ");
         if (OnAgentUpdate != null) OnAgentUpdate(agnt, what);
     }
 

@@ -126,7 +126,7 @@ public class Viewer : ModuleBase, IViewProvider {
         m_mainCamera = new CameraControl();
         m_mainCamera.GlobalPosition = new OMV.Vector3d(0d, 20d, 30d);   // World coordinates (Z up)
         // camera starts pointing down Y axis
-        m_mainCamera.Heading = new OMV.Quaternion(OMV.Vector3.UnitY, 0f);
+        m_mainCamera.Heading = new OMV.Quaternion(OMV.Vector3.UnitZ, Constants.PI/2);
         m_mainCamera.Zoom = 1.0f;
         m_mainCamera.Far = 300.0f;
         m_cameraMode = CameraMode.TrackingAgent;
@@ -239,6 +239,7 @@ public class Viewer : ModuleBase, IViewProvider {
 
     // called when the camera changes position or orientation
     private void OnCameraUpdate(CameraControl cam) {
+        // m_log.Log(LogLevel.DVIEWDETAIL, "OnCameraUpdate: ");
         if (m_trackedAgent != null) {
             // tell the agent the camera moved if it cares
             // This is an outgoing message that tells the world where the camera is
@@ -310,6 +311,15 @@ public class Viewer : ModuleBase, IViewProvider {
                 case Keys.Down:
                     m_trackedAgent.MoveBackward();
                     break;
+                case Keys.Home:
+                    m_trackedAgent.Fly();
+                    break;
+                case Keys.PageUp:
+                    m_trackedAgent.MoveUp();
+                    break;
+                case Keys.PageDown:
+                    m_trackedAgent.MoveDown();
+                    break;
                 case Keys.Escape:
                     // force the camera to the client position
                     m_log.Log(LogLevel.DVIEWDETAIL, "OnKeypress: ESC: restoring camera position");
@@ -342,8 +352,7 @@ public class Viewer : ModuleBase, IViewProvider {
     }
 
     private void OnAgentUpdate(IAgent agnt, UpdateCodes what) {
-        m_log.Log(LogLevel.DVIEWDETAIL, "OnAgentUpdate: p={0}, h={1}", 
-                agnt.GlobalPosition.ToString(), agnt.Heading.ToString());
+        // m_log.Log(LogLevel.DVIEWDETAIL, "OnAgentUpdate: p={0}, h={1}", agnt.GlobalPosition.ToString(), agnt.Heading.ToString());
         if ((what & (UpdateCodes.Rotation | UpdateCodes.Position)) != 0) {
             if (m_cameraMode == CameraMode.TrackingAgent) {
                 if (m_mainCamera != null) {

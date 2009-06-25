@@ -42,8 +42,11 @@ public interface IAgent {
     // TODO: this is just enough to get display working. Figure out better movement model
     void MoveForward();
     void MoveBackward();
+    void MoveUp();
+    void MoveDown();
     void TurnLeft();
     void TurnRight();
+    void Fly();
     #endregion MOVEMENT
 
     #region POSITION

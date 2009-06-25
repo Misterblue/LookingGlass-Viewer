@@ -55,19 +55,32 @@ public class LLAgent : IAgent {
         m_client.Self.Movement.AtNeg = true;
     }
 
+    public void MoveUp() {
+        m_client.Self.Movement.UpPos = true;
+    }
+
+    public void MoveDown() {
+        m_client.Self.Movement.UpNeg = true;
+    }
+
+    public void Fly() {
+        m_client.Self.Movement.Fly = true;
+    }
+
     public void TurnLeft() {
         // m_client.Self.Movement.LeftPos = true;
-        OMV.Quaternion Yturn = OMV.Quaternion.CreateFromAxisAngle(OMV.Vector3.UnitY, Globals.PI/18);
-        Yturn.Normalize();
-        m_client.Self.Movement.BodyRotation *= Yturn;
-
+        OMV.Quaternion Zturn = OMV.Quaternion.CreateFromAxisAngle(OMV.Vector3.UnitZ, Constants.PI/18);
+        Zturn.Normalize();
+        m_client.Self.Movement.BodyRotation *= Zturn;
+        m_client.Self.Movement.HeadRotation *= Zturn;
     }
 
     public void TurnRight() {
         // m_client.Self.Movement.LeftNeg = true;
-        OMV.Quaternion Yturn = OMV.Quaternion.CreateFromAxisAngle(OMV.Vector3.UnitY, -Globals.PI/18);
-        Yturn.Normalize();
-        m_client.Self.Movement.BodyRotation *= Yturn;
+        OMV.Quaternion Zturn = OMV.Quaternion.CreateFromAxisAngle(OMV.Vector3.UnitZ, -Constants.PI/18);
+        Zturn.Normalize();
+        m_client.Self.Movement.BodyRotation *= Zturn;
+        m_client.Self.Movement.HeadRotation *= Zturn;
     }
 
     #endregion MOVEMENT
@@ -103,6 +116,13 @@ public class LLAgent : IAgent {
 
     #region INTEREST
     public void UpdateCamera(OMV.Vector3d position, OMV.Quaternion direction) {
+        float roll;
+        float pitch;
+        float yaw;
+        direction.GetEulerAngles(out roll, out pitch, out yaw);
+        OMV.Vector3 pos = new OMV.Vector3((float)position.X, (float)position.Y, (float)position.Z);
+        m_client.Self.Movement.Camera.SetPositionOrientation(pos, roll, pitch, yaw);
+        // m_log.Log(LogLevel.DVIEWDETAIL, "UpdateCamera: {0}, {1}, {2}, {3}", pos.X, pos.Y, pos.Z, direction.ToString());
         return;
     }
 

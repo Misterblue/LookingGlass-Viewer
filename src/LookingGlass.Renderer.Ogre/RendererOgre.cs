@@ -368,10 +368,14 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         // OMV.Quaternion orient = new OMV.Quaternion(OMV.Vector3.UnitX, -Globals.PI / 2)
                     // * new OMV.Quaternion(OMV.Vector3.UnitZ, -Globals.PI / 2)
                     // * cam.Direction;
-        OMV.Quaternion orient = cam.Heading;
+        // we need to rotate the camera 90 to make it work out in Ogre. Not sure why.
+        // OMV.Quaternion orient = cam.Heading * OMV.Quaternion.CreateFromAxisAngle(OMV.Vector3.UnitZ, -Globals.PI / 2);
+        OMV.Quaternion orient = OMV.Quaternion.CreateFromAxisAngle(OMV.Vector3.UnitZ, -Globals.PI / 2) * cam.Heading;
+        // OMV.Quaternion orient = cam.Heading;
+        orient.Normalize();
         OMV.Vector3d pos = cam.GlobalPosition * m_sceneMagnification;
         Ogr.UpdateCamera((float)pos.X, (float)pos.Z, (float)-pos.Y, 
-            orient.W, orient.X, orient.Y, orient.Z,
+            orient.W, orient.X, orient.Z, -orient.Y,
             1.0f, (float)cam.Far*m_sceneMagnification, 1.0f);
         // m_log.Log(LogLevel.DRENDERDETAIL, "UpdateCamera: Camera to {0}, {1}, {2}",
         //     (float)pos.X, (float)pos.Z, (float)-pos.Y);
@@ -501,6 +505,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             case Ogr.ResourceTypeMaterial:
                 m_statMaterialsRequested.Event();
                 RequestMaterial(resourceContext, resourceName);
+                // RequestMaterialX(resourceContext, resourceName);
                 break;
             case Ogr.ResourceTypeTexture:
                 m_statTexturesRequested.Event();
