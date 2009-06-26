@@ -521,7 +521,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         LLRegionContext rcontext = FindRegion(sim);
         try {
             IEntity ent;
-            if (World.World.Instance.TryGetCreateEntityLocalID(prim.LocalID, out ent, delegate() {
+            if (World.World.Instance.TryGetCreateEntityLocalID(rcontext, prim.LocalID, out ent, delegate() {
                         IEntity newEnt = new LLEntityPhysical(rcontext.AssetContext,
                                         rcontext, regionHandle, prim.LocalID, prim);
                         return newEnt;
@@ -551,7 +551,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
             if (update.Avatar) updateFlags |= UpdateCodes.CollisionPlane;
             if (update.Textures != null) updateFlags |= UpdateCodes.Textures;
 
-        if (World.World.Instance.TryGetEntityLocalID(update.LocalID, out updatedEntity)) {
+        if (World.World.Instance.TryGetEntityLocalID(rcontext, update.LocalID, out updatedEntity)) {
             if ((updateFlags & UpdateCodes.Position) != 0) {
                 updatedEntity.RelativePosition = update.Position;
             }
@@ -586,7 +586,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         LLRegionContext rcontext = FindRegion(sim);
         try {
             IEntity removedEntity;
-            if (World.World.Instance.TryGetEntityLocalID(objectID, out removedEntity)) {
+            if (World.World.Instance.TryGetEntityLocalID(rcontext, objectID, out removedEntity)) {
                 // we need a handle to the objectID
                 World.World.Instance.RemoveEntity(removedEntity);
             }
@@ -599,7 +599,11 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
 
     // ===============================================================
     private void Objects_OnNewAvatar(OMV.Simulator sim, OMV.Avatar av, ulong regionHandle, ushort timeDilation) {
-        m_log.Log(LogLevel.DWORLDDETAIL, "Objects_OnNewAvatar:");
+        m_log.Log(LogLevel.DCOMMDETAIL, "Objects_OnNewAvatar:");
+        m_log.Log(LogLevel.DCOMMDETAIL, "cntl={0}, parent={1}, p={2}, r={3}", 
+            av.ControlFlags.ToString("x"), av.ParentID, av.Position.ToString(), av.Rotation.ToString());
+        if (av.LocalID == m_client.Self.LocalID) {
+        }
         return;
     }
 

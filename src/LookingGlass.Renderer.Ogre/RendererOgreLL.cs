@@ -42,6 +42,7 @@ public class RendererOgreLL : IWorldRenderConv {
     private OMVR.IRendering m_meshMaker = null;
     // some of the mesh conversion routines include the scale calculation
     private bool m_usePrimScaleFactor = false;
+    private bool m_useRendererTextureScaling = false;
 
     static RendererOgreLL m_instance = null;
     public static RendererOgreLL Instance {
@@ -68,6 +69,7 @@ public class RendererOgreLL : IWorldRenderConv {
             // m_usePrimScaleFactor = true; // use Ogre scaling rather than mesh scaling
             amesher.ShouldScaleMesh = true;
             m_usePrimScaleFactor = false; // use Ogre scaling rather than mesh scaling
+            m_useRendererTextureScaling = true; // use Ogre texture scaling rather than computing it
             m_meshMaker = amesher;
         }
 
@@ -144,14 +146,14 @@ public class RendererOgreLL : IWorldRenderConv {
             if (prim == null) throw new LookingGlassException("ASSERT: RenderOgreLL: prim is null");
         }
         catch (Exception e) {
-            m_log.Log(LogLevel.DRENDERDETAIL, "RenderingInfoLL: conversion of pointers failed: " + e.ToString());
+            m_log.Log(LogLevel.DRENDERDETAIL, "CreateMeshResource: conversion of pointers failed: " + e.ToString());
             throw e;
         }
 
         int meshType = 0;
         int meshFaces = 0;
         if (CheckStandardMeshType(prim, out meshType, out meshFaces)) {
-            m_log.Log(LogLevel.DBADERROR, "RenderingInfoLL: not implemented Standard Type");
+            m_log.Log(LogLevel.DBADERROR, "CreateMeshResource: not implemented Standard Type");
             // while we're in the neighborhood, we can create the materials
             if (m_buildMaterialsAtMeshCreationTime) {
                 for (int j = 0; j < meshFaces; j++) {
@@ -165,11 +167,15 @@ public class RendererOgreLL : IWorldRenderConv {
             OMVR.FacetedMesh mesh;
             try {
                 // we really should use Low for boxes, med for most things and high for megaprim curves
-                mesh = m_meshMaker.GenerateFacetedMesh(prim, OMVR.DetailLevel.High);
+                OMVR.DetailLevel meshDetail = OMVR.DetailLevel.High;
+                if (prim.Type == OMV.PrimType.Box) {
+                    meshDetail = OMVR.DetailLevel.Low;
+                    // m_log.Log(LogLevel.DRENDERDETAIL, "CreateMeshResource: Low detail for {0}", ent.Name.Name);
+                }
+                mesh = m_meshMaker.GenerateFacetedMesh(prim, meshDetail);
             }
             catch (Exception e) {
-                m_log.Log(LogLevel.DRENDERDETAIL, "RenderingInfoLL: failed generating mesh: " + e.ToString());
-                // would happen for types not working out
+                m_log.Log(LogLevel.DRENDERDETAIL, "CreateMeshResource: failed mesh generate for {0}", ent.Name.Name);
                 throw e;
             }
 
@@ -226,7 +232,9 @@ public class RendererOgreLL : IWorldRenderConv {
                 OMV.Primitive.TextureEntryFace teFace = null;
                 try {
                     teFace = prim.Textures.GetFace((uint)j);
-                    m_meshMaker.TransformTexCoords(face.Vertices, face.Center, teFace);
+                    if (!m_useRendererTextureScaling) {
+                        m_meshMaker.TransformTexCoords(face.Vertices, face.Center, teFace);
+                    }
                 }
                 catch {
                     m_log.Log(LogLevel.DBADERROR, "RenderOgreLL.CreateMeshResource:"
@@ -313,6 +321,7 @@ public class RendererOgreLL : IWorldRenderConv {
         CreateMaterialResource2(m_sceneMgr, ent, prim, materialName, faceNum);
     }
 
+    // OBSOLETE!!! DOES NOT WORK ANY MORE. DELETE WHEN YOU'RE TIRED OF IT
     private void CreateMaterialResource(OgreSceneMgr m_sceneMgr, IEntity ent, OMV.Primitive prim, string materialName, int faceNum) {
         OMV.Primitive.TextureEntryFace textureFace = prim.Textures.GetFace((uint)faceNum);
         OMV.Color4 textureParamColor = new OMV.Color4(0.1f, 0.1f, 1f, 0f);
@@ -376,11 +385,20 @@ public class RendererOgreLL : IWorldRenderConv {
             textureParams[(int)Ogr.CreateMaterialParam.colorG] = textureFace.RGBA.G;
             textureParams[(int)Ogr.CreateMaterialParam.colorB] = textureFace.RGBA.B;
             textureParams[(int)Ogr.CreateMaterialParam.colorA] = textureFace.RGBA.A;
-            textureParams[(int)Ogr.CreateMaterialParam.scaleU] = 1f/textureFace.RepeatU;
-            textureParams[(int)Ogr.CreateMaterialParam.scaleV] = 1f/textureFace.RepeatV;
-            textureParams[(int)Ogr.CreateMaterialParam.scrollU] = textureFace.OffsetU;
-            textureParams[(int)Ogr.CreateMaterialParam.scrollV] = textureFace.OffsetV;
-            textureParams[(int)Ogr.CreateMaterialParam.rotate] = textureFace.Rotation;
+            if (m_useRendererTextureScaling) {
+                textureParams[(int)Ogr.CreateMaterialParam.scaleU] = 1f / textureFace.RepeatU;
+                textureParams[(int)Ogr.CreateMaterialParam.scaleV] = 1f / textureFace.RepeatV;
+                textureParams[(int)Ogr.CreateMaterialParam.scrollU] = textureFace.OffsetU;
+                textureParams[(int)Ogr.CreateMaterialParam.scrollV] = textureFace.OffsetV;
+                textureParams[(int)Ogr.CreateMaterialParam.rotate] = textureFace.Rotation;
+            }
+            else {
+                textureParams[(int)Ogr.CreateMaterialParam.scaleU] = 1.0f;
+                textureParams[(int)Ogr.CreateMaterialParam.scaleV] = 1.0f;
+                textureParams[(int)Ogr.CreateMaterialParam.scrollU] = 1.0f;
+                textureParams[(int)Ogr.CreateMaterialParam.scrollV] = 1.0f;
+                textureParams[(int)Ogr.CreateMaterialParam.rotate] = 0.0f;
+            }
             textureParams[(int)Ogr.CreateMaterialParam.glow] = textureFace.Glow;
             textureParams[(int)Ogr.CreateMaterialParam.bump] = (float)textureFace.Bump;
             textureParams[(int)Ogr.CreateMaterialParam.shiny] = (float)textureFace.Shiny;
@@ -389,6 +407,8 @@ public class RendererOgreLL : IWorldRenderConv {
             textureParams[(int)Ogr.CreateMaterialParam.mediaFlags] = textureFace.MediaFlags ? 1f : 0f;
             textureParams[(int)Ogr.CreateMaterialParam.textureHasTransparent] = 1f; // true for the moment
             textureID = textureFace.TextureID;
+            // wish I could pass the texture animation information here but that's
+            //    in the texture entry and not in the face description
         }
         else {
             textureParams[(int)Ogr.CreateMaterialParam.colorR] = 0.4f;

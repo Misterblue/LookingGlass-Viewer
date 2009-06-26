@@ -303,7 +303,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     if (m_ri.parentID != 0) {
                         // this entity has a parent entity. find him and create scene node off his
                         IEntity parentEnt;
-                        if (World.World.Instance.TryGetEntityLocalID(m_ri.parentID, out parentEnt)) {
+                        if (World.World.Instance.TryGetEntityLocalID(m_ent.RegionContext, m_ri.parentID, out parentEnt)) {
                             parentNode = RendererOgre.GetSceneNode(parentEnt);
                         }
                         if (parentNode == null) {

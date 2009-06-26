@@ -107,7 +107,7 @@ void OLMaterialTracker::MakeMaterialDefault(Ogre::MaterialPtr matPtr) {
 	pass->setAmbient(0.05f, 0.05f, 0.05f);
 	// pass->setVertexColourTracking(Ogre::TVC_AMBIENT);
 	pass->setDiffuse(0.582f, 0.5703f, 0.7578f, 0.7f); // blue gray from girl's shirt
-	pass->setSceneBlending(Ogre::SBT_REPLACE);
+	pass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
 	// pass->createTextureUnitState(m_defaultTextureName);	// we need a resolvable texture filename
 
 	mat->load();
@@ -248,7 +248,9 @@ void OLMaterialTracker::CreateMaterialResource(const char* mName, const char* tN
 		const float glow, const bool fullBright, const int shiny, const int bump) {
 	Ogre::String materialName = mName;
 	Ogre::String textureName = tName;
-	// if (Ogre::MaterialManager::getSingleton().resourceExists(materialName))
+	// get rid of the old one
+	Ogre::MaterialManager::getSingleton().remove(materialName);
+	// create a new instance
 	Ogre::MaterialManager::ResourceCreateOrRetrieveResult crResult =
 			Ogre::MaterialManager::getSingleton().createOrRetrieve(materialName, OLResourceGroupName);
 	Ogre::MaterialPtr matPtr = crResult.first;
@@ -259,18 +261,52 @@ void OLMaterialTracker::CreateMaterialResource(const char* mName, const char* tN
 	Ogre::Technique* tech = mat->createTechnique();
 	Ogre::Pass* pass = tech->createPass();
 	pass->setLightingEnabled(true);
+	pass->setShininess(((float)shiny)/256.0f);	// origionally a byte
+	pass->setAmbient(0.05f, 0.05f, 0.05f);
+	pass->setVertexColourTracking(Ogre::TVC_AMBIENT);
 	if (textureName.length() > 0) {
 		Ogre::TextureUnitState* tus = pass->createTextureUnitState(textureName);
 		// TODO: somehow check to see if texture has transparency in it
+		pass->setDepthWriteEnabled(false);
+		pass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
+		tus->setColourOperationEx(Ogre::LBX_MODULATE, Ogre::LBS_TEXTURE, Ogre::LBS_MANUAL, 
+			Ogre::ColourValue(colorR, colorG, colorB, colorA));
 	}
+	else {
+		pass->setDiffuse(colorR, colorG, colorB, colorA);// this isn't right. color is a base color and not a lighting effect
+		if (colorA == 1.0) {
+			pass->setSceneBlending(Ogre::SBT_REPLACE);
+		}
+		else {
+			pass->setDepthWriteEnabled(false);
+			pass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
+		}
+	}
+	/*
+	pass->setLightingEnabled(true);
 	pass->setShininess(((float)shiny)/256.0f);	// origionally a byte
 	pass->setAmbient(0.05f, 0.05f, 0.05f);
 	pass->setVertexColourTracking(Ogre::TVC_AMBIENT);
 	pass->setDiffuse(colorR, colorG, colorB, colorA);// this isn't right. color is a base color and not a lighting effect
 	// we might need to make another pass for the base color
 	// use SceneBlendType to add the alpha information
-	// pass->setSceneBlending(Ogre::SceneBlendType::SBT_TRANSPARENT_ALPHA);
-	pass->setSceneBlending(Ogre::SBT_REPLACE);
+	if (colorA == 0) {
+		pass->setSceneBlending(Ogre::SBT_REPLACE);
+	}
+	else {
+		pass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
+		pass->setDepthWriteEnabled(false);
+	}
+	if (textureName.length() > 0) {
+		// create anohter pass for the material
+		pass = tech->createPass();
+		Ogre::TextureUnitState* tus = pass->createTextureUnitState(textureName);
+		// TODO: somehow check to see if texture has transparency in it
+		pass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
+		pass->setDepthWriteEnabled(false);
+		tus->setColourOperation(Ogre::LBO_ADD);
+	}
+	*/
 
 	// see "Historical Note" on FabricateMaterial
 	// because of the problems of thousands of material files, serialization is optional

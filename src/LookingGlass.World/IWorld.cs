@@ -121,8 +121,9 @@ public interface IWorld {
     bool TryGetEntity(ulong lgid, out IEntity ent);
     bool TryGetEntity(string entName, out IEntity ent);
     bool TryGetEntity(EntityName entName, out IEntity ent);
-    bool TryGetEntityLocalID(uint entName, out IEntity ent);
-    bool TryGetCreateEntityLocalID(uint localID, out IEntity ent, WorldCreateEntityCallback creater);
+    bool TryGetEntityLocalID(RegionContextBase rcontext, uint entName, out IEntity ent);
+    bool TryGetCreateEntityLocalID(RegionContextBase rcontext, uint localID, 
+                out IEntity ent, WorldCreateEntityCallback creater);
     IEntity FindEntity(Predicate<IEntity> pred);
 
     // AGENT MANAGEMENT

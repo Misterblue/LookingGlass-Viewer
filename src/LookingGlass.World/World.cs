@@ -112,8 +112,11 @@ public sealed class World : ModuleBase, IWorld, IProvider {
         return m_entityDictionary.TryGetValue(entName.Name, out ent);
     }
 
-    public bool TryGetEntityLocalID(uint localID, out IEntity ent) {
+    public bool TryGetEntityLocalID(RegionContextBase rcontext, uint localID, out IEntity ent) {
         // it's a kludge, but localID is the same as global ID
+        // TODO: add some checking for rcontext since the localIDs are scoped by 'simulator'
+        // we are relying on a low collision rate for localIDs
+        // A linear search of the list takes way too long for the number of objects arriving
         return TryGetEntity((ulong)localID, out ent);
     }
 
@@ -123,10 +126,10 @@ public sealed class World : ModuleBase, IWorld, IProvider {
     /// <param name="ent"></param>
     /// <param name="createIt"></param>
     /// <returns></returns>
-    public bool TryGetCreateEntityLocalID(uint localID, out IEntity ent, WorldCreateEntityCallback createIt) {
+    public bool TryGetCreateEntityLocalID(RegionContextBase rcontext, uint localID, out IEntity ent, WorldCreateEntityCallback createIt) {
         try {
             lock (m_entityDictionary) {
-                if (!TryGetEntityLocalID(localID, out ent)) {
+                if (!TryGetEntityLocalID(rcontext, localID, out ent)) {
                     IEntity newEntity = createIt();
                     AddEntity(newEntity);
                     ent = newEntity;
