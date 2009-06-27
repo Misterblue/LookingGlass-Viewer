@@ -405,7 +405,9 @@ public class RendererOgreLL : IWorldRenderConv {
             textureParams[(int)Ogr.CreateMaterialParam.fullBright] = textureFace.Fullbright ? 1f : 0f;
             textureParams[(int)Ogr.CreateMaterialParam.mappingType] = (float)textureFace.TexMapType;
             textureParams[(int)Ogr.CreateMaterialParam.mediaFlags] = textureFace.MediaFlags ? 1f : 0f;
-            textureParams[(int)Ogr.CreateMaterialParam.textureHasTransparent] = 1f; // true for the moment
+            // since we can't calculate whether material is transparent or not (actually
+            //   we don't have that information at this instant), assume transparent
+            textureParams[(int)Ogr.CreateMaterialParam.textureHasTransparent] = 0f;
             textureID = textureFace.TextureID;
             // wish I could pass the texture animation information here but that's
             //    in the texture entry and not in the face description

@@ -243,6 +243,7 @@ void OLMaterialTracker::ReloadMeshes(std::list<Ogre::MeshPtr>* meshes) {
 
 // Passed the information to put in a material, find the material and make it
 // follow this definition.
+// OBSOLETE: DO NOT USE. PROBABLY DOESN"T WORK ANY MORE ANYWAY.
 void OLMaterialTracker::CreateMaterialResource(const char* mName, const char* tName,
 		const float colorR, const float colorG, const float colorB, const float colorA,
 		const float glow, const bool fullBright, const int shiny, const int bump) {
@@ -282,31 +283,6 @@ void OLMaterialTracker::CreateMaterialResource(const char* mName, const char* tN
 			pass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
 		}
 	}
-	/*
-	pass->setLightingEnabled(true);
-	pass->setShininess(((float)shiny)/256.0f);	// origionally a byte
-	pass->setAmbient(0.05f, 0.05f, 0.05f);
-	pass->setVertexColourTracking(Ogre::TVC_AMBIENT);
-	pass->setDiffuse(colorR, colorG, colorB, colorA);// this isn't right. color is a base color and not a lighting effect
-	// we might need to make another pass for the base color
-	// use SceneBlendType to add the alpha information
-	if (colorA == 0) {
-		pass->setSceneBlending(Ogre::SBT_REPLACE);
-	}
-	else {
-		pass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
-		pass->setDepthWriteEnabled(false);
-	}
-	if (textureName.length() > 0) {
-		// create anohter pass for the material
-		pass = tech->createPass();
-		Ogre::TextureUnitState* tus = pass->createTextureUnitState(textureName);
-		// TODO: somehow check to see if texture has transparency in it
-		pass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
-		pass->setDepthWriteEnabled(false);
-		tus->setColourOperation(Ogre::LBO_ADD);
-	}
-	*/
 
 	// see "Historical Note" on FabricateMaterial
 	// because of the problems of thousands of material files, serialization is optional
@@ -333,33 +309,43 @@ void OLMaterialTracker::CreateMaterialResource2(const char* mName, const char* t
 	Ogre::Technique* tech = mat->createTechnique();
 	Ogre::Pass* pass = tech->createPass();
 	pass->setLightingEnabled(true);
+	pass->setShininess(parms[CreateMaterialShiny]/256.0f);	// origionally a byte
+	pass->setAmbient(0.05f, 0.05f, 0.05f);
+	pass->setVertexColourTracking(Ogre::TVC_AMBIENT);
 	if (textureName.length() > 0) {
 		Ogre::TextureUnitState* tus = pass->createTextureUnitState(textureName);
 		// TODO: somehow check to see if texture has transparency in it
+		pass->setDepthWriteEnabled(false);
+
+		// use SceneBlendType to add the alpha information
+		if (parms[CreateMaterialTransparancy] == 1.0f) {
+			pass->setSceneBlending(Ogre::SBT_REPLACE);
+		}
+		else {
+			pass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
+		}
 		tus->setTextureUScroll(parms[CreateMaterialScrollU]);
 		tus->setTextureVScroll(parms[CreateMaterialScrollV]);
 		tus->setTextureUScale(parms[CreateMaterialScaleU]);
 		tus->setTextureVScale(parms[CreateMaterialScaleV]);
 		tus->setTextureRotate(Ogre::Radian(parms[CreateMaterialRotate]));
-	}
-	pass->setShininess(parms[CreateMaterialShiny]/256.0f);	// origionally a byte
-	pass->setAmbient(0.05f, 0.05f, 0.05f);
-	pass->setVertexColourTracking(Ogre::TVC_AMBIENT);
-
-	// this isn't right. color is a base color and not a lighting effect
-	pass->setDiffuse(parms[CreateMaterialColorR], 
-			parms[CreateMaterialColorG], 
-			parms[CreateMaterialColorB], 
-			parms[CreateMaterialColorA]
-	);
-
-	// we might need to make another pass for the base color
-	// use SceneBlendType to add the alpha information
-	if (parms[CreateMaterialTransparancy] > 0.0f) {
-		pass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
+		tus->setColourOperationEx(Ogre::LBX_MODULATE, Ogre::LBS_TEXTURE, Ogre::LBS_MANUAL, 
+			Ogre::ColourValue( parms[CreateMaterialColorR], parms[CreateMaterialColorG], 
+					parms[CreateMaterialColorB], parms[CreateMaterialColorA] ));
 	}
 	else {
-		pass->setSceneBlending(Ogre::SBT_REPLACE);
+		pass->setDiffuse(parms[CreateMaterialColorR], 
+				parms[CreateMaterialColorG], 
+				parms[CreateMaterialColorB], 
+				parms[CreateMaterialColorA]
+		);
+		if (parms[CreateMaterialColorA] == 1.0) {
+			pass->setSceneBlending(Ogre::SBT_REPLACE);
+		}
+		else {
+			pass->setDepthWriteEnabled(false);
+			pass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
+		}
 	}
 
 	// see "Historical Note" on FabricateMaterial
