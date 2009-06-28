@@ -28,6 +28,6 @@ using LookingGlass.World;
 using OMV = OpenMetaverse;
 
 namespace LookingGlass.World {
-    public interface IEntityAvatar {
+    public interface IEntityAvatar : IEntity {
     }
 }

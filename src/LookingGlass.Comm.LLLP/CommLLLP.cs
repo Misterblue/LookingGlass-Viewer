@@ -228,7 +228,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
             m_client.Settings.PARCEL_TRACKING = false;
             m_client.Settings.USE_INTERPOLATION_TIMER = false;  // don't need the library helping
             m_client.Settings.SEND_AGENT_UPDATES = true;
-            m_client.Self.Movement.AutoResetControls = true;
+            m_client.Self.Movement.AutoResetControls = false;
             m_client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = true;
             m_client.Settings.USE_TEXTURE_CACHE = true;
             m_client.Settings.TEXTURE_CACHE_DIR = ModuleParams.ParamString(ModuleName + ".Assets.CacheDir");
@@ -545,11 +545,11 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
             update.LocalID, update.Position.ToString(), update.Rotation.ToString());
         LLRegionContext rcontext = FindRegion(sim);
         IEntity updatedEntity;
-            // assume somethings changed no matter what
-            UpdateCodes updateFlags = UpdateCodes.Acceleration | UpdateCodes.AngularVelocity
-                    | UpdateCodes.Position | UpdateCodes.Rotation | UpdateCodes.Velocity;
-            if (update.Avatar) updateFlags |= UpdateCodes.CollisionPlane;
-            if (update.Textures != null) updateFlags |= UpdateCodes.Textures;
+        // assume somethings changed no matter what
+        UpdateCodes updateFlags = UpdateCodes.Acceleration | UpdateCodes.AngularVelocity
+                | UpdateCodes.Position | UpdateCodes.Rotation | UpdateCodes.Velocity;
+        if (update.Avatar) updateFlags |= UpdateCodes.CollisionPlane;
+        if (update.Textures != null) updateFlags |= UpdateCodes.Textures;
 
         if (World.World.Instance.TryGetEntityLocalID(rcontext, update.LocalID, out updatedEntity)) {
             if ((updateFlags & UpdateCodes.Position) != 0) {
@@ -598,11 +598,42 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     }
 
     // ===============================================================
+    /// <summary>
+    /// This routine is called when there is a new avatar and whenever the avatar is
+    /// updated. Should be called "OnNewOrUpdatedAvatar". 
+    /// </summary>
+    /// <param name="sim"></param>
+    /// <param name="av"></param>
+    /// <param name="regionHandle"></param>
+    /// <param name="timeDilation"></param>
     private void Objects_OnNewAvatar(OMV.Simulator sim, OMV.Avatar av, ulong regionHandle, ushort timeDilation) {
         m_log.Log(LogLevel.DCOMMDETAIL, "Objects_OnNewAvatar:");
         m_log.Log(LogLevel.DCOMMDETAIL, "cntl={0}, parent={1}, p={2}, r={3}", 
-            av.ControlFlags.ToString("x"), av.ParentID, av.Position.ToString(), av.Rotation.ToString());
+                av.ControlFlags.ToString("x"), av.ParentID, av.Position.ToString(), av.Rotation.ToString());
+
+        LLRegionContext rcontext = FindRegion(sim);
+
+        IEntityAvatar updatedEntity;
+        // assume somethings changed no matter what
+        UpdateCodes updateFlags = UpdateCodes.Acceleration | UpdateCodes.AngularVelocity
+                | UpdateCodes.Position | UpdateCodes.Rotation | UpdateCodes.Velocity;
+        updateFlags |= UpdateCodes.CollisionPlane;
+
+        EntityName avatarEntityName = LLEntityAvatar.AvatarEntityNameFromID(rcontext.AssetContext, av.ID);
+        if (World.World.Instance.TryGetCreateAvatar(rcontext, avatarEntityName, out updatedEntity, delegate() {
+                        m_log.Log(LogLevel.DCOMMDETAIL, "OnNewAvatar: creating avatar {0} {1} ({2})",
+                            av.FirstName, av.LastName, av.ID.ToString());
+                        IEntityAvatar newEnt = new LLEntityAvatar(rcontext.AssetContext,
+                                        rcontext, regionHandle, av);
+                        return newEnt;
+                    }) ) {
+            updatedEntity.RelativePosition = av.Position;
+            updatedEntity.Heading = av.Rotation;
+            World.World.Instance.UpdateEntity(updatedEntity, updateFlags);
+        }
         if (av.LocalID == m_client.Self.LocalID) {
+            m_log.Log(LogLevel.DCOMMDETAIL, "OnNewAvatar: avatar update also updating agent");
+            World.World.Instance.UpdateAgent(m_myAgent, updateFlags);
         }
         return;
     }

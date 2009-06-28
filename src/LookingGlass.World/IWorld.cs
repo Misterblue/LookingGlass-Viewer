@@ -39,6 +39,7 @@ public delegate void WorldAgentUpdateCallback(IAgent agnt, UpdateCodes what);
 public delegate void WorldAgentRemovedCallback(IAgent agnt);
 
 public delegate IEntity WorldCreateEntityCallback();
+public delegate IEntityAvatar WorldCreateAvatarCallback();
 
 public enum WorldGroupCode {
     LLWorld,
@@ -124,6 +125,8 @@ public interface IWorld {
     bool TryGetEntityLocalID(RegionContextBase rcontext, uint entName, out IEntity ent);
     bool TryGetCreateEntityLocalID(RegionContextBase rcontext, uint localID, 
                 out IEntity ent, WorldCreateEntityCallback creater);
+    bool TryGetCreateAvatar(RegionContextBase rcontext, EntityName ename,
+                out IEntityAvatar ent, WorldCreateAvatarCallback creater);
     IEntity FindEntity(Predicate<IEntity> pred);
 
     // AGENT MANAGEMENT

@@ -43,6 +43,7 @@ public sealed class World : ModuleBase, IWorld, IProvider {
     }
 
     private OMV.DoubleDictionary<string, ulong, IEntity> m_entityDictionary;
+    private Dictionary<string, IEntityAvatar> m_avatarDictionary;
 
     private List<IAgent> m_agentList;
 
@@ -93,6 +94,7 @@ public sealed class World : ModuleBase, IWorld, IProvider {
         ModuleParams = parms;
         m_instance = this;
         m_entityDictionary = new OMV.DoubleDictionary<string, ulong, IEntity>();
+        m_avatarDictionary = new Dictionary<string, IEntityAvatar>();
         m_regionList = new List<RegionContextBase>();
         m_agentList = new List<IAgent>();
         ModuleParams.AddDefaultParameter(m_moduleName + ".Communication", "Comm", "Communication to connect to");
@@ -139,6 +141,26 @@ public sealed class World : ModuleBase, IWorld, IProvider {
         }
         catch (Exception e) {
             m_log.Log(LogLevel.DBADERROR, "TryGetCreateEntityLocalID: Failed to create entity: {0}", e.ToString());
+        }
+        ent = null;
+        return false;
+    }
+
+    public bool TryGetCreateAvatar(RegionContextBase rcontext, EntityName ename, out IEntityAvatar ent, 
+                    WorldCreateAvatarCallback createIt) {
+        IEntityAvatar av = null; ;
+        try {
+            lock (m_avatarDictionary) {
+                if (!m_avatarDictionary.TryGetValue(ename.Name, out av)) {
+                    av = createIt();
+                    m_avatarDictionary.Add(av.Name.Name, av);
+                }
+                ent = av;
+            }
+            return true;
+        }
+        catch (Exception e) {
+            m_log.Log(LogLevel.DBADERROR, "TryGetCreateAvatar: Failed to create avatar: {0}", e.ToString());
         }
         ent = null;
         return false;

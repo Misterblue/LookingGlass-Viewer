@@ -40,13 +40,14 @@ public interface IAgent {
     #region MOVEMENT
     // This also updates the agent's representation in the world (usually an avatar)
     // TODO: this is just enough to get display working. Figure out better movement model
-    void MoveForward();
-    void MoveBackward();
-    void MoveUp();
-    void MoveDown();
-    void TurnLeft();
-    void TurnRight();
-    void Fly();
+    void MoveForward(bool startstop);
+    void MoveBackward(bool startstop);
+    void MoveUp(bool startstop);
+    void MoveDown(bool startstop);
+    void TurnLeft(bool startstop);
+    void TurnRight(bool startstop);
+    void Fly(bool startstop);
+    void StopAllMovement();
     #endregion MOVEMENT
 
     #region POSITION

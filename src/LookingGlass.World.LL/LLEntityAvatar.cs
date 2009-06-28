@@ -42,8 +42,16 @@ namespace LookingGlass.World.LL {
             set { m_avatarManager = value; }
         }
 
-        public LLEntityAvatar(RegionContextBase rcontext, AssetContextBase acontext) 
-                    : base(rcontext, acontext) {
+        public LLEntityAvatar(AssetContextBase acontext, LLRegionContext rcontext, 
+                ulong regionHandle, OMV.Avatar av) : base(rcontext, acontext) {
+            m_simulator= rcontext.Simulator;
+            m_regionHandle = regionHandle;
+            m_avatar = av;
+            m_name = AvatarEntityNameFromID(acontext, m_avatar.ID);
+        }
+
+        public static EntityName AvatarEntityNameFromID(AssetContextBase acontext, OMV.UUID ID) {
+            return new EntityNameLL(acontext, ID.ToString());
         }
 
         override public OMV.Quaternion Heading {

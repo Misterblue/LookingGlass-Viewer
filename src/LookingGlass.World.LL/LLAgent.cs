@@ -46,41 +46,52 @@ public class LLAgent : IAgent {
     }
 
     #region MOVEMENT
-    public void MoveForward() {
-        m_client.Self.Movement.AtPos = true;
+    public void StopAllMovement() {
+        m_client.Self.Movement.Stop = true;
+    }
+
+    public void MoveForward(bool startstop) {
+        m_client.Self.Movement.AtPos = startstop;
         // updates are sent automatically by the movement framework
     }
 
-    public void MoveBackward() {
-        m_client.Self.Movement.AtNeg = true;
+    public void MoveBackward(bool startstop) {
+        m_client.Self.Movement.AtNeg = startstop;
     }
 
-    public void MoveUp() {
-        m_client.Self.Movement.UpPos = true;
+    public void MoveUp(bool startstop) {
+        m_client.Self.Movement.UpPos = startstop;
     }
 
-    public void MoveDown() {
-        m_client.Self.Movement.UpNeg = true;
+    public void MoveDown(bool startstop) {
+        m_client.Self.Movement.UpNeg = startstop;
     }
 
-    public void Fly() {
-        m_client.Self.Movement.Fly = true;
+    public void Fly(bool startstop) {
+        if (startstop) {
+            // flying is modal. If we're flying, stop.
+            m_client.Self.Movement.Fly = !m_client.Self.Movement.Fly;
+        }
     }
 
-    public void TurnLeft() {
-        // m_client.Self.Movement.LeftPos = true;
-        OMV.Quaternion Zturn = OMV.Quaternion.CreateFromAxisAngle(OMV.Vector3.UnitZ, Constants.PI/18);
-        Zturn.Normalize();
-        m_client.Self.Movement.BodyRotation *= Zturn;
-        m_client.Self.Movement.HeadRotation *= Zturn;
+    public void TurnLeft(bool startstop) {
+        m_client.Self.Movement.TurnLeft = startstop;
+        if (startstop) {
+            OMV.Quaternion Zturn = OMV.Quaternion.CreateFromAxisAngle(OMV.Vector3.UnitZ, Constants.PI / 18);
+            Zturn.Normalize();
+            m_client.Self.Movement.BodyRotation *= Zturn;
+            m_client.Self.Movement.HeadRotation *= Zturn;
+        }
     }
 
-    public void TurnRight() {
-        // m_client.Self.Movement.LeftNeg = true;
-        OMV.Quaternion Zturn = OMV.Quaternion.CreateFromAxisAngle(OMV.Vector3.UnitZ, -Constants.PI/18);
-        Zturn.Normalize();
-        m_client.Self.Movement.BodyRotation *= Zturn;
-        m_client.Self.Movement.HeadRotation *= Zturn;
+    public void TurnRight(bool startstop) {
+        m_client.Self.Movement.TurnRight = startstop;
+        if (startstop) {
+            OMV.Quaternion Zturn = OMV.Quaternion.CreateFromAxisAngle(OMV.Vector3.UnitZ, -Constants.PI / 18);
+            Zturn.Normalize();
+            m_client.Self.Movement.BodyRotation *= Zturn;
+            m_client.Self.Movement.HeadRotation *= Zturn;
+        }
     }
 
     #endregion MOVEMENT

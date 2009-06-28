@@ -90,6 +90,8 @@ public class Viewer : ModuleBase, IViewProvider {
     private int m_lastMouseMoveTime = System.Environment.TickCount;
     private float m_cameraSpeed = 100f;     // world units per second to move
     private float m_cameraRotationSpeed = 0.1f;     // degrees to rotate
+    private float m_agentCameraBehind;
+    private float m_agentCameraAbove;
 
     /// <summary>
     /// Constructor called in instance of main and not in own thread. This is only
@@ -109,6 +111,10 @@ public class Viewer : ModuleBase, IViewProvider {
         ModuleParams.AddDefaultParameter(m_moduleName + ".Camera.Speed", "10", "Units per second to move camera");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Camera.RotationSpeed", "100", "Thousandth of degrees to rotate camera");
 
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Camera.BehindAgent", "5", "Distance camera is behind agent");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Camera.AboveAgent", "5", "Distance camera is above agent (combined with behind)");
+
+
         m_EntitySlot = EntityBase.AddAdditionSubsystem("VIEWER");
     }
 
@@ -117,12 +123,14 @@ public class Viewer : ModuleBase, IViewProvider {
 
         Renderer = (IRenderProvider)ModuleManager.Module(ModuleParams.ParamString(m_moduleName + ".Renderer.Name"));
         if (Renderer == null) {
-            m_log.Log(LogLevel.DBADERROR, "UNABLE TO LOAD RENDERER!!!! ");
+            m_log.Log(LogLevel.DBADERROR, "UNABLE TO FIND RENDERER!!!! ");
             return false;
         }
 
         m_cameraSpeed = (float)ModuleParams.ParamInt(m_moduleName + ".Camera.Speed");
         m_cameraRotationSpeed = (float)ModuleParams.ParamInt(m_moduleName + ".Camera.RotationSpeed")/1000;
+        m_agentCameraBehind = (float)ModuleParams.ParamInt(m_moduleName + ".Camera.BehindAgent");
+        m_agentCameraAbove = (float)ModuleParams.ParamInt(m_moduleName + ".Camera.AboveAgent");
         m_mainCamera = new CameraControl();
         m_mainCamera.GlobalPosition = new OMV.Vector3d(0d, 20d, 30d);   // World coordinates (Z up)
         // camera starts pointing down Y axis
@@ -300,25 +308,25 @@ public class Viewer : ModuleBase, IViewProvider {
                     Globals.KeepRunning = false;
                     break;
                 case Keys.Right:
-                    m_trackedAgent.TurnRight();
+                    m_trackedAgent.TurnRight(updown);
                     break;
                 case Keys.Left:
-                    m_trackedAgent.TurnLeft();
+                    m_trackedAgent.TurnLeft(updown);
                     break;
                 case Keys.Up:
-                    m_trackedAgent.MoveForward();
+                    m_trackedAgent.MoveForward(updown);
                     break;
                 case Keys.Down:
-                    m_trackedAgent.MoveBackward();
+                    m_trackedAgent.MoveBackward(updown);
                     break;
                 case Keys.Home:
-                    m_trackedAgent.Fly();
+                    m_trackedAgent.Fly(updown);
                     break;
                 case Keys.PageUp:
-                    m_trackedAgent.MoveUp();
+                    m_trackedAgent.MoveUp(updown);
                     break;
                 case Keys.PageDown:
-                    m_trackedAgent.MoveDown();
+                    m_trackedAgent.MoveDown(updown);
                     break;
                 case Keys.Escape:
                     // force the camera to the client position
@@ -356,6 +364,7 @@ public class Viewer : ModuleBase, IViewProvider {
         if ((what & (UpdateCodes.Rotation | UpdateCodes.Position)) != 0) {
             if (m_cameraMode == CameraMode.TrackingAgent) {
                 if (m_mainCamera != null) {
+                    OMV.Vector3 cameraOffset = new OMV.Vector3(0, -m_agentCameraBehind, m_agentCameraAbove);
                     m_mainCamera.Update(agnt.GlobalPosition, agnt.Heading);
                 }
             }
