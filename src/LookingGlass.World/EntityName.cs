@@ -117,6 +117,13 @@ public class EntityName {
         return "";
     }
 
+    // the default way to build a cache filename.
+    public virtual string CacheFilename {
+        get {
+            return CombineEntityName(HeaderPart, HostPart, EntityPart);
+        }
+    }
+
     // default way to get the host part out of an entity name
     // The default format is HOSTPART + "/" + ENTITYPART
     public virtual string ExtractHostPartFromEntityName(string entName) {

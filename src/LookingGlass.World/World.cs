@@ -92,7 +92,7 @@ public sealed class World : ModuleBase, IWorld, IProvider {
     public override void OnLoad(string name, IAppParameters parms) {
         m_moduleName = name;
         ModuleParams = parms;
-        m_instance = this;
+        m_instance = this;      // there is only one world
         m_entityDictionary = new OMV.DoubleDictionary<string, ulong, IEntity>();
         m_avatarDictionary = new Dictionary<string, IEntityAvatar>();
         m_regionList = new List<RegionContextBase>();

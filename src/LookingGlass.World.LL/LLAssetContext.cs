@@ -22,6 +22,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -158,9 +159,11 @@ public sealed class LLAssetContext : AssetContextBase {
                 if (m_waiting.ContainsKey(binID)) {
                     m_log.Log(LogLevel.DTEXTUREDETAIL, "DoTextureLoad: Already waiting for " + worldID);
                 }
-                if (m_texturePipe != null) {
-                    m_waiting.Add(binID, new WaitingInfo(binID, finishCall));
-                    sendRequest = true;
+                else {
+                    if (m_texturePipe != null) {
+                        m_waiting.Add(binID, new WaitingInfo(binID, finishCall));
+                        sendRequest = true;
+                    }
                 }
             }
             if (sendRequest) {
@@ -219,6 +222,32 @@ public sealed class LLAssetContext : AssetContextBase {
         }
         toCall.Clear();
         return;
+    }
+
+    /// <summary>
+    /// Get the texture right now. If the texture is not immediately available (not on local
+    /// computer's disk or memory), return null saying it's not here.
+    /// </summary>
+    /// <param name="textureEnt"></param>
+    /// <returns></returns>
+    public override System.Drawing.Bitmap GetTexture(EntityName textureEnt) {
+        Bitmap bitmap = null;
+        try {
+            string textureFilename = Path.Combine(CacheDir, textureEnt.CacheFilename);
+            if (File.Exists(textureFilename)) {
+                bitmap = (Bitmap)Bitmap.FromFile(textureFilename);
+            }
+            else {
+                // the texture is not there yet. Return null to tell the caller they are out of luck
+                bitmap = null;
+            }
+        }
+        catch (Exception e) {
+            m_log.Log(LogLevel.DBADERROR, "GetTexture: Exception getting texture {0}: {1}",
+                textureEnt.Name, e.ToString());
+            bitmap = null;
+        }
+        return bitmap;
     }
 
     private void OnImageReceived(OMV.ImageDownload cntl, OMV.Assets.AssetTexture textureID) {

@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Text;
 using LookingGlass.Framework.Logging;
+using LookingGlass.World;
 using OMV = OpenMetaverse;
 using OMVR = OpenMetaverse.Rendering;
 
@@ -57,6 +58,7 @@ public class MeshmerizerG : OMVR.IRendering {
     /// <param name="lod">Level of detail to generate the mesh at</param>
     /// <returns>The generated mesh</returns// >
     public OMVR.FacetedMesh GenerateFacetedMesh(OMV.Primitive prim, OMVR.DetailLevel lod) {
+
         OMV.Primitive.ConstructionData primData = prim.PrimData;
         int sides = 4;
         int hollowsides = 4;
@@ -210,6 +212,95 @@ public class MeshmerizerG : OMVR.IRendering {
                     oface.Indices.Add((ushort)(faceVertices*3+2));
                     faceVertices++;
                 }
+            }
+            if (faceVertices > 0) {
+                oface.TextureFace = prim.Textures.FaceTextures[ii];
+                if (oface.TextureFace == null) {
+                    oface.TextureFace = prim.Textures.DefaultTexture;
+                }
+                oface.ID = ii;
+                omvrmesh.Faces.Add(oface);
+            }
+        }
+
+        return omvrmesh;
+    }
+
+    /// <summary>
+    /// Create a sculpty faceted mesh. The actual scuplt texture is fetched and passed to this
+    /// routine since all the context for finding teh texture is elsewhere.
+    /// </summary>
+    /// <param name="scupltTexture"></param>
+    /// <param name="prim"></param>
+    /// <param name="lod"></param>
+    /// <returns>the faceted mesh or null if can't do it</returns>
+    public OMVR.FacetedMesh GenerateSculptMesh(System.Drawing.Bitmap scupltTexture, 
+                                    OMV.Primitive prim, OMVR.DetailLevel lod) {
+        byte sculptType = (byte)prim.Sculpt.Type;
+        bool mirror = ((sculptType & 128) != 0);
+        bool invert = ((sculptType & 64) != 0);
+        OMV.SculptType omSculptType = (OMV.SculptType)(sculptType & 0x07);
+
+        PrimMesher.SculptMesh.SculptType smSculptType;
+        switch (omSculptType) {
+            case OpenMetaverse.SculptType.Cylinder:
+                smSculptType = PrimMesher.SculptMesh.SculptType.cylinder;
+                break;
+            case OpenMetaverse.SculptType.Plane:
+                smSculptType = PrimMesher.SculptMesh.SculptType.plane;
+                break;
+            case OpenMetaverse.SculptType.Sphere:
+                smSculptType = PrimMesher.SculptMesh.SculptType.sphere;
+                break;
+            case OpenMetaverse.SculptType.Torus:
+                smSculptType = PrimMesher.SculptMesh.SculptType.torus;
+                break;
+            default:
+                smSculptType = PrimMesher.SculptMesh.SculptType.plane;
+                break;
+        }
+        PrimMesher.SculptMesh newMesh = 
+            new PrimMesher.SculptMesh(scupltTexture, smSculptType, (int)lod, true, mirror, invert);
+        int numPrimFaces = 1;       // a scuplty has only one face
+
+        // copy the vertex information into OMVR.IRendering structures
+        OMVR.FacetedMesh omvrmesh = new OMVR.FacetedMesh();
+        omvrmesh.Faces = new List<OMVR.Face>();
+        omvrmesh.Prim = prim;
+        omvrmesh.Profile = new OMVR.Profile();
+        omvrmesh.Profile.Faces = new List<OMVR.ProfileFace>();
+        omvrmesh.Profile.Positions = new List<OMV.Vector3>();
+        omvrmesh.Path = new OMVR.Path();
+        omvrmesh.Path.Points = new List<OMVR.PathPoint>();
+
+        for (int ii=0; ii<numPrimFaces; ii++) {
+            OMVR.Face oface = new OMVR.Face();
+            oface.Vertices = new List<OMVR.Vertex>();
+            oface.Indices = new List<ushort>();
+            int faceVertices = 0;
+            foreach (PrimMesher.ViewerFace vface in newMesh.viewerFaces) {
+                OMVR.Vertex vert = new OMVR.Vertex();
+                vert.Position = new OMV.Vector3(vface.v1.X, vface.v1.Y, vface.v1.Z);
+                vert.TexCoord = new OMV.Vector2(vface.uv1.U, vface.uv1.V);
+                vert.Normal = new OMV.Vector3(vface.n1.X, vface.n1.Y, vface.n1.Z);
+                oface.Vertices.Add(vert);
+
+                vert = new OMVR.Vertex();
+                vert.Position = new OMV.Vector3(vface.v2.X, vface.v2.Y, vface.v2.Z);
+                vert.TexCoord = new OMV.Vector2(vface.uv2.U, vface.uv2.V);
+                vert.Normal = new OMV.Vector3(vface.n2.X, vface.n2.Y, vface.n2.Z);
+                oface.Vertices.Add(vert);
+
+                vert = new OMVR.Vertex();
+                vert.Position = new OMV.Vector3(vface.v3.X, vface.v3.Y, vface.v3.Z);
+                vert.TexCoord = new OMV.Vector2(vface.uv3.U, vface.uv3.V);
+                vert.Normal = new OMV.Vector3(vface.n3.X, vface.n3.Y, vface.n3.Z);
+                oface.Vertices.Add(vert);
+
+                oface.Indices.Add((ushort)(faceVertices*3+0));
+                oface.Indices.Add((ushort)(faceVertices*3+1));
+                oface.Indices.Add((ushort)(faceVertices*3+2));
+                faceVertices++;
             }
             if (faceVertices > 0) {
                 oface.TextureFace = prim.Textures.FaceTextures[ii];

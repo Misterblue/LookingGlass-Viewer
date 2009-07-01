@@ -61,7 +61,7 @@ public class EntityNameLL : EntityName {
 
     // Return the cache filename for this entity. This is not based in the cache directory.
     // At the moment, closely tied to the Ogre resource storage structure
-    public string CacheFilename {
+    public override string CacheFilename {
         get {
             string entReplace = Regex.Replace(EntityPart, EntityNameMatch, OgreNameReplace);
             // if the replacement didn't happen entReplace == entName

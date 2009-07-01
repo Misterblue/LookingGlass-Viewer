@@ -22,6 +22,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Text;
 using LookingGlass;
 using LookingGlass.Framework.Logging;
@@ -39,7 +40,9 @@ public class RendererOgreLL : IWorldRenderConv {
     private float m_sceneMagnification = 10.0f;
     bool m_buildMaterialsAtMeshCreationTime = true;
 
-    private OMVR.IRendering m_meshMaker = null;
+    // we've added things to the interface for scuplties. Need to push back into OMV someday.
+    // private OMVR.IRendering m_meshMaker = null;
+    private Mesher.MeshmerizerG m_meshMaker = null;
     // some of the mesh conversion routines include the scale calculation
     private bool m_usePrimScaleFactor = false;
     private bool m_useRendererTextureScaling = false;
@@ -152,8 +155,13 @@ public class RendererOgreLL : IWorldRenderConv {
 
         int meshType = 0;
         int meshFaces = 0;
+        // TODO: This is the start of come code to specialize the creation of standard
+        // meshes. Since a large number of prims are cubes, they can share the face vertices
+        // and thus reduce the total number of Ogre's vertices stored.
+        // At the moment, CheckStandardMeshType returns false so we don't do anything special yet
         if (CheckStandardMeshType(prim, out meshType, out meshFaces)) {
             m_log.Log(LogLevel.DBADERROR, "CreateMeshResource: not implemented Standard Type");
+            /*
             // while we're in the neighborhood, we can create the materials
             if (m_buildMaterialsAtMeshCreationTime) {
                 for (int j = 0; j < meshFaces; j++) {
@@ -161,21 +169,43 @@ public class RendererOgreLL : IWorldRenderConv {
                 }
             }
 
-            // Ogr.CreateStandardMeshResource(meshName, meshType);
+            Ogr.CreateStandardMeshResource(meshName, meshType);
+             */
         }
         else {
             OMVR.FacetedMesh mesh;
             try {
-                // we really should use Low for boxes, med for most things and high for megaprim curves
-                OMVR.DetailLevel meshDetail = OMVR.DetailLevel.High;
-                if (prim.Type == OMV.PrimType.Box) {
-                    meshDetail = OMVR.DetailLevel.Low;
-                    // m_log.Log(LogLevel.DRENDERDETAIL, "CreateMeshResource: Low detail for {0}", ent.Name.Name);
+
+                if (prim.Sculpt != null) {
+                    // looks like it's a sculpty. Do it that way
+                    EntityNameLL textureEnt = EntityNameLL.ConvertTextureWorldIDToEntityName(ent.AssetContext, prim.Sculpt.SculptTexture);
+                    System.Drawing.Bitmap textureBitmap = ent.AssetContext.GetTexture(textureEnt);
+                    if (textureBitmap == null) {
+                        m_log.Log(LogLevel.DRENDERDETAIL, "CreateMeshResource: waiting for texture for sculpty {0}", ent.Name.Name);
+                        // Don't have the texture now so ask for the texture to be loaded.
+                        // Note that we ignore the callback and let the work queue requeing get us back here
+                        ent.AssetContext.DoTextureLoad(textureEnt.Name, delegate(string name) { return; });
+                        // This will cause the work queue to requeue the mesh creation and call us
+                        //   back later to retry creating the mesh
+                        return false;
+                    }
+                    m_log.Log(LogLevel.DRENDERDETAIL, "CreateMeshResource: mesherizing scuplty {0}", ent.Name.Name);
+                    mesh = m_meshMaker.GenerateSculptMesh(textureBitmap, prim, OMVR.DetailLevel.Highest);
+                    textureBitmap.Dispose();
                 }
-                mesh = m_meshMaker.GenerateFacetedMesh(prim, meshDetail);
+                else {
+                    // we really should use Low for boxes, med for most things and high for megaprim curves
+                    OMVR.DetailLevel meshDetail = OMVR.DetailLevel.High;
+                    if (prim.Type == OMV.PrimType.Box) {
+                        meshDetail = OMVR.DetailLevel.Low;
+                        // m_log.Log(LogLevel.DRENDERDETAIL, "CreateMeshResource: Low detail for {0}", ent.Name.Name);
+                    }
+                    mesh = m_meshMaker.GenerateFacetedMesh(prim, meshDetail);
+                }
             }
             catch (Exception e) {
-                m_log.Log(LogLevel.DRENDERDETAIL, "CreateMeshResource: failed mesh generate for {0}", ent.Name.Name);
+                m_log.Log(LogLevel.DRENDERDETAIL, "CreateMeshResource: failed mesh generate for {0}: {1}", 
+                    ent.Name.Name, e.ToString());
                 throw e;
             }
 

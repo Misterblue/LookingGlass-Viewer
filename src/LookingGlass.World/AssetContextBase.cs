@@ -22,6 +22,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Text;
 using LookingGlass.Framework.Logging;
 using OMV = OpenMetaverse;
@@ -69,8 +70,18 @@ public abstract class AssetContextBase : IDisposable {
     public abstract void DoTextureLoad(string textureEntityName, DownloadFinishedCallback finished);
 
     /// <summary>
+    /// Just get the real texture and return it to us. If the texture is not immediately available
+    /// (that is, is not on the local computer's memory or disk) we return a null pointer.
+    /// </summary>
+    /// <param name="textureEnt">name of the texture to get</param>
+    /// <returns>Bitmap of image or 'null' if image not available now</returns>
+    public abstract System.Drawing.Bitmap GetTexture(EntityName textureEnt);
+
+    /// <summary>
     /// the caller didn't know who the owner of the texture was. We take apart the entity
-    /// name to try and find who it belongs to
+    /// name to try and find who it belongs to. This is static since we are using the static
+    /// asset context structures. When we find the real asset context of the texture, we
+    /// call that instance.
     /// </summary>
     /// <param name="textureEntityName"></param>
     /// <param name="finished"></param>
