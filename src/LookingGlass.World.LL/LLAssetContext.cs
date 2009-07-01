@@ -29,6 +29,7 @@ using System.Text.RegularExpressions;
 using LookingGlass.Framework.Logging;
 using LookingGlass.World;
 using OMV = OpenMetaverse;
+using OMVI = OpenMetaverse.Imaging;
 
 namespace LookingGlass.World.LL {
     /// <summary>
@@ -52,6 +53,7 @@ public sealed class LLAssetContext : AssetContextBase {
     private class WaitingInfo : IComparable<WaitingInfo> {
         public OMV.UUID worldID;
         public DownloadFinishedCallback callback;
+        public string filename;
         public WaitingInfo(OMV.UUID wid, DownloadFinishedCallback cback) {
             worldID = wid;
             callback = cback;
@@ -161,6 +163,8 @@ public sealed class LLAssetContext : AssetContextBase {
                 }
                 else {
                     if (m_texturePipe != null) {
+                        WaitingInfo wi = new WaitingInfo(binID, finishCall);
+                        wi.filename = textureFilename;
                         m_waiting.Add(binID, new WaitingInfo(binID, finishCall));
                         sendRequest = true;
                     }
@@ -216,9 +220,35 @@ public sealed class LLAssetContext : AssetContextBase {
             }
         }
         foreach (WaitingInfo wii in toCall) {
-            m_log.Log(LogLevel.DTEXTUREDETAIL, "Download finished callback: " + wii.worldID.ToString());
-            EntityName textureEntityName = EntityNameLL.ConvertTextureWorldIDToEntityName(this, assetWorldID);
-            wii.callback(textureEntityName.Name);
+            EntityName textureEntityName = EntityNameLL.ConvertTextureWorldIDToEntityName(this, wii.worldID);
+            // we write out the actual image data in the format we want
+            OMV.Imaging.ManagedImage managedImage;
+            System.Drawing.Image tempImage;
+            try {
+                if (OMVI.OpenJPEG.DecodeToImage(assetTexture, out managedImage, out tempImage)) {
+                    Bitmap textureBitmap = new Bitmap(tempImage.Width, tempImage.Height, 
+                        System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+                    Graphics graphics = Graphics.FromImage(textureBitmap);
+                    graphics.DrawImage(tempImage, 0, 0);
+                    graphics.Flush();
+                    graphics.Dispose();
+
+                    FileStream fileStream = File.Open(wii.filename, FileMode.Create);
+                    textureBitmap.Save(fileStream, System.Drawing.Imaging.ImageFormat.Png);
+                    fileStream.Flush();
+                    fileStream.Close();
+                    fileStream.Dispose();
+                    m_log.Log(LogLevel.DTEXTUREDETAIL, "Download finished callback: " + wii.worldID.ToString());
+                    wii.callback(textureEntityName.Name);
+                }
+                else {
+                    m_log.Log(LogLevel.DBADERROR, "TEXTURE DOWNLOAD COMPLETE. FAILED JPEG2 DECODE FOR {0}", textureEntityName.Name);
+                }
+            }
+            catch (Exception e) {
+                m_log.Log(LogLevel.DBADERROR, "TEXTURE DOWNLOAD COMPLETE. FAILED FILE CREATION FOR {0}: {1}", 
+                    textureEntityName.Name, e.ToString());
+            }
         }
         toCall.Clear();
         return;
