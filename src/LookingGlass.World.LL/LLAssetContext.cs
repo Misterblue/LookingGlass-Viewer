@@ -144,7 +144,7 @@ public sealed class LLAssetContext : AssetContextBase {
     // at the same time, this doesn't do all the callbacks
     // To enable this feature, remove the dictionary and checks for already fetching
     public override void DoTextureLoad(string textureEntityName, DownloadFinishedCallback finishCall) {
-        EntityNameLL textureEnt = new EntityNameLL(this, textureEntityName);
+        EntityNameLL textureEnt = new EntityNameLL(textureEntityName);
         string worldID = textureEnt.ExtractEntityFromEntityName(textureEntityName);
         OMV.UUID binID = new OMV.UUID(worldID);
 
@@ -165,7 +165,7 @@ public sealed class LLAssetContext : AssetContextBase {
                     if (m_texturePipe != null) {
                         WaitingInfo wi = new WaitingInfo(binID, finishCall);
                         wi.filename = textureFilename;
-                        m_waiting.Add(binID, new WaitingInfo(binID, finishCall));
+                        m_waiting.Add(binID, wi);
                         sendRequest = true;
                     }
                 }
@@ -225,7 +225,7 @@ public sealed class LLAssetContext : AssetContextBase {
             OMV.Imaging.ManagedImage managedImage;
             System.Drawing.Image tempImage;
             try {
-                if (OMVI.OpenJPEG.DecodeToImage(assetTexture, out managedImage, out tempImage)) {
+                if (OMVI.OpenJPEG.DecodeToImage(assetTexture.AssetData, out managedImage, out tempImage)) {
                     Bitmap textureBitmap = new Bitmap(tempImage.Width, tempImage.Height, 
                         System.Drawing.Imaging.PixelFormat.Format32bppArgb);
                     Graphics graphics = Graphics.FromImage(textureBitmap);

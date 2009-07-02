@@ -239,6 +239,8 @@ public class MeshmerizerG : OMVR.IRendering {
         byte sculptType = (byte)prim.Sculpt.Type;
         bool mirror = ((sculptType & 128) != 0);
         bool invert = ((sculptType & 64) != 0);
+        mirror = false; // TODO: libomv doesn't support these and letting them flop around causes problems
+        invert = false;
         OMV.SculptType omSculptType = (OMV.SculptType)(sculptType & 0x07);
 
         PrimMesher.SculptMesh.SculptType smSculptType;
@@ -261,6 +263,11 @@ public class MeshmerizerG : OMVR.IRendering {
         }
         PrimMesher.SculptMesh newMesh = 
             new PrimMesher.SculptMesh(scupltTexture, smSculptType, (int)lod, true, mirror, invert);
+
+        if (ShouldScaleMesh) {
+            newMesh.Scale(prim.Scale.X, prim.Scale.Y, prim.Scale.Z);
+        }
+
         int numPrimFaces = 1;       // a scuplty has only one face
 
         // copy the vertex information into OMVR.IRendering structures

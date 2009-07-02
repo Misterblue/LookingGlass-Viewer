@@ -70,8 +70,8 @@ public class RendererOgreLL : IWorldRenderConv {
             // For the moment, turned off while I figure that stuff out.
             // amesher.ShouldScaleMesh = false;
             // m_usePrimScaleFactor = true; // use Ogre scaling rather than mesh scaling
-            amesher.ShouldScaleMesh = true;
             m_usePrimScaleFactor = false; // use Ogre scaling rather than mesh scaling
+            amesher.ShouldScaleMesh = !m_usePrimScaleFactor;
             m_useRendererTextureScaling = true; // use Ogre texture scaling rather than computing it
             m_meshMaker = amesher;
         }
@@ -190,7 +190,11 @@ public class RendererOgreLL : IWorldRenderConv {
                         return false;
                     }
                     m_log.Log(LogLevel.DRENDERDETAIL, "CreateMeshResource: mesherizing scuplty {0}", ent.Name.Name);
+                    m_log.Log(LogLevel.DRENDERDETAIL, "CreateMeshResource: scuplty texture w={0}, h={1}",
+                                textureBitmap.Width, textureBitmap.Height );
                     mesh = m_meshMaker.GenerateSculptMesh(textureBitmap, prim, OMVR.DetailLevel.Highest);
+                    m_log.Log(LogLevel.DRENDERDETAIL, "CreateMeshResource: scuplty mesh faces={0}, verts={1}, indxs={2}",
+                        mesh.Faces.Count, mesh.Faces[0].Vertices.Count, mesh.Faces[0].Indices.Count);
                     textureBitmap.Dispose();
                 }
                 else {

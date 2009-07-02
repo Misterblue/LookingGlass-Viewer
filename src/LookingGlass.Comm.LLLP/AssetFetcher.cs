@@ -32,8 +32,17 @@ using OMV = OpenMetaverse;
 
 namespace LookingGlass.Comm.LLLP {
 
-delegate void AssetFetcherCompletionCallback(OMV.UUID id, string filename);
+public delegate void AssetFetcherCompletionCallback(OMV.UUID id, string filename);
 
+    /// <summary>
+    /// WORK IN PROGRESS.
+    /// This is not complete and not used anywhere yet. Someday LG will have to generalize
+    /// the asset fetching. Currently, texture fetching is in LLAssetContext but, even though
+    /// it is LL specific, the protocol implementation is tied to libomv. This could change.
+    /// Thus, might want to pull out the protocol side of asset fetching so it can be
+    /// plugged also.  This routine was a start of that and this code could either grow
+    /// or be thrown out.
+    /// </summary>
 public class AssetFetcher {
     private ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
 
@@ -49,9 +58,9 @@ public class AssetFetcher {
     }
 
     public StatisticManager m_stats;
-    public StatCounter m_totalRequests;         // count of total requests
-    public StatCounter m_duplicateRequests;     // count of requests for things we're already queued for
-    public StatCounter m_requestsForExisting;   // count of requests for assets that are already in files
+    public ICounter m_totalRequests;         // count of total requests
+    public ICounter m_duplicateRequests;     // count of requests for things we're already queued for
+    public ICounter m_requestsForExisting;   // count of requests for assets that are already in files
 
     struct TRequest {
         public OMV.UUID ID;
@@ -67,8 +76,8 @@ public class AssetFetcher {
     private OMV.GridClient m_client;
 
     public AssetFetcher(OMV.GridClient grid) {
-        m_client = client;
-        m_client.Assets.OnAssetReceived += new OMV.AssetManager.AssetReceivedCallback(Assets_OnAssetReceived);
+        m_client = grid;
+        // m_client.Assets.OnAssetReceived += new OMV.AssetManager.AssetReceivedCallback(Assets_OnAssetReceived);
         m_requests = new Dictionary<string, TRequest>();
         m_outstandingRequests = new List<TRequest>();
         m_stats = new StatisticManager("AssetFetcher");
@@ -85,10 +94,10 @@ public class AssetFetcher {
         }
         lock (m_requests) {
             if (!m_requests.ContainsKey(filename)) {
-                TRequest treq;
+                TRequest treq = new TRequest();
                 treq.ID = getID;
                 treq.Filename = filename;
-                treq.type = type;
+                treq.Type = type;
                 treq.DoneCall = doneCall;
                 treq.QueueTime = System.Environment.TickCount;
                 m_requests.Add(filename, treq);
@@ -104,16 +113,7 @@ public class AssetFetcher {
         lock (m_requests) {
             if (m_outstandingRequests.Count < m_maxParallelRequests && m_requests.Count > 0) {
                 // there is room for more requests
-                Dictionary<string, TRequest>.KeyCollection keys = m_requests.Keys;
-                int ii = 0;
-                while (m_outstandingRequests.Count < m_maxParallelRequests && m_requests.Count > 0) {
-                    TRequest treq = m_requests[keys[ii]];
-                    treq.QueueTime = System.Environment.TickCount;
-                    m_requests.Remove(keys[ii]);
-                    m_outstandingRequests.Add(treq);
-                    m_client.Assets.RequestAsset(treq.ID, treq.type, false);
-                    ii++;
-                }
+                // TODO: Move some requests from m_requests to m_outstandingRequests and start the request
             }
         }
     }

@@ -230,7 +230,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
             m_client.Settings.SEND_AGENT_UPDATES = true;
             m_client.Self.Movement.AutoResetControls = false;
             m_client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = true;
-            m_client.Settings.USE_TEXTURE_CACHE = true;
+            m_client.Settings.USE_TEXTURE_CACHE = false;
             m_client.Settings.TEXTURE_CACHE_DIR = ModuleParams.ParamString(ModuleName + ".Assets.CacheDir");
             m_client.Settings.ALWAYS_REQUEST_PARCEL_ACL = false;
             m_client.Settings.ALWAYS_REQUEST_PARCEL_DWELL = false;
