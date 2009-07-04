@@ -186,6 +186,7 @@ public class MeshmerizerG : OMVR.IRendering {
             OMVR.Face oface = new OMVR.Face();
             oface.Vertices = new List<OMVR.Vertex>();
             oface.Indices = new List<ushort>();
+            oface.TextureFace = prim.Textures.GetFace((uint)ii);
             int faceVertices = 0;
             foreach (PrimMesher.ViewerFace vface in newPrim.viewerFaces) {
                 if (vface.primFaceNumber == ii) {
@@ -261,8 +262,24 @@ public class MeshmerizerG : OMVR.IRendering {
                 smSculptType = PrimMesher.SculptMesh.SculptType.plane;
                 break;
         }
+        // The lod for sculpties is the resolution of the texture passed.
+        // The first guess is 1:1 then lower resolutions after that
+        // int mesherLod = (int)Math.Sqrt(scupltTexture.Width * scupltTexture.Height);
+        int mesherLod = 32; // number used in Idealist viewer
+        switch (lod) {
+            case OMVR.DetailLevel.Highest:
+                break;
+            case OMVR.DetailLevel.High:
+                break;
+            case OMVR.DetailLevel.Medium:
+                mesherLod /= 2;
+                break;
+            case OMVR.DetailLevel.Low:
+                mesherLod /= 4;
+                break;
+        }
         PrimMesher.SculptMesh newMesh = 
-            new PrimMesher.SculptMesh(scupltTexture, smSculptType, (int)lod, true, mirror, invert);
+            new PrimMesher.SculptMesh(scupltTexture, smSculptType, mesherLod, true, mirror, invert);
 
         if (ShouldScaleMesh) {
             newMesh.Scale(prim.Scale.X, prim.Scale.Y, prim.Scale.Z);
@@ -284,6 +301,7 @@ public class MeshmerizerG : OMVR.IRendering {
             OMVR.Face oface = new OMVR.Face();
             oface.Vertices = new List<OMVR.Vertex>();
             oface.Indices = new List<ushort>();
+            oface.TextureFace = prim.Textures.GetFace((uint)ii);
             int faceVertices = 0;
             foreach (PrimMesher.ViewerFace vface in newMesh.viewerFaces) {
                 OMVR.Vertex vert = new OMVR.Vertex();
@@ -346,14 +364,15 @@ public class MeshmerizerG : OMVR.IRendering {
             + ", sin=" + sinAngle.ToString()
             ); */
         for (int ii=0; ii<vertices.Count; ii++ ) {
-            OMVR.Vertex vert = vertices[ii];
             // tex coord comes to us as a number between zero and one
             // transform about the center of the texture
+            OMVR.Vertex vert = vertices[ii];
             float tX = vert.TexCoord.X - 0.5f;
             float tY = vert.TexCoord.Y - 0.5f;
             // rotate, scale, offset
-            vert.TexCoord.X = (tX * cosineAngle + tY * sinAngle) * teFace.RepeatU + teFace.OffsetU + 0.5f; ;
+            vert.TexCoord.X = (tX * cosineAngle + tY * sinAngle) * teFace.RepeatU + teFace.OffsetU + 0.5f;
             vert.TexCoord.Y = (-tX * sinAngle + tY * cosineAngle) * teFace.RepeatV + teFace.OffsetV + 0.5f;
+            vertices[ii] = vert;
         }
         return;
     }

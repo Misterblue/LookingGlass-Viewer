@@ -314,14 +314,13 @@ void OLMaterialTracker::CreateMaterialResource2(const char* mName, const char* t
 	pass->setVertexColourTracking(Ogre::TVC_AMBIENT);
 	if (textureName.length() > 0) {
 		Ogre::TextureUnitState* tus = pass->createTextureUnitState(textureName);
-		// TODO: somehow check to see if texture has transparency in it
-		pass->setDepthWriteEnabled(false);
 
 		// use SceneBlendType to add the alpha information
 		if (parms[CreateMaterialTransparancy] == 1.0f) {
 			pass->setSceneBlending(Ogre::SBT_REPLACE);
 		}
 		else {
+			pass->setDepthWriteEnabled(false);
 			pass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
 		}
 		tus->setTextureUScroll(parms[CreateMaterialScrollU]);
@@ -334,6 +333,7 @@ void OLMaterialTracker::CreateMaterialResource2(const char* mName, const char* t
 					parms[CreateMaterialColorB], parms[CreateMaterialColorA] ));
 	}
 	else {
+		// it's a solid color. Just use that.
 		pass->setDiffuse(parms[CreateMaterialColorR], 
 				parms[CreateMaterialColorG], 
 				parms[CreateMaterialColorB], 

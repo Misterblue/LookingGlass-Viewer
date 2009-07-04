@@ -364,8 +364,18 @@ public class Viewer : ModuleBase, IViewProvider {
         if ((what & (UpdateCodes.Rotation | UpdateCodes.Position)) != 0) {
             if (m_cameraMode == CameraMode.TrackingAgent) {
                 if (m_mainCamera != null) {
-                    OMV.Vector3 cameraOffset = new OMV.Vector3(0, -m_agentCameraBehind, m_agentCameraAbove);
-                    m_mainCamera.Update(agnt.GlobalPosition, agnt.Heading);
+                    // vector for camera position behind the avatar
+                    // note: coordinates are in LL form: Z up
+                    OMV.Quaternion cameraOffset = new OMV.Quaternion(0, -m_agentCameraBehind, m_agentCameraAbove, 0);
+                    OMV.Quaternion invertHeading = OMV.Quaternion.Inverse(agnt.Heading);
+                    // rotate the vector in the direction the agent is pointing
+                    OMV.Quaternion cameraBehind = agnt.Heading * cameraOffset * invertHeading;
+                    cameraBehind.Normalize();
+                    // create the global offset from the agent's position
+                    OMV.Vector3d globalOffset = new OMV.Vector3d(cameraBehind.X, cameraBehind.Y, cameraBehind.Z);
+                    m_log.Log(LogLevel.DVIEWDETAIL, "OnAgentUpdate: offset={0}, behind={1}, global={2}",
+                        cameraOffset.ToString(), cameraBehind.ToString(), globalOffset.ToString());
+                    m_mainCamera.Update(agnt.GlobalPosition + globalOffset, agnt.Heading);
                 }
             }
         }

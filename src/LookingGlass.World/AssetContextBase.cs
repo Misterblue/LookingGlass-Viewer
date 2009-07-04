@@ -30,6 +30,11 @@ using OMV = OpenMetaverse;
 namespace LookingGlass.World {
 public abstract class AssetContextBase : IDisposable {
 
+    public enum AssetType {
+        Texture,
+        SculptieTexture
+    }
+
     protected string m_Name;
     public string Name { get { return m_Name; } }
 
@@ -67,7 +72,7 @@ public abstract class AssetContextBase : IDisposable {
     /// call to the OnDownload* events will show it's progress.
     /// </summary>
     /// <param name="textureEntityName">the entity name of this texture</param>
-    public abstract void DoTextureLoad(string textureEntityName, DownloadFinishedCallback finished);
+    public abstract void DoTextureLoad(string textureEntityName, AssetType typ, DownloadFinishedCallback finished);
 
     /// <summary>
     /// Just get the real texture and return it to us. If the texture is not immediately available
@@ -86,7 +91,7 @@ public abstract class AssetContextBase : IDisposable {
     /// <param name="textureEntityName"></param>
     /// <param name="finished"></param>
     /// <returns></returns>
-    public static void RequestTextureLoad(string textureEntityName, DownloadFinishedCallback finished) {
+    public static void RequestTextureLoad(string textureEntityName, AssetType typ, DownloadFinishedCallback finished) {
         AssetContextBase textureOwner = null;
         lock (AssetContexts) {
             foreach (AssetContextBase acb in AssetContexts) {
@@ -97,7 +102,7 @@ public abstract class AssetContextBase : IDisposable {
             }
         }
         if (textureOwner != null) {
-            textureOwner.DoTextureLoad(textureEntityName, finished);
+            textureOwner.DoTextureLoad(textureEntityName, typ, finished);
         }
         else {
             LogManager.Log.Log(LogLevel.DBADERROR, "RequestTextureLoad: found not asset context for texture " + textureEntityName);

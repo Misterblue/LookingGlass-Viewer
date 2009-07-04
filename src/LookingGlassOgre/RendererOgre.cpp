@@ -213,7 +213,7 @@ namespace RendererOgre {
 		try {
 			const char* sceneName = GetParameter("Renderer.Ogre.Name");
 			m_sceneMgr = m_root->createSceneManager(Ogre::ST_EXTERIOR_CLOSE, sceneName);
-			m_sceneMgr->setAmbientLight(Ogre::ColourValue(0.9f, 0.9f, 0.9f));
+			m_sceneMgr->setAmbientLight(Ogre::ColourValue(0.1f, 0.1f, 0.1f));
 			const char* shadowName = GetParameter("Renderer.Ogre.ShadowTechnique");
 			if (stricmp(shadowName, "additive")) 
 				m_sceneMgr->setShadowTechnique(Ogre::SHADOWDETAILTYPE_ADDITIVE);	// easiest

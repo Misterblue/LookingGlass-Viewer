@@ -184,7 +184,8 @@ public class RendererOgreLL : IWorldRenderConv {
                         m_log.Log(LogLevel.DRENDERDETAIL, "CreateMeshResource: waiting for texture for sculpty {0}", ent.Name.Name);
                         // Don't have the texture now so ask for the texture to be loaded.
                         // Note that we ignore the callback and let the work queue requeing get us back here
-                        ent.AssetContext.DoTextureLoad(textureEnt.Name, delegate(string name) { return; });
+                        ent.AssetContext.DoTextureLoad(textureEnt.Name, AssetContextBase.AssetType.SculptieTexture, 
+                            delegate(string name) { return; });
                         // This will cause the work queue to requeue the mesh creation and call us
                         //   back later to retry creating the mesh
                         return false;
@@ -263,10 +264,9 @@ public class RendererOgreLL : IWorldRenderConv {
                 OMVR.Face face = mesh.Faces[j];
 
                 // Texture transform for this face
-                OMV.Primitive.TextureEntryFace teFace = null;
+                OMV.Primitive.TextureEntryFace teFace = face.TextureFace;
                 try {
-                    teFace = prim.Textures.GetFace((uint)j);
-                    if (!m_useRendererTextureScaling) {
+                    if (teFace != null && !m_useRendererTextureScaling) {
                         m_meshMaker.TransformTexCoords(face.Vertices, face.Center, teFace);
                     }
                 }
