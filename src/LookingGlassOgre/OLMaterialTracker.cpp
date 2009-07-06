@@ -46,7 +46,7 @@ OLMaterialTracker::OLMaterialTracker(RendererOgre::RendererOgre* ro) {
 	}
 
 	// more kludge processing for corrupt data files
-	Ogre::ImageCodec* codec = OGRE_NEW BadImageCodec::BadImageCodec();
+	Ogre::ImageCodec* codec = OGRE_NEW BadImageCodec::BadImageCodec(m_ro);
 	Ogre::Codec::registerCodec(codec);
 }
 

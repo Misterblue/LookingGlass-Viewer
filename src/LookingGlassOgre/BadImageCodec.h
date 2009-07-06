@@ -29,6 +29,10 @@
 // we create a codec that will be asked for last when loading an image file.
 // The problem is that the image file exists but we can't read it. Usually means
 // a corrupted file.
+
+// forward definition
+namespace RendererOgre { class RendererOgre; }
+
 namespace BadImageCodec {
 
 #define BIC_EXTENSION "zzz"
@@ -36,7 +40,7 @@ namespace BadImageCodec {
 class BadImageCodec : public Ogre::ImageCodec
 {
 public:
-	BadImageCodec(void) { };
+	BadImageCodec(RendererOgre::RendererOgre*);
 	~BadImageCodec(void) { };
 
 	// called to create and register this codec
@@ -50,6 +54,9 @@ public:
 
 	// routine to actually decode the data
 	Ogre::Codec::DecodeResult decode(Ogre::DataStreamPtr&) const;
+
+private:
+	RendererOgre::RendererOgre* m_ro;
 };
 
 }

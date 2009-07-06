@@ -23,13 +23,20 @@
 #include "StdAfx.h"
 #include "BadImageCodec.h"
 #include "LookingGlassOgre.h"
+#include "RendererOgre.h"
 
 namespace BadImageCodec {
 
-	// code used to start this up.
+BadImageCodec::BadImageCodec(RendererOgre::RendererOgre* ro) {
+	m_ro = ro;
+}
+
+// code used to start this up.
 void BadImageCodec::startup() {
-	Ogre::ImageCodec* codec = OGRE_NEW BadImageCodec();
+	/*
+	Ogre::ImageCodec* codec = OGRE_NEW BadImageCodec(m_ro);
 	Ogre::Codec::registerCodec(codec);
+	*/
 }
 
 Ogre::String BadImageCodec::getType() const {
@@ -60,8 +67,14 @@ Ogre::Codec::DecodeResult BadImageCodec::decode(Ogre::DataStreamPtr& dstrm) cons
 	LookingGlassOgr::Log("BadImageCodec::decode: CORRUPT FILE!!! %s", dstrm->getName().c_str());
 
 	// dstrm->getName() gets the entity name. Request a reload of the texture.
-	LookingGlassOgr::RequestResource(dstrm->getName().c_str(), dstrm->getName().c_str(), 
-		LookingGlassOgr::ResourceTypeTexture);
+	Ogre::String fullFilename = m_ro->EntityNameToFilename(dstrm->getName(), "");
+	LookingGlassOgr::Log("BadImageCodec::decode: filename = %s", fullFilename.c_str());
+	// For some reason this doesn't delete. Because it's busy?
+	// Because we can't delete the bad file, asking for new doesn't work (it already exists)
+	if (remove(fullFilename.c_str()) != 0) {
+		LookingGlassOgr::Log("BadImageCodec::decode: error removing file");
+	}
+	// LookingGlassOgr::RequestResource(dstrm->getName().c_str(), dstrm->getName().c_str(), LookingGlassOgr::ResourceTypeTexture);
 
 	// for the moment, put something in it's place
 	ImageCodec::ImageData * imgData = OGRE_NEW ImageCodec::ImageData();
@@ -69,7 +82,7 @@ Ogre::Codec::DecodeResult BadImageCodec::decode(Ogre::DataStreamPtr& dstrm) cons
 	imgData->height = 2;
 	imgData->depth = 1;
 	imgData->format = Ogre::PF_BYTE_RGBA;
-	int colors[4] = { 0xFFFF0080, 0xFF80FFFF, 0xFFFF80FF, 0xFFFFFF80}; // make it really ugly!
+	int colors[4] = { 0x40808080, 0x40808080, 0x40808080, 0x40808080 };
 	int * pData = (int *)OGRE_MALLOC(sizeof(colors), Ogre::MEMCATEGORY_GENERAL);
 	memcpy(pData, colors, sizeof(colors));
 	return std::make_pair(Ogre::MemoryDataStreamPtr(new Ogre::MemoryDataStream(pData, 1, true)), Ogre::Codec::CodecDataPtr(imgData));
