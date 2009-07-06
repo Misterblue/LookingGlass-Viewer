@@ -111,53 +111,53 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     public override void OnLoad(string name, IAppParameters parms) {
         m_moduleName = name;
         ModuleParams = parms;
-        ModuleParams.AddDefaultParameter("Renderer.Ogre.Name", "LookingGlass",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Name", "LookingGlass",
                     "Name of the Ogre resources to load");
-        ModuleParams.AddDefaultParameter("Renderer.Ogre.SkyboxName", "LookingGlass/CloudyNoonSkyBox",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.SkyboxName", "LookingGlass/CloudyNoonSkyBox",
                     "Name of the skybox resource to use");
-        ModuleParams.AddDefaultParameter("Renderer.Ogre.ShadowTechnique", "none",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.ShadowTechnique", "none",
                     "Shadow technique: none, additive, modulative, stencil");
-        // cp.AddParameter("Renderer.Ogre.Renderer", "Direct3D9 Rendering Subsystem",
+        // cp.AddParameter(m_moduleName + ".Ogre.Renderer", "Direct3D9 Rendering Subsystem",
         //             "Name of the rendering subsystem to use");
-        ModuleParams.AddDefaultParameter("Renderer.Ogre.Renderer", "OpenGL Rendering Subsystem",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Renderer", "OpenGL Rendering Subsystem",
                     "Name of the rendering subsystem to use");
-        ModuleParams.AddDefaultParameter("Renderer.Ogre.VideoMode", "800 x 600@ 32-bit colour",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.VideoMode", "800 x 600@ 32-bit colour",
                     "Initial window size");
-        ModuleParams.AddDefaultParameter("Renderer.Ogre.PluginFilename", "plugins.cfg",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.PluginFilename", "plugins.cfg",
                     "File that lists Ogre plugins to load");
-        ModuleParams.AddDefaultParameter("Renderer.Ogre.ResourcesFilename", "resources.cfg",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.ResourcesFilename", "resources.cfg",
                     "File that lists the Ogre resources to load");
-        ModuleParams.AddDefaultParameter("Renderer.Ogre.DefaultNumMipmaps", "3",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.DefaultNumMipmaps", "3",
                     "Default number of mip maps created for a texture (usually 6)");
-        ModuleParams.AddDefaultParameter("Renderer.Ogre.CacheDir", Globals.GetDefaultApplicationStorageDir(null),
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.CacheDir", Globals.GetDefaultApplicationStorageDir(null),
                     "Directory to store cached meshs, textures, etc");
-        ModuleParams.AddDefaultParameter("Renderer.Ogre.PreLoadedDir", 
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.PreLoadedDir", 
                     System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "../LookingGlassResources/Preloaded/"),
                     "Directory to for preloaded textures, etc");
-        ModuleParams.AddDefaultParameter("Renderer.Ogre.DefaultTerrainMaterial",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.DefaultTerrainMaterial",
                     "LookingGlass/DefaultTerrainMaterial",
                     "Material applied to terrain");
-        ModuleParams.AddDefaultParameter("Renderer.Ogre.OceanMaterialName",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.OceanMaterialName",
                     "LookingGlass/Ocean",
                     "The ogre name of the ocean texture");
-        ModuleParams.AddDefaultParameter("Renderer.Ogre.DefaultMeshFilename", 
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.DefaultMeshFilename", 
                     System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "../LookingGlassResources/LoadingShape.mesh"),
                     "Filename of the default shape found in the cache dir");
-        ModuleParams.AddDefaultParameter("Renderer.Ogre.DefaultTextureFilename", 
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.DefaultTextureFilename", 
                     System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "../LookingGlassResources/LoadingTexture.png"),
                     "Filename of the default texture found in the cache dir");
-        ModuleParams.AddDefaultParameter("Renderer.Ogre.DefaultTextureResourceName", 
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.DefaultTextureResourceName", 
                     "LoadingTexture.png",
                     "Resource name of  the default texture");
-        ModuleParams.AddDefaultParameter("Renderer.Ogre.LL.SceneMagnification", "10",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.LL.SceneMagnification", "10",
                     "Magnification of LL coordinates into Ogre space");
-        ModuleParams.AddDefaultParameter("Renderer.Ogre.LL.EarlyMaterialCreate", "true",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.LL.EarlyMaterialCreate", "true",
                     "Create materials while creating mesh rather than waiting");
-        ModuleParams.AddDefaultParameter("Renderer.Ogre.SerializeMaterials", "false",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.SerializeMaterials", "false",
                     "Write out materials to files (replace with DB someday)");
-        ModuleParams.AddDefaultParameter("Renderer.Ogre.SerializeMeshes", "true",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.SerializeMeshes", "true",
                     "Write out meshes to files");
-        ModuleParams.AddDefaultParameter("Renderer.Ogre.CaelumScript", "RainWindScriptTest",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.CaelumScript", "DefaultSky",
                     "Write out meshes to files");
 
         m_stats = new StatisticManager(m_moduleName);

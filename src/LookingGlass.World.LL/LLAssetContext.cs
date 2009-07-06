@@ -211,13 +211,11 @@ public sealed class LLAssetContext : AssetContextBase {
         lock (m_waiting) {
             foreach (KeyValuePair<OMV.UUID, WaitingInfo> kvp in m_waiting) {
                 if (kvp.Value.worldID == assetWorldID) {
-                    m_log.Log(LogLevel.DTEXTUREDETAIL, "OnACDownloadFinished: Found waiting " + kvp.Value.worldID);
                     toCall.Add(kvp.Value);
                 }
             }
             // now remove the ones from the list (we cannot remove while transversing the list)
             foreach (WaitingInfo wx in toCall) {
-                m_log.Log(LogLevel.DTEXTUREDETAIL, "OnACDownloadFinished: removing from waiting list " + wx.worldID);
                 m_waiting.Remove(wx.worldID);
             }
         }

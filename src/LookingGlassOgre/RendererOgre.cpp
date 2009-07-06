@@ -100,7 +100,7 @@ namespace RendererOgre {
 		m_defaultTerrainMaterial = LookingGlassOgr::GetParameter("Renderer.Ogre.DefaultTerrainMaterial");
 		m_serializeMeshes = LookingGlassOgr::isTrue(LookingGlassOgr::GetParameter("Renderer.Ogre.SerializeMeshes"));
 #ifdef CAELUM
-		m_caelumScript = LookingGlassOgr::isTrue(LookingGlassOgr::GetParameter("Renderer.Ogre.CaelumScript"));
+		m_caelumScript = LookingGlassOgr::GetParameter("Renderer.Ogre.CaelumScript");
 #endif
 
 
@@ -278,7 +278,7 @@ namespace RendererOgre {
 		*/
         componentMask = Caelum::CaelumSystem::CAELUM_COMPONENTS_NONE;
 		m_caelumSystem = new Caelum::CaelumSystem(m_root, m_sceneMgr, componentMask);
-		LookingGlassOgr::Log("CreateSky: loading caelum script %s", m_caelumScript.c_ptr());
+		LookingGlassOgr::Log("CreateSky: loading caelum script %s", m_caelumScript);
 		Caelum::CaelumPlugin::getSingleton().loadCaelumSystemFromScript(m_caelumSystem, m_caelumScript);
 
 		/*
@@ -488,12 +488,12 @@ namespace RendererOgre {
 		LookingGlassOgr::Log("RendererOgre::CreateMeshResource2: Creating mo. f = %d, %s", 
 				faces, manualMesh->getName().c_str());
 
+			/*
 		int iface, iv;
 		const float* fVf;
 		char faceName[10];
 		Ogre::String materialName;
 		for (iface = 0; iface < faces; iface++) {
-			/*
 			itoa(iface, faceName, 10);
 			materialName = baseMaterialName + "-" + faceName + ".material";
 			Ogre::SubMesh* faceMesh = manualMesh->createSubMesh();
@@ -522,8 +522,8 @@ namespace RendererOgre {
 			}
 			fC += 3;
 			mo->end();
-			*/
 		}
+			*/
 
 		if (m_serializeMeshes) {
 			// serialize the mesh to the filesystem

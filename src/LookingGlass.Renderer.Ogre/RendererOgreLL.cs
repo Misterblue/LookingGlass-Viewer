@@ -72,7 +72,8 @@ public class RendererOgreLL : IWorldRenderConv {
             // m_usePrimScaleFactor = true; // use Ogre scaling rather than mesh scaling
             m_usePrimScaleFactor = false; // use Ogre scaling rather than mesh scaling
             amesher.ShouldScaleMesh = !m_usePrimScaleFactor;
-            m_useRendererTextureScaling = true; // use Ogre texture scaling rather than computing it
+            m_useRendererTextureScaling = false; // use software texture face scaling
+            // m_useRendererTextureScaling = true; // use Ogre texture scaling rather than computing it
             m_meshMaker = amesher;
         }
 

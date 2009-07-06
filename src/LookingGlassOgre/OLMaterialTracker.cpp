@@ -24,6 +24,7 @@
 #include "OLMaterialTracker.h"
 #include "LookingGlassOgre.h"
 #include "RendererOgre.h"
+#include "BadImageCodec.h"
 
 namespace OLMaterialTracker {
 
@@ -43,6 +44,10 @@ OLMaterialTracker::OLMaterialTracker(RendererOgre::RendererOgre* ro) {
 	if (m_shouldSerialize) {
 		m_serializer = new Ogre::MaterialSerializer();
 	}
+
+	// more kludge processing for corrupt data files
+	Ogre::ImageCodec* codec = OGRE_NEW BadImageCodec::BadImageCodec();
+	Ogre::Codec::registerCodec(codec);
 }
 
 OLMaterialTracker::~OLMaterialTracker() {
