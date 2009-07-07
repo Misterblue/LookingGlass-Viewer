@@ -706,26 +706,33 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         }
 
         // the texture is loaded so get to the right time to tell the renderer
-        private void TextureLoadedCallback(string textureEntityName) {
+        private void TextureLoadedCallback(string textureEntityName, bool hasTransparancy) {
             LogManager.Log.Log(LogLevel.DRENDERDETAIL, 
                     "TextureLoadedCallback {0}: Load complete. Name: {1}", this.sequence, textureEntityName);
             EntityNameOgre entName = new EntityNameOgre(textureEntityName);
-            m_renderer.m_betweenFramesQueue.DoLater(new RequestTextureCompletionLater(entName));
+            m_renderer.m_betweenFramesQueue.DoLater(new RequestTextureCompletionLater(entName, hasTransparancy));
             return;
         }
 
         private sealed class RequestTextureCompletionLater : DoLaterBase {
             EntityNameOgre m_entName;
-            public RequestTextureCompletionLater(EntityNameOgre entName) : base() {
+            bool m_hasTransparancy;
+            public RequestTextureCompletionLater(EntityNameOgre entName, bool hasTransparancy) : base() {
                 m_entName = entName;
+                m_hasTransparancy = hasTransparancy;
                 this.cost = m_betweenFrameMapTextureCost;
             }
             override public bool DoIt() {
                 string ogreResourceName = m_entName.OgreResourceName;
                 LogManager.Log.Log(LogLevel.DRENDERDETAIL, 
-                    "RequestTextureCompleteLater {0}: Load complete. Refreshing texture {1}", 
-                            this.sequence, ogreResourceName);
-                Ogr.RefreshResource(Ogr.ResourceTypeTexture, ogreResourceName);
+                    "RequestTextureCompleteLater {0}: Load complete. Refreshing texture {1}, t={2}", 
+                            this.sequence, ogreResourceName, m_hasTransparancy);
+                if (m_hasTransparancy) {
+                    Ogr.RefreshResource(Ogr.ResourceTypeTransparentTexture, ogreResourceName);
+                }
+                else {
+                    Ogr.RefreshResource(Ogr.ResourceTypeTexture, ogreResourceName);
+                }
                 return true;
             }
         }

@@ -44,7 +44,7 @@ public abstract class AssetContextBase : IDisposable {
 
     // When a requested download is finished, you can be called with the ID of the
     // completed asset and the entityName of ??
-    public delegate void DownloadFinishedCallback(string entName);
+    public delegate void DownloadFinishedCallback(string entName, bool hasTransparancy);
     public delegate void DownloadProgressCallback(string entName);
 
 # pragma warning disable 0067   // disable unused event warning

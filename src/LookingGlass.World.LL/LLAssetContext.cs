@@ -153,7 +153,9 @@ public sealed class LLAssetContext : AssetContextBase {
         string textureFilename = Path.Combine(CacheDir, textureEnt.CacheFilename);
         if (File.Exists(textureFilename)) {
             m_log.Log(LogLevel.DTEXTUREDETAIL, "DoTextureLoad: Texture file alreayd exists for " + worldID);
-            finishCall.BeginInvoke(textureEntityName, null, null);
+            bool hasTransparancy = CheckTextureFileForTransparancy(textureFilename);
+            // can't check for transparancy
+            finishCall.BeginInvoke(textureEntityName, hasTransparancy, null, null);
         }
         else {
             bool sendRequest = false;
@@ -181,11 +183,59 @@ public sealed class LLAssetContext : AssetContextBase {
         return;
     }
 
+    /// <summary>
+    /// Check the file at the specified filename for transparancy. We presume the texture is
+    /// a JPEG2000 image. If we can't figure it out, we presume it has transparancy.
+    /// </summary>
+    /// <param name="textureFilename"></param>
+    /// <returns></returns>
+    private bool CheckTextureFileForTransparancy(string textureFilename) {
+        bool ret = true;    // assume the worst about  this texture
+        try {
+            byte[] data = File.ReadAllBytes(textureFilename);
+            OMV.Assets.AssetTexture assetTexture = new OMV.Assets.AssetTexture(OMV.UUID.Zero, data);
+            ret = CheckAssetTextureForTransparancy(assetTexture);
+        }
+        catch (Exception e) {
+            m_log.Log(LogLevel.DTEXTURE, "CheckTextureFileForTransparancy: error checking {0}: {1}",
+                textureFilename, e.ToString());
+            ret = true;
+        }
+        return ret;
+    }
+
+    /// <summary>
+    /// Given a decoded asset texture, return whether there is any transparancy therein.
+    /// </summary>
+    /// <param name="assetTexture"></param>
+    /// <returns>true if there is transparancy in the texture</returns>
+    private bool CheckAssetTextureForTransparancy(OMV.Assets.AssetTexture assetTexture) {
+        bool hasTransparancy = false;
+        try {
+            if (assetTexture.Image == null) {
+                assetTexture.Decode();
+            }
+            if (assetTexture.Image.Alpha != null) {
+                for (int ii = 0; ii < assetTexture.Image.Alpha.Length; ii++) {
+                    if (assetTexture.Image.Alpha[ii] != 255) {
+                        hasTransparancy = true;
+                        break;
+                    }
+                }
+            }
+        }
+        catch (Exception e) {
+            hasTransparancy = false;
+        }
+        return hasTransparancy;
+    }
+
     // Used for texture pipeline
     // returns flag = true if texture was sucessfully downloaded
     private void OnACDownloadFinished(OMV.TextureRequestState state, OMV.Assets.AssetTexture assetTexture) {
         // if texture could not be downloaded, create a fake texture
         OMV.UUID assetWorldID = assetTexture.AssetID;
+        bool hasTransparancy = true;    // assume the worst
         if (state == OMV.TextureRequestState.NotFound || state == OMV.TextureRequestState.Timeout) {
             try {
                 EntityNameLL tempTexture = EntityNameLL.ConvertTextureWorldIDToEntityName(this, assetWorldID.ToString());
@@ -224,13 +274,14 @@ public sealed class LLAssetContext : AssetContextBase {
             if (wii.type == AssetType.Texture) {
                 // a regular texture we write out as it's JPEG2000 image
                 try {
+                    hasTransparancy = CheckAssetTextureForTransparancy(assetTexture);
                     FileStream fileStream = File.Open(wii.filename, FileMode.Create);
                     fileStream.Flush();
                     fileStream.Write(assetTexture.AssetData, 0, assetTexture.AssetData.Length);
                     fileStream.Close();
                     fileStream.Dispose();
                     m_log.Log(LogLevel.DTEXTUREDETAIL, "Download finished callback: " + wii.worldID.ToString());
-                    wii.callback(textureEntityName.Name);
+                    wii.callback(textureEntityName.Name, hasTransparancy);
                 }
                 catch (Exception e) {
                     m_log.Log(LogLevel.DBADERROR, "TEXTURE DOWNLOAD COMPLETE. FAILED JPEG2 WRITE FOR {0}: {1}", 
@@ -269,7 +320,7 @@ public sealed class LLAssetContext : AssetContextBase {
                         fileStream.Close();
                         fileStream.Dispose();
                         m_log.Log(LogLevel.DTEXTUREDETAIL, "Download sculpty finished callback: " + wii.worldID.ToString());
-                        wii.callback(textureEntityName.Name);
+                        wii.callback(textureEntityName.Name, false);
                     }
                     else {
                         m_log.Log(LogLevel.DBADERROR, "TEXTURE DOWNLOAD COMPLETE. FAILED JPEG2 DECODE FOR {0}", textureEntityName.Name);

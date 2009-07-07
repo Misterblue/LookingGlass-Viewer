@@ -186,7 +186,7 @@ public class RendererOgreLL : IWorldRenderConv {
                         // Don't have the texture now so ask for the texture to be loaded.
                         // Note that we ignore the callback and let the work queue requeing get us back here
                         ent.AssetContext.DoTextureLoad(textureEnt.Name, AssetContextBase.AssetType.SculptieTexture, 
-                            delegate(string name) { return; });
+                            delegate(string name, bool trans) { return; });
                         // This will cause the work queue to requeue the mesh creation and call us
                         //   back later to retry creating the mesh
                         return false;

@@ -241,7 +241,11 @@ void LookingGlassOgr::RefreshResourceI(const Ogre::String& resName, const int rT
 	}
 	if (rType == LookingGlassOgr::ResourceTypeTexture) {
 		Ogre::TextureManager::getSingleton().unload(resName);
-		m_ro->MaterialTracker()->MarkTextureModified(resName);
+		m_ro->MaterialTracker()->MarkTextureModified(resName, false);
+	}
+	if (rType == LookingGlassOgr::ResourceTypeTransparentTexture) {
+		Ogre::TextureManager::getSingleton().unload(resName);
+		m_ro->MaterialTracker()->MarkTextureModified(resName, true);
 	}
 }
 

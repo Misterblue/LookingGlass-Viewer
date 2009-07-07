@@ -47,14 +47,14 @@ public:
 	// called to get all the meshes that need to be reloaded for materials
 	// just addes to the passed list
 	void GetMeshesToRefreshForMaterials(std::list<Ogre::MeshPtr>*, const Ogre::String&);
-	void GetMeshesToRefreshForTexture(std::list<Ogre::MeshPtr>*, const Ogre::String&);
+	void GetMeshesToRefreshForTexture(std::list<Ogre::MeshPtr>*, const Ogre::String&, bool);
 	void ReloadMeshes(std::list<Ogre::MeshPtr>*);
 
 	// remember the material is modified and reload the using entities
 	void MarkMaterialModified(const Ogre::String);
 
 	// remember the texture is modified and reload the using entities
-	void MarkTextureModified(const Ogre::String);
+	void MarkTextureModified(const Ogre::String, bool);
 
 	// Ogre::FrameListener
 	bool frameRenderingQueued(const Ogre::FrameEvent&);

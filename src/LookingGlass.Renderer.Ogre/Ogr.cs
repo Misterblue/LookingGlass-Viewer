@@ -24,7 +24,8 @@ static class Ogr {
     public const int ResourceTypeUnknown = 0;   // unknown
     public const int ResourceTypeMesh = 1;      // mesh resource
     public const int ResourceTypeTexture = 2;   // texture
-    public const int ResourceTypeMaterial = 3;  // texture
+    public const int ResourceTypeMaterial = 3;  // material
+    public const int ResourceTypeTransparentTexture = 4;  // texture with some transparancy
 
     // =============================================================================
     // Call from the Ogre C++ code back into  the managed code.

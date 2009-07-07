@@ -46,6 +46,7 @@ static const int ResourceTypeUnknown = 0;	//
 static const int ResourceTypeMesh = 1;		// Mesh
 static const int ResourceTypeTexture = 2;	// Texture
 static const int ResourceTypeMaterial = 3;	// Material
+static const int ResourceTypeTransparentTexture = 4;	// A texture with some transparancy
 
 #define OLArchiveTypeName "OLFileSystem"
 #define OLPreloadTypeName "OLPreloadFileSystem"

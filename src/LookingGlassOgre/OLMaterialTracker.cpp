@@ -134,8 +134,9 @@ void OLMaterialTracker::MarkMaterialModified(const Ogre::String materialName) {
 // named material
 // Note that this does not reload the material itself. This presumes you already did
 // that and you now just need Ogre to get with the program.
-void OLMaterialTracker::MarkTextureModified(const Ogre::String materialName) {
-	m_texturesModified.push(materialName);
+void OLMaterialTracker::MarkTextureModified(const Ogre::String materialName, bool hasTransparancy) {
+	Ogre::String taggedName = (hasTransparancy ? "T" : " ") + materialName;
+	m_texturesModified.push(taggedName);
 }
 
 // between frames, if there were material modified, refresh their containing entities
@@ -148,10 +149,13 @@ bool OLMaterialTracker::frameRenderingQueued(const Ogre::FrameEvent&) {
 		m_materialsModified.pop();
 		GetMeshesToRefreshForMaterials(&m_meshesToChange, matName);
 	}
+	cnt = 10;
 	while ((m_texturesModified.size() > 0) && (--cnt > 0)) {
 		matName = m_texturesModified.front();
 		m_texturesModified.pop();
-		GetMeshesToRefreshForTexture(&m_meshesToChange, matName);
+		char transparancyFlag = matName[0];
+		GetMeshesToRefreshForTexture(&m_meshesToChange, matName.substr(1, matName.length()-1),
+				(transparancyFlag == 'T' ? true : false));
 	}
 	if (m_meshesToChange.size() > 0) {
 		ReloadMeshes(&m_meshesToChange);
@@ -192,7 +196,8 @@ void OLMaterialTracker::GetMeshesToRefreshForMaterials(std::list<Ogre::MeshPtr>*
 
 // find all the meshes that use the texture and add it to a list of meshes
 // TODO: figure out of just reloading the resource group is faster
-void OLMaterialTracker::GetMeshesToRefreshForTexture(std::list<Ogre::MeshPtr>* meshes, const Ogre::String& texName) {
+void OLMaterialTracker::GetMeshesToRefreshForTexture(std::list<Ogre::MeshPtr>* meshes, const Ogre::String& texName,
+													 bool hasTransparancy) {
 	// only check the Meshs for use of this material
 	LookingGlassOgr::Log("GetMeshesToRefreshForTexture: refresh for %s", texName.c_str());
 	Ogre::ResourceManager::ResourceMapIterator rmi = Ogre::MeshManager::getSingleton().getResourceIterator();
@@ -214,6 +219,15 @@ void OLMaterialTracker::GetMeshesToRefreshForTexture(std::list<Ogre::MeshPtr>* m
 						while (tusIter.hasMoreElements()) {
 							Ogre::TextureUnitState* oneTus = tusIter.getNext();
 							if (oneTus->getTextureName() == texName) {
+								// we have the material pass with this texture. Update transparancy flag while here
+								if (hasTransparancy) {
+									onePass->setDepthWriteEnabled(false);
+									onePass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
+								}
+								else {
+									onePass->setDepthWriteEnabled(true);
+									onePass->setSceneBlending(Ogre::SBT_REPLACE);
+								}
 								// this mesh uses the material
 								// we sometimes get multiple materials for one mesh -- just reload once
 								std::list<Ogre::MeshPtr>::iterator ii = meshes->begin(); 
@@ -252,6 +266,7 @@ void OLMaterialTracker::ReloadMeshes(std::list<Ogre::MeshPtr>* meshes) {
 void OLMaterialTracker::CreateMaterialResource(const char* mName, const char* tName,
 		const float colorR, const float colorG, const float colorB, const float colorA,
 		const float glow, const bool fullBright, const int shiny, const int bump) {
+/*
 	Ogre::String materialName = mName;
 	Ogre::String textureName = tName;
 	// get rid of the old one
@@ -298,6 +313,7 @@ void OLMaterialTracker::CreateMaterialResource(const char* mName, const char* tN
 	}
 	// we're getting errors when this load happens if the textures don't already exist
 	// mat->load();
+*/
 }
 
 void OLMaterialTracker::CreateMaterialResource2(const char* mName, const char* tName, const float* parms) {
