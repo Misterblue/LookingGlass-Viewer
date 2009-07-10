@@ -182,30 +182,36 @@ public class MeshmerizerG : OMVR.IRendering {
         omvrmesh.Path = new OMVR.Path();
         omvrmesh.Path.Points = new List<OMVR.PathPoint>();
 
+        // LogManager.Log.Log(LogLevel.DRENDERDETAIL, "GenMesh: p={0}, numFaces={1}, vfaces={2}", prim.LocalID, 
+        //     newPrim.numPrimFaces, newPrim.viewerFaces.Count);
         for (int ii=0; ii<numPrimFaces; ii++) {
             OMVR.Face oface = new OMVR.Face();
             oface.Vertices = new List<OMVR.Vertex>();
             oface.Indices = new List<ushort>();
             oface.TextureFace = prim.Textures.GetFace((uint)ii);
             int faceVertices = 0;
+            // LogManager.Log.Log(LogLevel.DRENDERDETAIL, "GenMesh: p={0}, f={1}", prim.LocalID, ii);
             foreach (PrimMesher.ViewerFace vface in newPrim.viewerFaces) {
                 if (vface.primFaceNumber == ii) {
                     OMVR.Vertex vert = new OMVR.Vertex();
                     vert.Position = new OMV.Vector3(vface.v1.X, vface.v1.Y, vface.v1.Z);
                     vert.TexCoord = new OMV.Vector2(vface.uv1.U, vface.uv1.V);
                     vert.Normal = new OMV.Vector3(vface.n1.X, vface.n1.Y, vface.n1.Z);
+                    // LogManager.Log.Log(LogLevel.DRENDERDETAIL, "face={0}, V1:x={1}, y={2}, z={3}", ii, vface.v1.X, vface.v1.Y, vface.v1.Z);
                     oface.Vertices.Add(vert);
 
                     vert = new OMVR.Vertex();
                     vert.Position = new OMV.Vector3(vface.v2.X, vface.v2.Y, vface.v2.Z);
                     vert.TexCoord = new OMV.Vector2(vface.uv2.U, vface.uv2.V);
                     vert.Normal = new OMV.Vector3(vface.n2.X, vface.n2.Y, vface.n2.Z);
+                    // LogManager.Log.Log(LogLevel.DRENDERDETAIL, "face={0}, V2:x={1}, y={2}, z={3}", ii, vface.v2.X, vface.v2.Y, vface.v2.Z);
                     oface.Vertices.Add(vert);
 
                     vert = new OMVR.Vertex();
                     vert.Position = new OMV.Vector3(vface.v3.X, vface.v3.Y, vface.v3.Z);
                     vert.TexCoord = new OMV.Vector2(vface.uv3.U, vface.uv3.V);
                     vert.Normal = new OMV.Vector3(vface.n3.X, vface.n3.Y, vface.n3.Z);
+                    // LogManager.Log.Log(LogLevel.DRENDERDETAIL, "face={0}, V3:x={1}, y={2}, z={3}", ii, vface.v3.X, vface.v3.Y, vface.v3.Z);
                     oface.Vertices.Add(vert);
 
                     oface.Indices.Add((ushort)(faceVertices*3+0));

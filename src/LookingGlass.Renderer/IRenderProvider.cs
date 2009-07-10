@@ -94,6 +94,9 @@ public struct FaceData {
         void UpdateEnvironmentalLights(EntityLight sun, EntityLight moon);
         // TODO: ambient setting
 
+        // Given the current mouse position, return a point in the world
+        OMV.Vector3d SelectPoint();
+
         // called when a new region is found, decorates the region context with
         // rendering specific information for placing in  the view
         void MapRegionIntoView(RegionContextBase rcontext);

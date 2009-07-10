@@ -106,13 +106,21 @@ public sealed class LLAssetContext : AssetContextBase {
         // m_log.Log(LogLevel.DTEXTUREDETAIL, "ComputeTextureFilename: " + textureFilename);
 
         // make sure the recieving directory is there for the texture
-        // the texture pipeline will do this some day
-        string textureDirName = Path.GetDirectoryName(textureFilename);
+        MakeParentDirectoriesExist(textureFilename);
+
+        // m_log.Log(LogLevel.DTEXTUREDETAIL, "ComputerTextureFilename: returning " + textureFilename);
+        return textureFilename;
+    }
+
+    /// <summary>
+    /// Given a fully qualified filename, make sure all the parent directies exist
+    /// </summary>
+    /// <param name="filename"></param>
+    private void MakeParentDirectoriesExist(string filename) {
+        string textureDirName = Path.GetDirectoryName(filename);
         if (!Directory.Exists(textureDirName)) {
             Directory.CreateDirectory(textureDirName);
         }
-        // m_log.Log(LogLevel.DTEXTUREDETAIL, "ComputerTextureFilename: returning " + textureFilename);
-        return textureFilename;
     }
 
     // we set it in TexturePipeline and then just use that setting
@@ -275,6 +283,7 @@ public sealed class LLAssetContext : AssetContextBase {
                 // a regular texture we write out as it's JPEG2000 image
                 try {
                     hasTransparancy = CheckAssetTextureForTransparancy(assetTexture);
+                    MakeParentDirectoriesExist(wii.filename);
                     FileStream fileStream = File.Open(wii.filename, FileMode.Create);
                     fileStream.Flush();
                     fileStream.Write(assetTexture.AssetData, 0, assetTexture.AssetData.Length);
@@ -314,6 +323,7 @@ public sealed class LLAssetContext : AssetContextBase {
                         graphics.Flush();
                         graphics.Dispose();
 
+                        MakeParentDirectoriesExist(wii.filename);
                         FileStream fileStream = File.Open(wii.filename, FileMode.Create);
                         textureBitmap.Save(fileStream, System.Drawing.Imaging.ImageFormat.Png);
                         fileStream.Flush();

@@ -388,6 +388,12 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     }
     
     // ==========================================================================
+    // Given the current input pointer, return a point in the world
+    public OMV.Vector3d SelectPoint() {
+        return new OMV.Vector3d(0, 0, 0);
+    }
+    
+    // ==========================================================================
     public void MapRegionIntoView(RegionContextBase rcontext) {
         lock (rcontext) {
             // see that the region entity has a converter between world and renderer

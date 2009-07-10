@@ -192,11 +192,7 @@ public class RendererOgreLL : IWorldRenderConv {
                         return false;
                     }
                     m_log.Log(LogLevel.DRENDERDETAIL, "CreateMeshResource: mesherizing scuplty {0}", ent.Name.Name);
-                    m_log.Log(LogLevel.DRENDERDETAIL, "CreateMeshResource: scuplty texture w={0}, h={1}",
-                                textureBitmap.Width, textureBitmap.Height );
                     mesh = m_meshMaker.GenerateSculptMesh(textureBitmap, prim, OMVR.DetailLevel.Highest);
-                    m_log.Log(LogLevel.DRENDERDETAIL, "CreateMeshResource: scuplty mesh faces={0}, verts={1}, indxs={2}",
-                        mesh.Faces.Count, mesh.Faces[0].Vertices.Count, mesh.Faces[0].Indices.Count);
                     textureBitmap.Dispose();
                 }
                 else {
