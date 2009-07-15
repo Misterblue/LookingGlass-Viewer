@@ -213,15 +213,17 @@ namespace RendererOgre {
 		try {
 			const char* sceneName = GetParameter("Renderer.Ogre.Name");
 			m_sceneMgr = m_root->createSceneManager(Ogre::ST_EXTERIOR_CLOSE, sceneName);
-			m_sceneMgr->setAmbientLight(Ogre::ColourValue(0.1f, 0.1f, 0.1f));
-			const char* shadowName = GetParameter("Renderer.Ogre.ShadowTechnique");
+			m_sceneMgr->setAmbientLight(Ogre::ColourValue(0.01f, 0.01f, 0.01f));
+			const char* shadowName = LookingGlassOgr::GetParameter("Renderer.Ogre.ShadowTechnique");
 			if (stricmp(shadowName, "additive")) 
 				m_sceneMgr->setShadowTechnique(Ogre::SHADOWDETAILTYPE_ADDITIVE);	// easiest
 			if (stricmp(shadowName, "modulative")) 
 				m_sceneMgr->setShadowTechnique(Ogre::SHADOWDETAILTYPE_MODULATIVE);	// hardest
 			if (stricmp(shadowName, "stencil")) 
 				m_sceneMgr->setShadowTechnique(Ogre::SHADOWDETAILTYPE_STENCIL);
-			}
+			int shadowFarDistance = atoi(LookingGlassOgr::GetParameter("Renderer.Ogre.ShadowFarDistance"));
+			m_sceneMgr->setShadowFarDistance((float)shadowFarDistance);
+		}
 		catch (std::exception e) {
 			Log("Exception in createScene: %s", e.what());
 			return;
@@ -401,6 +403,8 @@ namespace RendererOgre {
 								);
 		Ogre::MovableObject* ent = sceneMgr->createEntity(entName, meshName);
 		// Ogre::MovableObject* ent = sceneMgr->createEntity(entName, Ogre::SceneManager::PT_SPHERE);	// DEBUG
+		// this should somehow be settable
+		ent->setCastShadows(true);
 		sceneNode->attachObject(ent);
 		return;
 	}

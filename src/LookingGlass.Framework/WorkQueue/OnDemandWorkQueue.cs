@@ -46,12 +46,12 @@ public class OnDemandWorkQueue : IWorkQueue {
 
     public long CurrentQueued { get { return (long)m_workQueue.Count; } }
 
-    protected List<DoLaterBase> m_workQueue;
+    protected LinkedList<DoLaterBase> m_workQueue;
 
     public OnDemandWorkQueue(string nam) {
         m_queueName = nam;
         m_totalRequests = 0;
-        m_workQueue = new List<DoLaterBase>();
+        m_workQueue = new LinkedList<DoLaterBase>();
         WorkQueueManager.Register(this);
     }
 
@@ -63,7 +63,7 @@ public class OnDemandWorkQueue : IWorkQueue {
         w.containingClass = this;
         w.remainingWait = 0;    // the first time through, do it now
         w.timesRequeued = 0;
-        lock (m_workQueue) m_workQueue.Add(w);
+        AddToWorkQueue(w);
     }
 
     // requeuing the work item. Since requeuing, add the delay
@@ -71,7 +71,33 @@ public class OnDemandWorkQueue : IWorkQueue {
         w.timesRequeued++;
         int nextTime = Math.Min(w.requeueWait * w.timesRequeued, 5000);
         w.remainingWait = System.Environment.TickCount + nextTime;
-        lock (m_workQueue) m_workQueue.Add(w);
+        AddToWorkQueue(w);
+    }
+
+    /// <summary>
+    /// Add the work item to the queue in the order order
+    /// </summary>
+    /// <param name="w"></param>
+    private void AddToWorkQueue(DoLaterBase w) {
+        lock (m_workQueue) {
+            // Experimental code trying to give some order to the requests
+            LinkedListNode<DoLaterBase> foundItem = null;
+            for (LinkedListNode<DoLaterBase> ii = m_workQueue.First; ii != null; ii = ii.Next) {
+                if (w.order < ii.Value.order) {
+                    foundItem = ii;
+                    break;
+                }
+            }
+            if (foundItem != null) {
+                // we're pointing to an element to put our element before
+                m_workQueue.AddBefore(foundItem, w);
+            }
+            else {
+                // just put it on the end
+                m_workQueue.AddLast(w);
+            }
+            // m_workQueue.AddLast(w);
+        }
     }
 
     public void ProcessQueue() {

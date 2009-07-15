@@ -82,6 +82,9 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     protected float m_sceneMagnification;
     public float SceneMagnification { get { return m_sceneMagnification; } }
 
+    // we remember where the camera last was so we can do some interest management
+    private OMV.Vector3d m_lastCameraPosition;
+
     protected BasicWorkQueue m_workQueue = new BasicWorkQueue("OgreRendererWork");
     protected OnDemandWorkQueue m_betweenFramesQueue = new OnDemandWorkQueue("OgreBetweenFrames");
     private static int m_betweenFrameTotalCost = 500;
@@ -93,7 +96,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     private static int m_betweenFrameUpdateTerrainCost = 50;
     private static int m_betweenFrameMapTextureCost = 10;
 
-    private Thread m_rendererThread = null;
+    // private Thread m_rendererThread = null;
 
     private RestHandler m_restHandler;
     private StatisticManager m_stats;
@@ -117,6 +120,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "Name of the skybox resource to use");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.ShadowTechnique", "none",
                     "Shadow technique: none, additive, modulative, stencil");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.ShadowFarDistance", "1000",
+                    "Integer units of distance within which to do shadows (mul by magnification)");
         // cp.AddParameter(m_moduleName + ".Ogre.Renderer", "Direct3D9 Rendering Subsystem",
         //             "Name of the rendering subsystem to use");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Renderer", "OpenGL Rendering Subsystem",
@@ -151,14 +156,16 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "Resource name of  the default texture");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.LL.SceneMagnification", "10",
                     "Magnification of LL coordinates into Ogre space");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.LL.EarlyMaterialCreate", "true",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.LL.EarlyMaterialCreate", "false",
+                    "Create materials while creating mesh rather than waiting");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.LL.RenderInfoMaterialCreate", "true",
                     "Create materials while creating mesh rather than waiting");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.SerializeMaterials", "false",
                     "Write out materials to files (replace with DB someday)");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.SerializeMeshes", "true",
                     "Write out meshes to files");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.CaelumScript", "DefaultSky",
-                    "Write out meshes to files");
+                    "The sky to use if Caelum enabled");
 
         m_stats = new StatisticManager(m_moduleName);
         m_statRefreshMaterialInterval = m_stats.GetIntervalCounter("UpdateTexture");
@@ -273,7 +280,9 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             // race condition: two Render()s for the same entity. This check is performed
             // again in the processing routine with some locking. The check here is
             // an optimization
-            m_betweenFramesQueue.DoLater(new DoRender(m_sceneMgr, ent, m_log));
+            DoLaterBase laterWork = new DoRender(m_sceneMgr, ent, m_log);
+            laterWork.order = CalculateInterestOrder(ent);
+            m_betweenFramesQueue.DoLater(laterWork);
         }
         return;
     }
@@ -352,6 +361,24 @@ public class RendererOgre : ModuleBase, IRenderProvider {
 
     }
 
+    /// <summary>
+    /// How interesting is this entity. Returns a floating point number that ranges from
+    /// zero (VERY interested) to N (less interested). The rough calculation is the distance
+    /// from the agent but it need not be linear (things behind can be 'farther away'.
+    /// </summary>
+    /// <param name="ent">Entity we're checking interest in</param>
+    /// <returns>Zero to N with larger meaning less interested</returns>
+    private float CalculateInterestOrder(IEntity ent) {
+        float ret = 100f;
+        if (m_lastCameraPosition != null) {
+            double dist = OMV.Vector3d.Distance(ent.GlobalPosition, m_lastCameraPosition);
+            if (dist < 0) dist = -dist;
+            if (dist > 1000.0) dist = 1000.0;
+            ret = (float)dist;
+        }
+        return ret;
+    }
+
     // ==========================================================================
     public void UnRender(IEntity ent) {
         return;
@@ -374,6 +401,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         // OMV.Quaternion orient = cam.Heading;
         orient.Normalize();
         OMV.Vector3d pos = cam.GlobalPosition * m_sceneMagnification;
+        m_lastCameraPosition = cam.GlobalPosition;
         Ogr.UpdateCamera((float)pos.X, (float)pos.Z, (float)-pos.Y, 
             orient.W, orient.X, orient.Z, -orient.Y,
             1.0f, (float)cam.Far*m_sceneMagnification, 1.0f);
@@ -582,11 +610,16 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             this.cost = m_betweenFrameRefreshMeshCost;
         }
         public override bool DoIt() {
-            // tell Ogre to refresh (reload) the resource
-            Ogr.RefreshResource(Ogr.ResourceTypeMesh, m_meshName);
-            // we're no longer waiting for the mesh
-            lock (m_renderer.waitingMeshes) {
-                m_renderer.waitingMeshes.Remove(m_meshName);
+            try {
+                // tell Ogre to refresh (reload) the resource
+                Ogr.RefreshResource(Ogr.ResourceTypeMesh, m_meshName);
+                // we're no longer waiting for the mesh
+                lock (m_renderer.waitingMeshes) {
+                    m_renderer.waitingMeshes.Remove(m_meshName);
+                }
+            }
+            catch {
+                // an oddity but not fatal
             }
             return true;
         }

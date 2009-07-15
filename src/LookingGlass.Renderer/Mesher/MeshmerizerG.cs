@@ -360,15 +360,16 @@ public class MeshmerizerG : OMVR.IRendering {
 
         // need a check for plainer vs default
         // just do default for now (I don't know what planar is)
-        /* LogManager.Log.Log(LogLevel.DRENDERDETAIL,
+        LogManager.Log.Log(LogLevel.DRENDERDETAIL,
             "TransformTex: c=" + vertices.Count.ToString()
+            + ", rot=" + teFace.Rotation
             + ", rU=" + teFace.RepeatU
             + ", rV=" + teFace.RepeatV
             + ", oU=" + teFace.OffsetU
             + ", oV=" + teFace.OffsetV
             + ", cos=" + cosineAngle.ToString()
             + ", sin=" + sinAngle.ToString()
-            ); */
+            );
         for (int ii=0; ii<vertices.Count; ii++ ) {
             // tex coord comes to us as a number between zero and one
             // transform about the center of the texture

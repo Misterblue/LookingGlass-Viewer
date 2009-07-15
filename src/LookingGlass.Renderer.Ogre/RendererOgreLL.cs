@@ -38,7 +38,8 @@ public class RendererOgreLL : IWorldRenderConv {
     private ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
 
     private float m_sceneMagnification = 10.0f;
-    bool m_buildMaterialsAtMeshCreationTime = true;
+    bool m_buildMaterialsAtMeshCreationTime = false;
+    bool m_buildMaterialsAtRenderInfoTime = true;
 
     // we've added things to the interface for scuplties. Need to push back into OMV someday.
     // private OMVR.IRendering m_meshMaker = null;
@@ -81,6 +82,7 @@ public class RendererOgreLL : IWorldRenderConv {
         m_sceneMagnification = float.Parse(Globals.Configuration.ParamString("Renderer.Ogre.LL.SceneMagnification"));
         // true if to creat materials while we are creating the mesh
         m_buildMaterialsAtMeshCreationTime = Globals.Configuration.ParamBool("Renderer.Ogre.LL.EarlyMaterialCreate");
+        m_buildMaterialsAtRenderInfoTime = Globals.Configuration.ParamBool("Renderer.Ogre.LL.RenderInfoMaterialCreate");
     }
 
     public RenderableInfo RenderingInfo(Object sceneMgr, IEntity ent) {
@@ -128,6 +130,16 @@ public class RendererOgreLL : IWorldRenderConv {
         // The region has a root node. Dig through the LL specific data structures to find it
         if (ent is LLEntityBase) {
             ri.RegionRoot = ent.RegionContext.Addition(RendererOgre.AddRegionSceneNode);
+        }
+
+        // while we're in the neighborhood, we can create the materials
+        if (m_buildMaterialsAtRenderInfoTime) {
+            if (sceneMgr is OgreSceneMgr) {
+                OgreSceneMgr oSceneMgr = (OgreSceneMgr)sceneMgr;
+                for (int j = 0; j < prim.Textures.FaceTextures.GetLength(0); j++) {
+                    CreateMaterialResource2(oSceneMgr, ent, prim, EntityNameOgre.ConvertToOgreMaterialNameX(ent.Name, j), j);
+                }
+            }
         }
 
         return ri;
