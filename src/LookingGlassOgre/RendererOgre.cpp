@@ -129,6 +129,8 @@ namespace RendererOgre {
         createFrameListener();
         createInput();
 
+		// uncomment this to generate the loading mesh shape (small cube)
+		// GenerateLoadingMesh();
 		return;
 	}
 
@@ -212,7 +214,8 @@ namespace RendererOgre {
 		Log("DEBUG: LookingGlassOrge: createScene");
 		try {
 			const char* sceneName = GetParameter("Renderer.Ogre.Name");
-			m_sceneMgr = m_root->createSceneManager(Ogre::ST_EXTERIOR_CLOSE, sceneName);
+			// m_sceneMgr = m_root->createSceneManager(Ogre::ST_EXTERIOR_CLOSE, sceneName);
+			m_sceneMgr = m_root->createSceneManager(Ogre::ST_GENERIC, sceneName);
 			m_sceneMgr->setAmbientLight(Ogre::ColourValue(0.01f, 0.01f, 0.01f));
 			const char* shadowName = LookingGlassOgr::GetParameter("Renderer.Ogre.ShadowTechnique");
 			if (stricmp(shadowName, "additive")) 
@@ -472,6 +475,49 @@ namespace RendererOgre {
 			meshToResource(mesh, entName);
 		}
 
+		return;
+	}
+
+	void RendererOgre::GenerateLoadingMesh() {
+		Ogre::String loadingMeshName = "LookingGlass/LoadingShape";
+		Ogre::String loadingMaterialName = "LookingGlass/LoadingShape";
+		Ogre::String targetFilename = LookingGlassOgr::GetParameter("Renderer.Ogre.DefaultMeshFilename");
+
+		Ogre::String loadingMeshManualObjectName = "MO/" + loadingMeshName;
+
+		Ogre::ManualObject* mo = m_sceneMgr->createManualObject(loadingMeshManualObjectName);
+		Log("RendererOgre::GenerateLoadingMesh: ");
+
+		mo->begin(loadingMaterialName);
+		mo->position(0.0, 0.0, 0.0);
+		mo->position(0.0, 0.0, 1.0);
+		mo->position(0.0, 1.0, 0.0);
+		mo->position(0.0, 1.0, 1.0);
+		mo->position(1.0, 0.0, 0.0);
+		mo->position(1.0, 0.0, 1.0);
+		mo->position(1.0, 1.0, 0.0);
+		mo->position(1.0, 1.0, 1.0);
+		
+		mo->quad(0, 2, 3, 1);
+		mo->quad(2, 4, 7, 3);
+		mo->quad(0, 4, 6, 2);
+		mo->quad(0, 4, 5, 1);
+		mo->quad(4, 5, 7, 6);
+		mo->quad(7, 5, 3, 1);
+		mo->end();
+
+		Ogre::MeshPtr mesh = mo->convertToMesh(loadingMeshName , OLResourceGroupName);
+		mo->clear();
+		m_sceneMgr->destroyManualObject(mo);
+
+		CreateParentDirectory(targetFilename);
+			
+		if (m_meshSerializer == NULL) {
+			m_meshSerializer = new Ogre::MeshSerializer();
+		}
+		m_meshSerializer->exportMesh(mesh.getPointer(), targetFilename);
+
+		// since this is called only once, we don't bother freeing the mesh
 		return;
 	}
 

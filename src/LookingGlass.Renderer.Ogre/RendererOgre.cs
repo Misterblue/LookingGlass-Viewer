@@ -786,6 +786,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         if (m_betweenFramesQueue != null) {
             m_betweenFramesQueue.ProcessQueue(m_betweenFrameTotalCost);
         }
+
         return Globals.KeepRunning;
     }
 }

@@ -102,6 +102,7 @@ private:
 
 	// UTILITY ROUTINES
 	void AssertNonNull(void*, const char*);
+	void GenerateLoadingMesh();
 
 	// USER IO
 	UserIO* m_userio;

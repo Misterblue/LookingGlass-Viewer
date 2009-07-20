@@ -103,6 +103,10 @@ extern "C" DLLExport void CreateMaterialResource2(const char* meshName, char* te
 	m_ro->MaterialTracker()->CreateMaterialResource2(meshName, textureName, parms);
 }
 
+extern "C" DLLExport void DiagnosticAction(int flag) {
+	return;
+}
+
 // ================================================================
 extern "C" DLLExport void GenTerrainMesh(Ogre::SceneManager* smgr, Ogre::SceneNode* terrainNode, 
 	 const int width, const int length, const float* heights) {
@@ -233,6 +237,7 @@ void LookingGlassOgr::RefreshResourceI(const Ogre::String& resName, const int rT
 	if (rType == LookingGlassOgr::ResourceTypeMesh) {
 		Ogre::MeshPtr theMesh = (Ogre::MeshPtr)Ogre::MeshManager::getSingleton().getByName(resName);
 		// unload it and let the renderer decide if it needs to be loaded again
+		// NOTE: unload doesn't work here. We get exceptions if we unload while reload doesn't fail
 		if (!theMesh.isNull()) theMesh->reload();
 	}
 	if (rType == LookingGlassOgr::ResourceTypeMaterial) {

@@ -209,7 +209,8 @@ public class RendererOgreLL : IWorldRenderConv {
                 }
                 else {
                     // we really should use Low for boxes, med for most things and high for megaprim curves
-                    OMVR.DetailLevel meshDetail = OMVR.DetailLevel.High;
+                    // OMVR.DetailLevel meshDetail = OMVR.DetailLevel.High;
+                    OMVR.DetailLevel meshDetail = OMVR.DetailLevel.Medium;
                     if (prim.Type == OMV.PrimType.Box) {
                         meshDetail = OMVR.DetailLevel.Low;
                         // m_log.Log(LogLevel.DRENDERDETAIL, "CreateMeshResource: Low detail for {0}", ent.Name.Name);

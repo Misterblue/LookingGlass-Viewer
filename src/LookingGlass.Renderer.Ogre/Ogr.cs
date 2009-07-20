@@ -117,6 +117,9 @@ static class Ogr {
         textureHasTransparent,
         maxParam
     };
+    // unload all resources associated with our resource groups
+    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
+    public static extern void DiagnosticAction(int flag);
 
     // ======================================================================
     [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
