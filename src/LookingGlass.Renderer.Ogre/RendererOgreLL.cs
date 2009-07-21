@@ -135,9 +135,14 @@ public class RendererOgreLL : IWorldRenderConv {
         // while we're in the neighborhood, we can create the materials
         if (m_buildMaterialsAtRenderInfoTime) {
             if (sceneMgr is OgreSceneMgr) {
+                // Oops. this doesn't work because FaceTextures is really a static array and
+                //   it really doesn't give the number of faces of the primitive
                 OgreSceneMgr oSceneMgr = (OgreSceneMgr)sceneMgr;
                 for (int j = 0; j < prim.Textures.FaceTextures.GetLength(0); j++) {
-                    CreateMaterialResource2(oSceneMgr, ent, prim, EntityNameOgre.ConvertToOgreMaterialNameX(ent.Name, j), j);
+                    if (prim.Textures.FaceTextures[j] != null
+                            && prim.Textures.FaceTextures[j] != prim.Textures.DefaultTexture) {
+                        CreateMaterialResource2(oSceneMgr, ent, prim, EntityNameOgre.ConvertToOgreMaterialNameX(ent.Name, j), j);
+                    }
                 }
             }
         }
@@ -204,7 +209,11 @@ public class RendererOgreLL : IWorldRenderConv {
                         return false;
                     }
                     m_log.Log(LogLevel.DRENDERDETAIL, "CreateMeshResource: mesherizing scuplty {0}", ent.Name.Name);
-                    mesh = m_meshMaker.GenerateSculptMesh(textureBitmap, prim, OMVR.DetailLevel.Highest);
+                    // mesh = m_meshMaker.GenerateSculptMesh(textureBitmap, prim, OMVR.DetailLevel.Highest);
+                    mesh = m_meshMaker.GenerateSculptMesh(textureBitmap, prim, OMVR.DetailLevel.Medium);
+                    if (mesh.Faces.Count > 10) {
+                        m_log.Log(LogLevel.DBADERROR, "CreateMeshResource: mesh has {0} faces!!!!", mesh.Faces.Count);
+                    }
                     textureBitmap.Dispose();
                 }
                 else {
@@ -216,6 +225,9 @@ public class RendererOgreLL : IWorldRenderConv {
                         // m_log.Log(LogLevel.DRENDERDETAIL, "CreateMeshResource: Low detail for {0}", ent.Name.Name);
                     }
                     mesh = m_meshMaker.GenerateFacetedMesh(prim, meshDetail);
+                    if (mesh.Faces.Count > 10) {
+                        m_log.Log(LogLevel.DBADERROR, "CreateMeshResource: mesh has {0} faces!!!!", mesh.Faces.Count);
+                    }
                 }
             }
             catch (Exception e) {

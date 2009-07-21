@@ -100,6 +100,8 @@ private:
     void createInput();
 	void destroyScene();
 
+	void calculateMeshVisibility();
+
 	// UTILITY ROUTINES
 	void AssertNonNull(void*, const char*);
 	void GenerateLoadingMesh();

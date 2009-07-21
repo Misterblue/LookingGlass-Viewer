@@ -394,6 +394,7 @@ namespace RendererOgre {
 	bool RendererOgre::frameEnded(const Ogre::FrameEvent& evt) {
 		return true;
 	}
+
 	// ========== end of Ogre::FrameListener
 
 	// ============= REQUESTS TO DO WORK
@@ -724,67 +725,133 @@ void RendererOgre::AddOceanToRegion(Ogre::SceneManager* sceneMgr, Ogre::SceneNod
 	return;
 }
 
-	// ============= UTILITY ROUTINES
-	// call out to the main program and make sure we should keep running
-	const bool RendererOgre::checkKeepRunning() {
-		if (LookingGlassOgr::checkKeepRunningCallback != NULL) {
-			return (*LookingGlassOgr::checkKeepRunningCallback)();
-		}
-		return false;
-	}
+// ============= MAGIC OGRE ROUTINES
+// Once a frame, go though all the meshes and figure out which ones are visible.
+// we unload the non-visible ones and make sure the visible ones are loaded.
+// This keeps the number of in memory vertexes low
+void RendererOgre::calculateMeshVisibility() {
+	// LookingGlassOgr::Log("CalculateMeshVisibility:");
+	// generate clipping planes
+	Ogre::Matrix4 camMatrix = m_camera->getProjectionMatrix() * m_camera->getViewMatrix()
+		// we need a reference point to start the view from -- does the camera have one?
+		//* m_sceneNode->_getFullTransform()
+		;
 
-	// Routine which calls back into the managed world to fetch a string/value configuration
-	// parameter.
-	const char* RendererOgre::GetParameter(const char* paramName) {
-		if (LookingGlassOgr::fetchParameterCallback != NULL) {
-			return (*LookingGlassOgr::fetchParameterCallback)(paramName);
-		}
-		else {
-			Log("DEBUG: LookingGlassOrge: could not get parameter %s", paramName);
-		}
-		return NULL;
-	}
+	// loop through all the meshes and see if they are in the view
 
-	// Print out a message of the pointer thing is null. At least the log will know
-	// of the problem
-	void RendererOgre::AssertNonNull(void* thing, const char* msg) {
-		if (thing == NULL) {
-			Log(msg);
+	/*
+	Ogre::ResourceManager::ResourceMapIterator rmi = Ogre::MeshManager::getSingleton().getResourceIterator();
+	while (rmi.hasMoreElements()) {
+		Ogre::MeshPtr oneMesh = rmi.getNext();
+		Ogre::Mesh::SubMeshIterator smi = oneMesh->getSubMeshIterator();
+		while (smi.hasMoreElements()) {
+			Ogre::SubMesh* oneSubMesh = smi.getNext();
+			Ogre::String subMeshMaterialName = oneSubMesh->getMaterialName();
+			Ogre::MaterialPtr subMeshMaterial = (Ogre::MaterialPtr)Ogre::MaterialManager::getSingleton().getByName(subMeshMaterialName);
+			if (!subMeshMaterial.isNull()) {
+				Ogre::Material::TechniqueIterator techIter = subMeshMaterial->getTechniqueIterator();
+				while (techIter.hasMoreElements()) {
+					Ogre::Technique* oneTech = techIter.getNext();
+					Ogre::Technique::PassIterator passIter = oneTech->getPassIterator();
+					while (passIter.hasMoreElements()) {
+						Ogre::Pass* onePass = passIter.getNext();
+						Ogre::Pass::TextureUnitStateIterator tusIter = onePass->getTextureUnitStateIterator();
+						while (tusIter.hasMoreElements()) {
+							Ogre::TextureUnitState* oneTus = tusIter.getNext();
+							if (oneTus->getTextureName() == texName) {
+								// we have the material pass with this texture. Update transparancy flag while here
+								if (hasTransparancy) {
+									onePass->setDepthWriteEnabled(false);
+									onePass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
+								}
+								else {
+									onePass->setDepthWriteEnabled(true);
+									onePass->setSceneBlending(Ogre::SBT_REPLACE);
+								}
+								// this mesh uses the material
+								// we sometimes get multiple materials for one mesh -- just reload once
+								std::list<Ogre::MeshPtr>::iterator ii = meshes->begin(); 
+								while (ii != meshes->end()) {
+									if (ii->getPointer()->getName() == oneMesh->getName()) {
+										break;
+									}
+									ii++;
+								}
+								if (ii == meshes->end()) {
+									meshes->push_front(oneMesh);
+								}
+								break;
+							}
+						}
+					}
+				}
+			}
 		}
 	}
+		*/
+}
 
-	// Call back into the managed world to output a log message with formatting
-	void RendererOgre::Log(const char* msg, ...) {
-		char buff[1024];
-		if (LookingGlassOgr::debugLogCallback != NULL) {
-			va_list args;
-			va_start(args, msg);
-			vsprintf(buff, msg, args);
-			va_end(args);
-			(*LookingGlassOgr::debugLogCallback)(buff);
-		}
+// ============= UTILITY ROUTINES
+// call out to the main program and make sure we should keep running
+const bool RendererOgre::checkKeepRunning() {
+	if (LookingGlassOgr::checkKeepRunningCallback != NULL) {
+		return (*LookingGlassOgr::checkKeepRunningCallback)();
 	}
+	return false;
+}
 
-	// Do a printf and return a newly allocated buffer (caller has to free it)
-	char* RendererOgre::formatIt(const char* msg, ...) {
-		char* buff = (char*)OGRE_MALLOC(256, Ogre::MEMCATEGORY_GENERAL);
+// Routine which calls back into the managed world to fetch a string/value configuration
+// parameter.
+const char* RendererOgre::GetParameter(const char* paramName) {
+	if (LookingGlassOgr::fetchParameterCallback != NULL) {
+		return (*LookingGlassOgr::fetchParameterCallback)(paramName);
+	}
+	else {
+		Log("DEBUG: LookingGlassOrge: could not get parameter %s", paramName);
+	}
+	return NULL;
+}
+
+// Print out a message of the pointer thing is null. At least the log will know
+// of the problem
+void RendererOgre::AssertNonNull(void* thing, const char* msg) {
+	if (thing == NULL) {
+		Log(msg);
+	}
+}
+
+// Call back into the managed world to output a log message with formatting
+void RendererOgre::Log(const char* msg, ...) {
+	char buff[1024];
+	if (LookingGlassOgr::debugLogCallback != NULL) {
 		va_list args;
 		va_start(args, msg);
-		vsnprintf(buff, 256, msg, args);
+		vsprintf(buff, msg, args);
 		va_end(args);
-		return buff;
+		(*LookingGlassOgr::debugLogCallback)(buff);
 	}
+}
 
-	// Do a printf and return a newly allocated buffer (caller has to free it)
-	void RendererOgre::formatIt(Ogre::String& dst, const char* msg, ...) {
-		char buff[1024];
-		va_list args;
-		va_start(args, msg);
-		vsnprintf(buff, 256, msg, args);
-		va_end(args);
-		dst = buff;
-		return;
-	}
+// Do a printf and return a newly allocated buffer (caller has to free it)
+char* RendererOgre::formatIt(const char* msg, ...) {
+	char* buff = (char*)OGRE_MALLOC(256, Ogre::MEMCATEGORY_GENERAL);
+	va_list args;
+	va_start(args, msg);
+	vsnprintf(buff, 256, msg, args);
+	va_end(args);
+	return buff;
+}
+
+// Do a printf and return a newly allocated buffer (caller has to free it)
+void RendererOgre::formatIt(Ogre::String& dst, const char* msg, ...) {
+	char buff[1024];
+	va_list args;
+	va_start(args, msg);
+	vsnprintf(buff, 256, msg, args);
+	va_end(args);
+	dst = buff;
+	return;
+}
 
 }
 
