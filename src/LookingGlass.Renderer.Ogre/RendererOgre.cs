@@ -164,6 +164,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "Write out materials to files (replace with DB someday)");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.SerializeMeshes", "true",
                     "Write out meshes to files");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.VisibilityFrames", "10",
+                    "number of frames between object visibility calculation");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.CaelumScript", "DefaultSky",
                     "The sky to use if Caelum enabled");
 

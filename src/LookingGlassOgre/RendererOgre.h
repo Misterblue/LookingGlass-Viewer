@@ -99,6 +99,8 @@ private:
 
 	void calculateEntityVisibility();
 	void calculateEntityVisibility(Ogre::Node*);
+	void processEntityVisibility();
+	int m_calculateVisibilityFrames;
 
 	// UTILITY ROUTINES
 	void AssertNonNull(void*, const char*);

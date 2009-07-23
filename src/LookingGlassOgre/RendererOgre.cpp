@@ -99,6 +99,7 @@ namespace RendererOgre {
 		m_preloadedDir = LookingGlassOgr::GetParameter("Renderer.Ogre.PreLoadedDir");
 		m_defaultTerrainMaterial = LookingGlassOgr::GetParameter("Renderer.Ogre.DefaultTerrainMaterial");
 		m_serializeMeshes = LookingGlassOgr::isTrue(LookingGlassOgr::GetParameter("Renderer.Ogre.SerializeMeshes"));
+		m_calculateVisibilityFrames = atoi(LookingGlassOgr::GetParameter("Renderer.Ogre.VisibilityFrames"));
 #ifdef CAELUM
 		m_caelumScript = LookingGlassOgr::GetParameter("Renderer.Ogre.CaelumScript");
 #endif
@@ -393,6 +394,7 @@ namespace RendererOgre {
 
 	bool RendererOgre::frameEnded(const Ogre::FrameEvent& evt) {
 		calculateEntityVisibility();
+		processEntityVisibility();
 		return true;
 	}
 
@@ -731,33 +733,22 @@ void RendererOgre::AddOceanToRegion(Ogre::SceneManager* sceneMgr, Ogre::SceneNod
 // we unload the non-visible ones and make sure the visible ones are loaded.
 // This keeps the number of in memory vertexes low
 int visibilityCount = 10;
-int visibilityRegions;
-int visibilityRecurse;
-int visibilityVisible;
-int visibilityMadeVisible;
-int visibilityMadeInvisible;
+std::list<Ogre::String> meshesToLoad;
+std::list<Ogre::String> meshesToUnload;
 void RendererOgre::calculateEntityVisibility() {
 	if (visibilityCount-- > 0) {
 		return;
 	}
-	visibilityCount = 30;
-	visibilityRegions = 0;
-	visibilityRecurse = 0;
-	visibilityVisible = 0;
-	visibilityMadeVisible = 0;
-	visibilityMadeInvisible = 0;
+	visibilityCount = m_calculateVisibilityFrames;
 	Ogre::SceneNode* nodeRoot = m_sceneMgr->getRootSceneNode();
 	// Hanging off the root node will be a node for each 'region'. A region has
 	// terrain and then content nodes
 	Ogre::SceneNode::ChildNodeIterator rootChildIterator = nodeRoot->getChildIterator();
 	while (rootChildIterator.hasMoreElements()) {
-		visibilityRegions++;
 		Ogre::Node* nodeRegion = rootChildIterator.getNext();
 		// a region node has the nodes of its contents.
 		calculateEntityVisibility(nodeRegion);
 	}
-	LookingGlassOgr::Log("CEV: rec=%d, vis=%d, madeinv=%d, madevis=%d", 
-		visibilityRecurse, visibilityVisible, visibilityMadeInvisible, visibilityMadeVisible);
 }
 
 void RendererOgre::calculateEntityVisibility(Ogre::Node* node) {
@@ -765,7 +756,6 @@ void RendererOgre::calculateEntityVisibility(Ogre::Node* node) {
 		// if node has more children nodes, visit them recursivily
 		Ogre::SceneNode::ChildNodeIterator nodeChildIterator = node->getChildIterator();
 		while (nodeChildIterator.hasMoreElements()) {
-			visibilityRecurse++;
 			Ogre::Node* nodeChild = nodeChildIterator.getNext();
 			calculateEntityVisibility(nodeChild);
 		}
@@ -778,15 +768,13 @@ void RendererOgre::calculateEntityVisibility(Ogre::Node* node) {
 		if (snodeObject->getMovableType() == "Entity") {
 			Ogre::Entity* snodeEntity = (Ogre::Entity*)snodeObject;
 			if (snodeEntity->isVisible()) {
-				visibilityVisible++;
 				// we currently think this object is visible. make sure it should stay that way
-				// if (!m_camera->isVisible(snodeEntity->getWorldBoundingBox())) {
-				if (!m_camera->isVisible(Ogre::Sphere(snodeEntity->getPosition(), 10.0))) {
+				if (!m_camera->isVisible(snodeEntity->getWorldBoundingBox())) {
 					// not visible any more... make invisible nad unload it
 					snodeEntity->setVisible(false);
-					visibilityMadeInvisible++;
 					if (!snodeEntity->getMesh().isNull()) {
-						Ogre::MeshManager::getSingleton().unload(snodeEntity->getMesh()->getName());
+						Ogre::String mshName = snodeEntity->getMesh()->getName();
+						Ogre::MeshManager::getSingleton().unload(mshName);
 						// snodeEntity->getMesh()->unload();
 					}
 				}
@@ -794,17 +782,32 @@ void RendererOgre::calculateEntityVisibility(Ogre::Node* node) {
 			else {
 				// the entity currently thinks it's not visible.
 				// check to see if it should be visible by checking a fake bounding box
-				if (m_camera->isVisible(Ogre::Sphere(snode->getPosition(), 10.0))) {
+				if (m_camera->isVisible(snodeObject->getWorldBoundingBox())) {
 					if (!snodeEntity->getMesh().isNull()) {
 						Ogre::MeshManager::getSingleton().load(snodeEntity->getMesh()->getName(), OLResourceGroupName);
 						// snodeEntity->getMesh()->load();
 					}
 					snodeEntity->setVisible(true);
-					visibilityMadeVisible++;
 				}
 			}
 		}
 	}
+}
+
+void RendererOgre::processEntityVisibility() {
+	int cnt = 5;
+	while (meshesToUnload.size() > 0 && cnt-- > 0) {
+		Ogre::String mshName = meshesToUnload.front();
+		meshesToUnload.pop_front();
+		Ogre::MeshManager::getSingleton().unload(mshName);
+	}
+	cnt = 5;
+	while (meshesToLoad.size() > 0 && cnt-- > 0) {
+		Ogre::String mshName = meshesToLoad.front();
+		meshesToLoad.pop_front();
+		Ogre::MeshManager::getSingleton().load(mshName, OLResourceGroupName);
+	}
+	return;
 }
 
 // ============= UTILITY ROUTINES
