@@ -56,9 +56,6 @@ public:
 	Ogre::Camera* m_camera;			// handle to the camera
 	Ogre::Viewport* m_viewport;		// viewport the camera is using
 
-	// Diddle with the scene graph
-	Ogre::SceneNode* getRootNode();
-
 	// update objects anvironment routines
 	void updateCamera(float, float, float, float, float, float, float, float, float, float);
 
@@ -100,7 +97,8 @@ private:
     void createInput();
 	void destroyScene();
 
-	void calculateMeshVisibility();
+	void calculateEntityVisibility();
+	void calculateEntityVisibility(Ogre::Node*);
 
 	// UTILITY ROUTINES
 	void AssertNonNull(void*, const char*);

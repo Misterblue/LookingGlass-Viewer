@@ -392,6 +392,7 @@ namespace RendererOgre {
 	}
 
 	bool RendererOgre::frameEnded(const Ogre::FrameEvent& evt) {
+		calculateEntityVisibility();
 		return true;
 	}
 
@@ -729,66 +730,81 @@ void RendererOgre::AddOceanToRegion(Ogre::SceneManager* sceneMgr, Ogre::SceneNod
 // Once a frame, go though all the meshes and figure out which ones are visible.
 // we unload the non-visible ones and make sure the visible ones are loaded.
 // This keeps the number of in memory vertexes low
-void RendererOgre::calculateMeshVisibility() {
-	// LookingGlassOgr::Log("CalculateMeshVisibility:");
-	// generate clipping planes
-	Ogre::Matrix4 camMatrix = m_camera->getProjectionMatrix() * m_camera->getViewMatrix()
-		// we need a reference point to start the view from -- does the camera have one?
-		//* m_sceneNode->_getFullTransform()
-		;
+int visibilityCount = 10;
+int visibilityRegions;
+int visibilityRecurse;
+int visibilityVisible;
+int visibilityMadeVisible;
+int visibilityMadeInvisible;
+void RendererOgre::calculateEntityVisibility() {
+	if (visibilityCount-- > 0) {
+		return;
+	}
+	visibilityCount = 30;
+	visibilityRegions = 0;
+	visibilityRecurse = 0;
+	visibilityVisible = 0;
+	visibilityMadeVisible = 0;
+	visibilityMadeInvisible = 0;
+	Ogre::SceneNode* nodeRoot = m_sceneMgr->getRootSceneNode();
+	// Hanging off the root node will be a node for each 'region'. A region has
+	// terrain and then content nodes
+	Ogre::SceneNode::ChildNodeIterator rootChildIterator = nodeRoot->getChildIterator();
+	while (rootChildIterator.hasMoreElements()) {
+		visibilityRegions++;
+		Ogre::Node* nodeRegion = rootChildIterator.getNext();
+		// a region node has the nodes of its contents.
+		calculateEntityVisibility(nodeRegion);
+	}
+	LookingGlassOgr::Log("CEV: rec=%d, vis=%d, madeinv=%d, madevis=%d", 
+		visibilityRecurse, visibilityVisible, visibilityMadeInvisible, visibilityMadeVisible);
+}
 
-	// loop through all the meshes and see if they are in the view
-
-	/*
-	Ogre::ResourceManager::ResourceMapIterator rmi = Ogre::MeshManager::getSingleton().getResourceIterator();
-	while (rmi.hasMoreElements()) {
-		Ogre::MeshPtr oneMesh = rmi.getNext();
-		Ogre::Mesh::SubMeshIterator smi = oneMesh->getSubMeshIterator();
-		while (smi.hasMoreElements()) {
-			Ogre::SubMesh* oneSubMesh = smi.getNext();
-			Ogre::String subMeshMaterialName = oneSubMesh->getMaterialName();
-			Ogre::MaterialPtr subMeshMaterial = (Ogre::MaterialPtr)Ogre::MaterialManager::getSingleton().getByName(subMeshMaterialName);
-			if (!subMeshMaterial.isNull()) {
-				Ogre::Material::TechniqueIterator techIter = subMeshMaterial->getTechniqueIterator();
-				while (techIter.hasMoreElements()) {
-					Ogre::Technique* oneTech = techIter.getNext();
-					Ogre::Technique::PassIterator passIter = oneTech->getPassIterator();
-					while (passIter.hasMoreElements()) {
-						Ogre::Pass* onePass = passIter.getNext();
-						Ogre::Pass::TextureUnitStateIterator tusIter = onePass->getTextureUnitStateIterator();
-						while (tusIter.hasMoreElements()) {
-							Ogre::TextureUnitState* oneTus = tusIter.getNext();
-							if (oneTus->getTextureName() == texName) {
-								// we have the material pass with this texture. Update transparancy flag while here
-								if (hasTransparancy) {
-									onePass->setDepthWriteEnabled(false);
-									onePass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
-								}
-								else {
-									onePass->setDepthWriteEnabled(true);
-									onePass->setSceneBlending(Ogre::SBT_REPLACE);
-								}
-								// this mesh uses the material
-								// we sometimes get multiple materials for one mesh -- just reload once
-								std::list<Ogre::MeshPtr>::iterator ii = meshes->begin(); 
-								while (ii != meshes->end()) {
-									if (ii->getPointer()->getName() == oneMesh->getName()) {
-										break;
-									}
-									ii++;
-								}
-								if (ii == meshes->end()) {
-									meshes->push_front(oneMesh);
-								}
-								break;
-							}
-						}
+void RendererOgre::calculateEntityVisibility(Ogre::Node* node) {
+	if (node->numChildren() > 0) {
+		// if node has more children nodes, visit them recursivily
+		Ogre::SceneNode::ChildNodeIterator nodeChildIterator = node->getChildIterator();
+		while (nodeChildIterator.hasMoreElements()) {
+			visibilityRecurse++;
+			Ogre::Node* nodeChild = nodeChildIterator.getNext();
+			calculateEntityVisibility(nodeChild);
+		}
+	}
+	// children taken care of... check fo attached objects to this node
+	Ogre::SceneNode* snode = (Ogre::SceneNode*)node;
+	Ogre::SceneNode::ObjectIterator snodeObjectIterator = snode->getAttachedObjectIterator();
+	while (snodeObjectIterator.hasMoreElements()) {
+		Ogre::MovableObject* snodeObject = snodeObjectIterator.getNext();
+		if (snodeObject->getMovableType() == "Entity") {
+			Ogre::Entity* snodeEntity = (Ogre::Entity*)snodeObject;
+			if (snodeEntity->isVisible()) {
+				visibilityVisible++;
+				// we currently think this object is visible. make sure it should stay that way
+				// if (!m_camera->isVisible(snodeEntity->getWorldBoundingBox())) {
+				if (!m_camera->isVisible(Ogre::Sphere(snodeEntity->getPosition(), 10.0))) {
+					// not visible any more... make invisible nad unload it
+					snodeEntity->setVisible(false);
+					visibilityMadeInvisible++;
+					if (!snodeEntity->getMesh().isNull()) {
+						Ogre::MeshManager::getSingleton().unload(snodeEntity->getMesh()->getName());
+						// snodeEntity->getMesh()->unload();
 					}
+				}
+			}
+			else {
+				// the entity currently thinks it's not visible.
+				// check to see if it should be visible by checking a fake bounding box
+				if (m_camera->isVisible(Ogre::Sphere(snode->getPosition(), 10.0))) {
+					if (!snodeEntity->getMesh().isNull()) {
+						Ogre::MeshManager::getSingleton().load(snodeEntity->getMesh()->getName(), OLResourceGroupName);
+						// snodeEntity->getMesh()->load();
+					}
+					snodeEntity->setVisible(true);
+					visibilityMadeVisible++;
 				}
 			}
 		}
 	}
-		*/
 }
 
 // ============= UTILITY ROUTINES

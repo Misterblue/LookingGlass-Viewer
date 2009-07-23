@@ -154,7 +154,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.DefaultTextureResourceName", 
                     "LoadingTexture.png",
                     "Resource name of  the default texture");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.LL.SceneMagnification", "10",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.LL.SceneMagnification", "1",
                     "Magnification of LL coordinates into Ogre space");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.LL.EarlyMaterialCreate", "false",
                     "Create materials while creating mesh rather than waiting");
