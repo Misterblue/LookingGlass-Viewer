@@ -58,6 +58,9 @@ namespace RendererOgre {
 			Ogre::WindowEventUtilities::messagePump();
 		}
 		Log("DEBUG: LookingGlassOrge: Completed rendering");
+#ifdef SKYMANAGER
+		SkyManager::get().end();
+#endif
 		destroyScene();
 		// for some reason, often after the exit, m_root is not usable
 		// m_root->shutdown();
@@ -69,23 +72,21 @@ namespace RendererOgre {
 	void RendererOgre::updateCamera(float px, float py, float pz, 
 				float dw, float dx, float dy, float dz,
 				float nearClip, float farClip, float aspect) {
-		bool changed = FALSE;
 		if (m_camera) {
 			m_camera->setPosition(px, py, pz);
 			m_camera->setOrientation(Ogre::Quaternion(dw, dx, dy, dz));
 			if (nearClip != m_camera->getNearClipDistance()) {
 				m_camera->setNearClipDistance(nearClip);
-				changed = TRUE;
 			}
 			/*	don't fool with far for the moment
 			if (farClip != m_camera->getFarClipDistance()) {
 				m_camera->setFarClipDistance(farClip);
-				changed = TRUE;
 			}
 			*/
-			if (changed) {
-				// Ogre::ResourceGroupManager::getSingleton().unloadResourceGroup(OLResourceGroupName);
-			}
+			m_recalculateVisibility = true;
+
+			// terrible kludge since we don't have interest information sent to us
+			m_sunFocalPoint = Ogre::Vector3(px, 30, pz);
 		}
 		return;
 	}
@@ -100,6 +101,7 @@ namespace RendererOgre {
 		m_defaultTerrainMaterial = LookingGlassOgr::GetParameter("Renderer.Ogre.DefaultTerrainMaterial");
 		m_serializeMeshes = LookingGlassOgr::isTrue(LookingGlassOgr::GetParameter("Renderer.Ogre.SerializeMeshes"));
 		m_calculateVisibilityFrames = atoi(LookingGlassOgr::GetParameter("Renderer.Ogre.VisibilityFrames"));
+		m_recalculateVisibility = true;
 #ifdef CAELUM
 		m_caelumScript = LookingGlassOgr::GetParameter("Renderer.Ogre.CaelumScript");
 #endif
@@ -217,7 +219,7 @@ namespace RendererOgre {
 			const char* sceneName = GetParameter("Renderer.Ogre.Name");
 			// m_sceneMgr = m_root->createSceneManager(Ogre::ST_EXTERIOR_CLOSE, sceneName);
 			m_sceneMgr = m_root->createSceneManager(Ogre::ST_GENERIC, sceneName);
-			m_sceneMgr->setAmbientLight(Ogre::ColourValue(0.01f, 0.01f, 0.01f));
+			m_sceneMgr->setAmbientLight(Ogre::ColourValue(0.1f, 0.1f, 0.1f));
 			const char* shadowName = LookingGlassOgr::GetParameter("Renderer.Ogre.ShadowTechnique");
 			if (stricmp(shadowName, "additive")) 
 				m_sceneMgr->setShadowTechnique(Ogre::SHADOWDETAILTYPE_ADDITIVE);	// easiest
@@ -247,14 +249,16 @@ namespace RendererOgre {
 	}
 
 	void RendererOgre::createLight() {
-#ifndef CAELUM
+#if !defined(CAELUM) && !defined(SKYMANAGER)
 		Log("DEBUG: LookingGlassOrge: createLight");
         // TODO: decide if I should connect  this to a scene node
         //    might make moving and control easier
+		m_sunDistance = 1000.0;
+		m_sunFocalPoint = Ogre::Vector3(128.0, 0.0, 128.0);
 		m_sun = m_sceneMgr->createLight("sun");
 		m_sun->setType(Ogre::Light::LT_DIRECTIONAL);	// directional and sun-like
 		m_sun->setDiffuseColour(Ogre::ColourValue::White);
-		m_sun->setSpecularColour(0.5f, 0.5f, 0.5f);
+		m_sun->setSpecularColour(0.8f, 0.8f, 0.8f);
 		m_sun->setPosition(0.0f, 1000.0f, 0.0f);
 		m_sun->setDirection(0.0f, -1.0f, 0.0f);
 		m_sun->setCastShadows(true);
@@ -270,6 +274,9 @@ namespace RendererOgre {
 	}
 
 	void RendererOgre::createSky() {
+#ifdef SKYMANAGER
+		SkyManager::get().init(true, true, m_sceneMgr->getName());
+#endif
 #ifdef CAELUM
         Caelum::CaelumSystem::CaelumComponent componentMask;
 		/*
@@ -354,7 +361,8 @@ namespace RendererOgre {
 	    m_caelumSystem->getUniversalClock()->setGregorianDateTime(2007, 4, 9, 9, 33, 0);
 		*/
 
-#else
+#endif	// CALEUM
+#if !defined(CAELUM) && !defined(SKYMANAGER)
 		try {
 			// Ogre::String skyboxName = "LookingGlass/CloudyNoonSkyBox";
 			Ogre::String skyboxName = GetParameter("Renderer.Ogre.SkyboxName");
@@ -364,7 +372,7 @@ namespace RendererOgre {
 			Log("Failed to set scene skybox");
 			m_sceneMgr->setSkyBox(false, "");
 		}
-#endif	// CALEUM
+#endif	// default skybox
 	}
 
 	void RendererOgre::createFrameListener() {
@@ -380,6 +388,9 @@ namespace RendererOgre {
 
 	// ========== Ogre::FrameListener
 	bool RendererOgre::frameStarted(const Ogre::FrameEvent& evt) {
+#ifdef SKYMANAGER
+		SkyManager::get().frameStarted(evt.timeSinceLastFrame, m_sunFocalPoint, 0);
+#endif	// SKYMANAGER
 		return true;
 	}
 
@@ -413,6 +424,7 @@ namespace RendererOgre {
 		// this should somehow be settable
 		ent->setCastShadows(true);
 		sceneNode->attachObject(ent);
+		m_recalculateVisibility = true;
 		return;
 	}
 
@@ -482,6 +494,7 @@ namespace RendererOgre {
 		return;
 	}
 
+	// Create a simple cube to be the loading mesh representation
 	void RendererOgre::GenerateLoadingMesh() {
 		Ogre::String loadingMeshName = "LookingGlass/LoadingShape";
 		Ogre::String loadingMaterialName = "LookingGlass/LoadingShape";
@@ -665,6 +678,7 @@ void RendererOgre::GenTerrainMesh(Ogre::SceneManager* sceneMgr, Ogre::SceneNode*
 		mob->setVisible(true);
 		mob->setQueryFlags(Ogre::SceneManager::WORLD_GEOMETRY_TYPE_MASK);
 		node->attachObject(mob);
+		m_recalculateVisibility = true;
 	}
 
 	Ogre::ManualObject* mo = (Ogre::ManualObject*)node->getAttachedObject(0);
@@ -723,8 +737,9 @@ void RendererOgre::AddOceanToRegion(Ogre::SceneManager* sceneMgr, Ogre::SceneNod
 	Ogre::SceneNode* oceanNode = regionNode->createChildSceneNode("WaterSceneNode/" + waterName);
 	oceanNode->setInheritOrientation(true);
 	oceanNode->setInheritScale(false);
-	oceanNode->translate(width/20.0, length/20.0, waterHeight);
+	oceanNode->translate(width/2.0, length/2.0, waterHeight);
 	oceanNode->attachObject(oceanEntity);
+	m_recalculateVisibility = true;
 	return;
 }
 
@@ -736,9 +751,11 @@ int visibilityCount = 10;
 std::list<Ogre::String> meshesToLoad;
 std::list<Ogre::String> meshesToUnload;
 void RendererOgre::calculateEntityVisibility() {
+	if (!m_recalculateVisibility) return;
 	if (visibilityCount-- > 0) {
 		return;
 	}
+	m_recalculateVisibility = false;
 	visibilityCount = m_calculateVisibilityFrames;
 	Ogre::SceneNode* nodeRoot = m_sceneMgr->getRootSceneNode();
 	// Hanging off the root node will be a node for each 'region'. A region has
@@ -762,32 +779,38 @@ void RendererOgre::calculateEntityVisibility(Ogre::Node* node) {
 	}
 	// children taken care of... check fo attached objects to this node
 	Ogre::SceneNode* snode = (Ogre::SceneNode*)node;
+	float snodeDistance = m_camera->getPosition().distance(snode->_getWorldAABB().getCenter());
+	float snodeEntitySize;
 	Ogre::SceneNode::ObjectIterator snodeObjectIterator = snode->getAttachedObjectIterator();
 	while (snodeObjectIterator.hasMoreElements()) {
 		Ogre::MovableObject* snodeObject = snodeObjectIterator.getNext();
 		if (snodeObject->getMovableType() == "Entity") {
 			Ogre::Entity* snodeEntity = (Ogre::Entity*)snodeObject;
-			if (snodeEntity->isVisible()) {
-				// we currently think this object is visible. make sure it should stay that way
-				if (!m_camera->isVisible(snodeEntity->getWorldBoundingBox())) {
-					// not visible any more... make invisible nad unload it
-					snodeEntity->setVisible(false);
-					if (!snodeEntity->getMesh().isNull()) {
-						Ogre::String mshName = snodeEntity->getMesh()->getName();
-						Ogre::MeshManager::getSingleton().unload(mshName);
-						// snodeEntity->getMesh()->unload();
+			// check it's visibility if it's not world geometry (terrain and ocean)
+			if ((snodeEntity->getQueryFlags() & Ogre::SceneManager::WORLD_GEOMETRY_TYPE_MASK) == 0) {
+				snodeEntitySize = snodeEntity->getBoundingRadius() * 2;
+				if (snodeEntity->isVisible()) {
+					// we currently think this object is visible. make sure it should stay that way
+					if (!m_camera->isVisible(snodeEntity->getWorldBoundingBox())
+							|| !calculateScaleVisibility(snodeDistance, snodeEntitySize)) {
+						// not visible any more... make invisible nad unload it
+						snodeEntity->setVisible(false);
+						if (!snodeEntity->getMesh().isNull()) {
+							unloadTheMesh(snodeEntity->getMesh());
+						}
 					}
 				}
-			}
-			else {
-				// the entity currently thinks it's not visible.
-				// check to see if it should be visible by checking a fake bounding box
-				if (m_camera->isVisible(snodeObject->getWorldBoundingBox())) {
-					if (!snodeEntity->getMesh().isNull()) {
-						Ogre::MeshManager::getSingleton().load(snodeEntity->getMesh()->getName(), OLResourceGroupName);
-						// snodeEntity->getMesh()->load();
+				else {
+					// the entity currently thinks it's not visible.
+					// check to see if it should be visible by checking a fake bounding box
+					if (m_camera->isVisible(snodeObject->getWorldBoundingBox())
+							&& calculateScaleVisibility(snodeDistance, snodeEntitySize)) {
+						if (!snodeEntity->getMesh().isNull()) {
+							Ogre::MeshManager::getSingleton().load(snodeEntity->getMesh()->getName(), OLResourceGroupName);
+							// snodeEntity->getMesh()->load();
+						}
+						snodeEntity->setVisible(true);
 					}
-					snodeEntity->setVisible(true);
 				}
 			}
 		}
@@ -808,6 +831,51 @@ void RendererOgre::processEntityVisibility() {
 		Ogre::MeshManager::getSingleton().load(mshName, OLResourceGroupName);
 	}
 	return;
+}
+
+// unload all about this mesh. The mesh itself and the textures.
+void RendererOgre::unloadTheMesh(Ogre::MeshPtr meshP) {
+	Ogre::Mesh::SubMeshIterator smi = meshP->getSubMeshIterator();
+	while (smi.hasMoreElements()) {
+		Ogre::SubMesh* oneSubMesh = smi.getNext();
+		Ogre::String subMeshMaterialName = oneSubMesh->getMaterialName();
+		Ogre::MaterialPtr subMeshMaterial = (Ogre::MaterialPtr)Ogre::MaterialManager::getSingleton().getByName(subMeshMaterialName);
+		if (!subMeshMaterial.isNull()) {
+			Ogre::Material::TechniqueIterator techIter = subMeshMaterial->getTechniqueIterator();
+			while (techIter.hasMoreElements()) {
+				Ogre::Technique* oneTech = techIter.getNext();
+				Ogre::Technique::PassIterator passIter = oneTech->getPassIterator();
+				while (passIter.hasMoreElements()) {
+					Ogre::Pass* onePass = passIter.getNext();
+					Ogre::Pass::TextureUnitStateIterator tusIter = onePass->getTextureUnitStateIterator();
+					while (tusIter.hasMoreElements()) {
+						Ogre::TextureUnitState* oneTus = tusIter.getNext();
+						Ogre::String texName = oneTus->getTextureName();
+						Ogre::TextureManager::getSingleton().unload(texName);
+					}
+				}
+			}
+		}
+	}
+	Ogre::String mshName = meshP->getName();
+	Ogre::MeshManager::getSingleton().unload(mshName);
+}
+
+// Return TRUE if an object of this size should be seen at this distance
+float m_visibilityScaleMaxDistance = 300.0;	// not visible after this far
+float m_visibilityScaleOnlyLargeAfter = 100.0;	// after this distance, only large things visible
+float m_visibilityScaleMinDistance = 30.0;	// always visible is this close
+float m_visibilityScaleLargeSize = 9.0;		// what is large enough to see at a distance
+bool RendererOgre::calculateScaleVisibility(float dist, float siz) {
+	// LookingGlassOgr::Log("calculateScaleVisibility: dist=%f, siz=%f", dist, siz);
+	if (dist >= m_visibilityScaleMaxDistance) return false;
+	if (dist <= m_visibilityScaleMinDistance) return true;
+	if (siz >= m_visibilityScaleLargeSize && dist > m_visibilityScaleOnlyLargeAfter) return true;
+	if (siz > ((dist - m_visibilityScaleMinDistance)
+				/(m_visibilityScaleMaxDistance - m_visibilityScaleMinDistance) 
+				* m_visibilityScaleLargeSize)) return true;
+	return false;
+
 }
 
 // ============= UTILITY ROUTINES

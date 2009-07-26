@@ -109,7 +109,7 @@ void OLMaterialTracker::MakeMaterialDefault(Ogre::MaterialPtr matPtr) {
 	Ogre::Technique* tech = mat->createTechnique();
 	Ogre::Pass* pass = tech->createPass();
 	pass->setShininess(0.0f);
-	pass->setAmbient(0.05f, 0.05f, 0.05f);
+	pass->setAmbient(0.1f, 0.1f, 0.1f);
 	// pass->setVertexColourTracking(Ogre::TVC_AMBIENT);
 	pass->setDiffuse(0.582f, 0.5703f, 0.7578f, 0.7f); // blue gray from girl's shirt
 	pass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
@@ -327,11 +327,12 @@ void OLMaterialTracker::CreateMaterialResource2(const char* mName, const char* t
 
 	mat->unload();
 	mat->removeAllTechniques();
+	mat->setReceiveShadows(true);
 	Ogre::Technique* tech = mat->createTechnique();
 	Ogre::Pass* pass = tech->createPass();
 	pass->setLightingEnabled(true);
 	pass->setShininess(parms[CreateMaterialShiny]/256.0f);	// origionally a byte
-	pass->setAmbient(0.05f, 0.05f, 0.05f);
+	pass->setAmbient(0.1f, 0.1f, 0.1f);
 	pass->setVertexColourTracking(Ogre::TVC_AMBIENT);
 	if (textureName.length() > 0) {
 		Ogre::TextureUnitState* tus = pass->createTextureUnitState(textureName);
@@ -346,7 +347,7 @@ void OLMaterialTracker::CreateMaterialResource2(const char* mName, const char* t
 			// pass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
 			// next 4 lines found in http://www.ogre3d.org/wiki/index.php/Creating_transparency_based_on_a_key_colour_in_code
 			pass->setSceneBlending(Ogre::SBT_REPLACE);
-			pass->setAlphaRejectSettings(Ogre::CMPF_GREATER_EQUAL, 32);
+			pass->setAlphaRejectSettings(Ogre::CMPF_GREATER_EQUAL, 128);
 			pass->setCullingMode(Ogre::CULL_NONE);
 			pass->setManualCullingMode(Ogre::MANUAL_CULL_NONE);
 
@@ -356,9 +357,15 @@ void OLMaterialTracker::CreateMaterialResource2(const char* mName, const char* t
 		tus->setTextureUScale(parms[CreateMaterialScaleU]);
 		tus->setTextureVScale(parms[CreateMaterialScaleV]);
 		tus->setTextureRotate(Ogre::Radian(parms[CreateMaterialRotate]));
-		tus->setColourOperationEx(Ogre::LBX_MODULATE, Ogre::LBS_TEXTURE, Ogre::LBS_MANUAL, 
-			Ogre::ColourValue( parms[CreateMaterialColorR], parms[CreateMaterialColorG], 
-					parms[CreateMaterialColorB], parms[CreateMaterialColorA] ));
+		//1 trying out different forms of adding the color to the texture
+		//1 tus->setColourOperationEx(Ogre::LBX_MODULATE, Ogre::LBS_TEXTURE, Ogre::LBS_MANUAL, 
+		//1 	Ogre::ColourValue( parms[CreateMaterialColorR], parms[CreateMaterialColorG], 
+		//1 			parms[CreateMaterialColorB], parms[CreateMaterialColorA] ));
+		pass->setDiffuse(parms[CreateMaterialColorR], 
+				parms[CreateMaterialColorG], 
+				parms[CreateMaterialColorB], 
+				parms[CreateMaterialColorA]
+		);
 	}
 	else {
 		// it's a solid color. Just use that.

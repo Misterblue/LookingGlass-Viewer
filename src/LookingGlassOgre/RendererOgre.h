@@ -24,6 +24,8 @@
 
 // uncomment to use Caelum as the sky
 // #define CAELUM
+// another SkyManager
+#define SKYMANAGER
 
 #include "LGOCommon.h"
 #include "UserIO.h"
@@ -31,6 +33,10 @@
 #ifdef CAELUM
 #include "Caelum.h"
 #include "CaelumPlugin.h"
+#endif
+
+#ifdef SKYMANAGER
+#include "SkyManager.h"
 #endif
 
 namespace RendererOgre {
@@ -99,8 +105,11 @@ private:
 
 	void calculateEntityVisibility();
 	void calculateEntityVisibility(Ogre::Node*);
+	bool calculateScaleVisibility(float, float);
+	void unloadTheMesh(Ogre::MeshPtr);
 	void processEntityVisibility();
 	int m_calculateVisibilityFrames;
+	bool m_recalculateVisibility;
 
 	// UTILITY ROUTINES
 	void AssertNonNull(void*, const char*);
@@ -110,13 +119,20 @@ private:
 	UserIO* m_userio;
 	OLMaterialTracker::OLMaterialTracker* m_materialTracker;
 
+	// environmental light stuff waiting for the day we have a real sky system
+	Ogre::Vector3 m_sunFocalPoint;	// where the sun is pointing
 #ifdef CAELUM
 	Caelum::CaelumSystem* m_caelumSystem;
 	Ogre::String m_caelumScript;
-#else
-	Ogre::Light* m_sun;				// the light that is the sun
-	Ogre::Light* m_moon;			// the light that is the moon
 #endif // CAELUM
+#ifdef SKYMANAGER
+#endif  // SKYMANAGER
+#if !defined(CAELUM) && !defined(SKYMANAGER)
+	// default if not using some fancy sky system
+	Ogre::Light* m_sun;				// the light that is the sun
+	float m_sunDistance;			// distance sun is from the focal point
+	Ogre::Light* m_moon;			// the light that is the moon
+#endif // ENVIRONMENT DEFAULT
 
 	Ogre::String m_cacheDir; 
 	Ogre::String m_preloadedDir; 

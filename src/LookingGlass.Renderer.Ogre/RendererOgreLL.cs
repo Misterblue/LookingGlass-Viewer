@@ -44,9 +44,9 @@ public class RendererOgreLL : IWorldRenderConv {
     // we've added things to the interface for scuplties. Need to push back into OMV someday.
     // private OMVR.IRendering m_meshMaker = null;
     private Mesher.MeshmerizerG m_meshMaker = null;
-    // some of the mesh conversion routines include the scale calculation
-    private bool m_usePrimScaleFactor = false;
-    private bool m_useRendererTextureScaling = false;
+    // set to true if the generation of the mesh includes the scale factors
+    private bool m_useRendererMeshScaling;
+    private bool m_useRendererTextureScaling;
 
     static RendererOgreLL m_instance = null;
     public static RendererOgreLL Instance {
@@ -69,10 +69,9 @@ public class RendererOgreLL : IWorldRenderConv {
             // It also effects the texture mapping so texture scaling factors would have to be
             // scaled by the scale of teh face that they appear on. Ugh.
             // For the moment, turned off while I figure that stuff out.
-            // amesher.ShouldScaleMesh = false;
-            // m_usePrimScaleFactor = true; // use Ogre scaling rather than mesh scaling
-            m_usePrimScaleFactor = false; // use Ogre scaling rather than mesh scaling
-            amesher.ShouldScaleMesh = !m_usePrimScaleFactor;
+            // m_useRendererMeshScaling = true; // use Ogre to scale the mesh
+            m_useRendererMeshScaling = false; // scale the mesh in the meshmerizer
+            amesher.ShouldScaleMesh = !m_useRendererMeshScaling;
             m_useRendererTextureScaling = false; // use software texture face scaling
             // m_useRendererTextureScaling = true; // use Ogre texture scaling rather than computing it
             m_meshMaker = amesher;
@@ -91,7 +90,7 @@ public class RendererOgreLL : IWorldRenderConv {
         OMV.Primitive prim;
         string newMeshName = EntityNameOgre.ConvertToOgreNameX(ent.Name, ".mesh");
         // true if we should do the scaling with the rendering parameters
-        bool shouldScale = m_usePrimScaleFactor;
+        bool shouldHaveRendererScale = m_useRendererMeshScaling;
 
         try {
             llent = (LLEntityPhysical)ent;
@@ -112,7 +111,7 @@ public class RendererOgreLL : IWorldRenderConv {
         int meshFaces = 0;
         if (CheckStandardMeshType(prim, out meshType, out meshFaces)) {
             // if a standard mesh type, use Ogre scaling so we can reuse base shapes
-            shouldScale = true;
+            shouldHaveRendererScale = true;
         }
 
         // if the prim has a parent, we must hang this scene node off the parent's scene node
@@ -120,7 +119,11 @@ public class RendererOgreLL : IWorldRenderConv {
         ri.rotation = prim.Rotation;
         // some of the mesh creators include the scale calculations
         ri.position = prim.Position;
-        if (shouldScale) {
+
+        // If the mesh was scaled just pass the renderer a scale of one
+        // otherwise, if the mesh was not scaled, have the renderer do the scaling
+        // This specifies what we want the renderer to do
+        if (shouldHaveRendererScale) {
             ri.scale = prim.Scale * m_sceneMagnification;
         }
         else {
@@ -138,11 +141,9 @@ public class RendererOgreLL : IWorldRenderConv {
                 // Oops. this doesn't work because FaceTextures is really a static array and
                 //   it really doesn't give the number of faces of the primitive
                 OgreSceneMgr oSceneMgr = (OgreSceneMgr)sceneMgr;
-                for (int j = 0; j < prim.Textures.FaceTextures.GetLength(0); j++) {
-                    if (prim.Textures.FaceTextures[j] != null
-                            && prim.Textures.FaceTextures[j] != prim.Textures.DefaultTexture) {
-                        CreateMaterialResource2(oSceneMgr, ent, prim, EntityNameOgre.ConvertToOgreMaterialNameX(ent.Name, j), j);
-                    }
+                for (int j = 0; j < 6; j++) {
+                    OMV.Primitive.TextureEntryFace textureFace = prim.Textures.GetFace((uint)j);
+                    CreateMaterialResource2(oSceneMgr, ent, prim, EntityNameOgre.ConvertToOgreMaterialNameX(ent.Name, j), j);
                 }
             }
         }
@@ -288,7 +289,7 @@ public class RendererOgreLL : IWorldRenderConv {
                 // Texture transform for this face
                 OMV.Primitive.TextureEntryFace teFace = face.TextureFace;
                 try {
-                    if (teFace != null && !m_useRendererTextureScaling) {
+                    if ((teFace != null) && !m_useRendererTextureScaling) {
                         m_meshMaker.TransformTexCoords(face.Vertices, face.Center, teFace);
                     }
                 }
@@ -380,6 +381,7 @@ public class RendererOgreLL : IWorldRenderConv {
     // OBSOLETE!!! DOES NOT WORK ANY MORE. DELETE WHEN YOU'RE TIRED OF IT
     private void CreateMaterialResource(OgreSceneMgr m_sceneMgr, IEntity ent, OMV.Primitive prim, string materialName, int faceNum) {
         OMV.Primitive.TextureEntryFace textureFace = prim.Textures.GetFace((uint)faceNum);
+        if (textureFace == null) return;
         OMV.Color4 textureParamColor = new OMV.Color4(0.1f, 0.1f, 1f, 0f);
         // float textureParamRepeatU = 1.0f;
         // float textureParamRepeatV = 1.0f;

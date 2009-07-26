@@ -120,7 +120,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "Name of the skybox resource to use");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.ShadowTechnique", "none",
                     "Shadow technique: none, additive, modulative, stencil");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.ShadowFarDistance", "1000",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.ShadowFarDistance", "200",
                     "Integer units of distance within which to do shadows (mul by magnification)");
         // cp.AddParameter(m_moduleName + ".Ogre.Renderer", "Direct3D9 Rendering Subsystem",
         //             "Name of the rendering subsystem to use");
@@ -156,9 +156,9 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "Resource name of  the default texture");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.LL.SceneMagnification", "1",
                     "Magnification of LL coordinates into Ogre space");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.LL.EarlyMaterialCreate", "false",
-                    "Create materials while creating mesh rather than waiting");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.LL.RenderInfoMaterialCreate", "true",
+                    "Create materials while gathering mesh generation info (earlier than mesh creation)");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.LL.EarlyMaterialCreate", "false",
                     "Create materials while creating mesh rather than waiting");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.SerializeMaterials", "false",
                     "Write out materials to files (replace with DB someday)");
