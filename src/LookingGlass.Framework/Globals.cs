@@ -85,7 +85,7 @@ public static class Globals {
             newAppDir = String.Join(System.Char.ToString(Path.DirectorySeparatorChar), pieces, 0, pieces.Length - 3);
         }
         newAppDir = Path.Combine(newAppDir, Globals.ApplicationName);
-        if (subdir != null && subdir.Length > 0) newAppDir = Path.Combine(newAppDir, subdir);
+        if ((subdir != null) && (subdir.Length > 0)) newAppDir = Path.Combine(newAppDir, subdir);
         return newAppDir;
     }
 

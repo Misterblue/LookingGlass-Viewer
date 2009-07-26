@@ -225,7 +225,7 @@ LookingGlass
             }
             else
             {
-                if (ii == 0 && firstOpFlag)
+                if ((ii == 0) && firstOpFlag)
                 {   // if the first thing is not a parameter, make like it's an op or something
                     m_params.Add(FIRST_PARAM, para);
                 }

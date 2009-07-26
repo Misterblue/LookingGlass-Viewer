@@ -88,7 +88,7 @@ public class BasicWorkQueue : IWorkQueue {
         }
 
         // if it's me, I have the job of empting the queue
-        while (doEvenLaterThread != null && doEvenLaterThread == Thread.CurrentThread) {
+        while ((doEvenLaterThread != null) && (doEvenLaterThread == Thread.CurrentThread)) {
             List<DoLaterBase> doneWaiting = null;
             int sleepTime = 0;
             int now = System.Environment.TickCount;

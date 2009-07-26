@@ -59,7 +59,7 @@ public class LLTerrainInfo : TerrainInfoBase {
             float minHeight = 999999f;
             float maxHeight = 0f;
 
-            if (reg == null || !(reg is LLRegionContext)) {
+            if ((reg == null) || !(reg is LLRegionContext)) {
                 // things are not set up so create a default, flat heightmap
                 LogManager.Log.Log(LogLevel.DWORLDDETAIL,
                         "LLTerrainInfo: Building default zero terrain");

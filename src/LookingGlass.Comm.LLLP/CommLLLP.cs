@@ -168,7 +168,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     private OMVSD.OSD RuntimeValueFetch(string key) {
         OMVSD.OSD ret = null;
         try {
-            if (m_client != null && m_isConnected && m_isLoggedIn) {
+            if ((m_client != null) && (m_isConnected && m_isLoggedIn)) {
                 switch (key) {
                     case FIELDCURRENTSIM:
                         ret = new OMVSD.OSDString(m_client.Network.CurrentSim.Name);
@@ -355,7 +355,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         // the format that we must pass is "uri:sim&x&y&z" or the strings "home" or "last"
         // The user inputs either "home", "last", "sim" or "sim/x/y/z"
         string loginSetting = null;
-        if (m_loginSim != null && m_loginSim.Length > 0) {
+        if ((m_loginSim != null) && (m_loginSim.Length > 0)) {
             try {
                 char sep = '/';
                 string[] parts = System.Uri.UnescapeDataString(m_loginSim).ToLower().Split(sep);

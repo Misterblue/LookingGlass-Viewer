@@ -111,7 +111,7 @@ public class AssetFetcher {
 
     private void PushRequests() {
         lock (m_requests) {
-            if (m_outstandingRequests.Count < m_maxParallelRequests && m_requests.Count > 0) {
+            if ((m_outstandingRequests.Count < m_maxParallelRequests) && (m_requests.Count > 0)) {
                 // there is room for more requests
                 // TODO: Move some requests from m_requests to m_outstandingRequests and start the request
             }

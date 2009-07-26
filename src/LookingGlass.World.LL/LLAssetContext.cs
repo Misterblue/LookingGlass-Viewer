@@ -244,7 +244,7 @@ public sealed class LLAssetContext : AssetContextBase {
         // if texture could not be downloaded, create a fake texture
         OMV.UUID assetWorldID = assetTexture.AssetID;
         bool hasTransparancy = true;    // assume the worst
-        if (state == OMV.TextureRequestState.NotFound || state == OMV.TextureRequestState.Timeout) {
+        if ((state == OMV.TextureRequestState.NotFound) || (state == OMV.TextureRequestState.Timeout)) {
             try {
                 EntityNameLL tempTexture = EntityNameLL.ConvertTextureWorldIDToEntityName(this, assetWorldID.ToString());
                 string tempTextureFilename = Path.Combine(CacheDir, tempTexture.CacheFilename);

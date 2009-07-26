@@ -197,7 +197,7 @@ public class ModuleManager {
         try {
             OMVSD.OSD modulesRaw = Globals.Configuration.ParamValue("Modules");
             // modules are specified by an array of maps
-            if (modulesRaw != null && modulesRaw.Type == OMVSD.OSDType.Array) {
+            if ((modulesRaw != null) && (modulesRaw.Type == OMVSD.OSDType.Array)) {
                 OMVSD.OSDArray moduleArray = (OMVSD.OSDArray)modulesRaw;
                 foreach (OMVSD.OSDMap modSpec in moduleArray) {
                     string modAssembly = modSpec["Assembly"].AsString();
