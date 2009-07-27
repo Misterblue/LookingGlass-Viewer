@@ -285,11 +285,11 @@ public sealed class LLAssetContext : AssetContextBase {
             if (wii.type == AssetType.Texture) {
                 // a regular texture we write out as it's JPEG2000 image
                 try {
-                    // This PNG code kinda works but PNGs are larger than the JPEG files and
-                    // there are occasional 'out of memory'. It also uses WAY MORE disk space.
                     hasTransparancy = CheckAssetTextureForTransparancy(assetTexture);
                     MakeParentDirectoriesExist(wii.filename);
                     if (m_convertToPng) {
+                        // This PNG code kinda works but PNGs are larger than the JPEG files and
+                        // there are occasional 'out of memory'. It also uses WAY MORE disk space.
                         if (OMVI.OpenJPEG.DecodeToImage(assetTexture.AssetData, out managedImage)) {
                             try {
                                 tempImage = OMVI.LoadTGAClass.LoadTGA(new MemoryStream(managedImage.ExportTGA()));

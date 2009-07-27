@@ -25,7 +25,7 @@
 // uncomment to use Caelum as the sky
 // #define CAELUM
 // another SkyManager
-#define SKYMANAGER
+// #define SKYMANAGER
 
 #include "LGOCommon.h"
 #include "UserIO.h"
