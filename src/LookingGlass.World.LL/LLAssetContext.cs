@@ -184,8 +184,8 @@ public sealed class LLAssetContext : AssetContextBase {
             }
             if (sendRequest) {
                 // this is here because RequestTexture might immediately call the callback
-                m_texturePipe.RequestTexture(binID, OMV.ImageType.Normal, 101300f, 0, 0, OnACDownloadFinished, false);
                 m_log.Log(LogLevel.DTEXTUREDETAIL, "DoTextureLoad: Requesting: " + textureEntityName);
+                m_texturePipe.RequestTexture(binID, OMV.ImageType.Normal, 50f, 0, 0, OnACDownloadFinished, false);
             }
         }
         return;

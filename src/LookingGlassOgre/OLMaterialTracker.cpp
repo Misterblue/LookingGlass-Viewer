@@ -109,7 +109,7 @@ void OLMaterialTracker::MakeMaterialDefault(Ogre::MaterialPtr matPtr) {
 	Ogre::Technique* tech = mat->createTechnique();
 	Ogre::Pass* pass = tech->createPass();
 	pass->setShininess(0.0f);
-	pass->setAmbient(0.1f, 0.1f, 0.1f);
+	pass->setAmbient(0.1, 0.1, 0.1);
 	// pass->setVertexColourTracking(Ogre::TVC_AMBIENT);
 	pass->setDiffuse(0.582f, 0.5703f, 0.7578f, 0.7f); // blue gray from girl's shirt
 	pass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
@@ -331,14 +331,14 @@ void OLMaterialTracker::CreateMaterialResource2(const char* mName, const char* t
 	Ogre::Technique* tech = mat->createTechnique();
 	Ogre::Pass* pass = tech->createPass();
 	pass->setLightingEnabled(true);
-	pass->setShininess(parms[CreateMaterialShiny]/256.0f);	// origionally a byte
-	pass->setAmbient(0.1f, 0.1f, 0.1f);
+	pass->setShininess(parms[CreateMaterialShiny]/256.0);	// origionally a byte
+	pass->setAmbient(0.1, 0.1, 0.1);
 	pass->setVertexColourTracking(Ogre::TVC_AMBIENT);
 	if (textureName.length() > 0) {
 		Ogre::TextureUnitState* tus = pass->createTextureUnitState(textureName);
 
 		// use SceneBlendType to add the alpha information
-		if (parms[CreateMaterialTransparancy] == 1.0f) {
+		if (parms[CreateMaterialTransparancy] == 1.0) {
 			pass->setSceneBlending(Ogre::SBT_REPLACE);
 		}
 		else {

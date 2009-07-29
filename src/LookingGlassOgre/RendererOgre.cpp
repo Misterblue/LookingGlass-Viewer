@@ -133,7 +133,7 @@ namespace RendererOgre {
         createInput();
 
 		// uncomment this to generate the loading mesh shape (small cube)
-		// GenerateLoadingMesh();
+		GenerateLoadingMesh();
 		return;
 	}
 
@@ -219,7 +219,7 @@ namespace RendererOgre {
 			const char* sceneName = GetParameter("Renderer.Ogre.Name");
 			// m_sceneMgr = m_root->createSceneManager(Ogre::ST_EXTERIOR_CLOSE, sceneName);
 			m_sceneMgr = m_root->createSceneManager(Ogre::ST_GENERIC, sceneName);
-			m_sceneMgr->setAmbientLight(Ogre::ColourValue(0.1f, 0.1f, 0.1f));
+			m_sceneMgr->setAmbientLight(Ogre::ColourValue(0.1, 0.1, 0.1));
 			const char* shadowName = LookingGlassOgr::GetParameter("Renderer.Ogre.ShadowTechnique");
 			if (stricmp(shadowName, "additive")) 
 				m_sceneMgr->setShadowTechnique(Ogre::SHADOWDETAILTYPE_ADDITIVE);	// easiest
@@ -293,74 +293,6 @@ namespace RendererOgre {
 		m_caelumSystem = new Caelum::CaelumSystem(m_root, m_sceneMgr, componentMask);
 		LookingGlassOgr::Log("CreateSky: loading caelum script %s", m_caelumScript);
 		Caelum::CaelumPlugin::getSingleton().loadCaelumSystemFromScript(m_caelumSystem, m_caelumScript);
-
-		/*
-	    // Create subcomponents (and allow individual subcomponents to fail).
-	    try {
-			m_caelumSystem->setSkyDome (new Caelum::SkyDome (m_sceneMgr, m_caelumSystem->getCaelumCameraNode ()));
-	    } catch (Caelum::UnsupportedException& ex) {
-			Log("Failed initialization of Caelum skyDome: %s", ex.getFullDescription().c_str());
-	    }
-	    try {
-	        m_caelumSystem->setSun (new Caelum::SphereSun(m_sceneMgr, m_caelumSystem->getCaelumCameraNode ()));
-	    } catch (Caelum::UnsupportedException& ex) {
-			Log("Failed initialization of Caelum sun: %s", ex.getFullDescription().c_str());
-	    }
-	    try {
-	        m_caelumSystem->setMoon (new Caelum::Moon(m_sceneMgr, m_caelumSystem->getCaelumCameraNode ()));
-	    } catch (Caelum::UnsupportedException& ex) {
-			Log("Failed initialization of Caelum moon: %s", ex.getFullDescription().c_str());
-	    }
-	    try {
-	        m_caelumSystem->setCloudSystem (new Caelum::CloudSystem (m_sceneMgr, m_caelumSystem->getCaelumGroundNode ()));
-	    } catch (Caelum::UnsupportedException& ex) {
-			Log("Failed initialization of Caelum cloud system: %s", ex.getFullDescription().c_str());
-	    }
-	    try {
-			m_caelumSystem->setPointStarfield (new Caelum::PointStarfield (m_sceneMgr, m_caelumSystem->getCaelumCameraNode ()));
-	    } catch (Caelum::UnsupportedException& ex) {
-			Log("Failed initialization of Caelum cloud starfield: %s", ex.getFullDescription().c_str());
-	    }
-
-		m_root->addFrameListener(m_caelumSystem);
-	    m_caelumSystem->attachViewport(m_camera->getViewport());
-
-		m_caelumSystem->setPrecipitationController (new Caelum::PrecipitationController (m_sceneMgr));
-
-	    // m_caelumSystem->setSceneFogDensityMultiplier (0.0015);
-		m_caelumSystem->setManageSceneFog(false);
-	    m_caelumSystem->setManageAmbientLight (true);
-	    m_caelumSystem->setMinimumAmbientLight (Ogre::ColourValue (0.1, 0.1, 0.1));
-
-	    // Setup sun options
-	    if (m_caelumSystem->getSun()) {
-	        m_caelumSystem->getSun()->setAutoDisableThreshold(0.05);
-	        m_caelumSystem->getSun()->setAutoDisable(false);
-	    }
-
-	    if (m_caelumSystem->getMoon()) {
-	        m_caelumSystem->getMoon()->setAutoDisableThreshold (0.05);
-	        m_caelumSystem->getMoon()->setAutoDisable (false);
-	    }
-
-	    if (m_caelumSystem->getCloudSystem()) {
-	        m_caelumSystem->getCloudSystem()->createLayerAtHeight(2000);
-	        m_caelumSystem->getCloudSystem()->createLayerAtHeight(5000);
-	        m_caelumSystem->getCloudSystem()->getLayer(0)->setCloudSpeed(Ogre::Vector2(0.000005, -0.000009));
-	        m_caelumSystem->getCloudSystem()->getLayer(1)->setCloudSpeed(Ogre::Vector2(0.0000045, -0.0000085));
-	    }
-
-	    if (m_caelumSystem->getPrecipitationController()) {
-	        m_caelumSystem->getPrecipitationController()->setIntensity (0);
-	    }
-
-	    // Set time acceleration.
-	    m_caelumSystem->getUniversalClock()->setTimeScale (0);
-
-	    // Sunrise with visible moon.
-	    m_caelumSystem->getUniversalClock()->setGregorianDateTime(2007, 4, 9, 9, 33, 0);
-		*/
-
 #endif	// CALEUM
 #if !defined(CAELUM) && !defined(SKYMANAGER)
 		try {
@@ -516,7 +448,7 @@ namespace RendererOgre {
 		mo->position(1.0, 1.0, 1.0);
 		
 		mo->quad(0, 2, 3, 1);
-		mo->quad(2, 4, 7, 3);
+		mo->quad(2, 6, 7, 3);
 		mo->quad(0, 4, 6, 2);
 		mo->quad(0, 4, 5, 1);
 		mo->quad(4, 5, 7, 6);
@@ -806,8 +738,8 @@ void RendererOgre::calculateEntityVisibility(Ogre::Node* node) {
 					if (m_camera->isVisible(snodeObject->getWorldBoundingBox())
 							&& calculateScaleVisibility(snodeDistance, snodeEntitySize)) {
 						if (!snodeEntity->getMesh().isNull()) {
-							Ogre::MeshManager::getSingleton().load(snodeEntity->getMesh()->getName(), OLResourceGroupName);
-							// snodeEntity->getMesh()->load();
+							// Ogre::MeshManager::getSingleton().load(snodeEntity->getMesh()->getName(), OLResourceGroupName);
+							snodeEntity->getMesh()->load();
 						}
 						snodeEntity->setVisible(true);
 					}
