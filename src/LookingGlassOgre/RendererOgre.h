@@ -24,8 +24,6 @@
 
 // uncomment to use Caelum as the sky
 // #define CAELUM
-// another SkyManager
-// #define SKYMANAGER
 
 #include "LGOCommon.h"
 #include "UserIO.h"
@@ -33,10 +31,6 @@
 #ifdef CAELUM
 #include "Caelum.h"
 #include "CaelumPlugin.h"
-#endif
-
-#ifdef SKYMANAGER
-#include "SkyManager.h"
 #endif
 
 namespace RendererOgre {

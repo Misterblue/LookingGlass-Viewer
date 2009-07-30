@@ -135,6 +135,7 @@ extern "C" DLLExport Ogre::SceneNode* CreateSceneNode(
 					float sx, float sy, float sz,
 					float ow, float ox, float oy, float oz) {
 	Ogre::SceneNode* node = NULL;
+	Ogre::Quaternion rot = Ogre::Quaternion(ow, ox, oy, oz);
 
 	if (parentNode == 0) {
 		node = sceneMgr->getRootSceneNode()->createChildSceneNode(nodeName);
@@ -146,7 +147,7 @@ extern "C" DLLExport Ogre::SceneNode* CreateSceneNode(
 	node->setInheritOrientation(inheritOrientation);
 	node->setScale(sx, sy, sz);
 	node->translate(px, py, pz);
-	node->rotate(Ogre::Quaternion(ow, ox, oy, oz));
+	node->rotate(rot);
 	node->setVisible(true);
 	node->setInitialState();
 	return node;

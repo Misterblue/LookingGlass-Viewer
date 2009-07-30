@@ -58,9 +58,6 @@ namespace RendererOgre {
 			Ogre::WindowEventUtilities::messagePump();
 		}
 		Log("DEBUG: LookingGlassOrge: Completed rendering");
-#ifdef SKYMANAGER
-		SkyManager::get().end();
-#endif
 		destroyScene();
 		// for some reason, often after the exit, m_root is not usable
 		// m_root->shutdown();
@@ -133,7 +130,7 @@ namespace RendererOgre {
         createInput();
 
 		// uncomment this to generate the loading mesh shape (small cube)
-		GenerateLoadingMesh();
+		// GenerateLoadingMesh();
 		return;
 	}
 
@@ -249,7 +246,7 @@ namespace RendererOgre {
 	}
 
 	void RendererOgre::createLight() {
-#if !defined(CAELUM) && !defined(SKYMANAGER)
+#if !defined(CAELUM)
 		Log("DEBUG: LookingGlassOrge: createLight");
         // TODO: decide if I should connect  this to a scene node
         //    might make moving and control easier
@@ -274,9 +271,6 @@ namespace RendererOgre {
 	}
 
 	void RendererOgre::createSky() {
-#ifdef SKYMANAGER
-		SkyManager::get().init(true, true, m_sceneMgr->getName());
-#endif
 #ifdef CAELUM
         Caelum::CaelumSystem::CaelumComponent componentMask;
 		/*
@@ -294,7 +288,7 @@ namespace RendererOgre {
 		LookingGlassOgr::Log("CreateSky: loading caelum script %s", m_caelumScript);
 		Caelum::CaelumPlugin::getSingleton().loadCaelumSystemFromScript(m_caelumSystem, m_caelumScript);
 #endif	// CALEUM
-#if !defined(CAELUM) && !defined(SKYMANAGER)
+#if !defined(CAELUM)
 		try {
 			// Ogre::String skyboxName = "LookingGlass/CloudyNoonSkyBox";
 			Ogre::String skyboxName = GetParameter("Renderer.Ogre.SkyboxName");
@@ -320,9 +314,6 @@ namespace RendererOgre {
 
 	// ========== Ogre::FrameListener
 	bool RendererOgre::frameStarted(const Ogre::FrameEvent& evt) {
-#ifdef SKYMANAGER
-		SkyManager::get().frameStarted(evt.timeSinceLastFrame, m_sunFocalPoint, 0);
-#endif	// SKYMANAGER
 		return true;
 	}
 

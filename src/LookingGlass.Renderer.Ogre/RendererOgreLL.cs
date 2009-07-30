@@ -37,7 +37,7 @@ namespace LookingGlass.Renderer.Ogr {
 public class RendererOgreLL : IWorldRenderConv {
     private ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
 
-    private float m_sceneMagnification = 10.0f;
+    private float m_sceneMagnification = 1.0f;
     bool m_buildMaterialsAtMeshCreationTime = false;
     bool m_buildMaterialsAtRenderInfoTime = true;
 
@@ -138,9 +138,8 @@ public class RendererOgreLL : IWorldRenderConv {
         // while we're in the neighborhood, we can create the materials
         if (m_buildMaterialsAtRenderInfoTime) {
             if (sceneMgr is OgreSceneMgr) {
-                // Oops. this doesn't work because FaceTextures is really a static array and
-                //   it really doesn't give the number of faces of the primitive
                 OgreSceneMgr oSceneMgr = (OgreSceneMgr)sceneMgr;
+                // we create the usual ones. extra faces will be asked for on demand
                 for (int j = 0; j < 6; j++) {
                     OMV.Primitive.TextureEntryFace textureFace = prim.Textures.GetFace((uint)j);
                     CreateMaterialResource2(oSceneMgr, ent, prim, EntityNameOgre.ConvertToOgreMaterialNameX(ent.Name, j), j);
