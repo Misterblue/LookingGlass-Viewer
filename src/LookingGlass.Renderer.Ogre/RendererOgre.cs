@@ -34,7 +34,6 @@ using LookingGlass.Framework.Statistics;
 using LookingGlass.Framework.WorkQueue;
 using LookingGlass.Renderer;
 using LookingGlass.Rest;
-using LookingGlass.View;
 using LookingGlass.World;
 using OMV = OpenMetaverse;
 

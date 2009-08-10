@@ -24,7 +24,6 @@ using System;
 using System.Collections.Generic;
 // using System.Drawing;
 using System.Text;
-using LookingGlass.View;
 using LookingGlass.World;
 using OMV = OpenMetaverse;
 
