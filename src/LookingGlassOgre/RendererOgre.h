@@ -118,15 +118,13 @@ private:
 #ifdef CAELUM
 	Caelum::CaelumSystem* m_caelumSystem;
 	Ogre::String m_caelumScript;
-#endif // CAELUM
-#ifdef SKYMANAGER
-#endif  // SKYMANAGER
-#if !defined(CAELUM) && !defined(SKYMANAGER)
+#else // CAELUM
 	// default if not using some fancy sky system
 	Ogre::Light* m_sun;				// the light that is the sun
 	float m_sunDistance;			// distance sun is from the focal point
 	Ogre::Light* m_moon;			// the light that is the moon
 #endif // ENVIRONMENT DEFAULT
+	void UpdateSun();				// move the sun to the local area
 
 	Ogre::String m_cacheDir; 
 	Ogre::String m_preloadedDir; 

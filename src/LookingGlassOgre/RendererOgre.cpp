@@ -84,8 +84,15 @@ namespace RendererOgre {
 
 			// terrible kludge since we don't have interest information sent to us
 			m_sunFocalPoint = Ogre::Vector3(px, 30, pz);
+			UpdateSun();
 		}
 		return;
+	}
+
+	void RendererOgre::UpdateSun() {
+#if !defined(CAELUM)
+		m_sun->setPosition(m_sunFocalPoint.x, 1000.0f, m_sunFocalPoint.z);
+#endif	// CAELUM
 	}
 
 	// Called from managed code via InitializeOgre().

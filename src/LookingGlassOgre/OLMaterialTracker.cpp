@@ -334,6 +334,7 @@ void OLMaterialTracker::CreateMaterialResource2(const char* mName, const char* t
 	pass->setShininess(parms[CreateMaterialShiny]/256.0);	// origionally a byte
 	pass->setAmbient(0.1, 0.1, 0.1);
 	pass->setVertexColourTracking(Ogre::TVC_AMBIENT);
+	// pass->setVertexColourTracking(Ogre::TVC_NONE);
 	if (textureName.length() > 0) {
 		Ogre::TextureUnitState* tus = pass->createTextureUnitState(textureName);
 
@@ -360,7 +361,7 @@ void OLMaterialTracker::CreateMaterialResource2(const char* mName, const char* t
 		//1 trying out different forms of adding the color to the texture
 		//1 tus->setColourOperationEx(Ogre::LBX_MODULATE, Ogre::LBS_TEXTURE, Ogre::LBS_MANUAL, 
 		//1 	Ogre::ColourValue( parms[CreateMaterialColorR], parms[CreateMaterialColorG], 
-		//1 			parms[CreateMaterialColorB], parms[CreateMaterialColorA] ));
+		//1 	parms[CreateMaterialColorB], parms[CreateMaterialColorA] ));
 		pass->setDiffuse(parms[CreateMaterialColorR], 
 				parms[CreateMaterialColorG], 
 				parms[CreateMaterialColorB], 
