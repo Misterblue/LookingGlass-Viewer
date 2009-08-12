@@ -137,7 +137,7 @@ namespace RendererOgre {
         createInput();
 
 		// uncomment this to generate the loading mesh shape (small cube)
-		// GenerateLoadingMesh();
+		GenerateLoadingMesh();
 		return;
 	}
 
@@ -221,8 +221,8 @@ namespace RendererOgre {
 		Log("DEBUG: LookingGlassOrge: createScene");
 		try {
 			const char* sceneName = GetParameter("Renderer.Ogre.Name");
-			// m_sceneMgr = m_root->createSceneManager(Ogre::ST_EXTERIOR_CLOSE, sceneName);
-			m_sceneMgr = m_root->createSceneManager(Ogre::ST_GENERIC, sceneName);
+			m_sceneMgr = m_root->createSceneManager(Ogre::ST_EXTERIOR_CLOSE, sceneName);
+			// m_sceneMgr = m_root->createSceneManager(Ogre::ST_GENERIC, sceneName);
 			m_sceneMgr->setAmbientLight(Ogre::ColourValue(0.1, 0.1, 0.1));
 			const char* shadowName = LookingGlassOgr::GetParameter("Renderer.Ogre.ShadowTechnique");
 			if (stricmp(shadowName, "additive")) 
@@ -450,7 +450,7 @@ namespace RendererOgre {
 		mo->quad(0, 4, 6, 2);
 		mo->quad(0, 4, 5, 1);
 		mo->quad(4, 5, 7, 6);
-		mo->quad(7, 5, 3, 1);
+		mo->quad(7, 5, 1, 3);
 		mo->end();
 
 		Ogre::MeshPtr mesh = mo->convertToMesh(loadingMeshName , OLResourceGroupName);
