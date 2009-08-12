@@ -1,0 +1,15 @@
+material LookingGlass/DefaultTerrainMaterial
+{
+	receive_shadows on
+	technique 
+    {
+		pass 
+        {
+			ambient 0.8 0.8 0.8
+			texture_unit 
+            {
+				texture DefaultTextures/grass_1024.jpg
+			}
+		}
+	}
+}

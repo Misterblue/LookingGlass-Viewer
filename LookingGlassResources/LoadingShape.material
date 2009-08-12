@@ -1,0 +1,16 @@
+material LookingGlass/LoadingShape
+{
+	technique 
+	{
+		pass 
+		{
+            scene_blend alpha_blend
+            depth_write off
+			texture_unit 
+            {
+                colour_op_ex source1 src_manual src_current 0.582 0.5703 0.7578
+                alpha_op_ex source1 src_manual src_current 0.4
+			}
+		}
+	}
+}

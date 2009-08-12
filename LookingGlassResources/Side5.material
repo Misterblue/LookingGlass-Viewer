@@ -1,0 +1,15 @@
+material LookingGlass/Side5
+{
+	technique 
+    {
+		pass 
+        {
+			ambient 0.8 0.8 0.8
+			texture_unit
+ 
+            {
+				texture DefaultTextures/Side5-32.jpg
+			}
+		}
+	}
+}

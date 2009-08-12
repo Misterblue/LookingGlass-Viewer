@@ -1,0 +1,15 @@
+material LookingGlass/LookingGlassLogo256 
+{
+	technique 
+    {
+		pass 
+        {
+			lighting off
+
+			texture_unit 
+            {
+				texture LookingGlassLogo256.png
+			}
+		}
+	}
+}

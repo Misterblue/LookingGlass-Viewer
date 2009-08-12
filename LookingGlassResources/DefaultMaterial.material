@@ -1,0 +1,15 @@
+material LookingGlass/DefaultMaterial
+{
+	technique 
+    {
+		pass 
+        {
+			ambient 0.8 0.8 0.8
+			texture_unit
+ 
+            {
+				texture DefaultTextures/RustedMetal.jpg
+			}
+		}
+	}
+}

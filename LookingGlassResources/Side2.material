@@ -1,0 +1,15 @@
+material LookingGlass/Side2
+{
+	technique 
+    {
+		pass 
+        {
+			ambient 0.8 0.8 0.8
+			texture_unit
+ 
+            {
+				texture DefaultTextures/Side2-32.jpg
+			}
+		}
+	}
+}
