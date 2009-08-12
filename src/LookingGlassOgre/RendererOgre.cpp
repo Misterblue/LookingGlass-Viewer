@@ -92,6 +92,7 @@ namespace RendererOgre {
 	void RendererOgre::UpdateSun() {
 #if !defined(CAELUM)
 		m_sun->setPosition(m_sunFocalPoint.x, 1000.0f, m_sunFocalPoint.z);
+		LookingGlassOgr::Log("UpdateSun: x=%f, z=%f", (double)m_sunFocalPoint.x, (double)m_sunFocalPoint.z);
 #endif	// CAELUM
 	}
 
@@ -265,6 +266,7 @@ namespace RendererOgre {
 		m_sun->setSpecularColour(0.8f, 0.8f, 0.8f);
 		m_sun->setPosition(0.0f, 1000.0f, 0.0f);
 		m_sun->setDirection(0.0f, -1.0f, 0.0f);
+		// m_sun->setDirection(0.0f, 1.0f, 0.0f);
 		m_sun->setCastShadows(true);
 		m_sun->setVisible(true);
 #endif // CAELUM
