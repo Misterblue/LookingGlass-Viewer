@@ -102,8 +102,12 @@ private:
 	bool calculateScaleVisibility(float, float);
 	void unloadTheMesh(Ogre::MeshPtr);
 	void processEntityVisibility();
-	int m_calculateVisibilityFrames;
-	bool m_recalculateVisibility;
+	int m_calculateVisibilityFrames;		// number of frames between visibility calcuation
+	float m_visibilityScaleMaxDistance;		// not visible after this far
+	float m_visibilityScaleOnlyLargeAfter;	// after this distance, only large things visible
+	float m_visibilityScaleMinDistance;		// always visible is this close
+	float m_visibilityScaleLargeSize;		// what is large enough to see at a distance
+	bool m_recalculateVisibility;			// set to TRUE if visibility should be recalcuated
 
 	// UTILITY ROUTINES
 	void AssertNonNull(void*, const char*);

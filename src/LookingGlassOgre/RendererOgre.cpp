@@ -105,7 +105,15 @@ namespace RendererOgre {
 		m_preloadedDir = LookingGlassOgr::GetParameter("Renderer.Ogre.PreLoadedDir");
 		m_defaultTerrainMaterial = LookingGlassOgr::GetParameter("Renderer.Ogre.DefaultTerrainMaterial");
 		m_serializeMeshes = LookingGlassOgr::isTrue(LookingGlassOgr::GetParameter("Renderer.Ogre.SerializeMeshes"));
-		m_calculateVisibilityFrames = atoi(LookingGlassOgr::GetParameter("Renderer.Ogre.VisibilityFrames"));
+		m_calculateVisibilityFrames = (float)atoi(LookingGlassOgr::GetParameter("Renderer.Ogre.Visibility.Frames"));
+		m_visibilityScaleMaxDistance = (float)atoi(LookingGlassOgr::GetParameter("Renderer.Ogre.Visibility.MaxDistance"));
+		m_visibilityScaleMinDistance = (float)atoi(LookingGlassOgr::GetParameter("Renderer.Ogre.Visibility.MinDistance"));
+		m_visibilityScaleOnlyLargeAfter = (float)atoi(LookingGlassOgr::GetParameter("Renderer.Ogre.Visibility.OnlyLargeAfter"));
+		m_visibilityScaleLargeSize = atoi(LookingGlassOgr::GetParameter("Renderer.Ogre.Visibility.Large"));
+		LookingGlassOgr::Log("initialize: visibility: min=%f, max=%f, large=%f, largeafter=%f",
+				(double)m_visibilityScaleMinDistance, (double)m_visibilityScaleMaxDistance, 
+				(double)m_visibilityScaleLargeSize, (double)m_visibilityScaleOnlyLargeAfter
+		);
 		m_recalculateVisibility = true;
 #ifdef CAELUM
 		m_caelumScript = LookingGlassOgr::GetParameter("Renderer.Ogre.CaelumScript");
@@ -138,7 +146,7 @@ namespace RendererOgre {
         createInput();
 
 		// uncomment this to generate the loading mesh shape (small cube)
-		GenerateLoadingMesh();
+		// GenerateLoadingMesh();
 		return;
 	}
 
@@ -682,11 +690,21 @@ void RendererOgre::AddOceanToRegion(Ogre::SceneManager* sceneMgr, Ogre::SceneNod
 int visibilityCount = 10;
 std::list<Ogre::String> meshesToLoad;
 std::list<Ogre::String> meshesToUnload;
+int visRegions;
+int visChildren;
+int visEntities;
+int visNodes;
+int visVisToInvis;
+int visVisToVis;
+int visInvisToVis;
+int visInvisToInvis;
 void RendererOgre::calculateEntityVisibility() {
-	if (!m_recalculateVisibility) return;
+	if ((!m_recalculateVisibility) || (m_calculateVisibilityFrames == 0)) return;
 	if (visibilityCount-- > 0) {
 		return;
 	}
+	visRegions = visChildren = visEntities = visNodes = 0;
+	visVisToVis = visVisToInvis = visInvisToVis = visInvisToInvis = 0;
 	m_recalculateVisibility = false;
 	visibilityCount = m_calculateVisibilityFrames;
 	Ogre::SceneNode* nodeRoot = m_sceneMgr->getRootSceneNode();
@@ -694,10 +712,17 @@ void RendererOgre::calculateEntityVisibility() {
 	// terrain and then content nodes
 	Ogre::SceneNode::ChildNodeIterator rootChildIterator = nodeRoot->getChildIterator();
 	while (rootChildIterator.hasMoreElements()) {
+		visRegions++;
 		Ogre::Node* nodeRegion = rootChildIterator.getNext();
 		// a region node has the nodes of its contents.
 		calculateEntityVisibility(nodeRegion);
 	}
+	/*
+	LookingGlassOgr::Log("calcVisibility: regions=%d, nodes=%d, entities=%d, children=%d",
+			visRegions, visNodes, visEntities, visChildren);
+	LookingGlassOgr::Log("calcVisibility: vv=%d, vi=%d, iv=%d, ii=%d",
+			visVisToVis, visVisToInvis, visInvisToVis, visInvisToInvis);
+	*/
 }
 
 void RendererOgre::calculateEntityVisibility(Ogre::Node* node) {
@@ -707,8 +732,10 @@ void RendererOgre::calculateEntityVisibility(Ogre::Node* node) {
 		while (nodeChildIterator.hasMoreElements()) {
 			Ogre::Node* nodeChild = nodeChildIterator.getNext();
 			calculateEntityVisibility(nodeChild);
+			visChildren++;
 		}
 	}
+	visNodes++;
 	// children taken care of... check fo attached objects to this node
 	Ogre::SceneNode* snode = (Ogre::SceneNode*)node;
 	float snodeDistance = m_camera->getPosition().distance(snode->_getWorldAABB().getCenter());
@@ -717,9 +744,10 @@ void RendererOgre::calculateEntityVisibility(Ogre::Node* node) {
 	while (snodeObjectIterator.hasMoreElements()) {
 		Ogre::MovableObject* snodeObject = snodeObjectIterator.getNext();
 		if (snodeObject->getMovableType() == "Entity") {
+			visEntities++;
 			Ogre::Entity* snodeEntity = (Ogre::Entity*)snodeObject;
 			// check it's visibility if it's not world geometry (terrain and ocean)
-			if ((snodeEntity->getQueryFlags() & Ogre::SceneManager::WORLD_GEOMETRY_TYPE_MASK) == 0) {
+			if ((snodeEntity->getQueryFlags() & Ogre::SceneManager::WORLD_GEOMETRY_TYPE_MASK) != 0) {
 				snodeEntitySize = snodeEntity->getBoundingRadius() * 2;
 				if (snodeEntity->isVisible()) {
 					// we currently think this object is visible. make sure it should stay that way
@@ -727,9 +755,13 @@ void RendererOgre::calculateEntityVisibility(Ogre::Node* node) {
 							|| !calculateScaleVisibility(snodeDistance, snodeEntitySize)) {
 						// not visible any more... make invisible nad unload it
 						snodeEntity->setVisible(false);
+						visVisToInvis++;
 						if (!snodeEntity->getMesh().isNull()) {
 							unloadTheMesh(snodeEntity->getMesh());
 						}
+					}
+					else {
+						visVisToVis++;
 					}
 				}
 				else {
@@ -742,6 +774,10 @@ void RendererOgre::calculateEntityVisibility(Ogre::Node* node) {
 							snodeEntity->getMesh()->load();
 						}
 						snodeEntity->setVisible(true);
+						visInvisToVis++;
+					}
+					else {
+						visInvisToInvis++;
 					}
 				}
 			}
@@ -794,10 +830,6 @@ void RendererOgre::unloadTheMesh(Ogre::MeshPtr meshP) {
 }
 
 // Return TRUE if an object of this size should be seen at this distance
-float m_visibilityScaleMaxDistance = 300.0;	// not visible after this far
-float m_visibilityScaleOnlyLargeAfter = 100.0;	// after this distance, only large things visible
-float m_visibilityScaleMinDistance = 30.0;	// always visible is this close
-float m_visibilityScaleLargeSize = 9.0;		// what is large enough to see at a distance
 bool RendererOgre::calculateScaleVisibility(float dist, float siz) {
 	// LookingGlassOgr::Log("calculateScaleVisibility: dist=%f, siz=%f", dist, siz);
 	if (dist >= m_visibilityScaleMaxDistance) return false;

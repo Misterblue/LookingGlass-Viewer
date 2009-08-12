@@ -163,8 +163,16 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "Write out materials to files (replace with DB someday)");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.SerializeMeshes", "true",
                     "Write out meshes to files");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.VisibilityFrames", "10",
-                    "number of frames between object visibility calculation");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.Frames", "10",
+                    "number of frames between object visibility calculation (zero means never)");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.MaxDistance", "300",
+                    "the maximum distance to see any entites (far clip)");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.MinDistance", "30",
+                    "below this distance, everything is visible");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.OnlyLargeAfter", "100",
+                    "After this distance, only large things are visible");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.Large", "9",
+                    "How big is considered 'large' for 'OnlyLargeAfter' calculation");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.CaelumScript", "DefaultSky",
                     "The sky to use if Caelum enabled");
 
