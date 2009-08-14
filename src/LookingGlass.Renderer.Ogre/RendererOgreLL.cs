@@ -116,8 +116,8 @@ public class RendererOgreLL : IWorldRenderConv {
 
         // if the prim has a parent, we must hang this scene node off the parent's scene node
         ri.parentID = prim.ParentID;
+        
         ri.rotation = prim.Rotation;
-        // some of the mesh creators include the scale calculations
         ri.position = prim.Position;
 
         // If the mesh was scaled just pass the renderer a scale of one

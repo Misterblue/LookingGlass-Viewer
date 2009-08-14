@@ -22,16 +22,9 @@
  */
 #pragma once
 
-// uncomment to use Caelum as the sky
-// #define CAELUM
-
 #include "LGOCommon.h"
 #include "UserIO.h"
 #include "OLMaterialTracker.h"
-#ifdef CAELUM
-#include "Caelum.h"
-#include "CaelumPlugin.h"
-#endif
 
 namespace RendererOgre {
 
@@ -119,15 +112,10 @@ private:
 
 	// environmental light stuff waiting for the day we have a real sky system
 	Ogre::Vector3 m_sunFocalPoint;	// where the sun is pointing
-#ifdef CAELUM
-	Caelum::CaelumSystem* m_caelumSystem;
-	Ogre::String m_caelumScript;
-#else // CAELUM
 	// default if not using some fancy sky system
 	Ogre::Light* m_sun;				// the light that is the sun
 	float m_sunDistance;			// distance sun is from the focal point
 	Ogre::Light* m_moon;			// the light that is the moon
-#endif // ENVIRONMENT DEFAULT
 	void UpdateSun();				// move the sun to the local area
 
 	Ogre::String m_cacheDir; 

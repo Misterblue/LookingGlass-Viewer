@@ -90,10 +90,8 @@ namespace RendererOgre {
 	}
 
 	void RendererOgre::UpdateSun() {
-#if !defined(CAELUM)
 		m_sun->setPosition(m_sunFocalPoint.x, 1000.0f, m_sunFocalPoint.z);
 		LookingGlassOgr::Log("UpdateSun: x=%f, z=%f", (double)m_sunFocalPoint.x, (double)m_sunFocalPoint.z);
-#endif	// CAELUM
 	}
 
 	// Called from managed code via InitializeOgre().
@@ -115,9 +113,6 @@ namespace RendererOgre {
 				(double)m_visibilityScaleLargeSize, (double)m_visibilityScaleOnlyLargeAfter
 		);
 		m_recalculateVisibility = true;
-#ifdef CAELUM
-		m_caelumScript = LookingGlassOgr::GetParameter("Renderer.Ogre.CaelumScript");
-#endif
 
 
 		m_root = new Ogre::Root(GetParameter("Renderer.Ogre.PluginFilename"));
@@ -262,7 +257,6 @@ namespace RendererOgre {
 	}
 
 	void RendererOgre::createLight() {
-#if !defined(CAELUM)
 		Log("DEBUG: LookingGlassOrge: createLight");
         // TODO: decide if I should connect  this to a scene node
         //    might make moving and control easier
@@ -277,7 +271,6 @@ namespace RendererOgre {
 		// m_sun->setDirection(0.0f, 1.0f, 0.0f);
 		m_sun->setCastShadows(true);
 		m_sun->setVisible(true);
-#endif // CAELUM
 	}
 
 	void RendererOgre::createViewport() {
@@ -288,24 +281,6 @@ namespace RendererOgre {
 	}
 
 	void RendererOgre::createSky() {
-#ifdef CAELUM
-        Caelum::CaelumSystem::CaelumComponent componentMask;
-		/*
-        componentMask = static_cast<Caelum::CaelumSystem::CaelumComponent> (
-                Caelum::CaelumSystem::CAELUM_COMPONENT_SUN |				
-                Caelum::CaelumSystem::CAELUM_COMPONENT_MOON |
-                Caelum::CaelumSystem::CAELUM_COMPONENT_SKY_DOME |
-                //Caelum::CaelumSystem::CAELUM_COMPONENT_IMAGE_STARFIELD |
-                Caelum::CaelumSystem::CAELUM_COMPONENT_POINT_STARFIELD |
-                Caelum::CaelumSystem::CAELUM_COMPONENT_CLOUDS |
-                0);
-		*/
-        componentMask = Caelum::CaelumSystem::CAELUM_COMPONENTS_NONE;
-		m_caelumSystem = new Caelum::CaelumSystem(m_root, m_sceneMgr, componentMask);
-		LookingGlassOgr::Log("CreateSky: loading caelum script %s", m_caelumScript);
-		Caelum::CaelumPlugin::getSingleton().loadCaelumSystemFromScript(m_caelumSystem, m_caelumScript);
-#endif	// CALEUM
-#if !defined(CAELUM)
 		try {
 			// Ogre::String skyboxName = "LookingGlass/CloudyNoonSkyBox";
 			Ogre::String skyboxName = GetParameter("Renderer.Ogre.SkyboxName");
@@ -315,7 +290,6 @@ namespace RendererOgre {
 			Log("Failed to set scene skybox");
 			m_sceneMgr->setSkyBox(false, "");
 		}
-#endif	// default skybox
 	}
 
 	void RendererOgre::createFrameListener() {
