@@ -244,21 +244,21 @@ public class RendererOgreLL : IWorldRenderConv {
             //   faceCounts[0] = number of faces
             //   faceCounts[1] = offset in second array for beginning of vertex info for face 1
             //   faceCounts[2] = number of vertices for face 1
-            //   faceCounts[3] = stride for vertex info for face 1 (= 5)
+            //   faceCounts[3] = stride for vertex info for face 1 (= 8)
             //   faceCounts[4] = offset in second array for beginning of indices info for face 1
             //   faceCounts[5] = number of indices for face 1
             //   faceCounts[6] = stride for indices (= 3)
             //   faceCounts[7] = offset in second array for beginning of vertex info for face 2
             //   faceCounts[8] = number of vertices for face 2
-            //   faceCounts[9] = stride for vertex info for face 2 (= 9)
+            //   faceCounts[9] = stride for vertex info for face 2 (= 8)
             //   etc
             // The second array contains the vertex info in the order:
-            //   v.X, v.Y, v.Z, t.X, t.Y
+            //   v.X, v.Y, v.Z, t.X, t.Y, n.X, n.Y, n.Z
             // this is repeated for each vertex
             // This is followed by the list of indices listed as i.X, i.Y, i.Z
 
             const int faceCountsStride = 6;
-            const int verticesStride = 5;
+            const int verticesStride = 8;
             const int indicesStride = 3;
             // calculate how many floating point numbers we're pushing over
             int[] faceCounts = new int[mesh.Faces.Count * faceCountsStride + 1];
@@ -303,18 +303,16 @@ public class RendererOgreLL : IWorldRenderConv {
                 // Vertices for this face
                 for (int k = 0; k < face.Vertices.Count; k++) {
                     OMVR.Vertex thisVert = face.Vertices[k];
-                    /* m_log.Log(LogLevel.DRENDERDETAIL, "CreateMesh:"
-                        + " px=" + thisVert.Position.X.ToString()
-                        + ", py=" + thisVert.Position.Y.ToString()
-                        + ", pz=" + thisVert.Position.Z.ToString()
-                        + ", tx=" + thisVert.TexCoord.X.ToString()
-                        + ", ty=" + thisVert.TexCoord.Y.ToString()
-                        ); */
+                    // m_log.Log(LogLevel.DRENDERDETAIL, "CreateMesh: vertices: p={0}, t={1}, n={2}",
+                    //     thisVert.Position.ToString(), thisVert.TexCoord.ToString(), thisVert.Normal.ToString());
                     faceVertices[vertI + 0] = thisVert.Position.X;
                     faceVertices[vertI + 1] = thisVert.Position.Y;
                     faceVertices[vertI + 2] = thisVert.Position.Z;
                     faceVertices[vertI + 3] = thisVert.TexCoord.X;
                     faceVertices[vertI + 4] = thisVert.TexCoord.Y;
+                    faceVertices[vertI + 5] = thisVert.Normal.X;
+                    faceVertices[vertI + 6] = thisVert.Normal.Y;
+                    faceVertices[vertI + 7] = thisVert.Normal.Z;
                     vertI += verticesStride;
                 }
                 for (int k = 0; k < face.Indices.Count; k += 3) {

@@ -70,6 +70,7 @@ namespace RendererOgre {
 				float dw, float dx, float dy, float dz,
 				float nearClip, float farClip, float aspect) {
 		if (m_camera) {
+			LookingGlassOgr::Log("UpdateCamera: pos=<%f, %f, %f>", (double)px, (double)py, (double)pz);
 			m_camera->setPosition(px, py, pz);
 			m_camera->setOrientation(Ogre::Quaternion(dw, dx, dy, dz));
 			if (nearClip != m_camera->getNearClipDistance()) {
@@ -90,8 +91,11 @@ namespace RendererOgre {
 	}
 
 	void RendererOgre::UpdateSun() {
-		m_sun->setPosition(m_sunFocalPoint.x, 1000.0f, m_sunFocalPoint.z);
-		LookingGlassOgr::Log("UpdateSun: x=%f, z=%f", (double)m_sunFocalPoint.x, (double)m_sunFocalPoint.z);
+		if (m_sun != NULL) {
+			// we don't need to update the directional light position
+			// m_sun->setPosition(m_sunFocalPoint.x, 1000.0f, m_sunFocalPoint.z);
+			// LookingGlassOgr::Log("UpdateSun: x=%f, z=%f", (double)m_sunFocalPoint.x, (double)m_sunFocalPoint.z);
+		}
 	}
 
 	// Called from managed code via InitializeOgre().
@@ -225,18 +229,26 @@ namespace RendererOgre {
 		Log("DEBUG: LookingGlassOrge: createScene");
 		try {
 			const char* sceneName = GetParameter("Renderer.Ogre.Name");
-			m_sceneMgr = m_root->createSceneManager(Ogre::ST_EXTERIOR_CLOSE, sceneName);
-			// m_sceneMgr = m_root->createSceneManager(Ogre::ST_GENERIC, sceneName);
-			m_sceneMgr->setAmbientLight(Ogre::ColourValue(0.1, 0.1, 0.1));
+			// m_sceneMgr = m_root->createSceneManager(Ogre::ST_EXTERIOR_CLOSE, sceneName);
+			m_sceneMgr = m_root->createSceneManager(Ogre::ST_GENERIC, sceneName);
+			// ambient has to be adjusted for time of day. Set it initially
+			m_sceneMgr->setAmbientLight(Ogre::ColourValue(0.6, 0.6, 0.6));
 			const char* shadowName = LookingGlassOgr::GetParameter("Renderer.Ogre.ShadowTechnique");
-			if (stricmp(shadowName, "additive")) 
+			if (stricmp(shadowName, "additive") == 0) {
 				m_sceneMgr->setShadowTechnique(Ogre::SHADOWDETAILTYPE_ADDITIVE);	// easiest
-			if (stricmp(shadowName, "modulative")) 
+				LookingGlassOgr::Log("createScene: setting shadow to 'additive'");
+			}
+			if (stricmp(shadowName, "modulative") == 0) {
 				m_sceneMgr->setShadowTechnique(Ogre::SHADOWDETAILTYPE_MODULATIVE);	// hardest
-			if (stricmp(shadowName, "stencil")) 
+				LookingGlassOgr::Log("createScene: setting shadow to 'modulative'");
+			}
+			if (stricmp(shadowName, "stencil") == 0) {
 				m_sceneMgr->setShadowTechnique(Ogre::SHADOWDETAILTYPE_STENCIL);
+				LookingGlassOgr::Log("createScene: setting shadow to 'stencil'");
+			}
 			int shadowFarDistance = atoi(LookingGlassOgr::GetParameter("Renderer.Ogre.ShadowFarDistance"));
 			m_sceneMgr->setShadowFarDistance((float)shadowFarDistance);
+			m_sceneMgr->setShadowColour(Ogre::ColourValue::Black);
 		}
 		catch (std::exception e) {
 			Log("Exception in createScene: %s", e.what());
@@ -250,8 +262,8 @@ namespace RendererOgre {
 		m_camera->setPosition(0.0, 0.0, 0.0);
 		m_camera->setDirection(0.0, 0.0, -1.0);
 		m_camera->setNearClipDistance(2.0);
-		// m_camera->setFarClipDistance(1500.0);
-		m_camera->setFarClipDistance(0.0);
+		m_camera->setFarClipDistance(10000.0);
+		// m_camera->setFarClipDistance(0.0);
 		m_camera->setAutoAspectRatio(true);
 		AssertNonNull(m_camera, "createCamera: m_camera is NULL");
 	}
@@ -260,14 +272,13 @@ namespace RendererOgre {
 		Log("DEBUG: LookingGlassOrge: createLight");
         // TODO: decide if I should connect  this to a scene node
         //    might make moving and control easier
-		m_sunDistance = 1000.0;
+		m_sunDistance = 2000.0;
 		m_sunFocalPoint = Ogre::Vector3(128.0, 0.0, 128.0);
 		m_sun = m_sceneMgr->createLight("sun");
 		m_sun->setType(Ogre::Light::LT_DIRECTIONAL);	// directional and sun-like
 		m_sun->setDiffuseColour(Ogre::ColourValue::White);
-		m_sun->setSpecularColour(0.8f, 0.8f, 0.8f);
 		m_sun->setPosition(0.0f, 1000.0f, 0.0f);
-		m_sun->setDirection(0.0f, -1.0f, 0.0f);
+		m_sun->setDirection(0.0f, -1.0f, 1.0f);
 		// m_sun->setDirection(0.0f, 1.0f, 0.0f);
 		m_sun->setCastShadows(true);
 		m_sun->setVisible(true);
@@ -285,6 +296,7 @@ namespace RendererOgre {
 			// Ogre::String skyboxName = "LookingGlass/CloudyNoonSkyBox";
 			Ogre::String skyboxName = GetParameter("Renderer.Ogre.SkyboxName");
 			m_sceneMgr->setSkyBox(true, skyboxName);
+			LookingGlassOgr::Log("createSky: setting skybox to %s", skyboxName.c_str());
 		}
 		catch (Ogre::Exception e) {
 			Log("Failed to set scene skybox");
@@ -334,6 +346,8 @@ namespace RendererOgre {
 								"Mesh", OLResourceGroupName
 								);
 		Ogre::MovableObject* ent = sceneMgr->createEntity(entName, meshName);
+		// it's not scenery
+		ent->removeQueryFlags(Ogre::SceneManager::WORLD_GEOMETRY_TYPE_MASK);	
 		// Ogre::MovableObject* ent = sceneMgr->createEntity(entName, Ogre::SceneManager::PT_SPHERE);	// DEBUG
 		// this should somehow be settable
 		ent->setCastShadows(true);
@@ -355,6 +369,7 @@ namespace RendererOgre {
 		fC += 1;
 
 		Ogre::ManualObject* mo = m_sceneMgr->createManualObject(manualObjectName);
+		mo->setCastShadows(true);
 		// Ogre::ManualObject* mo = new Ogre::ManualObject(manualObjectName);
 		Log("RendererOgre::CreateMeshResource: Creating mo. f = %d, %s", faces, manualObjectName.c_str());
 
@@ -372,6 +387,7 @@ namespace RendererOgre {
 				// Log("RendererOgre::CreateMeshResource: %f, %f, %f, %f, %f", fVf[0], fVf[1], fVf[2], fVf[3], fVf[4] );
 				mo->position(fVf[0], fVf[1], fVf[2]);
 				mo->textureCoord(fVf[3], fVf[4]);
+				mo->normal(fVf[5], fVf[6], fVf[7]);
 				fVf += fC[2];
 			}
 			fC += 3;
@@ -399,6 +415,7 @@ namespace RendererOgre {
 		Ogre::MeshPtr mesh = mo->convertToMesh(entName , OLResourceGroupName);
 		mo->clear();
 		m_sceneMgr->destroyManualObject(mo);
+		mesh->buildEdgeList();
 
 		if (m_serializeMeshes) {
 			// serialize the mesh to the filesystem
@@ -587,8 +604,9 @@ void RendererOgre::GenTerrainMesh(Ogre::SceneManager* sceneMgr, Ogre::SceneNode*
 		Log("GenTerrainMesh: creating terrain ManualObject");
         // if no attached objects, we add our dynamic ManualObject
 		Ogre::ManualObject* mob = sceneMgr->createManualObject("ManualObject/" + node->getName());
+		mob->addQueryFlags(Ogre::SceneManager::WORLD_GEOMETRY_TYPE_MASK);
 		mob->setDynamic(true);
-		mob->setCastShadows(false);
+		mob->setCastShadows(true);
 		mob->setVisible(true);
 		mob->setQueryFlags(Ogre::SceneManager::WORLD_GEOMETRY_TYPE_MASK);
 		node->attachObject(mob);
@@ -613,6 +631,7 @@ void RendererOgre::GenTerrainMesh(Ogre::SceneManager* sceneMgr, Ogre::SceneNode*
 		for (int yy = 0; yy < hmLength; yy++) {
 			mo->position(xx, yy, hm[loc++]);
 			mo->textureCoord((float)xx / (float)hmWidth, (float)yy / (float)hmLength);
+			mo->normal(0.0, 1.0, 0.0);	// always up (for the moment)
 		}
 	}
 
@@ -637,7 +656,6 @@ void RendererOgre::AddOceanToRegion(Ogre::SceneManager* sceneMgr, Ogre::SceneNod
 		Log("AddOceanToRegion: passed null scene manager");
 		return;
 	}
-	Log("AddOceanToRegion: r=%s, w=%f, l=%f, h=%f, n=%s", regionNode->getName().c_str(), width, length, waterHeight, wName);
 	Ogre::String waterName = wName;
 	Ogre::Plane* oceanPlane = new Ogre::Plane(0.0, 0.0, 1.0, 0);
 	Ogre::MeshPtr oceanMesh = Ogre::MeshManager::getSingleton().createPlane(waterName, OLResourceGroupName, 
@@ -645,9 +663,12 @@ void RendererOgre::AddOceanToRegion(Ogre::SceneManager* sceneMgr, Ogre::SceneNod
 					2, 2, true,
 					2, 2.0, 2.0, Ogre::Vector3::UNIT_Y);
 	Ogre::String oceanMaterialName = LookingGlassOgr::GetParameter("Renderer.Ogre.OceanMaterialName");
+	Log("AddOceanToRegion: r=%s, h=%f, n=%s, m=%s", 
+		regionNode->getName().c_str(), waterHeight, wName, oceanMaterialName.c_str());
 	oceanMesh->getSubMesh(0)->setMaterialName(oceanMaterialName);
 	Ogre::Entity* oceanEntity = sceneMgr->createEntity("WaterEntity/" + waterName, oceanMesh->getName());
-	oceanEntity->setQueryFlags(Ogre::SceneManager::WORLD_GEOMETRY_TYPE_MASK);
+	oceanEntity->addQueryFlags(Ogre::SceneManager::WORLD_GEOMETRY_TYPE_MASK);
+	oceanEntity->setCastShadows(false);
 	Ogre::SceneNode* oceanNode = regionNode->createChildSceneNode("WaterSceneNode/" + waterName);
 	oceanNode->setInheritOrientation(true);
 	oceanNode->setInheritScale(false);
@@ -664,6 +685,7 @@ void RendererOgre::AddOceanToRegion(Ogre::SceneManager* sceneMgr, Ogre::SceneNod
 int visibilityCount = 10;
 std::list<Ogre::String> meshesToLoad;
 std::list<Ogre::String> meshesToUnload;
+int visSlowdown;
 int visRegions;
 int visChildren;
 int visEntities;
@@ -691,12 +713,13 @@ void RendererOgre::calculateEntityVisibility() {
 		// a region node has the nodes of its contents.
 		calculateEntityVisibility(nodeRegion);
 	}
-	/*
-	LookingGlassOgr::Log("calcVisibility: regions=%d, nodes=%d, entities=%d, children=%d",
-			visRegions, visNodes, visEntities, visChildren);
-	LookingGlassOgr::Log("calcVisibility: vv=%d, vi=%d, iv=%d, ii=%d",
-			visVisToVis, visVisToInvis, visInvisToVis, visInvisToInvis);
-	*/
+	if ((visSlowdown-- < 0) || (visVisToInvis != 0) || (visInvisToVis != 0)) {
+		visSlowdown = 30;
+		LookingGlassOgr::Log("calcVisibility: regions=%d, nodes=%d, entities=%d, children=%d",
+				visRegions, visNodes, visEntities, visChildren);
+		LookingGlassOgr::Log("calcVisibility: vv=%d, vi=%d, iv=%d, ii=%d",
+				visVisToVis, visVisToInvis, visInvisToVis, visInvisToInvis);
+	}
 }
 
 void RendererOgre::calculateEntityVisibility(Ogre::Node* node) {
@@ -721,7 +744,7 @@ void RendererOgre::calculateEntityVisibility(Ogre::Node* node) {
 			visEntities++;
 			Ogre::Entity* snodeEntity = (Ogre::Entity*)snodeObject;
 			// check it's visibility if it's not world geometry (terrain and ocean)
-			if ((snodeEntity->getQueryFlags() & Ogre::SceneManager::WORLD_GEOMETRY_TYPE_MASK) != 0) {
+			if ((snodeEntity->getQueryFlags() & Ogre::SceneManager::WORLD_GEOMETRY_TYPE_MASK) == 0) {
 				snodeEntitySize = snodeEntity->getBoundingRadius() * 2;
 				if (snodeEntity->isVisible()) {
 					// we currently think this object is visible. make sure it should stay that way

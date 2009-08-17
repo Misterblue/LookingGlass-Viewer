@@ -332,7 +332,7 @@ void OLMaterialTracker::CreateMaterialResource2(const char* mName, const char* t
 	Ogre::Pass* pass = tech->createPass();
 	pass->setLightingEnabled(true);
 	pass->setShininess(parms[CreateMaterialShiny]/256.0);	// origionally a byte
-	pass->setAmbient(0.1, 0.1, 0.1);
+	pass->setAmbient(0.2, 0.2, 0.2);
 	pass->setVertexColourTracking(Ogre::TVC_AMBIENT);
 	if (textureName.length() > 0) {
 		Ogre::TextureUnitState* tus = pass->createTextureUnitState(textureName);
@@ -347,9 +347,10 @@ void OLMaterialTracker::CreateMaterialResource2(const char* mName, const char* t
 			// pass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
 			// next 4 lines found in http://www.ogre3d.org/wiki/index.php/Creating_transparency_based_on_a_key_colour_in_code
 			pass->setSceneBlending(Ogre::SBT_REPLACE);
-			pass->setAlphaRejectSettings(Ogre::CMPF_GREATER_EQUAL, 128);
+			pass->setAlphaRejectSettings(Ogre::CMPF_GREATER_EQUAL, 140);
 			pass->setCullingMode(Ogre::CULL_NONE);
 			pass->setManualCullingMode(Ogre::MANUAL_CULL_NONE);
+			mat->setTransparencyCastsShadows(true);
 
 		}
 		tus->setTextureUScroll(parms[CreateMaterialScrollU]);
