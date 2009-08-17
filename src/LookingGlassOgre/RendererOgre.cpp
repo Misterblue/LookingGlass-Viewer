@@ -683,8 +683,6 @@ void RendererOgre::AddOceanToRegion(Ogre::SceneManager* sceneMgr, Ogre::SceneNod
 // we unload the non-visible ones and make sure the visible ones are loaded.
 // This keeps the number of in memory vertexes low
 int visibilityCount = 10;
-std::list<Ogre::String> meshesToLoad;
-std::list<Ogre::String> meshesToUnload;
 int visSlowdown;
 int visRegions;
 int visChildren;
@@ -754,7 +752,7 @@ void RendererOgre::calculateEntityVisibility(Ogre::Node* node) {
 						snodeEntity->setVisible(false);
 						visVisToInvis++;
 						if (!snodeEntity->getMesh().isNull()) {
-							unloadTheMesh(snodeEntity->getMesh());
+							queueMeshUnload(snodeEntity->getMesh());
 						}
 					}
 					else {
@@ -767,10 +765,9 @@ void RendererOgre::calculateEntityVisibility(Ogre::Node* node) {
 					if (m_camera->isVisible(snodeObject->getWorldBoundingBox())
 							&& calculateScaleVisibility(snodeDistance, snodeEntitySize)) {
 						if (!snodeEntity->getMesh().isNull()) {
-							// Ogre::MeshManager::getSingleton().load(snodeEntity->getMesh()->getName(), OLResourceGroupName);
-							snodeEntity->getMesh()->load();
+							queueMeshLoad(snodeEntity, snodeEntity->getMesh());
 						}
-						snodeEntity->setVisible(true);
+						// snodeEntity->setVisible(true);	// must happen after mesh loaded
 						visInvisToVis++;
 					}
 					else {
@@ -782,20 +779,52 @@ void RendererOgre::calculateEntityVisibility(Ogre::Node* node) {
 	}
 }
 
+// NOTE that all this queuing and visibility checking relies on the since
+//    between frame thread.
+stdext::hash_map<Ogre::String, Ogre::Entity*> meshesToLoad;
+stdext::hash_map<Ogre::String, Ogre::Entity*> meshesToUnload;
 void RendererOgre::processEntityVisibility() {
-	int cnt = 5;
+	int cnt = 10;
+	/*
 	while (meshesToUnload.size() > 0 && cnt-- > 0) {
-		Ogre::String mshName = meshesToUnload.front();
-		meshesToUnload.pop_front();
-		Ogre::MeshManager::getSingleton().unload(mshName);
 	}
-	cnt = 5;
-	while (meshesToLoad.size() > 0 && cnt-- > 0) {
-		Ogre::String mshName = meshesToLoad.front();
-		meshesToLoad.pop_front();
-		Ogre::MeshManager::getSingleton().load(mshName, OLResourceGroupName);
+	*/
+	cnt = 30;
+	// if (!meshesToLoad.empty()) {
+	// 	LookingGlassOgr::Log("processEntityVisibility: cnt=%d", meshesToLoad.size());
+	// }
+	stdext::hash_map<Ogre::String, Ogre::Entity*>::iterator intr;
+	while ((!meshesToLoad.empty()) && (cnt-- > 0)) {
+		intr = meshesToLoad.begin();
+		Ogre::String meshName = intr->first;
+		Ogre::Entity* parentEntity = intr->second;
+		meshesToLoad.erase(intr);
+		Ogre::MeshPtr meshP = Ogre::MeshManager::getSingleton().getByName(meshName);
+		if (!meshP.isNull()) {
+			meshP->load();
+			parentEntity->setVisible(true);
+		}
 	}
 	return;
+}
+
+void RendererOgre::queueMeshLoad(Ogre::Entity* parentEntity, Ogre::MeshPtr meshP) {
+	// remove from the unload list if scheduled to do that
+	Ogre::String meshName = meshP->getName();
+	if (meshesToUnload.find(meshName) != meshesToUnload.end()) {
+		meshesToUnload.erase(meshName);
+	}
+	// add to the load list if not already there (that camera can move around)
+	meshesToLoad.insert(std::pair<Ogre::String, Ogre::Entity*>(meshName, parentEntity));
+}
+
+void RendererOgre::queueMeshUnload(Ogre::MeshPtr meshP) {
+	Ogre::String meshName = meshP->getName();
+	if (meshesToLoad.find(meshName) != meshesToLoad.end()) {
+		meshesToLoad.erase(meshName);
+	}
+	// for the moment, just unload it and don't queue
+	unloadTheMesh(meshP);
 }
 
 // unload all about this mesh. The mesh itself and the textures.

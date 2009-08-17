@@ -93,8 +93,10 @@ private:
 	void calculateEntityVisibility();
 	void calculateEntityVisibility(Ogre::Node*);
 	bool calculateScaleVisibility(float, float);
-	void unloadTheMesh(Ogre::MeshPtr);
 	void processEntityVisibility();
+	void queueMeshLoad(Ogre::Entity*, Ogre::MeshPtr);
+	void queueMeshUnload(Ogre::MeshPtr);
+	void unloadTheMesh(Ogre::MeshPtr);
 	int m_calculateVisibilityFrames;		// number of frames between visibility calcuation
 	float m_visibilityScaleMaxDistance;		// not visible after this far
 	float m_visibilityScaleOnlyLargeAfter;	// after this distance, only large things visible
