@@ -332,7 +332,7 @@ void OLMaterialTracker::CreateMaterialResource2(const char* mName, const char* t
 	Ogre::Pass* pass = tech->createPass();
 	pass->setLightingEnabled(true);
 	pass->setShininess(parms[CreateMaterialShiny]/256.0);	// origionally a byte
-	pass->setAmbient(0.2, 0.2, 0.2);
+	pass->setAmbient(0.4, 0.4, 0.4);
 	pass->setVertexColourTracking(Ogre::TVC_AMBIENT);
 	if (textureName.length() > 0) {
 		Ogre::TextureUnitState* tus = pass->createTextureUnitState(textureName);
@@ -381,6 +381,7 @@ void OLMaterialTracker::CreateMaterialResource2(const char* mName, const char* t
 		else {
 			pass->setDepthWriteEnabled(false);
 			pass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
+			mat->setTransparencyCastsShadows(true);
 		}
 	}
 

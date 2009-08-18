@@ -232,23 +232,27 @@ namespace RendererOgre {
 			// m_sceneMgr = m_root->createSceneManager(Ogre::ST_EXTERIOR_CLOSE, sceneName);
 			m_sceneMgr = m_root->createSceneManager(Ogre::ST_GENERIC, sceneName);
 			// ambient has to be adjusted for time of day. Set it initially
-			m_sceneMgr->setAmbientLight(Ogre::ColourValue(0.6, 0.6, 0.6));
+			m_sceneMgr->setAmbientLight(Ogre::ColourValue(0.2, 0.2, 0.2));
 			const char* shadowName = LookingGlassOgr::GetParameter("Renderer.Ogre.ShadowTechnique");
-			if (stricmp(shadowName, "additive") == 0) {
-				m_sceneMgr->setShadowTechnique(Ogre::SHADOWDETAILTYPE_ADDITIVE);	// easiest
-				LookingGlassOgr::Log("createScene: setting shadow to 'additive'");
+			if (stricmp(shadowName, "texture-modulative") == 0) {
+				m_sceneMgr->setShadowTechnique(Ogre::SHADOWTYPE_TEXTURE_MODULATIVE);	// hardest
+				LookingGlassOgr::Log("createScene: setting shadow to 'texture-modulative'");
 			}
-			if (stricmp(shadowName, "modulative") == 0) {
-				m_sceneMgr->setShadowTechnique(Ogre::SHADOWDETAILTYPE_MODULATIVE);	// hardest
-				LookingGlassOgr::Log("createScene: setting shadow to 'modulative'");
+			if (stricmp(shadowName, "stencil-modulative") == 0) {
+				m_sceneMgr->setShadowTechnique(Ogre::SHADOWTYPE_STENCIL_MODULATIVE);
+				LookingGlassOgr::Log("createScene: setting shadow to 'stencil-modulative'");
 			}
-			if (stricmp(shadowName, "stencil") == 0) {
-				m_sceneMgr->setShadowTechnique(Ogre::SHADOWDETAILTYPE_STENCIL);
-				LookingGlassOgr::Log("createScene: setting shadow to 'stencil'");
+			if (stricmp(shadowName, "texture-additive") == 0) {
+				m_sceneMgr->setShadowTechnique(Ogre::SHADOWTYPE_TEXTURE_ADDITIVE);	// easiest
+				LookingGlassOgr::Log("createScene: setting shadow to 'texture-additive'");
+			}
+			if (stricmp(shadowName, "stencil-additive") == 0) {
+				m_sceneMgr->setShadowTechnique(Ogre::SHADOWTYPE_STENCIL_ADDITIVE);
+				LookingGlassOgr::Log("createScene: setting shadow to 'stencil-additive'");
 			}
 			int shadowFarDistance = atoi(LookingGlassOgr::GetParameter("Renderer.Ogre.ShadowFarDistance"));
 			m_sceneMgr->setShadowFarDistance((float)shadowFarDistance);
-			m_sceneMgr->setShadowColour(Ogre::ColourValue::Black);
+			m_sceneMgr->setShadowColour(Ogre::ColourValue(0.2, 0.2, 0.2));
 		}
 		catch (std::exception e) {
 			Log("Exception in createScene: %s", e.what());
@@ -278,7 +282,9 @@ namespace RendererOgre {
 		m_sun->setType(Ogre::Light::LT_DIRECTIONAL);	// directional and sun-like
 		m_sun->setDiffuseColour(Ogre::ColourValue::White);
 		m_sun->setPosition(0.0f, 1000.0f, 0.0f);
-		m_sun->setDirection(0.0f, -1.0f, 1.0f);
+		Ogre::Vector3 sunDirection(0.0f, -1.0f, 1.0f);
+		sunDirection.normalise();
+		m_sun->setDirection(sunDirection);
 		// m_sun->setDirection(0.0f, 1.0f, 0.0f);
 		m_sun->setCastShadows(true);
 		m_sun->setVisible(true);
@@ -789,7 +795,7 @@ void RendererOgre::processEntityVisibility() {
 	while (meshesToUnload.size() > 0 && cnt-- > 0) {
 	}
 	*/
-	cnt = 30;
+	cnt = 400;
 	// if (!meshesToLoad.empty()) {
 	// 	LookingGlassOgr::Log("processEntityVisibility: cnt=%d", meshesToLoad.size());
 	// }
