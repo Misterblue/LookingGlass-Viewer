@@ -105,13 +105,18 @@ namespace RendererOgre {
 		Log("DEBUG: LookingGlassOrge: Initialize");
 		m_cacheDir = LookingGlassOgr::GetParameter("Renderer.Ogre.CacheDir");
 		m_preloadedDir = LookingGlassOgr::GetParameter("Renderer.Ogre.PreLoadedDir");
+
 		m_defaultTerrainMaterial = LookingGlassOgr::GetParameter("Renderer.Ogre.DefaultTerrainMaterial");
-		m_serializeMeshes = LookingGlassOgr::isTrue(LookingGlassOgr::GetParameter("Renderer.Ogre.SerializeMeshes"));
-		m_calculateVisibilityFrames = (float)atoi(LookingGlassOgr::GetParameter("Renderer.Ogre.Visibility.Frames"));
-		m_visibilityScaleMaxDistance = (float)atoi(LookingGlassOgr::GetParameter("Renderer.Ogre.Visibility.MaxDistance"));
-		m_visibilityScaleMinDistance = (float)atoi(LookingGlassOgr::GetParameter("Renderer.Ogre.Visibility.MinDistance"));
-		m_visibilityScaleOnlyLargeAfter = (float)atoi(LookingGlassOgr::GetParameter("Renderer.Ogre.Visibility.OnlyLargeAfter"));
-		m_visibilityScaleLargeSize = atoi(LookingGlassOgr::GetParameter("Renderer.Ogre.Visibility.Large"));
+		m_serializeMeshes = LookingGlassOgr::GetParameterBool("Renderer.Ogre.SerializeMeshes");
+
+		m_shouldCullMeshes = LookingGlassOgr::GetParameterBool("Renderer.Ogre.Visibility.Cull.Meshes");
+		m_shouldCullTextures = LookingGlassOgr::GetParameterBool("Renderer.Ogre.Visibility.Cull.Textures");
+		m_shouldCullByFrustrum = LookingGlassOgr::GetParameterBool("Renderer.Ogre.Visibility.Cull.Frustrum");
+		m_shouldCullByDistance = LookingGlassOgr::GetParameterBool("Renderer.Ogre.Visibility.Cull.Distance");
+		m_visibilityScaleMaxDistance = LookingGlassOgr::GetParameterFloat("Renderer.Ogre.Visibility.MaxDistance");
+		m_visibilityScaleMinDistance = LookingGlassOgr::GetParameterFloat("Renderer.Ogre.Visibility.MinDistance");
+		m_visibilityScaleOnlyLargeAfter = LookingGlassOgr::GetParameterFloat("Renderer.Ogre.Visibility.OnlyLargeAfter");
+		m_visibilityScaleLargeSize = LookingGlassOgr::GetParameterInt("Renderer.Ogre.Visibility.Large");
 		LookingGlassOgr::Log("initialize: visibility: min=%f, max=%f, large=%f, largeafter=%f",
 				(double)m_visibilityScaleMinDistance, (double)m_visibilityScaleMaxDistance, 
 				(double)m_visibilityScaleLargeSize, (double)m_visibilityScaleOnlyLargeAfter
@@ -221,7 +226,7 @@ namespace RendererOgre {
 	void RendererOgre::initOgreResources() {
 		Log("DEBUG: LookingGlassOrge: InitOgreResources");
 		Ogre::TextureManager::getSingleton().setDefaultNumMipmaps(
-			atoi(GetParameter("Renderer.Ogre.DefaultNumMipmaps")));
+			LookingGlassOgr::GetParameterInt("Renderer.Ogre.DefaultNumMipmaps"));
 		Ogre::ResourceGroupManager::getSingleton().initialiseAllResourceGroups();
 	}
 
@@ -232,7 +237,8 @@ namespace RendererOgre {
 			// m_sceneMgr = m_root->createSceneManager(Ogre::ST_EXTERIOR_CLOSE, sceneName);
 			m_sceneMgr = m_root->createSceneManager(Ogre::ST_GENERIC, sceneName);
 			// ambient has to be adjusted for time of day. Set it initially
-			m_sceneMgr->setAmbientLight(Ogre::ColourValue(0.2, 0.2, 0.2));
+			// m_sceneMgr->setAmbientLight(Ogre::ColourValue(0.5, 0.5, 0.5));
+			m_sceneMgr->setAmbientLight(LookingGlassOgr::GetParameterColor("Renderer.Ogre.Ambient"));
 			const char* shadowName = LookingGlassOgr::GetParameter("Renderer.Ogre.ShadowTechnique");
 			if (stricmp(shadowName, "texture-modulative") == 0) {
 				m_sceneMgr->setShadowTechnique(Ogre::SHADOWTYPE_TEXTURE_MODULATIVE);	// hardest
@@ -250,7 +256,7 @@ namespace RendererOgre {
 				m_sceneMgr->setShadowTechnique(Ogre::SHADOWTYPE_STENCIL_ADDITIVE);
 				LookingGlassOgr::Log("createScene: setting shadow to 'stencil-additive'");
 			}
-			int shadowFarDistance = atoi(LookingGlassOgr::GetParameter("Renderer.Ogre.ShadowFarDistance"));
+			int shadowFarDistance = LookingGlassOgr::GetParameterInt("Renderer.Ogre.ShadowFarDistance");
 			m_sceneMgr->setShadowFarDistance((float)shadowFarDistance);
 			m_sceneMgr->setShadowColour(Ogre::ColourValue(0.2, 0.2, 0.2));
 		}
@@ -688,7 +694,6 @@ void RendererOgre::AddOceanToRegion(Ogre::SceneManager* sceneMgr, Ogre::SceneNod
 // Once a frame, go though all the meshes and figure out which ones are visible.
 // we unload the non-visible ones and make sure the visible ones are loaded.
 // This keeps the number of in memory vertexes low
-int visibilityCount = 10;
 int visSlowdown;
 int visRegions;
 int visChildren;
@@ -699,14 +704,10 @@ int visVisToVis;
 int visInvisToVis;
 int visInvisToInvis;
 void RendererOgre::calculateEntityVisibility() {
-	if ((!m_recalculateVisibility) || (m_calculateVisibilityFrames == 0)) return;
-	if (visibilityCount-- > 0) {
-		return;
-	}
+	if ((!m_recalculateVisibility) || ((!m_shouldCullByDistance) && (!m_shouldCullByFrustrum))) return;
 	visRegions = visChildren = visEntities = visNodes = 0;
 	visVisToVis = visVisToInvis = visInvisToVis = visInvisToInvis = 0;
 	m_recalculateVisibility = false;
-	visibilityCount = m_calculateVisibilityFrames;
 	Ogre::SceneNode* nodeRoot = m_sceneMgr->getRootSceneNode();
 	// Hanging off the root node will be a node for each 'region'. A region has
 	// terrain and then content nodes
@@ -752,8 +753,12 @@ void RendererOgre::calculateEntityVisibility(Ogre::Node* node) {
 				snodeEntitySize = snodeEntity->getBoundingRadius() * 2;
 				if (snodeEntity->isVisible()) {
 					// we currently think this object is visible. make sure it should stay that way
-					if (!m_camera->isVisible(snodeEntity->getWorldBoundingBox())
-							|| !calculateScaleVisibility(snodeDistance, snodeEntitySize)) {
+					if ( (m_shouldCullByFrustrum && m_camera->isVisible(snodeEntity->getWorldBoundingBox()))
+							|| (m_shouldCullByDistance && calculateScaleVisibility(snodeDistance, snodeEntitySize))) {
+						// it should stay visible
+						visVisToVis++;
+					}
+					else {
 						// not visible any more... make invisible nad unload it
 						snodeEntity->setVisible(false);
 						visVisToInvis++;
@@ -761,15 +766,13 @@ void RendererOgre::calculateEntityVisibility(Ogre::Node* node) {
 							queueMeshUnload(snodeEntity->getMesh());
 						}
 					}
-					else {
-						visVisToVis++;
-					}
 				}
 				else {
 					// the entity currently thinks it's not visible.
 					// check to see if it should be visible by checking a fake bounding box
-					if (m_camera->isVisible(snodeObject->getWorldBoundingBox())
-							&& calculateScaleVisibility(snodeDistance, snodeEntitySize)) {
+					if ( (m_shouldCullByFrustrum && m_camera->isVisible(snodeEntity->getWorldBoundingBox()))
+							|| (m_shouldCullByDistance && calculateScaleVisibility(snodeDistance, snodeEntitySize))) {
+						// it should become visible again
 						if (!snodeEntity->getMesh().isNull()) {
 							queueMeshLoad(snodeEntity, snodeEntity->getMesh());
 						}
@@ -795,7 +798,7 @@ void RendererOgre::processEntityVisibility() {
 	while (meshesToUnload.size() > 0 && cnt-- > 0) {
 	}
 	*/
-	cnt = 400;
+	cnt = 200;
 	// if (!meshesToLoad.empty()) {
 	// 	LookingGlassOgr::Log("processEntityVisibility: cnt=%d", meshesToLoad.size());
 	// }
@@ -807,7 +810,7 @@ void RendererOgre::processEntityVisibility() {
 		meshesToLoad.erase(intr);
 		Ogre::MeshPtr meshP = Ogre::MeshManager::getSingleton().getByName(meshName);
 		if (!meshP.isNull()) {
-			meshP->load();
+			if (m_shouldCullMeshes) meshP->load();
 			parentEntity->setVisible(true);
 		}
 	}
@@ -835,30 +838,34 @@ void RendererOgre::queueMeshUnload(Ogre::MeshPtr meshP) {
 
 // unload all about this mesh. The mesh itself and the textures.
 void RendererOgre::unloadTheMesh(Ogre::MeshPtr meshP) {
-	Ogre::Mesh::SubMeshIterator smi = meshP->getSubMeshIterator();
-	while (smi.hasMoreElements()) {
-		Ogre::SubMesh* oneSubMesh = smi.getNext();
-		Ogre::String subMeshMaterialName = oneSubMesh->getMaterialName();
-		Ogre::MaterialPtr subMeshMaterial = (Ogre::MaterialPtr)Ogre::MaterialManager::getSingleton().getByName(subMeshMaterialName);
-		if (!subMeshMaterial.isNull()) {
-			Ogre::Material::TechniqueIterator techIter = subMeshMaterial->getTechniqueIterator();
-			while (techIter.hasMoreElements()) {
-				Ogre::Technique* oneTech = techIter.getNext();
-				Ogre::Technique::PassIterator passIter = oneTech->getPassIterator();
-				while (passIter.hasMoreElements()) {
-					Ogre::Pass* onePass = passIter.getNext();
-					Ogre::Pass::TextureUnitStateIterator tusIter = onePass->getTextureUnitStateIterator();
-					while (tusIter.hasMoreElements()) {
-						Ogre::TextureUnitState* oneTus = tusIter.getNext();
-						Ogre::String texName = oneTus->getTextureName();
-						Ogre::TextureManager::getSingleton().unload(texName);
+	if (m_shouldCullTextures) {
+		Ogre::Mesh::SubMeshIterator smi = meshP->getSubMeshIterator();
+		while (smi.hasMoreElements()) {
+			Ogre::SubMesh* oneSubMesh = smi.getNext();
+			Ogre::String subMeshMaterialName = oneSubMesh->getMaterialName();
+			Ogre::MaterialPtr subMeshMaterial = (Ogre::MaterialPtr)Ogre::MaterialManager::getSingleton().getByName(subMeshMaterialName);
+			if (!subMeshMaterial.isNull()) {
+				Ogre::Material::TechniqueIterator techIter = subMeshMaterial->getTechniqueIterator();
+				while (techIter.hasMoreElements()) {
+					Ogre::Technique* oneTech = techIter.getNext();
+					Ogre::Technique::PassIterator passIter = oneTech->getPassIterator();
+					while (passIter.hasMoreElements()) {
+						Ogre::Pass* onePass = passIter.getNext();
+						Ogre::Pass::TextureUnitStateIterator tusIter = onePass->getTextureUnitStateIterator();
+						while (tusIter.hasMoreElements()) {
+							Ogre::TextureUnitState* oneTus = tusIter.getNext();
+							Ogre::String texName = oneTus->getTextureName();
+							Ogre::TextureManager::getSingleton().unload(texName);
+						}
 					}
 				}
 			}
 		}
 	}
-	Ogre::String mshName = meshP->getName();
-	Ogre::MeshManager::getSingleton().unload(mshName);
+	if (m_shouldCullMeshes) {
+		Ogre::String mshName = meshP->getName();
+		Ogre::MeshManager::getSingleton().unload(mshName);
+	}
 }
 
 // Return TRUE if an object of this size should be seen at this distance

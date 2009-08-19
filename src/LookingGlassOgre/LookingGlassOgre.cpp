@@ -191,6 +191,36 @@ const char* LookingGlassOgr::GetParameter(const char* paramName) {
 	return NULL;
 }
 
+const int LookingGlassOgr::GetParameterInt(const char* paramName) {
+	int inum = 0;
+	if (sscanf(GetParameter(paramName), "%d", &inum)) {
+		return inum;
+	}
+	return 0;
+}
+
+const bool LookingGlassOgr::GetParameterBool(const char* paramName) {
+	return isTrue(GetParameter(paramName));
+}
+
+const float LookingGlassOgr::GetParameterFloat(const char* paramName) {
+	float fnum = 0;
+	if (sscanf(GetParameter(paramName), "%f", &fnum)) {
+		return fnum;
+	}
+	return 0.0;
+}
+
+const Ogre::ColourValue LookingGlassOgr::GetParameterColor(const char* paramName) {
+	float rnum;
+	float gnum;
+	float bnum;
+	if (sscanf(GetParameter(paramName), "<%f,%f,%f>", &rnum, &gnum, &bnum)) {
+		return Ogre::ColourValue(rnum, gnum, bnum);
+	}
+	return Ogre::ColourValue::Red;
+}
+
 // Print out a message of the pointer thing is null. At least the log will know
 // of the problem
 void LookingGlassOgr::AssertNonNull(void* thing, const char* msg) {

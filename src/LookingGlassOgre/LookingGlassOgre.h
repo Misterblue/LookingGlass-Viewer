@@ -62,6 +62,10 @@ extern void AssertNonNull(void*, const char*);
 extern const bool isTrue(const char*);
 extern void Log(const char*, ...);
 extern const char* GetParameter(const char*);
+extern const int GetParameterInt(const char*);
+extern const bool GetParameterBool(const char*);
+extern const float GetParameterFloat(const char*);
+extern const Ogre::ColourValue GetParameterColor(const char*);
 extern const bool checkKeepRunning();
 // Request the loading of a resource (call to network)
 extern void RequestResource(const char*, const char*, const int);

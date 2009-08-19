@@ -369,6 +369,16 @@ void OLMaterialTracker::CreateMaterialResource2(const char* mName, const char* t
 		);
 	}
 	else {
+		/*
+		// this code makes the prim a solid color that does not respect light shading
+		Ogre::TextureUnitState* tus = pass->createTextureUnitState(textureName);
+		tus->setColourOperationEx(Ogre::LBX_SOURCE1, Ogre::LBS_MANUAL, Ogre::LBS_CURRENT,
+				Ogre::ColourValue(
+				parms[CreateMaterialColorR], parms[CreateMaterialColorG], parms[CreateMaterialColorB]));
+		tus->setAlphaOperation(Ogre::LBX_SOURCE1, Ogre::LBS_MANUAL, Ogre::LBS_CURRENT,
+				parms[CreateMaterialColorA]);
+		*/
+
 		// it's a solid color. Just use that.
 		pass->setDiffuse(parms[CreateMaterialColorR], 
 				parms[CreateMaterialColorG], 

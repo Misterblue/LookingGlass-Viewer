@@ -153,26 +153,39 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.DefaultTextureResourceName", 
                     "LoadingTexture.png",
                     "Resource name of  the default texture");
+
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.LL.SceneMagnification", "1",
                     "Magnification of LL coordinates into Ogre space");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.LL.RenderInfoMaterialCreate", "true",
                     "Create materials while gathering mesh generation info (earlier than mesh creation)");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.LL.EarlyMaterialCreate", "false",
                     "Create materials while creating mesh rather than waiting");
+
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.SerializeMaterials", "false",
                     "Write out materials to files (replace with DB someday)");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.SerializeMeshes", "true",
                     "Write out meshes to files");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.Frames", "10",
-                    "number of frames between object visibility calculation (zero means never)");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.MaxDistance", "300",
+
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Ambient", "<0.2,0.2,0.2>",
+                    "color value for initial ambient lighting");
+
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.Cull.Frustrum", "false",
+                    "whether to cull (unload) objects if not visible in camera frustrum");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.Cull.Distance", "true",
+                    "whether to cull (unload) objects depending on distance from camera");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.Cull.Meshes", "true",
+                    "unload culled object meshes");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.Cull.Textures", "true",
+                    "unload culled textures");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.MaxDistance", "100",
                     "the maximum distance to see any entites (far clip)");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.MinDistance", "30",
                     "below this distance, everything is visible");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.OnlyLargeAfter", "100",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.OnlyLargeAfter", "90",
                     "After this distance, only large things are visible");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.Large", "9",
                     "How big is considered 'large' for 'OnlyLargeAfter' calculation");
+
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.CaelumScript", "DefaultSky",
                     "The sky to use if Caelum enabled");
 

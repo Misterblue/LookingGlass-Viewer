@@ -1,0 +1,75 @@
+{
+// Uncomment this if you like lots of debug output
+// "Log.FilterLevel": "2147483647",	// log everything
+//"Log.FilterLevel": "1073744896",	// RENDER and RENDERDETAIL
+
+// ====================================================
+"Modules": [
+    {   "Assembly": "LookingGlass.Rest.dll",
+        "Interface": "LookingGlass.Framework.Modules.IModule",
+        "Name": "RestManager",
+        "Order": 10
+    },
+    {   "Assembly": "LookingGlass.Comm.LLLP.dll",
+        "Interface": "LookingGlass.Comm.ICommProvider",
+        "Name": "Comm",
+        "Order": 20
+    },
+    {   "Assembly": "LookingGlass.World.dll",
+        "Interface": "LookingGlass.World.IWorld",
+        "Name": "World",
+        "Order": 30
+    },
+    {   "Assembly": "LookingGlass.Renderer.Ogre.dll",
+        "Interface": "LookingGlass.Renderer.IRenderProvider",
+        "Name": "Renderer",
+        "Order": 40
+    },
+    {   "Assembly": "LookingGlass.View.dll",
+        "Interface": "LookingGlass.View.IViewProvider",
+        "Name": "Viewer",
+        "Order": 50
+    },
+    {   "Assembly": "LookingGlass.Comm.LLLP.dll",
+        "Interface": "LookingGlass.Rest.IRestUser",
+        "Name": "CommLLLPRest",
+        "Order": 70
+    }
+],
+
+// ====================================================
+"World.Parameters": "xx",
+
+// ====================================================
+"Viewer.World.Name": "World",
+"Viewer.Renderer.Name": "Renderer",
+
+// ====================================================
+"Renderer.Ogre.Renderer": "OpenGL Rendering Subsystem",
+// "Renderer.Ogre.Renderer": "Direct3D9 Rendering Subsystem",
+"Renderer.Ogre.VideoMode": "800 x 600@ 32-bit colour",
+// Shadow technique: none, texture-modulative, stencil-modulative, texture-additive, stencil-additive
+"Renderer.Ogre.ShadowTechnique": "none",
+"Renderer.Ogre.Visibility.Cull.Meshes": "true",
+"Renderer.Ogre.Visibility.Cull.Textures": "false",
+"Renderer.Ogre.Visibility.Cull.Frustrum": "false",
+"Renderer.Ogre.Visibility.Cull.Distance": "true",
+"Renderer.Ogre.Visibility.MaxDistance": "150",
+"Renderer.Ogre.Visibility.MinDistance": "30",
+"Renderer.Ogre.Visibility.OnlyLargeAfter": "100",
+"Renderer.Ogre.Visibility.Large": "8",
+
+// ====================================================
+"Comm.Texture.MaxRequests": "4",
+"Comm.Settings.MultipleSims": "false",
+
+// ====================================================
+"CommLLLPRest.Comm": "Comm",
+"CommLLLPRest.APIName": "LLLP",
+
+// ====================================================
+"Rest.Manager.Skin": "Default",
+
+// ====================================================
+"ParameterWithoutAComma": "Last"
+}

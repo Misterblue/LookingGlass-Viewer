@@ -97,7 +97,10 @@ private:
 	void queueMeshLoad(Ogre::Entity*, Ogre::MeshPtr);
 	void queueMeshUnload(Ogre::MeshPtr);
 	void unloadTheMesh(Ogre::MeshPtr);
-	int m_calculateVisibilityFrames;		// number of frames between visibility calcuation
+	bool m_shouldCullByFrustrum;			// true if should cull visible objects by the camera frustrum
+	bool m_shouldCullByDistance;			// true if should cull visible objects by distance from camera
+	bool m_shouldCullMeshes;				// true if should cull meshes
+	bool m_shouldCullTextures;				// true if should cull textures
 	float m_visibilityScaleMaxDistance;		// not visible after this far
 	float m_visibilityScaleOnlyLargeAfter;	// after this distance, only large things visible
 	float m_visibilityScaleMinDistance;		// always visible is this close
