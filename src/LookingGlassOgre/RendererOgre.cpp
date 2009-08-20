@@ -751,10 +751,16 @@ void RendererOgre::calculateEntityVisibility(Ogre::Node* node) {
 			// check it's visibility if it's not world geometry (terrain and ocean)
 			if ((snodeEntity->getQueryFlags() & Ogre::SceneManager::WORLD_GEOMETRY_TYPE_MASK) == 0) {
 				snodeEntitySize = snodeEntity->getBoundingRadius() * 2;
+				// computation if it should be visible
+				bool frust = m_shouldCullByFrustrum && m_camera->isVisible(snodeEntity->getWorldBoundingBox());
+				bool dist = m_shouldCullByDistance && calculateScaleVisibility(snodeDistance, snodeEntitySize);
+				bool viz = (!m_shouldCullByFrustrum && !m_shouldCullByDistance)	// don't cull
+					|| (!m_shouldCullByDistance && frust)	// if frust cull only, it must be true
+					|| (!m_shouldCullByFrustrum && dist)	// if dist cull only, it must be true
+					|| (dist && frust);						// if cull both ways, both must be true
 				if (snodeEntity->isVisible()) {
 					// we currently think this object is visible. make sure it should stay that way
-					if ( (m_shouldCullByFrustrum && m_camera->isVisible(snodeEntity->getWorldBoundingBox()))
-							|| (m_shouldCullByDistance && calculateScaleVisibility(snodeDistance, snodeEntitySize))) {
+					if (viz) {
 						// it should stay visible
 						visVisToVis++;
 					}
@@ -770,8 +776,7 @@ void RendererOgre::calculateEntityVisibility(Ogre::Node* node) {
 				else {
 					// the entity currently thinks it's not visible.
 					// check to see if it should be visible by checking a fake bounding box
-					if ( (m_shouldCullByFrustrum && m_camera->isVisible(snodeEntity->getWorldBoundingBox()))
-							|| (m_shouldCullByDistance && calculateScaleVisibility(snodeDistance, snodeEntitySize))) {
+					if (viz) {
 						// it should become visible again
 						if (!snodeEntity->getMesh().isNull()) {
 							queueMeshLoad(snodeEntity, snodeEntity->getMesh());

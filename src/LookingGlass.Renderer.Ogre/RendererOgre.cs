@@ -183,7 +183,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "below this distance, everything is visible");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.OnlyLargeAfter", "90",
                     "After this distance, only large things are visible");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.Large", "9",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.Large", "8",
                     "How big is considered 'large' for 'OnlyLargeAfter' calculation");
 
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.CaelumScript", "DefaultSky",
