@@ -279,7 +279,7 @@ public sealed class LLAssetContext : AssetContextBase {
         }
         foreach (WaitingInfo wii in toCall) {
             EntityName textureEntityName = EntityNameLL.ConvertTextureWorldIDToEntityName(this, wii.worldID);
-            bool m_convertToPng = false;
+            bool m_convertToPng = Globals.Configuration.ParamBool(m_commName + ".Assets.ConvertPNG");
             OMV.Imaging.ManagedImage managedImage;
             System.Drawing.Image tempImage = null;
             if (wii.type == AssetType.Texture) {

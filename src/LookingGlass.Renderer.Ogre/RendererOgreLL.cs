@@ -43,7 +43,7 @@ public class RendererOgreLL : IWorldRenderConv {
 
     // we've added things to the interface for scuplties. Need to push back into OMV someday.
     // private OMVR.IRendering m_meshMaker = null;
-    private Mesher.MeshmerizerG m_meshMaker = null;
+    private Mesher.MeshmerizerR m_meshMaker = null;
     // set to true if the generation of the mesh includes the scale factors
     private bool m_useRendererMeshScaling;
     private bool m_useRendererTextureScaling;
@@ -60,7 +60,7 @@ public class RendererOgreLL : IWorldRenderConv {
 
     public RendererOgreLL() {
         if (m_meshMaker == null) {
-            Renderer.Mesher.MeshmerizerG amesher = new Renderer.Mesher.MeshmerizerG();
+            Renderer.Mesher.MeshmerizerR amesher = new Renderer.Mesher.MeshmerizerR();
             // There is two ways to do scaling: in the mesh or in Ogre. We choose the latter here
             // so we can create shared vertices for the standard shapes (the cubes  that are everywhere)
             // this causes the mesherizer to not scale the node coordinates by the prim scaling factor

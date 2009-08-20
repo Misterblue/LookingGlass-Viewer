@@ -34,7 +34,7 @@ namespace LookingGlass.Renderer.Mesher {
     /// <summary>
     /// Meshing code based on the Idealist Viewer (20081213).
     /// </summary>
-public class MeshmerizerG : OMVR.IRendering {
+public class MeshmerizerR : OMVR.IRendering {
     // If this is set to 'true' the returned mesh will be scaled by the prim's scaling
     // parameters. Otherwise the mesh is a unit mesh and needs scaling elsewhere.
     private bool m_shouldScale = true;
@@ -246,8 +246,8 @@ public class MeshmerizerG : OMVR.IRendering {
         byte sculptType = (byte)prim.Sculpt.Type;
         bool mirror = ((sculptType & 128) != 0);
         bool invert = ((sculptType & 64) != 0);
-        mirror = false; // TODO: libomv doesn't support these and letting them flop around causes problems
-        invert = false;
+        // mirror = false; // TODO: libomv doesn't support these and letting them flop around causes problems
+        // invert = false;
         OMV.SculptType omSculptType = (OMV.SculptType)(sculptType & 0x07);
 
         PrimMesher.SculptMesh.SculptType smSculptType;
