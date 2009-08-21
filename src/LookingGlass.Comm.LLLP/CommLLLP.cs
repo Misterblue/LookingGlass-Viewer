@@ -232,14 +232,14 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
             m_client.Settings.SEND_AGENT_UPDATES = true;
             m_client.Self.Movement.AutoResetControls = false;
             m_client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = true;
-            m_client.Settings.USE_TEXTURE_CACHE = false;
+            m_client.Settings.USE_ASSET_CACHE = false;
             m_client.Settings.PIPELINE_REQUEST_TIMEOUT = 120 * 1000;
-            m_client.Settings.TEXTURE_CACHE_DIR = ModuleParams.ParamString(ModuleName + ".Assets.CacheDir");
+            m_client.Settings.ASSET_CACHE_DIR = ModuleParams.ParamString(ModuleName + ".Assets.CacheDir");
             m_client.Settings.ALWAYS_REQUEST_PARCEL_ACL = false;
             m_client.Settings.ALWAYS_REQUEST_PARCEL_DWELL = false;
             // m_client.Settings.Apply();
             // Crank up the throttle on texture downloads
-            // m_client.Throttle.Texture = 446000.0f;
+            m_client.Throttle.Texture = 446000.0f;
 
             m_client.Network.OnLogin += new OMV.NetworkManager.LoginCallback(Network_OnLogin);
             m_client.Network.OnDisconnected += new OMV.NetworkManager.DisconnectedCallback(Network_OnDisconnected);
