@@ -92,7 +92,6 @@ public sealed class LLAssetContext : AssetContextBase {
     public void InitializeContext(OMV.GridClient gclient, string commName, string cacheDir, int maxrequests) {
         m_waiting = new Dictionary<OMV.UUID, WaitingInfo>();
         m_completionWork = new BasicWorkQueue("LLAssetContext.Completion");
-        WorkQueueManager.Register(m_completionWork);
         m_client = gclient;
         m_commName = commName;
         m_cacheDir = cacheDir;
