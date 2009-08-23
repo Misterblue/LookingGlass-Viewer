@@ -1,0 +1,36 @@
+body {
+ font-family: Veranda,Arial,Helvetica,sans-serif;
+ font-size: 12px;
+ background: #4A5F6D;
+ color: #EEEAD6;
+ padding: 0px;
+ margin: 0px;
+}
+.footer {
+ font-family: Veranda,Arial,Helvetica,sans-serif;
+ font-size: 10px;
+}
+td {
+ font-family: Veranda,Arial,Helvetica,sans-serif;
+ font-size: 12px;
+ padding: 4px;
+ margin: 4px;
+}
+blockquote {
+ font-family: Veranda,Arial,Helvetica,sans-serif;
+ font-style: italic;
+ font-size: 12px;
+}
+pre {
+ padding: 5px;
+ background-color: #8080B0;
+ color: #000000;
+ margin-left: 20px;
+ font-size: 11px;
+}
+:link {
+ color: #ffffff;
+}
+:visited {
+ color: #d0d0d0;
+}

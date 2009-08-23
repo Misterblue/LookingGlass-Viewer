@@ -227,6 +227,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
             m_client.Settings.ALWAYS_REQUEST_OBJECTS = true;
             m_client.Settings.OBJECT_TRACKING = false; // We use our own object tracking system
             m_client.Settings.AVATAR_TRACKING = true; //but we want to use the libsl avatar system
+            m_client.Settings.SEND_AGENT_APPEARANCE = false;    // for the moment, don't do appearance
             m_client.Settings.PARCEL_TRACKING = false;
             m_client.Settings.USE_INTERPOLATION_TIMER = false;  // don't need the library helping
             m_client.Settings.SEND_AGENT_UPDATES = true;

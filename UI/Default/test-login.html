@@ -1,0 +1,54 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>LookingGlass</title>
+<link rel="stylesheet" href="/static/LookingGlass.css" type="text/css">
+<script type="application/javascript" src="/std/jquery.js"></script>
+<script type="application/javascript" src="/std/jquery.form.js"></script>
+<script type="application/javascript">
+$(document).ready(function() {
+    var formOptions = {
+        dataType: 'json',
+        success: function(resp) {
+        }
+    };
+
+    $('LGLoginForm').ajaxForm(formOptions);
+    // var timerHande = SetTimeout(fetchLoginStuff, 1000);
+    // var statHandle = SetTimeout(fetchDataStuff, 1000);
+} 
+);
+</script>
+</head>
+<body id="LGBody">
+<div id="LGContent">
+<form id="LGLoginForm" action="/api/LLLP/connection/login" method="post">
+    <ul class="LGLogin">
+        <li class="LGLogin">
+            <span class="LGLoginLabel">First</span>
+            <span class="LGLoginValue"><input type="text" name="LOGINFIRST"/></span>
+        </li>
+        <li class="LGLogin">
+            <span class="LGLoginLabel">Last</span>
+            <span class="LGLoginValue"><input type="text" name="LOGINLAST"/></span>
+        </li>
+        <li class="LGLogin">
+            <span class="LGLoginLabel">Password</span>
+            <span class="LGLoginValue"><input type="password" name="LOGINPASS"/></span>
+        </li>
+        <li class="LGLogin">
+            <span class="LGLoginLabel">Grid</span>
+            <span class="LGLoginValue"><input type="text" name="LOGINGRID"/></span>
+        </li>
+        <li class="LGLogin">
+            <span class="LGLoginLabel">Sim</span>
+            <span class="LGLoginValue"><input type="text" name="LOGINSIM"/></span>
+        </li>
+    </ul>
+    <span class="LGLoginSubmit">
+        <input type="submit" value="Login"/>
+    </span>
+</div>
+</body>
+</html>

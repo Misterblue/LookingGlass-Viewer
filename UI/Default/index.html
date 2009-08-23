@@ -1,0 +1,214 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>LookingGlass</title>
+<link rel="stylesheet" href="/static/LookingGlass.css" type="text/css">
+<script type="application/javascript" src="/std/jquery.js"></script>
+<script type="application/javascript">
+$(document).ready(function() {
+    // setup form to post info when 'Login' is pressed
+    $("#LGLoginForm").submit(SendLoginRequest);
+
+    // Major divisions in the content accordioning
+    $('.LGSection').hide();
+    $('#LGLogin').show();
+    $('.LGSectionHeader').click(function() {
+        $(this).next().toggle();
+        return false;
+    });
+
+    // Start the timed functions
+    TimerLoginStuff(true);
+    // TimerDataStuff();
+});
+
+var BASEURL='http://127.0.0.1:9144';
+var loginTimerHandle;
+function TimerLoginStuff(firstTime) {
+    $.ajax({
+        type: "GET",
+        url: BASEURL + '/api/LLLP/status/',
+        dataType: 'json',
+        timeout: 5000,
+        success: function(data, status) {
+            if (status == 'success') {
+                if (firstTime) InitializeLoginForm(data);
+                UpdateLoginArea(data);
+            }
+        },
+        error: function(xmlHTTPRequest, errorType) {
+            UpdateLoginArea( {
+                msg: "Lost connection to viewer",
+                loginstate: "logout"
+            });
+        }
+    });
+            
+    loginTimerHandle = setTimeout('TimerLoginStuff(false)', 3000);
+};
+
+// given a set of login status parameters, update login status area
+function UpdateLoginArea(data) {
+    $('#LGCurrentLogin td').empty();
+    $('#LGCurrentLogin td:nth-child(1)').append(data.first);
+    $('#LGCurrentLogin td:nth-child(2)').append(data.last);
+    $('#LGCurrentLogin td:nth-child(3)').append(data.currentgrid);
+    $('#LGCurrentLogin td:nth-child(4)').append(data.currentsim);
+    $('#LGCurrentLogin td:nth-child(5)').append(data.positionx);
+    $('#LGCurrentLogin td:nth-child(6)').append(data.positiony);
+    $('#LGCurrentLogin td:nth-child(7)').append(data.positionz);
+
+    $('#LGLoginMessage').empty();
+    $('#LGLoginMessage').append(data.msg);
+
+    if(data.loginstate == 'logout') {
+        $("#LGLoginForm").show();
+    }
+    else {
+        $("#LGLoginForm").hide();
+    }
+}
+
+// Called the first time so we can pre-populate the form
+function InitializeLoginForm(data) {
+    $('#LGLoginForm input[name="LOGINFIRST"]').attr('value', data.first);
+    $('#LGLoginForm input[name="LOGINLAST"]').attr('value', data.last);
+    $('#LGLoginForm input[name="LOGINSIM"]').attr('value', data.sim);
+    var selector = $('#LGLoginForm select[name="LOGINGRID"]');
+    selector.empty();
+    for (grid in data.possiblegrids) {
+        var valu = data.possiblegrids[grid];
+        selector.append('<option value="' + valu + '">' + valu + '</option>');
+    }
+
+}
+
+// Called by login form 'submit' click
+function SendLoginRequest() {
+    $.post(BASEURL + "/api/LLLP/connect/login", $('#LGLoginForm').serializeArray());
+    return false;
+}
+
+var statTimerHandle;
+function TimerDataStuff() {
+    $.getJSON(BASEURL+'/api/stats/queues', function(data, status) {
+        if (status == 'success') {
+            BuildBasicTable('#LGStats', data);
+        }
+    });
+    statTimerHandle = setTimeout('TimerDataStuff()', 1000);
+};
+
+function DebugLog(msg) {
+    $("#DEBUG").append('<div>' + msg + '</div>');
+    $("#DEBUG").show();
+}
+
+</script>
+</head>
+<body id="LGBody">
+<div id="LGHeader"></div>
+<div id="LGContent">
+<!-- ============================================== -->
+<div class="LGSectionContainer">
+<a class="LGSectionHeader" href="#">Connection</a>
+<div id="LGLogin" class="LGSectionContent">
+
+<div id="LGLoginMessage"></div>
+<div id="LGCurrentLogin">
+    <table>
+        <tr>
+            <th>First</th>
+            <th>Last</th>
+            <th>Grid</th>
+            <th>Sim</th>
+            <th>X</th>
+            <th>Y</th>
+            <th>Z</th>
+        </tr>
+        <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+    </table>
+</div>  <!-- LGCurrentLogin -->
+
+<form id="LGLoginForm">
+    <ul class="LGLogin">
+        <li>
+            <span class="label">First</span>
+            <span class="value">
+                <input type="text" name="LOGINFIRST"/>
+            </span>
+        </li>
+        <li>
+            <span class="label">Last</span>
+            <span class="value">
+                <input type="text" name="LOGINLAST"/>
+            </span>
+        </li>
+        <li>
+            <span class="label">Password</span>
+            <span class="value">
+                <input type="password" name="LOGINPASS"/>
+            </span>
+        </li>
+        <li>
+            <span class="label">Grid</span>
+            <span class="value">
+                <select size="1" name="LOGINGRID">
+                    <option selected value="OSGrid">OSGrid</option>
+                </select>
+            </span>
+        </li>
+        <li>
+            <span class="label">Sim</span>
+            <span class="value">
+                <input type="text" name="LOGINSIM"/>
+            </span>
+        </li>
+    </ul>
+    <span class="LGLoginSubmit">
+        <input type="submit" value="Login"/>
+    </span>
+</div>  <!-- LGLogin -->
+</div>  <!-- LGSectionContainer -->
+
+<!-- ============================================== -->
+<div class="LGSectionContainer">
+<a class="LGSectionHeader" href="#">Chat</a>
+<div id="LGChat" class="LGSection">
+<textarea name="chattext" rows="20" cols="80"></textarea>
+</div>  <!-- LGChat -->
+</div>  <!-- LGSectionContainer -->
+
+<!-- ============================================== -->
+<div class="LGSectionContainer">
+<a class="LGSectionHeader" href="#">Inventory</a>
+<div id="LGInventory" class="LGSection">
+<p>Look at all the stuff in my inventory</p>
+</div>  <!-- LGInventory -->
+</div>  <!-- LGSectionContainer -->
+
+<!-- ============================================== -->
+<div class="LGSectionContainer">
+<a class="LGSectionHeader" href="#">Statistics</a>
+<div id="LGStatistics" class="LGSection">
+    <ul class="LGStat">
+    <li>statistics</li>
+    </ul>
+</div>  <!-- LGStatistics -->
+</div>  <!-- LGSectionContainer -->
+
+<!-- ============================================== -->
+</div>  <!-- LGContent -->
+<div id="DEBUG"></div>
+<div id="LGFooter"></div>
+</body>
+</html>
