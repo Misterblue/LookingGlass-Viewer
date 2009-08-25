@@ -24,6 +24,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using LookingGlass.Framework.Logging;
+using OMVSD = OpenMetaverse.StructuredData;
 
 namespace LookingGlass.Framework.WorkQueue {
     // An odd mish mash of dynamic and static. The idea is that different work
@@ -52,7 +53,7 @@ public class OnDemandWorkQueue : IWorkQueue {
         m_queueName = nam;
         m_totalRequests = 0;
         m_workQueue = new LinkedList<DoLaterBase>();
-        WorkQueueManager.Register(this);
+        WorkQueueManager.Instance.Register(this);
     }
 
     public void DoLater(DoLaterBase w){
@@ -80,6 +81,7 @@ public class OnDemandWorkQueue : IWorkQueue {
     /// <param name="w"></param>
     private void AddToWorkQueue(DoLaterBase w) {
         lock (m_workQueue) {
+            /*
             // Experimental code trying to give some order to the requests
             LinkedListNode<DoLaterBase> foundItem = null;
             for (LinkedListNode<DoLaterBase> ii = m_workQueue.First; ii != null; ii = ii.Next) {
@@ -96,7 +98,8 @@ public class OnDemandWorkQueue : IWorkQueue {
                 // just put it on the end
                 m_workQueue.AddLast(w);
             }
-            // m_workQueue.AddLast(w);
+            */
+            m_workQueue.AddLast(w);
         }
     }
 
@@ -148,6 +151,14 @@ public class OnDemandWorkQueue : IWorkQueue {
                 }
             }
         }
+    }
+
+    public OMVSD.OSDMap GetDisplayable() {
+        OMVSD.OSDMap aMap = new OMVSD.OSDMap();
+        aMap.Add("Name", new OMVSD.OSDString(this.Name));
+        aMap.Add("Total", new OMVSD.OSDInteger((int)this.TotalQueued));
+        aMap.Add("Current", new OMVSD.OSDInteger((int)this.CurrentQueued));
+        return aMap;
     }
 }
 }

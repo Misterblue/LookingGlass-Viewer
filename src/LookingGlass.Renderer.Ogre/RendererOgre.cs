@@ -213,7 +213,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     // ==========================================================================
     override public bool AfterAllModulesLoaded() {
         // allow others to get our statistics
-        m_restHandler = new RestHandler("/" + m_moduleName + "/detailStats/", m_stats);
+        m_restHandler = new RestHandler("/stats/" + m_moduleName + "/detailStats/", m_stats);
 
         m_userInterface = new UserInterfaceOgre();
 

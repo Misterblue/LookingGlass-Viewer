@@ -145,21 +145,7 @@ class Program {
             Thread.Sleep(3 * 1000);
         }
 
-        try {
-            m_log.Log(LogLevel.DINIT, "STOP INITIATED. Stopping modules.");
-            ModuleManager.Stop();
-
-            m_log.Log(LogLevel.DINIT, "Unloading modules.");
-            ModuleManager.PrepareForUnload();
-
-            m_log.Log(LogLevel.DINIT, "Pushing out configuration file if needed.");
-            Globals.WriteConfigurationFile();
-        }
-        catch (Exception e) {
-            // we don't know how bad things got while shutting down..
-            // just exit gracefully
-            m_log.Log(LogLevel.DINIT, "EXCEPTION WHILE SHUTTING DOWN: "+e.ToString());
-        }
+        programInstance.StopEverything();
 
         m_log.Log(LogLevel.DINIT, "EXIT");
     }
@@ -261,6 +247,24 @@ LookingGlass
             Globals.KeepRunning = false;
         }
         m_log.Log(LogLevel.DINIT, "Completed main module startup");
+    }
+
+    private void StopEverything() {
+        try {
+            m_log.Log(LogLevel.DINIT, "STOP INITIATED. Stopping modules.");
+            ModuleManager.Stop();
+
+            m_log.Log(LogLevel.DINIT, "Unloading modules.");
+            ModuleManager.PrepareForUnload();
+
+            m_log.Log(LogLevel.DINIT, "Pushing out configuration file if needed.");
+            Globals.WriteConfigurationFile();
+        }
+        catch (Exception e) {
+            // we don't know how bad things got while shutting down..
+            // just exit gracefully
+            m_log.Log(LogLevel.DINIT, "EXCEPTION WHILE SHUTTING DOWN: "+e.ToString());
+        }
     }
 }
 }

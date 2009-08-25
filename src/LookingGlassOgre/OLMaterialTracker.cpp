@@ -347,7 +347,7 @@ void OLMaterialTracker::CreateMaterialResource2(const char* mName, const char* t
 			// pass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
 			// next 4 lines found in http://www.ogre3d.org/wiki/index.php/Creating_transparency_based_on_a_key_colour_in_code
 			pass->setSceneBlending(Ogre::SBT_REPLACE);
-			pass->setAlphaRejectSettings(Ogre::CMPF_GREATER_EQUAL, 140);
+			pass->setAlphaRejectSettings(Ogre::CMPF_GREATER_EQUAL, 240);
 			pass->setCullingMode(Ogre::CULL_NONE);
 			pass->setManualCullingMode(Ogre::MANUAL_CULL_NONE);
 			mat->setTransparencyCastsShadows(true);

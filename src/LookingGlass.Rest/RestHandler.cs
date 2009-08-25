@@ -322,9 +322,13 @@ public class RestHandler {
     }
 
     private void DisplayableGetHandler(IHttpClientContext context, IHttpRequest reqContext, IHttpResponse respContext) {
-        m_log.Log(LogLevel.DRESTDETAIL, "DisplayableGetHandler: " + reqContext.Uri);
-        OMVSD.OSDMap statValues = m_displayable.GetDisplayable();
-        ReturnGetResponse(statValues, context, reqContext, respContext);
+        try {
+            OMVSD.OSDMap statValues = m_displayable.GetDisplayable();
+            ReturnGetResponse(statValues, context, reqContext, respContext);
+        }
+        catch (Exception e) {
+            m_log.Log(LogLevel.DBADERROR, "DisplayableGetHandler: exception: {0}", e.ToString());
+        }
         return;
     }
 

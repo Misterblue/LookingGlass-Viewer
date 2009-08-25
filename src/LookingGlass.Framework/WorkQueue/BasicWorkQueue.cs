@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using LookingGlass.Framework.Logging;
+using OMVSD = OpenMetaverse.StructuredData;
 
 namespace LookingGlass.Framework.WorkQueue {
     // An odd mish mash of dynamic and static. The idea is that different work
@@ -43,7 +44,7 @@ public class BasicWorkQueue : IWorkQueue {
     public BasicWorkQueue(string nam) {
         m_queueName = nam;
         m_totalRequests = 0;
-        WorkQueueManager.Register(this);
+        WorkQueueManager.Instance.Register(this);
     }
 
     public void DoLater(DoLaterBase w){
@@ -140,6 +141,16 @@ public class BasicWorkQueue : IWorkQueue {
                 }
             }
         }
+    }
+    
+    public OMVSD.OSDMap GetDisplayable() {
+        OMVSD.OSDMap aMap = new OMVSD.OSDMap();
+        aMap.Add("Name", new OMVSD.OSDString(this.Name));
+        aMap.Add("Total", new OMVSD.OSDInteger((int)this.TotalQueued));
+        aMap.Add("Current", new OMVSD.OSDInteger((int)this.CurrentQueued));
+        Logging.LogManager.Log.Log(LogLevel.DRESTDETAIL,
+            "BasicWorkQueue: GetDisplayable: out={0}", aMap.ToString());
+        return aMap;
     }
 }
 }

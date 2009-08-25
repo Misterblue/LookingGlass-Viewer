@@ -23,31 +23,52 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using LookingGlass.Framework.Statistics;
+using OMVSD = OpenMetaverse.StructuredData;
 
 namespace LookingGlass.Framework.WorkQueue {
     // A static class which keeps a list of all the allocated work queues
     // and can serve up statistics about them.
-    public class WorkQueueManager {
-        static List<IWorkQueue> m_queues;
+    public class WorkQueueManager : IDisplayable {
 
-        static WorkQueueManager() {
+        private List<IWorkQueue> m_queues;
+
+        private static WorkQueueManager m_instance = null;
+        public static WorkQueueManager Instance {
+            get {
+                if (m_instance == null) m_instance = new WorkQueueManager();
+                return m_instance;
+            }
+        }
+        
+        public WorkQueueManager() {
             m_queues = new List<IWorkQueue>();
         }
 
-        public static void Register(IWorkQueue wq) {
+        public void Register(IWorkQueue wq) {
             lock (m_queues) m_queues.Add(wq);
         }
 
-        public static void Unregister(IWorkQueue wq) {
+        public void Unregister(IWorkQueue wq) {
             lock (m_queues) m_queues.Remove(wq);
         }
 
-        public static void ForEach(Action<IWorkQueue> act) {
+        public void ForEach(Action<IWorkQueue> act) {
             lock (m_queues) {
                 foreach (IWorkQueue wq in m_queues) {
                     act(wq);
                 }
             }
+        }
+
+        public OMVSD.OSDMap GetDisplayable() {
+            OMVSD.OSDMap aMap = new OMVSD.OSDMap();
+            lock (m_queues) {
+                foreach (IWorkQueue wq in m_queues) {
+                    aMap.Add(wq.Name, wq.GetDisplayable());
+                }
+            }
+            return aMap;
         }
     }
 }

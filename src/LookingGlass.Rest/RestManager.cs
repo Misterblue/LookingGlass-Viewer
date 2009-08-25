@@ -30,6 +30,7 @@ using LookingGlass;
 using LookingGlass.Framework.Logging;
 using LookingGlass.Framework.Modules;
 using LookingGlass.Framework.Parameters;
+using LookingGlass.Framework.WorkQueue;
 using OMV = OpenMetaverse;
 using HttpServer;
 using HttpServer.Handlers;
@@ -70,6 +71,8 @@ public class RestManager : ModuleBase, HttpServer.ILogWriter {
 
     protected int m_port;
     public int Port { get { return m_port; } }
+
+    RestHandler m_workQueueRestHandler = null;
 
     protected string m_baseURL;
     // return the full base URL with the port added
@@ -136,6 +139,10 @@ public class RestManager : ModuleBase, HttpServer.ILogWriter {
 
         m_log.Log(LogLevel.DINITDETAIL, "Registering FileHandler {0} -> {1}", "/favicon.ico", stdDir);
         FileHandler m_faviconHandler = new FileHandler(m_Server, "/favicon.ico", stdDir, true);
+
+        // some Framework structures that can be referenced
+        m_log.Log(LogLevel.DINITDETAIL, "Registering work queue stats at 'api/stats/workQueues'");
+        m_workQueueRestHandler = new RestHandler("/stats/workQueues", WorkQueueManager.Instance);
 
         m_log.Log(LogLevel.DINIT, "exiting AfterAllModulesLoaded()");
         return true;

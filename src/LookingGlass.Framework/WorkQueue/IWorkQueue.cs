@@ -26,7 +26,7 @@ using System.Text;
 using LookingGlass;
 
 namespace LookingGlass.Framework.WorkQueue {
-    public interface IWorkQueue {
+    public interface IWorkQueue : IDisplayable {
 
         // queue work to do later
         void DoLater(DoLaterBase x);
