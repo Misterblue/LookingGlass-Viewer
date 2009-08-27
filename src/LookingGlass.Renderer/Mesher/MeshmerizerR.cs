@@ -184,40 +184,73 @@ public class MeshmerizerR : OMVR.IRendering {
 
         // LogManager.Log.Log(LogLevel.DRENDERDETAIL, "GenMesh: p={0}, numFaces={1}, vfaces={2}", prim.LocalID, 
         //     newPrim.numPrimFaces, newPrim.viewerFaces.Count);
+        Dictionary<OMV.Vector3, int> vertexAccount = new Dictionary<OMV.Vector3, int>();
         for (int ii=0; ii<numPrimFaces; ii++) {
             OMVR.Face oface = new OMVR.Face();
             oface.Vertices = new List<OMVR.Vertex>();
             oface.Indices = new List<ushort>();
             oface.TextureFace = prim.Textures.GetFace((uint)ii);
             int faceVertices = 0;
+            vertexAccount.Clear();
             // LogManager.Log.Log(LogLevel.DRENDERDETAIL, "GenMesh: p={0}, f={1}", prim.LocalID, ii);
+            OMV.Vector3 pos;
+            int indx;
+            OMVR.Vertex vert;
             foreach (PrimMesher.ViewerFace vface in newPrim.viewerFaces) {
                 if (vface.primFaceNumber == ii) {
-                    OMVR.Vertex vert = new OMVR.Vertex();
-                    vert.Position = new OMV.Vector3(vface.v1.X, vface.v1.Y, vface.v1.Z);
-                    vert.TexCoord = new OMV.Vector2(vface.uv1.U, vface.uv1.V);
-                    vert.Normal = new OMV.Vector3(vface.n1.X, vface.n1.Y, vface.n1.Z);
-                    // LogManager.Log.Log(LogLevel.DRENDERDETAIL, "face={0}, V1:x={1}, y={2}, z={3}", ii, vface.v1.X, vface.v1.Y, vface.v1.Z);
-                    oface.Vertices.Add(vert);
-
-                    vert = new OMVR.Vertex();
-                    vert.Position = new OMV.Vector3(vface.v2.X, vface.v2.Y, vface.v2.Z);
-                    vert.TexCoord = new OMV.Vector2(vface.uv2.U, vface.uv2.V);
-                    vert.Normal = new OMV.Vector3(vface.n2.X, vface.n2.Y, vface.n2.Z);
-                    // LogManager.Log.Log(LogLevel.DRENDERDETAIL, "face={0}, V2:x={1}, y={2}, z={3}", ii, vface.v2.X, vface.v2.Y, vface.v2.Z);
-                    oface.Vertices.Add(vert);
-
-                    vert = new OMVR.Vertex();
-                    vert.Position = new OMV.Vector3(vface.v3.X, vface.v3.Y, vface.v3.Z);
-                    vert.TexCoord = new OMV.Vector2(vface.uv3.U, vface.uv3.V);
-                    vert.Normal = new OMV.Vector3(vface.n3.X, vface.n3.Y, vface.n3.Z);
-                    // LogManager.Log.Log(LogLevel.DRENDERDETAIL, "face={0}, V3:x={1}, y={2}, z={3}", ii, vface.v3.X, vface.v3.Y, vface.v3.Z);
-                    oface.Vertices.Add(vert);
-
-                    oface.Indices.Add((ushort)(faceVertices*3+0));
-                    oface.Indices.Add((ushort)(faceVertices*3+1));
-                    oface.Indices.Add((ushort)(faceVertices*3+2));
                     faceVertices++;
+                    pos = new OMV.Vector3(vface.v1.X, vface.v1.Y, vface.v1.Z);
+                    if (vertexAccount.ContainsKey(pos)) {
+                        // we aleady have this vertex in the list. Just point the index at it
+                        oface.Indices.Add((ushort)vertexAccount[pos]);
+                        // LogManager.Log.Log(LogLevel.DRENDERDETAIL, "face={0}, reuse i={2}, V1:{1}", ii, vface.v3.ToString(), vertexAccount[pos]);
+                    }
+                    else {
+                        // the vertex is not in the list. Add it and the new index.
+                        vert = new OMVR.Vertex();
+                        vert.Position = pos;
+                        vert.TexCoord = new OMV.Vector2(vface.uv1.U, vface.uv1.V);
+                        vert.Normal = new OMV.Vector3(vface.n1.X, vface.n1.Y, vface.n1.Z);
+                        oface.Vertices.Add(vert);
+                        indx = oface.Vertices.Count - 1;
+                        vertexAccount.Add(pos, indx);
+                        oface.Indices.Add((ushort)indx);
+                        // LogManager.Log.Log(LogLevel.DRENDERDETAIL, "face={0}, i={2}, V1:{1}", ii, vface.v1.ToString(), indx);
+                    }
+
+                    pos = new OMV.Vector3(vface.v2.X, vface.v2.Y, vface.v2.Z);
+                    if (vertexAccount.ContainsKey(pos)) {
+                        oface.Indices.Add((ushort)vertexAccount[pos]);
+                        // LogManager.Log.Log(LogLevel.DRENDERDETAIL, "face={0}, reuse i={2}, V2:{1}", ii, vface.v3.ToString(), vertexAccount[pos]);
+                    }
+                    else {
+                        vert = new OMVR.Vertex();
+                        vert.Position = pos;
+                        vert.TexCoord = new OMV.Vector2(vface.uv2.U, vface.uv2.V);
+                        vert.Normal = new OMV.Vector3(vface.n2.X, vface.n2.Y, vface.n2.Z);
+                        oface.Vertices.Add(vert);
+                        indx = oface.Vertices.Count - 1;
+                        vertexAccount.Add(pos, indx);
+                        oface.Indices.Add((ushort)indx);
+                        // LogManager.Log.Log(LogLevel.DRENDERDETAIL, "face={0}, i={2}, V2:{1}", ii, vface.v2.ToString(), indx);
+                    }
+
+                    pos = new OMV.Vector3(vface.v3.X, vface.v3.Y, vface.v3.Z);
+                    if (vertexAccount.ContainsKey(pos)) {
+                        oface.Indices.Add((ushort)vertexAccount[pos]);
+                        // LogManager.Log.Log(LogLevel.DRENDERDETAIL, "face={0}, reuse i={2}, V3:{1}", ii, vface.v3.ToString(), vertexAccount[pos]);
+                    }
+                    else {
+                        vert = new OMVR.Vertex();
+                        vert.Position = pos;
+                        vert.TexCoord = new OMV.Vector2(vface.uv3.U, vface.uv3.V);
+                        vert.Normal = new OMV.Vector3(vface.n3.X, vface.n3.Y, vface.n3.Z);
+                        oface.Vertices.Add(vert);
+                        indx = oface.Vertices.Count - 1;
+                        vertexAccount.Add(pos, indx);
+                        oface.Indices.Add((ushort)indx);
+                        // LogManager.Log.Log(LogLevel.DRENDERDETAIL, "face={0}, i={2}, V3:{1}", ii, vface.v3.ToString(), indx);
+                    }
                 }
             }
             if (faceVertices > 0) {
