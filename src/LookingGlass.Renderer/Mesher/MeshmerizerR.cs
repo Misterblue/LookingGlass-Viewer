@@ -141,7 +141,7 @@ public class MeshmerizerR : OMVR.IRendering {
                 break;
         }
 
-        if (primData.PathCurve == OMV.PathCurve.Line) {
+        if ((primData.PathCurve == OMV.PathCurve.Line) || (primData.PathCurve == OMV.PathCurve.Flexible)) {
             newPrim.taperX = 1.0f - primData.PathScaleX;
             newPrim.taperY = 1.0f - primData.PathScaleY;
             newPrim.twistBegin = (int)(180 * primData.PathTwistBegin);
@@ -183,7 +183,7 @@ public class MeshmerizerR : OMVR.IRendering {
         omvrmesh.Path.Points = new List<OMVR.PathPoint>();
 
         // LogManager.Log.Log(LogLevel.DRENDERDETAIL, "GenMesh: p={0}, numFaces={1}, vfaces={2}", prim.LocalID, 
-        //     newPrim.numPrimFaces, newPrim.viewerFaces.Count);
+        //    newPrim.numPrimFaces, newPrim.viewerFaces.Count);
         Dictionary<OMV.Vector3, int> vertexAccount = new Dictionary<OMV.Vector3, int>();
         for (int ii=0; ii<numPrimFaces; ii++) {
             OMVR.Face oface = new OMVR.Face();
@@ -393,6 +393,7 @@ public class MeshmerizerR : OMVR.IRendering {
 
         // need a check for plainer vs default
         // just do default for now (I don't know what planar is)
+        /*
         LogManager.Log.Log(LogLevel.DRENDERDETAIL,
             "TransformTex: c=" + vertices.Count.ToString()
             + ", rot=" + teFace.Rotation
@@ -403,6 +404,7 @@ public class MeshmerizerR : OMVR.IRendering {
             + ", cos=" + cosineAngle.ToString()
             + ", sin=" + sinAngle.ToString()
             );
+         */
         for (int ii=0; ii<vertices.Count; ii++ ) {
             // tex coord comes to us as a number between zero and one
             // transform about the center of the texture
