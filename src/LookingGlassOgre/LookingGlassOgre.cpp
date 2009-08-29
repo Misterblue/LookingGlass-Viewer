@@ -92,15 +92,30 @@ extern "C" DLLExport void RefreshResource(int rType, char* resourceName) {
 extern "C" DLLExport void CreateMeshResource(const char* meshName, const int* faceCounts, const float* faceVertices) {
 	m_ro->CreateMeshResource(meshName, faceCounts, faceVertices);
 }
-extern "C" DLLExport void CreateMaterialResource(const char* meshName, char* textureName,
+extern "C" DLLExport void CreateMaterialResource(const char* matName, char* textureName,
 		 const float colorR, const float colorG, const float colorB, const float colorA,
 		 const float glow, const bool fullBright, const int shiny, const int bump) {
-	 m_ro->MaterialTracker()->CreateMaterialResource(meshName, textureName, 
+	 m_ro->MaterialTracker()->CreateMaterialResource(matName, textureName, 
 		 colorR, colorG, colorB, colorA, glow, fullBright, shiny, bump);
 }
-extern "C" DLLExport void CreateMaterialResource2(const char* meshName, char* textureName, 
+extern "C" DLLExport void CreateMaterialResource2(const char* matName, char* textureName, 
 												  const float* parms) {
-	m_ro->MaterialTracker()->CreateMaterialResource2(meshName, textureName, parms);
+	m_ro->MaterialTracker()->CreateMaterialResource2(matName, textureName, parms);
+}
+
+extern "C" DLLExport void CreateMaterialResource6(
+			const char* matName1, const char* matName2, const char* matName3, 
+			const char* matName4, const char* matName5, const char* matName6, 
+			char* textureName1, char* textureName2, char* textureName3, 
+			char* textureName4, char* textureName5, char* textureName6, 
+			const float* parms) {
+	int stride = (int)parms[0];
+	m_ro->MaterialTracker()->CreateMaterialResource2(matName1, textureName1, &parms[1 + stride * 0]);
+	m_ro->MaterialTracker()->CreateMaterialResource2(matName2, textureName2, &parms[1 + stride * 1]);
+	m_ro->MaterialTracker()->CreateMaterialResource2(matName3, textureName3, &parms[1 + stride * 2]);
+	m_ro->MaterialTracker()->CreateMaterialResource2(matName4, textureName4, &parms[1 + stride * 3]);
+	m_ro->MaterialTracker()->CreateMaterialResource2(matName5, textureName5, &parms[1 + stride * 4]);
+	m_ro->MaterialTracker()->CreateMaterialResource2(matName6, textureName6, &parms[1 + stride * 5]);
 }
 
 extern "C" DLLExport void DiagnosticAction(int flag) {
