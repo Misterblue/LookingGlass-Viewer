@@ -137,7 +137,7 @@ public class RendererOgreLL : IWorldRenderConv {
 
         // while we're in the neighborhood, we can create the materials
         if (m_buildMaterialsAtRenderInfoTime) {
-            CreateMaterialResource6(ent, prim);
+            CreateMaterialResource6X(ent, prim);
         }
 
         return ri;
@@ -368,53 +368,6 @@ public class RendererOgreLL : IWorldRenderConv {
         CreateMaterialResource2(ent, prim, materialName, faceNum);
     }
 
-    /*
-    // OBSOLETE!!! DOES NOT WORK ANY MORE. DELETE WHEN YOU'RE TIRED OF IT
-    private void CreateMaterialResource(OgreSceneMgr m_sceneMgr, IEntity ent, OMV.Primitive prim, string materialName, int faceNum) {
-        OMV.Primitive.TextureEntryFace textureFace = prim.Textures.GetFace((uint)faceNum);
-        if (textureFace == null) return;
-        OMV.Color4 textureParamColor = new OMV.Color4(0.1f, 0.1f, 1f, 0f);
-        // float textureParamRepeatU = 1.0f;
-        // float textureParamRepeatV = 1.0f;
-        // float textureParamOffsetU = 1.0f;
-        // float textureParamOffsetV = 1.0f;
-        // float textureParamRotation = 0f;
-        float textureParamGlow = 0f;
-        OMV.Bumpiness textureParamBump = OMV.Bumpiness.None;
-        OMV.Shininess textureParamShiny = OMV.Shininess.None;
-        bool textureParamFullBright = false;
-        // bool textureParamMediaFlags;
-        // OMV.MappingType textureParamMappingType;
-        OMV.UUID textureID = OMV.Primitive.TextureEntry.WHITE_TEXTURE;
-        if (textureFace != null) {
-            textureParamColor = textureFace.RGBA;
-            // textureParamRepeatU = textureFace.RepeatU;
-            // textureParamRepeatV = textureFace.RepeatV;
-            // textureParamOffsetU = textureFace.OffsetU;
-            // textureParamOffsetV = textureFace.OffsetV;
-            // textureParamRotation = textureFace.Rotation;
-            textureParamGlow = textureFace.Glow;
-            textureParamBump = textureFace.Bump;
-            textureParamShiny = textureFace.Shiny;
-            textureParamFullBright = textureFace.Fullbright;
-            // textureParamMediaFlags = textureFace.MediaFlags;
-            // textureParamMappingType = textureFace.TexMapType;
-            textureID = textureFace.TextureID;
-        }
-        EntityNameOgre textureEntityName = new EntityNameOgre(ent, textureID.ToString());
-        string textureOgreResourceName = "";
-        if (textureID != OMV.Primitive.TextureEntry.WHITE_TEXTURE) {
-            // what if the ogre resource has filetypes on it? Where does that info come from?
-            // textureOgreResourceName = EntityNameOgre.ConvertToOgreName(textureEntityName.Name, ".jp2");
-            textureOgreResourceName = textureEntityName.OgreResourceName;
-        }
-        m_log.Log(LogLevel.DRENDERDETAIL, "CreateMaterialResource: m=" + materialName + ",o=" + textureOgreResourceName);
-        Ogr.CreateMaterialResource(materialName, textureOgreResourceName,
-                textureParamColor.R, textureParamColor.G, textureParamColor.B, textureParamColor.A,
-                textureParamGlow, textureParamFullBright, (int)textureParamShiny, (int)textureParamBump);
-    }
-     */
-
     /// <summary>
     /// Create a material resource in Ogre. This is the new way done by passing an
     /// array of parameters. Bool values are 0f for false and true otherwise.
@@ -517,26 +470,24 @@ public class RendererOgreLL : IWorldRenderConv {
     private void CreateMaterialResource6X(IEntity ent, OMV.Primitive prim) {
         // we create the usual ones. extra faces will be asked for on demand
         const int genCount = 6;
-        float[] textureParams = new float[((int)Ogr.CreateMaterialParam.maxParam) * genCount];
+        float[] textureParams = new float[1 + ((int)Ogr.CreateMaterialParam.maxParam) * genCount];
         string[] materialNames = new string[genCount];
         string[] textureOgreNames = new string[genCount];
 
-        int pBase = 0;
+        textureParams[0] = (float)Ogr.CreateMaterialParam.maxParam;
+        int pBase = 1;
         string textureOgreName;
-        for (int j = 0; j <= genCount; j++) {
+        for (int j = 0; j < genCount; j++) {
             CreateMaterialParameters(ent, prim, pBase, textureParams, j, out textureOgreName);
             materialNames[j] = EntityNameOgre.ConvertToOgreMaterialNameX(ent.Name, j);
             textureOgreNames[j] = textureOgreName;
-            pBase += (int)Ogr.CreateMaterialParam.maxParam;
-
+            pBase += (int)textureParams[0];
         }
-        /*
         Ogr.CreateMaterialResource6(
             materialNames[0], materialNames[1], materialNames[2], materialNames[3], materialNames[4], materialNames[5],
             textureOgreNames[0], textureOgreNames[1], textureOgreNames[2], textureOgreNames[3], textureOgreNames[4], textureOgreNames[5],
             textureParams
         );
-         */
     }
 
     /// <summary>
