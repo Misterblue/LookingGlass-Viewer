@@ -1,5 +1,4 @@
 ﻿/* Copyright (c) 2008 Robert Adams
- * Portions of code (c) 2008 Teravis (TODO: look up proper copyright)
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *     * Redistributions of source code must retain the above copyright
@@ -21,6 +20,26 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/*
+ * Portions of this code are:
+ * Copyright (c) Contributors, http://idealistviewer.org
+ * The basic logic of the extrusion code is based on the Idealist viewer code.
+ * The Idealist viewer is licensed under the three clause BSD license.
+ */
+/*
+ * MeshmerizerR class implments OpenMetaverse.Rendering.IRendering interface
+ * using PrimMesher (http://forge.opensimulator.org/projects/primmesher).
+ * The faceted mesh returned is made up of separate face meshes.
+ * There are a few additions/changes:
+ *  GenerateSimpleMesh() does not generate anything. Use the other mesher for that.
+ *  ShouldScaleMesh property sets whether the mesh should be sized up or down
+ *      based on the prim scale parameters. If turned off, the mesh will not be
+ *      scaled thus allowing the scaling to happen in the graphics library
+ *  GenerateScupltMesh() does what it says: takes a bitmap and returns a mesh
+ *      based on the RGB coordinates in the bitmap.
+ *  TransformTexCoords() does regular transformations but does not do planier
+ *      mapping of textures.
+ */ 
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -336,34 +355,62 @@ public class MeshmerizerR : OMVR.IRendering {
         omvrmesh.Path = new OMVR.Path();
         omvrmesh.Path.Points = new List<OMVR.PathPoint>();
 
+        Dictionary<OMV.Vector3, int> vertexAccount = new Dictionary<OMV.Vector3, int>();
+        OMV.Vector3 pos;
+        int indx;
+        OMVR.Vertex vert;
         for (int ii=0; ii<numPrimFaces; ii++) {
             OMVR.Face oface = new OMVR.Face();
             oface.Vertices = new List<OMVR.Vertex>();
             oface.Indices = new List<ushort>();
             oface.TextureFace = prim.Textures.GetFace((uint)ii);
             int faceVertices = 0;
+            vertexAccount.Clear();
             foreach (PrimMesher.ViewerFace vface in newMesh.viewerFaces) {
-                OMVR.Vertex vert = new OMVR.Vertex();
-                vert.Position = new OMV.Vector3(vface.v1.X, vface.v1.Y, vface.v1.Z);
-                vert.TexCoord = new OMV.Vector2(vface.uv1.U, vface.uv1.V);
-                vert.Normal = new OMV.Vector3(vface.n1.X, vface.n1.Y, vface.n1.Z);
-                oface.Vertices.Add(vert);
+                pos = new OMV.Vector3(vface.v1.X, vface.v1.Y, vface.v1.Z);
+                if (vertexAccount.ContainsKey(pos)) {
+                    oface.Indices.Add((ushort)vertexAccount[pos]);
+                }
+                else {
+                    vert = new OMVR.Vertex();
+                    vert.Position = pos;
+                    vert.TexCoord = new OMV.Vector2(vface.uv1.U, vface.uv1.V);
+                    vert.Normal = new OMV.Vector3(vface.n1.X, vface.n1.Y, vface.n1.Z);
+                    oface.Vertices.Add(vert);
+                    indx = oface.Vertices.Count - 1;
+                    vertexAccount.Add(pos, indx);
+                    oface.Indices.Add((ushort)indx);
+                }
 
-                vert = new OMVR.Vertex();
-                vert.Position = new OMV.Vector3(vface.v2.X, vface.v2.Y, vface.v2.Z);
-                vert.TexCoord = new OMV.Vector2(vface.uv2.U, vface.uv2.V);
-                vert.Normal = new OMV.Vector3(vface.n2.X, vface.n2.Y, vface.n2.Z);
-                oface.Vertices.Add(vert);
+                pos = new OMV.Vector3(vface.v2.X, vface.v2.Y, vface.v2.Z);
+                if (vertexAccount.ContainsKey(pos)) {
+                    oface.Indices.Add((ushort)vertexAccount[pos]);
+                }
+                else {
+                    vert = new OMVR.Vertex();
+                    vert.Position = pos;
+                    vert.TexCoord = new OMV.Vector2(vface.uv2.U, vface.uv2.V);
+                    vert.Normal = new OMV.Vector3(vface.n2.X, vface.n2.Y, vface.n2.Z);
+                    oface.Vertices.Add(vert);
+                    indx = oface.Vertices.Count - 1;
+                    vertexAccount.Add(pos, indx);
+                    oface.Indices.Add((ushort)indx);
+                }
 
-                vert = new OMVR.Vertex();
-                vert.Position = new OMV.Vector3(vface.v3.X, vface.v3.Y, vface.v3.Z);
-                vert.TexCoord = new OMV.Vector2(vface.uv3.U, vface.uv3.V);
-                vert.Normal = new OMV.Vector3(vface.n3.X, vface.n3.Y, vface.n3.Z);
-                oface.Vertices.Add(vert);
-
-                oface.Indices.Add((ushort)(faceVertices*3+0));
-                oface.Indices.Add((ushort)(faceVertices*3+1));
-                oface.Indices.Add((ushort)(faceVertices*3+2));
+                pos = new OMV.Vector3(vface.v3.X, vface.v3.Y, vface.v3.Z);
+                if (vertexAccount.ContainsKey(pos)) {
+                    oface.Indices.Add((ushort)vertexAccount[pos]);
+                }
+                else {
+                    vert = new OMVR.Vertex();
+                    vert.Position = pos;
+                    vert.TexCoord = new OMV.Vector2(vface.uv3.U, vface.uv3.V);
+                    vert.Normal = new OMV.Vector3(vface.n3.X, vface.n3.Y, vface.n3.Z);
+                    oface.Vertices.Add(vert);
+                    indx = oface.Vertices.Count - 1;
+                    vertexAccount.Add(pos, indx);
+                    oface.Indices.Add((ushort)indx);
+                }
                 faceVertices++;
             }
             if (faceVertices > 0) {

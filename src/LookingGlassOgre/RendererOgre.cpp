@@ -449,6 +449,7 @@ namespace RendererOgre {
 		Log("RendererOgre::GenerateLoadingMesh: ");
 
 		mo->begin(loadingMaterialName);
+		/*
 		mo->position(0.0, 0.0, 0.0);
 		mo->position(0.0, 0.0, 1.0);
 		mo->position(0.0, 1.0, 0.0);
@@ -464,6 +465,36 @@ namespace RendererOgre {
 		mo->quad(0, 4, 5, 1);
 		mo->quad(4, 5, 7, 6);
 		mo->quad(7, 5, 1, 3);
+		*/
+		// top
+		mo->position(0.0, 1.0, 0.0);
+		mo->position(1.0, 1.0, 0.0);
+		mo->position(1.0, 0.0, 0.0);
+		mo->position(0.0, 0.0, 0.0);
+		mo->triangle(0, 1, 2);
+		mo->triangle(0, 2, 3);
+		
+		// bottom
+		mo->position(1.0, 1.0, 1.0);
+		mo->position(0.0, 1.0, 1.0);
+		mo->position(0.0, 0.0, 1.0);
+		mo->position(1.0, 0.0, 1.0);
+		mo->triangle(4, 5, 6);
+		mo->triangle(4, 6, 7);
+
+		// sides
+		mo->triangle(5, 0, 3);
+		mo->triangle(5, 3, 6);
+
+		mo->triangle(1, 0, 5);
+		mo->triangle(1, 5, 4);
+
+		mo->triangle(7, 1, 4);
+		mo->triangle(7, 2, 1);
+
+		mo->triangle(3, 2, 7);
+		mo->triangle(3, 7, 6);
+
 		mo->end();
 
 		Ogre::MeshPtr mesh = mo->convertToMesh(loadingMeshName , OLResourceGroupName);
