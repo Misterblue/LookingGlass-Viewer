@@ -20,11 +20,17 @@ $(document).ready(function() {
 
     // Start the timed functions
     TimerLoginStuff(true);
-    // TimerDataStuff();
+    TimerDataStuff();
 });
 
+// Login works by polling the viewer for the status of the user.
+// If the user is logged in, we display this status and the user location.
+// If not logged in, the user filled in fields and pressed 'login'
+// which POSTs parameters to the viewer which change the user's
+// login state.
 var BASEURL='http://127.0.0.1:9144';
 var loginTimerHandle;
+// poll for the user's date. Initialize form if first GET.
 function TimerLoginStuff(firstTime) {
     $.ajax({
         type: "GET",
@@ -85,24 +91,95 @@ function InitializeLoginForm(data) {
 }
 
 // Called by login form 'submit' click
+// Post the user's parameters to the viewer to login the user
 function SendLoginRequest() {
     $.post(BASEURL + "/api/LLLP/connect/login", $('#LGLoginForm').serializeArray());
     return false;
 }
 
+// One of the sections is viewer statistics. Poll for the data.
 var statTimerHandle;
 function TimerDataStuff() {
-    $.getJSON(BASEURL+'/api/stats/queues', function(data, status) {
-        if (status == 'success') {
-            BuildBasicTable('#LGStats', data);
-        }
-    });
-    statTimerHandle = setTimeout('TimerDataStuff()', 1000);
+    if ($('#LGQueueStats').is(':visible')) {
+        $.getJSON(BASEURL+'/api/stats/workQueues', function(data, status) {
+            if (status == 'success') {
+                BuildBasicTable('#LGQueueStats', data, false);
+            }
+        });
+        $.getJSON(BASEURL+'/api/stats/Renderer/detailStats', function(data, status) {
+            if (status == 'success') {
+                BuildBasicTable('#LGRendererStats', data, true);
+            }
+        });
+    }
+    statTimerHandle = setTimeout('TimerDataStuff()', 2000);
 };
 
 function DebugLog(msg) {
     $("#DEBUG").append('<div>' + msg + '</div>');
     $("#DEBUG").show();
+}
+
+// build a table in the specified section.
+// Clear whatever is there and refill it with the data.
+// We presume the data is in the form:
+//   {rowname: { col1: val, col2, val; ...}, ...)
+function BuildBasicTable(sect, data, addRowName) {
+    var sectID = sect.substr(1);
+    var tableID = sectID + "-table";
+    if ($('#' + tableID).length == 0) {
+        // table does not exist. Build same
+        // build an array of all the column names
+        var columns = new Array();
+        for (row in data) {
+            for (col in data[row]) {
+                if (columns[col] == undefined) {
+                    columns[col] = col;
+                }
+                
+            }
+        }
+        // create a table with td's with id's for cell addressing
+        var buff = new StringBuffer();
+        buff.append('<table id="' + tableID + '" class="LGStatsTable">');
+        buff.append('<tr>');
+        if (addRowName) buff.append('<th></th>');
+        for (col in columns) {
+            buff.append('<th>' + columns[col] + '</th>');
+        }
+        $(sect).append('</tr>');
+        for (row in data) {
+            buff.append('<tr>');
+            if (addRowName) {
+                buff.append('<td id="' + sectID + '-rowName-' + row + '">.</td>');
+            }
+            for (col in columns) {
+                var cellID = sectID + '-' + row + '-' + col;
+                buff.append('<td id="' + cellID + '">.</td>');
+            }
+            buff.append('</tr>');
+        }
+        buff.append('</table>');
+        $(sect).append(buff.toString());
+    }
+    // table exist. Fill its cells with the text data
+    for (row in data) {
+        $('#' + sectID + '-rowName-' + row).text(row);
+        for (col in data[row]) {
+            var cellID = sectID + '-' + row + '-' + col;
+            $('#' + cellID).text(data[row][col]);
+        }
+    }
+}
+
+function StringBuffer() {
+    this.__strings__ = new Array;
+}
+StringBuffer.prototype.append = function(str) {
+    this.__strings__.push(str);
+}
+StringBuffer.prototype.toString = function() {
+    return this.__strings__.join("");
 }
 
 </script>
@@ -200,9 +277,12 @@ function DebugLog(msg) {
 <div class="LGSectionContainer">
 <a class="LGSectionHeader" href="#">Statistics</a>
 <div id="LGStatistics" class="LGSection">
-    <ul class="LGStat">
-    <li>statistics</li>
-    </ul>
+<div id="LGQueueStats">
+<h1>WorkQueues</h1>
+</div>  <!-- LGQueueStats -->
+<div id="LGRendererStats">
+<h1>Renderer</h1>
+</div>  <!-- LGRendererStats -->
 </div>  <!-- LGStatistics -->
 </div>  <!-- LGSectionContainer -->
 

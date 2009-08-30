@@ -34,3 +34,20 @@ pre {
 :visited {
  color: #d0d0d0;
 }
+.LGSectionHeader {
+}
+#LGStatistics div {
+    margin-left: 20px;
+    background: #3A4F5D;
+}
+#LGStatistics h1 {
+    background: #5A6F7D;
+    font-size: 12px;
+}
+table.LGStatsTable {
+}
+table.LGStatsTable td {
+    border: 1px solid;
+    width: 15px;
+    text-align: right;
+}

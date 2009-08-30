@@ -60,7 +60,7 @@ public class BasicWorkQueue : IWorkQueue {
         DoLaterBase ww = (DoLaterBase)w;
         m_currentRequests--;
         if (!ww.DoIt()) {
-            LogManager.Log.Log(LogLevel.DRENDERDETAIL, "{0}.DoLater: DoWork: DoEvenLater", m_queueName);
+            // LogManager.Log.Log(LogLevel.DRENDERDETAIL, "{0}.DoLater: DoWork: DoEvenLater", m_queueName);
             DoItEvenLater(ww);
         }
     }
@@ -84,7 +84,7 @@ public class BasicWorkQueue : IWorkQueue {
             doEvenLater.Add(w);
             if (doEvenLaterThread == null) {    // is there another thread doing the requeuing?
                 doEvenLaterThread = Thread.CurrentThread;   // no, looks like I'm stuck
-                LogManager.Log.Log(LogLevel.DRENDERDETAIL, "DoItEvenLater: becoming the one thread");
+                // LogManager.Log.Log(LogLevel.DRENDERDETAIL, "DoItEvenLater: becoming the one thread");
             }
         }
 
@@ -148,8 +148,8 @@ public class BasicWorkQueue : IWorkQueue {
         aMap.Add("Name", new OMVSD.OSDString(this.Name));
         aMap.Add("Total", new OMVSD.OSDInteger((int)this.TotalQueued));
         aMap.Add("Current", new OMVSD.OSDInteger((int)this.CurrentQueued));
-        Logging.LogManager.Log.Log(LogLevel.DRESTDETAIL,
-            "BasicWorkQueue: GetDisplayable: out={0}", aMap.ToString());
+        aMap.Add("Later", new OMVSD.OSDInteger(doEvenLater.Count));
+        // Logging.LogManager.Log.Log(LogLevel.DRESTDETAIL, "BasicWorkQueue: GetDisplayable: out={0}", aMap.ToString());
         return aMap;
     }
 }
