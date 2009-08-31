@@ -332,7 +332,6 @@ namespace RendererOgre {
 		return true;
 	}
 
-	static int keepRunningPollCount = 30;
 	bool RendererOgre::frameRenderingQueued(const Ogre::FrameEvent& evt) {
 		if (m_window->isClosed()) return false;	// if you close the window we leave
 		if (LookingGlassOgr::betweenFramesCallback != NULL) {

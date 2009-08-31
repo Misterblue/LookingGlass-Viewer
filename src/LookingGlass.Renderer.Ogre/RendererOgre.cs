@@ -86,7 +86,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
 
     protected BasicWorkQueue m_workQueue = new BasicWorkQueue("OgreRendererWork");
     protected OnDemandWorkQueue m_betweenFramesQueue = new OnDemandWorkQueue("OgreBetweenFrames");
-    private static int m_betweenFrameTotalCost = 500;
+    private static int m_betweenFrameTotalCost = 120;
     private static int m_betweenFrameCreateMaterialCost = 5;
     private static int m_betweenFrameCreateSceneNodeCost = 20;
     private static int m_betweenFrameCreateMeshCost = 20;
