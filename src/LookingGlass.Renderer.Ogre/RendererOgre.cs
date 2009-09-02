@@ -86,7 +86,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
 
     protected BasicWorkQueue m_workQueue = new BasicWorkQueue("OgreRendererWork");
     protected OnDemandWorkQueue m_betweenFramesQueue = new OnDemandWorkQueue("OgreBetweenFrames");
-    private static int m_betweenFrameTotalCost = 120;
+    private static int m_betweenFrameTotalCost = 300;
     private static int m_betweenFrameCreateMaterialCost = 5;
     private static int m_betweenFrameCreateSceneNodeCost = 20;
     private static int m_betweenFrameCreateMeshCost = 20;
@@ -161,6 +161,23 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.LL.EarlyMaterialCreate", "false",
                     "Create materials while creating mesh rather than waiting");
 
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.BetweenFrame.Costs.Total", "300",
+                    "The total cost of operations to do between frames");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.BetweenFrame.Costs.CreateMaterial", "5",
+                    "The cost of creating a material");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.BetweenFrame.Costs.CreateSceneNode", "20",
+                    "The cost of creating a scene node");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.BetweenFrame.Costs.CreateMesh", "20",
+                    "The cost of creating a mesh");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.BetweenFrame.Costs.RefreshMesh", "20",
+                    "The cost of refreshing a mesh (scanning all entities and reloading ones using mesh)");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.BetweenFrame.Costs.MapRegion", "50",
+                    "The cost of mapping a region (creating the region management structures");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.BetweenFrame.Costs.UpdateTerrain", "50",
+                    "The cost of updating the terrain (rebuilding terrain mesh)");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.BetweenFrame.Costs.MapTexture", "10",
+                    "The cost of mapping a texture (doing a texture reload)");
+
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.SerializeMaterials", "false",
                     "Write out materials to files (replace with DB someday)");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.SerializeMeshes", "true",
@@ -185,9 +202,6 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "After this distance, only large things are visible");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.Large", "8",
                     "How big is considered 'large' for 'OnlyLargeAfter' calculation");
-
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.CaelumScript", "DefaultSky",
-                    "The sky to use if Caelum enabled");
 
         m_stats = new StatisticManager(m_moduleName);
         m_statRefreshMaterialInterval = m_stats.GetIntervalCounter("UpdateTexture");
@@ -233,6 +247,15 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         Ogr.SetBetweenFramesCallback(betweenFramesCallbackHandle);
 
         m_sceneMagnification = float.Parse(Globals.Configuration.ParamString("Renderer.Ogre.LL.SceneMagnification"));
+
+        m_betweenFrameTotalCost = Globals.Configuration.ParamInt("Renderer.Ogre.BetweenFrame.Costs.Total");
+        m_betweenFrameCreateMaterialCost = Globals.Configuration.ParamInt("Renderer.Ogre.BetweenFrame.Costs.CreateMaterial");
+        m_betweenFrameCreateSceneNodeCost = Globals.Configuration.ParamInt("Renderer.Ogre.BetweenFrame.Costs.CreateSceneNode");
+        m_betweenFrameCreateMeshCost = Globals.Configuration.ParamInt("Renderer.Ogre.BetweenFrame.Costs.CreateMesh");
+        m_betweenFrameRefreshMeshCost = Globals.Configuration.ParamInt("Renderer.Ogre.BetweenFrame.Costs.RefreshMesh");
+        m_betweenFrameMapRegionCost = Globals.Configuration.ParamInt("Renderer.Ogre.BetweenFrame.Costs.MapRegion");
+        m_betweenFrameUpdateTerrainCost = Globals.Configuration.ParamInt("Renderer.Ogre.BetweenFrame.Costs.UpdateTerrain");
+        m_betweenFrameMapTextureCost = Globals.Configuration.ParamInt("Renderer.Ogre.BetweenFrame.Costs.MapTexture");
 
         Ogr.InitializeOgre();
         m_sceneMgr = new OgreSceneMgr(Ogr.GetSceneMgr());
@@ -305,6 +328,9 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             DoLaterBase laterWork = new DoRender(m_sceneMgr, ent, m_log);
             laterWork.order = CalculateInterestOrder(ent);
             m_betweenFramesQueue.DoLater(laterWork);
+            // m_betweenFramesQueue.DoLater(CalculateInterestOrder(ent), (DoLaterCallback)delegate() {
+            //     return DoRenderIt(m_sceneMgr, ent, m_log);
+            // });
         }
         return;
     }
@@ -327,6 +353,11 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     // m_log.Log(LogLevel.DRENDERDETAIL, "Adding SceneNode to new entity " + ent.Name);
                     if (m_ri == null) {
                         m_ri = RendererOgre.GetWorldRenderConv(m_ent).RenderingInfo(m_sceneMgr, m_ent);
+                        if (m_ri == null) {
+                            // The rendering info couldn't be built now. This is usually because
+                            // the parent of this object is not available so we don't know where to put it
+                            return false;
+                        }
                     }
 
                     // Find a handle to the parent for this node

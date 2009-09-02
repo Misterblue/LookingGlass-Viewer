@@ -24,6 +24,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Threading;
 using LookingGlass.Framework;
 using LookingGlass.Framework.Logging;
 using LookingGlass.Framework.Statistics;
@@ -89,7 +90,12 @@ public class AssetFetcher {
         m_totalRequests.Event();
         if (File.Exists(filename)) {
             m_requestsForExisting.Event();
-            doneCall.BeginInvoke(getID, filename, null, null);
+            // doneCall.BeginInvoke(getID, filename, null, null);
+            ThreadPool.QueueUserWorkItem((WaitCallback)delegate(Object x) {
+                doneCall(getID, filename);
+            });
+
+
         }
         lock (m_requests) {
             if (!m_requests.ContainsKey(filename)) {

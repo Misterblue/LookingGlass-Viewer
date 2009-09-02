@@ -26,6 +26,7 @@ using System.Drawing;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using LookingGlass.Framework.Logging;
 using LookingGlass.Framework.WorkQueue;
 using LookingGlass.World;
@@ -166,7 +167,9 @@ public sealed class LLAssetContext : AssetContextBase {
             m_log.Log(LogLevel.DTEXTUREDETAIL, "DoTextureLoad: Texture file alreayd exists for " + worldID);
             bool hasTransparancy = CheckTextureFileForTransparancy(textureFilename);
             // can't check for transparancy
-            finishCall.BeginInvoke(textureEntityName, hasTransparancy, null, null);
+            ThreadPool.QueueUserWorkItem((WaitCallback)delegate(Object x) {
+                finishCall(textureEntityName, hasTransparancy);
+            });
         }
         else {
             bool sendRequest = false;

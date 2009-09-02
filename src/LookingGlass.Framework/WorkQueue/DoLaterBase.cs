@@ -32,6 +32,8 @@ namespace LookingGlass.Framework.WorkQueue {
     /// sometime later -- probably when a thread is available.
     /// </summary>
 
+    public delegate bool DoLaterCallback();
+
     public abstract class DoLaterBase {
         static long baseSequence = 0;
 

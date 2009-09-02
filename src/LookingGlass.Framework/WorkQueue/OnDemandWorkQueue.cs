@@ -67,6 +67,36 @@ public class OnDemandWorkQueue : IWorkQueue {
         AddToWorkQueue(w);
     }
 
+    /// <summary>
+    /// Experimental, untested entry which doesn't force the caller to create an
+    /// instance of a DoLaterBase class but to use s delegate. The calling sequence
+    /// would be something like:
+    /// m_workQueue.DoLater((DoLaterCallback)delegate() { 
+    ///     return LocalMethod(localParam1, localParam2, ...); 
+    /// });
+    /// </summary>
+    /// <param name="dlcb"></param>
+    public void DoLater(DoLaterCallback dlcb) {
+        this.DoLater(new DoLaterDelegateCaller(dlcb));
+    }
+
+    public void DoLater(int priority, DoLaterCallback dlcb) {
+        DoLaterBase newDoer = new DoLaterDelegateCaller(dlcb);
+        newDoer.order = priority;
+        this.DoLater(newDoer);
+    }
+
+    private class DoLaterDelegateCaller : DoLaterBase {
+        DoLaterCallback m_dlcb;
+        public DoLaterDelegateCaller(DoLaterCallback dlcb) {
+            m_dlcb = dlcb;
+        }
+        public override bool DoIt() {
+            return m_dlcb();
+        }
+    }
+
+
     // requeuing the work item. Since requeuing, add the delay
     public void DoLaterRequeue(ref DoLaterBase w) {
         w.timesRequeued++;

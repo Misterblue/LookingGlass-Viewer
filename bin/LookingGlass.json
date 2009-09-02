@@ -59,9 +59,10 @@
 "Renderer.Ogre.Visibility.MinDistance": "30",
 "Renderer.Ogre.Visibility.OnlyLargeAfter": "120",
 "Renderer.Ogre.Visibility.Large": "8",
+"Renderer.Ogre.BetweenFrame.Costs.Total": "1000",
 
 // ====================================================
-"Comm.Texture.MaxRequests": "2",
+"Comm.Texture.MaxRequests": "4",
 "Comm.Settings.MultipleSims": "false",
 
 // ====================================================
