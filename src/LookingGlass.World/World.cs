@@ -128,7 +128,8 @@ public sealed class World : ModuleBase, IWorld, IProvider {
     /// <param name="ent"></param>
     /// <param name="createIt"></param>
     /// <returns></returns>
-    public bool TryGetCreateEntityLocalID(RegionContextBase rcontext, uint localID, out IEntity ent, WorldCreateEntityCallback createIt) {
+    public bool TryGetCreateEntityLocalID(RegionContextBase rcontext, uint localID, out IEntity ent, 
+                    WorldCreateEntityCallback createIt) {
         try {
             lock (m_entityDictionary) {
                 if (!TryGetEntityLocalID(rcontext, localID, out ent)) {

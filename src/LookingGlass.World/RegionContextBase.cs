@@ -46,6 +46,21 @@ public abstract class RegionContextBase : EntityBase, IRegionContext, IDisposabl
     protected TerrainInfoBase m_terrainInfo = null;
     public TerrainInfoBase TerrainInfo { get { return m_terrainInfo; } }
 
+    public bool TryGetEntityLocalID(uint entName, out IEntity ent) {
+        // someday, entities will be managed by regions. For the moment they are in the world
+        return World.Instance.TryGetEntityLocalID(this, entName, out ent);
+    }
+
+    public bool TryGetCreateEntityLocalID(uint localID, out IEntity ent, WorldCreateEntityCallback creater) {
+        // someday, entities will be managed by regions. For the moment they are in the world
+        return World.Instance.TryGetCreateEntityLocalID(this, localID, out ent, creater);
+    }
+
+    public bool TryGetCreateAvatar(EntityName ename, out IEntityAvatar ent, WorldCreateAvatarCallback creater) {
+        // someday, entities will be managed by regions. For the moment they are in the world
+        return World.Instance.TryGetCreateAvatar(this, ename, out ent, creater);
+    }
+
     public override void Dispose() {
         m_terrainInfo = null; // let the garbage collector work
         return;

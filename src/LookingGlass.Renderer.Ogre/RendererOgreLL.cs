@@ -84,6 +84,17 @@ public class RendererOgreLL : IWorldRenderConv {
         m_buildMaterialsAtRenderInfoTime = Globals.Configuration.ParamBool("Renderer.Ogre.LL.RenderInfoMaterialCreate");
     }
 
+    /// <summary>
+    /// Collect rendering info. The information collected for rendering has a pre
+    /// phase (this call), a doit phase and then a post phase (usually on demand
+    /// requests).
+    /// If we can't collect all the information return null. For LLLP, the one thing
+    /// we might not have is the parent entity since child prims are rendered relative
+    /// to the parent.
+    /// </summary>
+    /// <param name="sceneMgr"></param>
+    /// <param name="ent"></param>
+    /// <returns>rendering info or null if we cannot collect all data</returns>
     public RenderableInfo RenderingInfo(Object sceneMgr, IEntity ent) {
         LLEntityPhysical llent;
         LLRegionContext rcontext;
@@ -115,7 +126,12 @@ public class RendererOgreLL : IWorldRenderConv {
         }
 
         // if the prim has a parent, we must hang this scene node off the parent's scene node
-        ri.parentID = prim.ParentID;
+        if (prim.ParentID != 0) {
+            if (!rcontext.TryGetEntityLocalID(prim.ParentID, out ri.parentEntity)) {
+                // we can't find the parent. Can't build render info.
+                return null;
+            }
+        }
         
         ri.rotation = prim.Rotation;
         ri.position = prim.Position;

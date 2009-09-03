@@ -43,14 +43,16 @@ namespace LookingGlass.Renderer {
     /// </summary>
     public class RenderableInfo {
         public Object basicObject;
-        public uint parentID;
+        // public uint parentID;
+        public IEntity parentEntity;
         public OMV.Vector3 position;
         public OMV.Quaternion rotation;
         public OMV.Vector3 scale;
         public Object RegionRoot;
         public RenderableInfo() {
             basicObject = null; RegionRoot = null;
-            parentID = 0;
+            // parentID = 0;
+            parentEntity = null;
             position = OMV.Vector3.Zero;
             rotation = new OMV.Quaternion(0f, 0f, 0f, 0f);
             scale = OMV.Vector3.Zero;

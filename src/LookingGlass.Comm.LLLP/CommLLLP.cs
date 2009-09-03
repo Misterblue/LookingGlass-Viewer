@@ -525,7 +525,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         LLRegionContext rcontext = FindRegion(sim);
         try {
             IEntity ent;
-            if (World.World.Instance.TryGetCreateEntityLocalID(rcontext, prim.LocalID, out ent, delegate() {
+            if (rcontext.TryGetCreateEntityLocalID(prim.LocalID, out ent, delegate() {
                         IEntity newEnt = new LLEntityPhysical(rcontext.AssetContext,
                                         rcontext, regionHandle, prim.LocalID, prim);
                         return newEnt;
@@ -555,7 +555,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         if (update.Avatar) updateFlags |= UpdateCodes.CollisionPlane;
         if (update.Textures != null) updateFlags |= UpdateCodes.Textures;
 
-        if (World.World.Instance.TryGetEntityLocalID(rcontext, update.LocalID, out updatedEntity)) {
+        if (rcontext.TryGetEntityLocalID(update.LocalID, out updatedEntity)) {
             if ((updateFlags & UpdateCodes.Position) != 0) {
                 updatedEntity.RelativePosition = update.Position;
             }
@@ -590,7 +590,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         LLRegionContext rcontext = FindRegion(sim);
         try {
             IEntity removedEntity;
-            if (World.World.Instance.TryGetEntityLocalID(rcontext, objectID, out removedEntity)) {
+            if (rcontext.TryGetEntityLocalID(objectID, out removedEntity)) {
                 // we need a handle to the objectID
                 World.World.Instance.RemoveEntity(removedEntity);
             }

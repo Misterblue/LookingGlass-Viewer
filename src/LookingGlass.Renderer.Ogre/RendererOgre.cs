@@ -356,21 +356,22 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                         if (m_ri == null) {
                             // The rendering info couldn't be built now. This is usually because
                             // the parent of this object is not available so we don't know where to put it
+                            m_log.Log(LogLevel.DRENDERDETAIL, "Delaying rendering {0}/{1}. RenderingInfo not built for {2}",
+                                this.sequence, this.timesRequeued, m_ent.Name.Name);
                             return false;
                         }
                     }
 
                     // Find a handle to the parent for this node
                     OgreSceneNode parentNode = null;
-                    if (m_ri.parentID != 0) {
-                        // this entity has a parent entity. find him and create scene node off his
-                        IEntity parentEnt;
-                        if (World.World.Instance.TryGetEntityLocalID(m_ent.RegionContext, m_ri.parentID, out parentEnt)) {
-                            parentNode = RendererOgre.GetSceneNode(parentEnt);
-                        }
+                    if (m_ri.parentEntity != null) {
+                        // this entity has a parent entity. create scene node off his
+                        IEntity parentEnt = m_ri.parentEntity;
+                        parentNode = RendererOgre.GetSceneNode(parentEnt);
                         if (parentNode == null) {
-                            m_log.Log(LogLevel.DRENDERDETAIL, "Delaying rendering {0}. {1} waiting for parent {2}",
-                                this.sequence, m_ent.Name.Name, (parentEnt == null ? "NULL" : parentEnt.Name.Name));
+                            m_log.Log(LogLevel.DRENDERDETAIL, "Delaying rendering {0}/{1}. {2} waiting for parent {3}",
+                                this.sequence, this.timesRequeued, m_ent.Name.Name, 
+                                (parentEnt == null ? "NULL" : parentEnt.Name.Name));
                             return false;   // if I must have parent, requeue if no parent
                         }
                     }

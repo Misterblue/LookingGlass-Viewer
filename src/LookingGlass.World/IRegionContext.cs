@@ -32,6 +32,9 @@ namespace LookingGlass.World {
     /// and is the basic interface between mapping local coordinates
     /// into the displayed view.
     /// </summary>
+ 
+public delegate IEntity RegionCreateEntityCallback();
+
 public interface IRegionContext {
 
     // get the name of the region
@@ -48,5 +51,12 @@ public interface IRegionContext {
 
     // information on terrain for this region
     TerrainInfoBase TerrainInfo { get; }
+
+    // In  transition requests for getting region entities based on implementation
+    // specific info. In this case the LLLP localID. This is part of the conversion
+    // of entites being in the world to the entities being in regions.
+    bool TryGetEntityLocalID(uint entName, out IEntity ent);
+    bool TryGetCreateEntityLocalID(uint localID, out IEntity ent, WorldCreateEntityCallback creater);
+    bool TryGetCreateAvatar(EntityName ename, out IEntityAvatar ent, WorldCreateAvatarCallback creater);
 }
 }
