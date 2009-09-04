@@ -23,6 +23,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using LookingGlass.Framework.Logging;
 using LookingGlass.World;
 using OMV = OpenMetaverse;
 
@@ -43,6 +44,15 @@ public sealed class LLRegionContext : RegionContextBase {
         m_simulator = sim;
         // this should be more general as "GRID/SIM"
         m_name = new EntityName(sim.Name);
+    }
+
+    /// <summary>
+    /// Called to request a particular local ID should be sent to us. Very LLLP dependent.
+    /// </summary>
+    /// <param name="localID"></param>
+    public void RequestLocalID(uint localID) {
+        LogManager.Log.Log(LogLevel.DCOMMDETAIL, "LLRegionContext.RequestLocalID: asking for {0}/{1}", this.Name, localID);
+        m_comm.Objects.RequestObject(this.Simulator, localID);
     }
 
     public override void Dispose() {

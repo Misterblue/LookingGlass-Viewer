@@ -91,11 +91,18 @@ public class RendererOgreLL : IWorldRenderConv {
     /// If we can't collect all the information return null. For LLLP, the one thing
     /// we might not have is the parent entity since child prims are rendered relative
     /// to the parent.
+    /// This will be called multiple times trying to get the information for the 
+    /// renderable. The callCount is the number of times we have asked. The caller
+    /// can pass zero and know nothing will happen. Values more than zero can cause
+    /// this routine to try and do some implementation specific thing to fix the
+    /// problem. For LLLP, this is usually asking for the parent to be loaded.
     /// </summary>
     /// <param name="sceneMgr"></param>
     /// <param name="ent"></param>
+    /// <param name="callCount">zero if do nothing, otherwise the number of times that
+    /// this RenderingInfo has been asked for</param>
     /// <returns>rendering info or null if we cannot collect all data</returns>
-    public RenderableInfo RenderingInfo(Object sceneMgr, IEntity ent) {
+    public RenderableInfo RenderingInfo(Object sceneMgr, IEntity ent, int callCount) {
         LLEntityPhysical llent;
         LLRegionContext rcontext;
         OMV.Primitive prim;
@@ -129,6 +136,10 @@ public class RendererOgreLL : IWorldRenderConv {
         if (prim.ParentID != 0) {
             if (!rcontext.TryGetEntityLocalID(prim.ParentID, out ri.parentEntity)) {
                 // we can't find the parent. Can't build render info.
+                // if we've been waiting for that parent, ask for same
+                if ((callCount != 0) && ((callCount % 5) == 0)) {
+                    rcontext.RequestLocalID(prim.ParentID);
+                }
                 return null;
             }
         }

@@ -352,7 +352,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                 try {
                     // m_log.Log(LogLevel.DRENDERDETAIL, "Adding SceneNode to new entity " + ent.Name);
                     if (m_ri == null) {
-                        m_ri = RendererOgre.GetWorldRenderConv(m_ent).RenderingInfo(m_sceneMgr, m_ent);
+                        m_ri = RendererOgre.GetWorldRenderConv(m_ent).RenderingInfo(m_sceneMgr, m_ent, this.timesRequeued);
                         if (m_ri == null) {
                             // The rendering info couldn't be built now. This is usually because
                             // the parent of this object is not available so we don't know where to put it
