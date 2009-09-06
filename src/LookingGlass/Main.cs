@@ -25,9 +25,7 @@ using System.Reflection;
 using System.Threading;
 using System.Collections.Generic;
 using LookingGlass.Framework.Logging;
-using LookingGlass.Framework.Modules;
 using LookingGlass.Framework.Parameters;
-using LookingGlass.View;
 
 namespace LookingGlass {
 class Program {
@@ -36,6 +34,11 @@ class Program {
 
     [STAThread]
     static void Main(string[] args) {
+
+        Globals.Configuration = new AppParameters();
+        // The MaxValue causes everything to be written. When done debugging (ha!), reduce to near zero.
+        Globals.Configuration.AddDefaultParameter("Log.FilterLevel", ((int)LogLevel.DNONDETAIL).ToString(),
+                    "Default, initial logging level");
 
         try {
             m_Parameters = ParseArguments(args, false);
@@ -112,46 +115,11 @@ class Program {
         // log level after all the parameters have been set
         LogManager.CurrentLogLevel = (LogLevel)Globals.Configuration.ParamInt("Log.FilterLevel");
 
-        Globals.KeepRunning = true;
+        LookingGlassMain programInstance = new LookingGlassMain();
 
-        Program programInstance = new Program();
-        try {
-            programInstance.StartEverything();
-        }
-        catch {
-            m_log.Log(LogLevel.DBADERROR, "STARTEVERYTHING FAILED. NOT RUNNING");
-            Globals.KeepRunning = false;
-        }
-
-        System.Threading.ThreadPool.SetMaxThreads(100, 1000);
-        // Some renderers (Mogre and Ogre, I'm looking at you) require the main thread to
-        // do their rendering and window management. This kludge calls into the
-        // viewer to give the main thread to the renderer. If the renderer doesn't
-        // need it, the function returns 'false' and we just wait for things to
-        // finish.
-        // Thread m_renderingThread = new Thread(RunRenderer);
-        // m_renderingThread.Start();
-        if ( Globals.KeepRunning 
-                && !((IViewProvider)ModuleManager.Module("Viewer")).RendererThreadEntry()
-            ) {
-            // wait until everything shuts down
-            while (Globals.KeepRunning) {
-                Thread.Sleep(1 * 1000);
-            }
-        }
-        else {
-            // renderer thread exited, we turn stuff off
-            Globals.KeepRunning = false;
-            Thread.Sleep(3 * 1000);
-        }
-
-        programInstance.StopEverything();
+        programInstance.Start();
 
         m_log.Log(LogLevel.DINIT, "EXIT");
-    }
-
-    private static void RunRenderer() {
-        ((IViewProvider)ModuleManager.Module("Viewer")).RendererThreadEntry();
     }
 
     private static string Invocation()
@@ -235,36 +203,5 @@ LookingGlass
     }
     #endregion Parameter Processing
 
-    private void StartEverything() {
-        try {
-            if (!ModuleManager.LoadAndStartModules()) {
-                m_log.Log(LogLevel.DBADERROR, "Failed starting modules");
-                Globals.KeepRunning = false;
-            }
-        }
-        catch (Exception e) {
-            m_log.Log(LogLevel.DBADERROR, "Failed starting modules: " + e.ToString());
-            Globals.KeepRunning = false;
-        }
-        m_log.Log(LogLevel.DINIT, "Completed main module startup");
-    }
-
-    private void StopEverything() {
-        try {
-            m_log.Log(LogLevel.DINIT, "STOP INITIATED. Stopping modules.");
-            ModuleManager.Stop();
-
-            m_log.Log(LogLevel.DINIT, "Unloading modules.");
-            ModuleManager.PrepareForUnload();
-
-            m_log.Log(LogLevel.DINIT, "Pushing out configuration file if needed.");
-            Globals.WriteConfigurationFile();
-        }
-        catch (Exception e) {
-            // we don't know how bad things got while shutting down..
-            // just exit gracefully
-            m_log.Log(LogLevel.DINIT, "EXCEPTION WHILE SHUTTING DOWN: "+e.ToString());
-        }
-    }
 }
 }

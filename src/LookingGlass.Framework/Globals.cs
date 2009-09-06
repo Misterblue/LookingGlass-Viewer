@@ -34,13 +34,6 @@ public static class Globals {
     private static string m_applicationVersion = "V0.1.1";
     public static string ApplicationVersion { get { return m_applicationVersion; } set { m_applicationVersion = value; } }
 
-    static Globals() {
-        m_configuration = new AppParameters();
-        // The MaxValue causes everything to be written. When done debugging (ha!), reduce to near zero.
-        Configuration.AddDefaultParameter("Log.FilterLevel", ((int)LogLevel.DNONDETAIL).ToString(),
-                    "Default, initial logging level");
-    }
-
     /// <summary>
     /// True if everything should keep running. Anything can set this to 'false'.
     /// Once set, the main control will call Stop() on everything and shut it all

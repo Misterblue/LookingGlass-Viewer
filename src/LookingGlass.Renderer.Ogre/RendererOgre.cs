@@ -127,6 +127,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "Name of the rendering subsystem to use");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.VideoMode", "800 x 600@ 32-bit colour",
                     "Initial window size");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.InputSystem", "LookingGlass.Renderer.Ogr.UserInterfaceOgre",
+                    "Selection of user interface system.");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.PluginFilename", "plugins.cfg",
                     "File that lists Ogre plugins to load");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.ResourcesFilename", "resources.cfg",
@@ -229,13 +231,24 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         // allow others to get our statistics
         m_restHandler = new RestHandler("/stats/" + m_moduleName + "/detailStats", m_stats);
 
-        m_userInterface = new UserInterfaceOgre();
+        // load the input system we're supposed to be using
+        String uiClass = ModuleParams.ParamString(m_moduleName + ".Ogre.InputSystem");
+        try {
+            m_log.Log(LogLevel.DRENDERDETAIL, "Loading UI processor {0}", uiClass);
+            System.Reflection.Assembly thisAssembly = System.Reflection.Assembly.GetExecutingAssembly();
+            m_userInterface = (UserInterfaceOgre)thisAssembly.CreateInstance(uiClass, true);
+            // m_userInterface = new UserInterfaceOgre();
+        }
+        catch (Exception e) {
+            m_log.Log(LogLevel.DBADERROR, "FATAL: Could not load user interface class {0}: {1}", uiClass, e.ToString());
+            return false;
+        }
 
         if (m_log.WouldLog(LogLevel.DRENDERDETAIL)) {
             debugLogCallbackHandle = new Ogr.DebugLogCallback(OgrLogger);
             Ogr.SetDebugLogCallback(debugLogCallbackHandle);
         }
-        fetchParameterCallbackHandle = new Ogr.FetchParameterCallback(ModuleParams.ParamString);
+        fetchParameterCallbackHandle = new Ogr.FetchParameterCallback(GetAParameter);
         Ogr.SetFetchParameterCallback(fetchParameterCallbackHandle);
         checkKeepRunningCallbackHandle = new Ogr.CheckKeepRunningCallback(CheckKeepRunning);
         Ogr.SetCheckKeepRunningCallback(checkKeepRunningCallbackHandle);
@@ -266,9 +279,24 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     private void OgrLogger(string msg) {
         m_logOgre.Log(LogLevel.DRENDERDETAIL, msg);
     }
-
+    
     private bool CheckKeepRunning() {
         return Globals.KeepRunning;
+    }
+
+    private string GetAParameter(string parm) {
+        string ret = null;
+        paramErrorType oldtype = ModuleParams.ParamErrorMethod;
+        ModuleParams.ParamErrorMethod = paramErrorType.eException;
+        try {
+            ret = ModuleParams.ParamString(parm);
+        }
+        catch (Exception e) {
+            m_log.Log(LogLevel.DBADERROR, "GetAParameter: returning default value for parameter {0}", parm);
+            ret = "";
+        }
+        ModuleParams.ParamErrorMethod = oldtype;
+        return ret;
     }
 
     // ==========================================================================

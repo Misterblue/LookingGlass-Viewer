@@ -119,7 +119,12 @@ namespace RendererOgre {
 		m_visibilityScaleLargeSize = LookingGlassOgr::GetParameterInt("Renderer.Ogre.Visibility.Large");
 		LookingGlassOgr::Log("initialize: visibility: min=%f, max=%f, large=%f, largeafter=%f",
 				(double)m_visibilityScaleMinDistance, (double)m_visibilityScaleMaxDistance, 
-				(double)m_visibilityScaleLargeSize, (double)m_visibilityScaleOnlyLargeAfter
+				(double)m_visibilityScaleLargeSize, (double)m_visibilityScaleOnlyLargeAfter);
+		LookingGlassOgr::Log("initialize: visibility: cull meshes/textures/frustrum/distance = {0}/{1}/{2}/{3}",
+						m_shouldCullMeshes ? "true" : "false",
+						m_shouldCullTextures ? "true" : "false",
+						m_shouldCullByFrustrum ? "true" : "false",
+						m_shouldCullByDistance ? "true" : "false"
 		);
 		m_recalculateVisibility = true;
 
@@ -220,7 +225,22 @@ namespace RendererOgre {
         rs->setConfigOption("Full Screen", "No");
         rs->setConfigOption("Video Mode", GetParameter("Renderer.Ogre.VideoMode"));
 
-		m_window = m_root->initialise(true, GetParameter("Renderer.Ogre.Name"));
+		// Two types of initialization here. Get own own window or use a passed window
+		Ogre::String windowHandle = LookingGlassOgr::GetParameter("Renderer.Ogre.ExternalWindowHandle");
+		if (windowHandle.length() == 0) {
+			m_window = m_root->initialise(true, GetParameter("Renderer.Ogre.Name"));
+		}
+		else {
+			m_window = m_root->initialise(false);
+			Ogre::NameValuePairList createParams;
+			createParams["externalWindowHandle"] = windowHandle;
+			createParams["title"] = GetParameter("Renderer.Ogre.name");
+			// createParams["left"] = something;
+			// createParams["right"] = something;
+			// createParams["depthBuffer"] = something;
+			// createParams["parentWindowHandle"] = something;
+			m_window = m_root->createRenderWindow("MAINWINDOW", 800, 600, false, &createParams);
+		}
 	}
 
 	void RendererOgre::initOgreResources() {
@@ -890,7 +910,9 @@ void RendererOgre::unloadTheMesh(Ogre::MeshPtr meshP) {
 						while (tusIter.hasMoreElements()) {
 							Ogre::TextureUnitState* oneTus = tusIter.getNext();
 							Ogre::String texName = oneTus->getTextureName();
+							// TODO: the same texture gets unloaded multiple times. Is that a bad thing?
 							Ogre::TextureManager::getSingleton().unload(texName);
+							// LookingGlassOgr::Log("unloadTheMesh: unloading texture %s", texName.c_str());
 						}
 					}
 				}
@@ -900,6 +922,7 @@ void RendererOgre::unloadTheMesh(Ogre::MeshPtr meshP) {
 	if (m_shouldCullMeshes) {
 		Ogre::String mshName = meshP->getName();
 		Ogre::MeshManager::getSingleton().unload(mshName);
+		// LookingGlassOgr::Log("unloadTheMesh: unloading mesh %s", mshName.c_str());
 	}
 }
 
