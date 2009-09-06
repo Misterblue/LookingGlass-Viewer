@@ -301,6 +301,11 @@ public class UserInterfaceOgre : IUserInterfaceProvider {
         m_workQueue = new BasicWorkQueue("UIOgreWork");
     }
 
+    // I need the hooks to the lowest levels
+    public bool NeedsRendererLinkage() {
+        return true;
+    }
+
     /// <summary>
     /// Called from Ogre with the ui operation. We pass the work to a thread in the pool so
     /// we don't tie up the renderer.

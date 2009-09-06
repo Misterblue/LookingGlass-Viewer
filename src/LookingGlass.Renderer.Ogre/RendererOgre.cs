@@ -73,9 +73,11 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         return (IWorldRenderConv)ent.Addition(RendererOgre.AddWorldRenderConv);
     }
 
-    protected UserInterfaceOgre m_userInterface = null;
+    protected IUserInterfaceProvider m_userInterface = null;
 
     protected OgreSceneMgr m_sceneMgr;
+
+    protected Thread m_rendererThread = null;
 
     // this shouldn't be here... this is a feature of the LL renderer
     protected float m_sceneMagnification;
@@ -129,6 +131,9 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "Initial window size");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.InputSystem", "LookingGlass.Renderer.Ogr.UserInterfaceOgre",
                     "Selection of user interface system.");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.FramePerSecMax", "30",
+                    "Maximum number of frames to display per second");
+
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.PluginFilename", "plugins.cfg",
                     "File that lists Ogre plugins to load");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.ResourcesFilename", "resources.cfg",
@@ -233,15 +238,21 @@ public class RendererOgre : ModuleBase, IRenderProvider {
 
         // load the input system we're supposed to be using
         String uiClass = ModuleParams.ParamString(m_moduleName + ".Ogre.InputSystem");
-        try {
-            m_log.Log(LogLevel.DRENDERDETAIL, "Loading UI processor {0}", uiClass);
-            System.Reflection.Assembly thisAssembly = System.Reflection.Assembly.GetExecutingAssembly();
-            m_userInterface = (UserInterfaceOgre)thisAssembly.CreateInstance(uiClass, true);
-            // m_userInterface = new UserInterfaceOgre();
+        if (uiClass != null && uiClass.Length > 0) {
+            try {
+                m_log.Log(LogLevel.DRENDERDETAIL, "Loading UI processor {0}", uiClass);
+                System.Reflection.Assembly thisAssembly = System.Reflection.Assembly.GetExecutingAssembly();
+                m_userInterface = (UserInterfaceOgre)thisAssembly.CreateInstance(uiClass, true);
+                // m_userInterface = new UserInterfaceOgre();
+            }
+            catch (Exception e) {
+                m_log.Log(LogLevel.DBADERROR, "FATAL: Could not load user interface class {0}: {1}", uiClass, e.ToString());
+                return false;
+            }
         }
-        catch (Exception e) {
-            m_log.Log(LogLevel.DBADERROR, "FATAL: Could not load user interface class {0}: {1}", uiClass, e.ToString());
-            return false;
+        else {
+            m_log.Log(LogLevel.DBADERROR, "Using null user interfare");
+            m_userInterface = new UserInterfaceNull();
         }
 
         if (m_log.WouldLog(LogLevel.DRENDERDETAIL)) {
@@ -252,8 +263,10 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         Ogr.SetFetchParameterCallback(fetchParameterCallbackHandle);
         checkKeepRunningCallbackHandle = new Ogr.CheckKeepRunningCallback(CheckKeepRunning);
         Ogr.SetCheckKeepRunningCallback(checkKeepRunningCallbackHandle);
-        userIOCallbackHandle = new Ogr.UserIOCallback(m_userInterface.ReceiveUserIO);
-        Ogr.SetUserIOCallback(userIOCallbackHandle);
+        if (m_userInterface.NeedsRendererLinkage()) {
+            userIOCallbackHandle = new Ogr.UserIOCallback(m_userInterface.ReceiveUserIO);
+            Ogr.SetUserIOCallback(userIOCallbackHandle);
+        }
         requestResourceCallbackHandle = new Ogr.RequestResourceCallback(RequestResource);
         Ogr.SetRequestResourceCallback(requestResourceCallbackHandle);
         betweenFramesCallbackHandle = new Ogr.BetweenFramesCallback(ProcessBetweenFrames);
@@ -291,7 +304,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         try {
             ret = ModuleParams.ParamString(parm);
         }
-        catch (Exception e) {
+        catch {
             m_log.Log(LogLevel.DBADERROR, "GetAParameter: returning default value for parameter {0}", parm);
             ret = "";
         }
@@ -324,6 +337,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     // pass the main thread to the renderer. If he doesn't want it, he returns 'false'
     public bool RendererThread() {
         /*
+        // Try creating a thread just for the renderer
         // create a thread for the renderer
         m_rendererThread = new Thread(RunRenderer);
         m_rendererThread.Name = "Renderer";
@@ -331,7 +345,28 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         // tell the caller I'm not using the main thread
         return false;
          */
-        return Ogr.RenderingThread();
+
+        // Let the Ogre code decide if it needs the main thread
+        // return Ogr.RenderingThread();
+
+        // code  to keep the rendering thread mostly in managed space
+        // periodically call to draw a frame
+        int maxFramePerSec = ModuleParams.ParamInt(m_moduleName + ".Ogre.FramePerSecMax");
+        int msPerFrame = 1000 / maxFramePerSec;
+        int frameStart, frameEnd, frameDuration, frameLeft;
+        while (Globals.KeepRunning) {
+            frameStart = System.Environment.TickCount;
+            if (!Ogr.RenderOneFrame()) {
+                Globals.KeepRunning = false;
+            }
+            frameEnd = System.Environment.TickCount;
+            frameDuration = frameEnd - frameStart;
+            frameLeft = msPerFrame - frameDuration;
+            if (frameLeft > 10) {
+                Thread.Sleep(frameLeft);
+            }
+        }
+        return true;
     }
 
     // pass the thread into the renderer

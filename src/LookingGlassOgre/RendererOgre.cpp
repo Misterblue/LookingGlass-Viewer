@@ -52,10 +52,20 @@ namespace RendererOgre {
 
 	bool RendererOgre::renderingThread() {
 		Log("DEBUG: LookingGlassOrge: Starting rendering");
+		int maxFPS = LookingGlassOgr::GetParameterInt("Renderer.Ogre.FramePerSecMax");
+		if (maxFPS < 2 || maxFPS > 100) maxFPS = 20;
+		int msPerFrame = 1000 / maxFPS;
+		Ogre::Timer* timeKeeper = new Ogre::Timer();
+		unsigned long now = timeKeeper->getMilliseconds();
+		unsigned long timeStartedLastFrame = timeKeeper->getMilliseconds();
+
 		// m_root->startRendering();
 		while (m_root->renderOneFrame()) {
-			// delay some
 			Ogre::WindowEventUtilities::messagePump();
+			now = timeKeeper->getMilliseconds();
+			int remaining = msPerFrame - ((int)(now - timeStartedLastFrame));
+			if (remaining > 10) Sleep(remaining);
+			timeStartedLastFrame = timeKeeper->getMilliseconds();
 		}
 		Log("DEBUG: LookingGlassOrge: Completed rendering");
 		destroyScene();
@@ -63,6 +73,15 @@ namespace RendererOgre {
 		// m_root->shutdown();
 		m_root = NULL;
 		return true;
+	}
+
+	bool RendererOgre::renderOneFrame() {
+		bool ret = false;
+		if (m_root != NULL) {
+			ret = m_root->renderOneFrame();
+			Ogre::WindowEventUtilities::messagePump();
+		}
+		return ret;
 	}
 
 	// Update the camera position given an location and a direction
@@ -120,7 +139,7 @@ namespace RendererOgre {
 		LookingGlassOgr::Log("initialize: visibility: min=%f, max=%f, large=%f, largeafter=%f",
 				(double)m_visibilityScaleMinDistance, (double)m_visibilityScaleMaxDistance, 
 				(double)m_visibilityScaleLargeSize, (double)m_visibilityScaleOnlyLargeAfter);
-		LookingGlassOgr::Log("initialize: visibility: cull meshes/textures/frustrum/distance = {0}/{1}/{2}/{3}",
+		LookingGlassOgr::Log("initialize: visibility: cull meshes/textures/frustrum/distance = %s/%s/%s/%s",
 						m_shouldCullMeshes ? "true" : "false",
 						m_shouldCullTextures ? "true" : "false",
 						m_shouldCullByFrustrum ? "true" : "false",
@@ -152,7 +171,9 @@ namespace RendererOgre {
         createViewport();
         createSky();
         createFrameListener();
-        createInput();
+		if (LookingGlassOgr::userIOCallback != NULL) {
+	        createInput();
+		}
 
 		// uncomment this to generate the loading mesh shape (small cube)
 		// GenerateLoadingMesh();
@@ -226,7 +247,7 @@ namespace RendererOgre {
         rs->setConfigOption("Video Mode", GetParameter("Renderer.Ogre.VideoMode"));
 
 		// Two types of initialization here. Get own own window or use a passed window
-		Ogre::String windowHandle = LookingGlassOgr::GetParameter("Renderer.Ogre.ExternalWindowHandle");
+		Ogre::String windowHandle = LookingGlassOgr::GetParameter("Renderer.Ogre.ExternalWindow.Handle");
 		if (windowHandle.length() == 0) {
 			m_window = m_root->initialise(true, GetParameter("Renderer.Ogre.Name"));
 		}
@@ -239,7 +260,10 @@ namespace RendererOgre {
 			// createParams["right"] = something;
 			// createParams["depthBuffer"] = something;
 			// createParams["parentWindowHandle"] = something;
-			m_window = m_root->createRenderWindow("MAINWINDOW", 800, 600, false, &createParams);
+			m_window = m_root->createRenderWindow("MAINWINDOW", 
+				LookingGlassOgr::GetParameterInt("Renderer.Ogre.ExternalWindow.Width"),
+				LookingGlassOgr::GetParameterInt("Renderer.Ogre.ExternalWindow.Height"),
+				false, &createParams);
 		}
 	}
 

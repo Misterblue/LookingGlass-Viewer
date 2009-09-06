@@ -58,6 +58,11 @@ extern "C" DLLExport bool RenderingThread() {
 	return m_ro->renderingThread();
 }
 
+// a call that renders only one frams
+extern "C" DLLExport bool RenderOneFrame() {
+	return m_ro->renderOneFrame();
+}
+
 // ==========================================================
 extern "C" DLLExport void SetFetchParameterCallback(FetchParameterCallback* fpc) {
 	fetchParameterCallback = fpc;

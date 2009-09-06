@@ -59,6 +59,7 @@ class LookingGlassMain {
                 && !((IViewProvider)ModuleManager.Module("Viewer")).RendererThreadEntry()
             ) {
             // wait until everything shuts down
+            m_log.Log(LogLevel.DINIT, "Using separate renderer thread. Main thread in main");
             while (Globals.KeepRunning) {
                 Thread.Sleep(1 * 1000);
             }

@@ -24,23 +24,30 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Windows.Forms;
 using LookingGlass.Framework.Logging;
 using LookingGlass.Framework.Parameters;
+using LookingGlass.Radegast;
 using Radegast;
 
 namespace LookingGlass {
 
 class RadegastMain : IRadegastPlugin {
     public static RadegastInstance RadInstance = null;
+    private ILog m_log = null;
 
     LookingGlassMain m_lookingGlassInstance = null;
 
+
     public RadegastMain() {
+        m_log = LogManager.GetLogger("RadegastMain");
+        m_log.Log(LogLevel.DRADEGAST, "Entered constructor");
     }
 
     #region IRadegastPlugin methods
 
     public void StartPlugin(RadegastInstance inst) {
+        m_log.Log(LogLevel.DRADEGAST, "StartPlugin()");
         RadInstance = inst;
 
         Globals.Configuration = new AppParameters();
@@ -57,8 +64,24 @@ class RadegastMain : IRadegastPlugin {
             Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "RadegastModules.json"),
             "Modules configuration file");
 
-        // Globals.Configuration.AddDefaultParameter("Render.Ogre.ExternalWindowHandle", "StringOfWindowHandleInt",
-        //             "The window handle to use for our rendering");
+        RadegastWindow viewDialog = new RadegastWindow();
+        Control[] subControls = viewDialog.Controls.Find("LGWindow", true);
+        if (subControls.Length == 1) {
+            Control windowPanel = subControls[0];
+            string wHandle = windowPanel.Handle.ToString();
+            m_log.Log(LogLevel.DRADEGASTDETAIL, "Connecting to external window {0}, w={1}, h={2}",
+                wHandle, windowPanel.Width, windowPanel.Height);
+            Globals.Configuration.AddDefaultParameter("Renderer.Ogre.ExternalWindow.Handle",
+                windowPanel.Handle.ToString(),
+                "The window handle to use for our rendering");
+            Globals.Configuration.AddDefaultParameter("Renderer.Ogre.ExternalWindow.Width",
+                windowPanel.Width.ToString(), "width of external window");
+            Globals.Configuration.AddDefaultParameter("Renderer.Ogre.ExternalWindow.Height",
+                windowPanel.Height.ToString(), "Height of external window");
+        }
+        else {
+            throw new Exception("Could not find window control on dialog");
+        }
 
         try {
             Globals.ReadConfigurationFile();
@@ -70,6 +93,8 @@ class RadegastMain : IRadegastPlugin {
         // log level after all the parameters have been set
         LogManager.CurrentLogLevel = (LogLevel)Globals.Configuration.ParamInt("Log.FilterLevel");
 
+        viewDialog.Show();
+
         m_lookingGlassInstance = new LookingGlassMain();
 
         // this causes LookingGlass to load all it's modules and get running.
@@ -77,6 +102,7 @@ class RadegastMain : IRadegastPlugin {
     }
 
     public void StopPlugin(RadegastInstance inst) {
+        m_log.Log(LogLevel.DRADEGAST, "StopPlugin()");
         m_lookingGlassInstance.Stop();
     }
 

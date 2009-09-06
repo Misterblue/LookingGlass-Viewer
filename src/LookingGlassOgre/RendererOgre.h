@@ -36,6 +36,7 @@ public:
 
 	void initialize();
 	bool renderingThread();
+	bool renderOneFrame();
 
 	// Ogre::FrameListener
 	bool frameStarted(const Ogre::FrameEvent&);
