@@ -257,7 +257,7 @@ public sealed class LLAssetContext : AssetContextBase {
                 if (!Directory.Exists(textureDirName)) {
                     Directory.CreateDirectory(textureDirName);
                 }
-                string noTextureFilename = Globals.Configuration.ParamString(m_commName + ".Assets.NoTextureFilename");
+                string noTextureFilename = LookingGlassBase.Instance.AppParams.ParamString(m_commName + ".Assets.NoTextureFilename");
                 // if we copy the no texture file into the filesystem, we will never retry to
                 // fetch the texture. This copy is not a good thing.
                 File.Copy(noTextureFilename, tempTextureFilename);
@@ -306,7 +306,7 @@ public sealed class LLAssetContext : AssetContextBase {
         public override bool  DoIt() {
             foreach (WaitingInfo wii in m_completeWork) {
                 EntityName textureEntityName = EntityNameLL.ConvertTextureWorldIDToEntityName(m_acontext, wii.worldID);
-                bool m_convertToPng = Globals.Configuration.ParamBool(m_commName + ".Assets.ConvertPNG");
+                bool m_convertToPng = LookingGlassBase.Instance.AppParams.ParamBool(m_commName + ".Assets.ConvertPNG");
                 OMV.Imaging.ManagedImage managedImage;
                 System.Drawing.Image tempImage = null;
                 if (wii.type == AssetType.Texture) {

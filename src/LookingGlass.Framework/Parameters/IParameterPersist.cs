@@ -26,7 +26,7 @@ using System.Text;
 
 namespace LookingGlass.Framework.Parameters {
 
-interface IParameterPersist {
+public interface IParameterPersist {
 
     /// <summary>
     /// Read in the parameters from the persistant storage. It is expected

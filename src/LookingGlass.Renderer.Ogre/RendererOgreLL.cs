@@ -78,10 +78,10 @@ public class RendererOgreLL : IWorldRenderConv {
         }
 
         // magnification of passed World coordinates into Ogre coordinates
-        m_sceneMagnification = float.Parse(Globals.Configuration.ParamString("Renderer.Ogre.LL.SceneMagnification"));
+        m_sceneMagnification = float.Parse(LookingGlassBase.Instance.AppParams.ParamString("Renderer.Ogre.LL.SceneMagnification"));
         // true if to creat materials while we are creating the mesh
-        m_buildMaterialsAtMeshCreationTime = Globals.Configuration.ParamBool("Renderer.Ogre.LL.EarlyMaterialCreate");
-        m_buildMaterialsAtRenderInfoTime = Globals.Configuration.ParamBool("Renderer.Ogre.LL.RenderInfoMaterialCreate");
+        m_buildMaterialsAtMeshCreationTime = LookingGlassBase.Instance.AppParams.ParamBool("Renderer.Ogre.LL.EarlyMaterialCreate");
+        m_buildMaterialsAtRenderInfoTime = LookingGlassBase.Instance.AppParams.ParamBool("Renderer.Ogre.LL.RenderInfoMaterialCreate");
     }
 
     /// <summary>
@@ -533,7 +533,7 @@ public class RendererOgreLL : IWorldRenderConv {
                 // this funny rotation of the region's scenenode causes the region
                 // to be twisted from LL coordinates (Z up) to Ogre coords (Y up)
                 // Anything added under this node will not need to be converted.
-                OMV.Quaternion orient = OMV.Quaternion.CreateFromAxisAngle(OMV.Vector3.UnitX, -Globals.PI / 2);
+                OMV.Quaternion orient = OMV.Quaternion.CreateFromAxisAngle(OMV.Vector3.UnitX, -Constants.PI / 2);
 
                 m_log.Log(LogLevel.DRENDERDETAIL, "MapRegionIntoView: Region at {0}, {1}, {2}",
                         (float)rcontext.WorldBase.X * m_sceneMagnification,

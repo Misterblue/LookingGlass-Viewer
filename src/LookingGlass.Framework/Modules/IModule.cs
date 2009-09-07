@@ -38,7 +38,8 @@ namespace LookingGlass.Framework.Modules {
 public interface IModule {
     string ModuleName { get ; }
 
-    void OnLoad(string name, IAppParameters parms);
+    // void OnLoad(string name, IAppParameters parms);
+    void OnLoad(string name, LookingGlassBase lgbase);
 
     bool AfterAllModulesLoaded();
 

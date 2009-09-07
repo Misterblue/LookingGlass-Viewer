@@ -37,7 +37,7 @@ public class GridLists {
     private ParameterSet m_gridInfo = null;
 
     public GridLists() {
-        Globals.Configuration.AddDefaultParameter("Grids.Filename", 
+        LookingGlassBase.Instance.AppParams.AddDefaultParameter("Grids.Filename", 
             Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "Grids.json"),
             "Filename of grid specs");
     }
@@ -47,7 +47,7 @@ public class GridLists {
             string gridsFilename = "";
             try {
                 m_gridInfo = new ParameterSet();
-                gridsFilename = Globals.Configuration.ParamString("Grids.Filename");
+                gridsFilename = LookingGlassBase.Instance.AppParams.ParamString("Grids.Filename");
                 if (gridsFilename != null) {
                     m_gridInfo.AddFromFile(gridsFilename);
                 }

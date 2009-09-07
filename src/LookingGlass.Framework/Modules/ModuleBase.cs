@@ -36,15 +36,20 @@ public class ModuleBase : IModule {
     protected string m_moduleName;
     public string ModuleName { get { return m_moduleName; } set { m_moduleName = value; } }
 
+    protected LookingGlassBase m_lgb = null;
+    public LookingGlassBase LGB { get { return m_lgb; } }
+
+    public IAppParameters ModuleParams { get { return m_lgb.AppParams; } }
+
     public ModuleBase() {
         // default to the class name. The module code can set it to something else later.
         m_moduleName = System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name;
     }
 
-    public virtual void OnLoad(string modName, IAppParameters parm) {
+    public virtual void OnLoad(string modName, LookingGlassBase lgbase) {
         LogManager.Log.Log(LogLevel.DINIT, "ModuleBase.OnLoad()");
         m_moduleName = modName;
-        ModuleParams = parm;
+        m_lgb = lgbase;
     }
 
     public virtual bool AfterAllModulesLoaded() {
@@ -62,18 +67,6 @@ public class ModuleBase : IModule {
 
     public virtual bool PrepareForUnload() {
         return false;
-    }
-
-    // Every module has a handle to the parameters
-    private IAppParameters m_params = null;
-    protected IAppParameters ModuleParams {
-        get {
-            if (m_params == null) {
-                return Globals.Configuration;
-            }
-            return m_params;
-        }
-        set { m_params = value; }
     }
 }
 }

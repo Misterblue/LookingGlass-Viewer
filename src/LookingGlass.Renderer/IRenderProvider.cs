@@ -85,7 +85,10 @@ public struct FaceData {
 
         // entry for main thread for rendering. Return false if you don't need it.
         bool RendererThread();
+        // entry for rendering one frame. An alternate to the above thread method
+        bool RenderOneFrame();
 
+        //=================================================================
         // Set the entity to be rendered
         void Render(IEntity ent);
         void UnRender(IEntity ent);

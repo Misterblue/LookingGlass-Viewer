@@ -56,8 +56,8 @@ public class CommLLLPRest : ModuleBase, IRestUser {
     public CommLLLPRest() {
     }
 
-    public override void OnLoad(string name, IAppParameters parms) {
-        base.OnLoad(name, parms);
+    public override void OnLoad(string name, LookingGlassBase lgbase) {
+        base.OnLoad(name, lgbase);
         m_apiName = "LLLP";
         ModuleParams.AddDefaultParameter(ModuleName + ".Comm", "Comm", "Name of comm module to connect to");
         ModuleParams.AddDefaultParameter(ModuleName + ".APIName", m_apiName, "Name of api for this comm control");
@@ -66,7 +66,7 @@ public class CommLLLPRest : ModuleBase, IRestUser {
     public override void Start() {
         string commName = ModuleParams.ParamString(ModuleName + ".Comm");
         try {
-            m_comm = (ICommProvider)ModuleManager.Module(commName);
+            m_comm = (ICommProvider)LGB.ModManager.Module(commName);
         }
         catch (Exception e) {
             m_log.Log(LogLevel.DBADERROR, "CommLLLPRest COULD NOT CONNECT TO COMM MODULE NAMED " + commName);

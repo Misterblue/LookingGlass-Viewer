@@ -90,7 +90,7 @@ namespace LookingGlass.Framework.Logging {
             StringBuilder buf = new StringBuilder(256);
             buf.Append(DateTime.Now.ToString("yyyyMMddHHmmss"));
             buf.Append(": ");
-            buf.Append(Globals.ApplicationName);
+            buf.Append(LookingGlassBase.ApplicationName);
             buf.Append(": ");
             if (ModuleName.Length != 0) {
                 buf.Append(ModuleName);

@@ -53,28 +53,6 @@ public class Viewer : ModuleBase, IViewProvider {
     // our reserved slot in the Entity subsystem additions list
     private int m_EntitySlot;
 
-    private IRenderProvider m_Renderer = null;
-    public IRenderProvider Renderer { get { return m_Renderer; } set { m_Renderer = value; } }
-
-    private World.World m_world = null;
-    public World.World TheWorld {
-        get {
-            if (m_world == null) {
-                string worldName = ModuleParams.ParamString(ModuleName + ".World.Name");
-                try {
-                    m_world = (World.World)ModuleManager.Module(worldName);
-                }
-                catch (Exception e) {
-                    m_log.Log(LogLevel.DBADERROR, "FAILED TO FIND WORLD " + worldName + ": " + e.ToString());
-                    throw new LookingGlassException("Viewer " + ModuleName
-                        + " could not find world to connect to in parameter "
-                        + ModuleName + ".World.Name");
-                }
-            }
-            return m_world;
-        }
-    }
-
     private IAgent m_trackedAgent;
 
     // the viewer manages the camera
@@ -101,9 +79,8 @@ public class Viewer : ModuleBase, IViewProvider {
     }
 
     #region IModule methods
-    public override void OnLoad(string name, IAppParameters theParams) {
-        m_moduleName = name;
-        ModuleParams = theParams;
+    public override void OnLoad(string name, LookingGlassBase lgbase) {
+        base.OnLoad(name, lgbase);
         ModuleParams.AddDefaultParameter(m_moduleName + ".World.Name", "World", "Name of world module to connect to");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Renderer.Name", "Renderer", "");
         // todo: make this variable so there can be multiple viewers
@@ -121,7 +98,7 @@ public class Viewer : ModuleBase, IViewProvider {
     override public bool AfterAllModulesLoaded() {
         m_log.Log(LogLevel.DINIT, "entered AfterAllModulesLoaded()");
 
-        Renderer = (IRenderProvider)ModuleManager.Module(ModuleParams.ParamString(m_moduleName + ".Renderer.Name"));
+        Renderer = (IRenderProvider)LGB.ModManager.Module(ModuleParams.ParamString(m_moduleName + ".Renderer.Name"));
         if (Renderer == null) {
             m_log.Log(LogLevel.DBADERROR, "UNABLE TO FIND RENDERER!!!! ");
             return false;
@@ -170,7 +147,7 @@ public class Viewer : ModuleBase, IViewProvider {
         Renderer.UserInterface.OnUserInterfaceMouseButton += new UserInterfaceMouseButtonCallback(UserInterface_OnMouseButton);
 
         // start the renderer
-        ((IModule)Renderer).Start();
+        // ((IModule)Renderer).Start();
 
         m_log.Log(LogLevel.DINIT, "exiting Start()");
         return;
@@ -182,12 +159,20 @@ public class Viewer : ModuleBase, IViewProvider {
     #endregion IModule methods
 
     #region IViewProvider methods
-    // Special kludge to pass the main execution thread to the renderer if it's the
-    // the kind of renderer that needs the main event thread to work.
-    // return true if
-    public bool RendererThreadEntry() {
-        return m_Renderer.RendererThread();
+    private IRenderProvider m_Renderer = null;
+    public IRenderProvider Renderer { get { return m_Renderer; } set { m_Renderer = value; } }
+
+    private World.World m_world = null;
+    public World.World TheWorld {
+        get {
+            if (m_world == null) {
+                // there is only one world this viewer can be looking at
+                m_world = World.World.Instance;
+            }
+            return m_world;
+        }
     }
+
     #endregion IViewProvider methods
 
     private void OnEntityNew(IEntity ent) {
@@ -305,7 +290,7 @@ public class Viewer : ModuleBase, IViewProvider {
             switch (key) {
                 case (Keys.Control | Keys.C):
                     // CNTL-C says to stop everything now
-                    Globals.KeepRunning = false;
+                    LGB.KeepRunning = false;
                     break;
                 case Keys.Right:
                     m_trackedAgent.TurnRight(updown);

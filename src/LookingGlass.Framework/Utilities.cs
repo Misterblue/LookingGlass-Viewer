@@ -62,5 +62,23 @@ public class Utilities {
         string l = last.StartsWith(separator) ? last.Substring(1, last.Length-1) : last;
         return f + separator + l;
     }
+
+    /// <summary>
+    /// The stupid application storage function MS defined adds "corporation/application/version"
+    /// to the end of the application path. This takes them off and just adds the application name.
+    /// </summary>
+    /// <returns></returns>
+    public static string GetDefaultApplicationStorageDir(string subdir) {
+        string appdir = System.Windows.Forms.Application.UserAppDataPath;
+        string[] pieces = appdir.Split(Path.DirectorySeparatorChar);
+        string newAppDir = pieces[0];
+        if (pieces.Length > 3) {
+            newAppDir = String.Join(System.Char.ToString(Path.DirectorySeparatorChar), pieces, 0, pieces.Length - 3);
+        }
+        newAppDir = Path.Combine(newAppDir, LookingGlassBase.ApplicationName);
+        if ((subdir != null) && (subdir.Length > 0)) newAppDir = Path.Combine(newAppDir, subdir);
+        return newAppDir;
+    }
+
 }
 }

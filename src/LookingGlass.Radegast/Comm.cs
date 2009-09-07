@@ -40,10 +40,10 @@ public class Comm : ModuleBase, ICommProvider {
 
     #region IModule methods
 
-    public override void OnLoad(string name, IAppParameters parms) {
-        base.OnLoad(name, parms);
+    public override void OnLoad(string name, LookingGlassBase lgbase) {
+        base.OnLoad(name, lgbase);
         ModuleParams.AddDefaultParameter(ModuleName + ".Assets.CacheDir", 
-                    Globals.GetDefaultApplicationStorageDir(null),
+                    Utilities.GetDefaultApplicationStorageDir(null),
                     "Filesystem location to build the texture cache");
     }
 

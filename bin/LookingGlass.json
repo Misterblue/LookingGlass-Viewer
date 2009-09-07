@@ -1,6 +1,6 @@
 {
 // Uncomment this if you like lots of debug output
-// "Log.FilterLevel": "2147483647",	// log everything
+"Log.FilterLevel": "2147483647",	// log everything
 // "Log.FilterLevel": "1073744896",	// RENDER and RENDERDETAIL
 
 // ====================================================
@@ -20,14 +20,14 @@
         "Name": "World",
         "Order": 30
     },
-    {   "Assembly": "LookingGlass.Renderer.Ogre.dll",
-        "Interface": "LookingGlass.Renderer.IRenderProvider",
-        "Name": "Renderer",
-        "Order": 40
-    },
     {   "Assembly": "LookingGlass.View.dll",
         "Interface": "LookingGlass.View.IViewProvider",
         "Name": "Viewer",
+        "Order": 40
+    },
+    {   "Assembly": "LookingGlass.Renderer.Ogre.dll",
+        "Interface": "LookingGlass.Renderer.IRenderProvider",
+        "Name": "Renderer",
         "Order": 50
     },
     {   "Assembly": "LookingGlass.Comm.LLLP.dll",

@@ -47,7 +47,8 @@ namespace LookingGlass.Framework.Logging {
             // logger = log4net.LogManager.GetLogger(modName);
             lock (lockObject) {
                 if (logger == null) {
-                    logger = log4net.LogManager.GetLogger(Globals.ApplicationName);
+                    // logger = log4net.LogManager.GetLogger(LookingGlassBase.ApplicationName);
+                    logger = log4net.LogManager.GetLogger(moduleName);
                     // logger = log4net.LogManager.GetLogger(Assembly.GetExecutingAssembly().FullName);
                     // logger = log4net.LogManager.GetLogger(ModuleName);
                     // If error level reporting isn't enabled we assume no logger is configured 
@@ -120,7 +121,7 @@ namespace LookingGlass.Framework.Logging {
             StringBuilder buf = new StringBuilder(256);
             buf.Append(DateTime.Now.ToString("yyyyMMddHHmmss"));
             buf.Append(": ");
-            buf.Append(Globals.ApplicationName);
+            buf.Append(LookingGlassBase.ApplicationName);
             buf.Append(": ");
             if (ModuleName.Length != 0) {
                 buf.Append(ModuleName);

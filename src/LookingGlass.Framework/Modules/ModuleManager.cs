@@ -31,11 +31,14 @@ using OMVSD = OpenMetaverse.StructuredData;
 namespace LookingGlass.Framework.Modules {
 
 public class ModuleManager {
-    private static Dictionary<string, IModule> m_modules;
-    private static ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
+    private Dictionary<string, IModule> m_modules;
+    private ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
 
-    static ModuleManager() {
+    LookingGlassBase m_lgb = null;
+
+    public ModuleManager(LookingGlassBase lgbase) {
         m_modules = new Dictionary<string, IModule>();
+        m_lgb = lgbase;
     }
 
     /// <summary>
@@ -46,7 +49,7 @@ public class ModuleManager {
     /// <param name="modName">Name of the module to manage it under. If null, the module
     /// will not be managed by this module manager.</param>
     /// <returns></returns>
-    public static Object LoadModule(string assemblyFilename, string interfaceType, string modName, IAppParameters modParams) {
+    public Object LoadModule(string assemblyFilename, string interfaceType, string modName) {
         string fullfile = new System.IO.FileInfo(assemblyFilename).FullName;
         Object obj = null;
         try {
@@ -62,7 +65,7 @@ public class ModuleManager {
                                 null, null, null, null);
                         //        null, parms, null, null);
                         m_log.Log(LogLevel.DMODULE, "CreateInstance of " + type.FullName);
-                        ((IModule)obj).OnLoad(modName, modParams);
+                        ((IModule)obj).OnLoad(modName, m_lgb);
                         if (modName != null) {
                             ManageModule(obj, modName);
                         }
@@ -98,7 +101,7 @@ public class ModuleManager {
     /// </summary>
     /// <param name="modu">IModule to manage</param>
     /// <returns>true if added. false otherwise</returns>
-    public static bool ManageModule(Object modu) {
+    public bool ManageModule(Object modu) {
         bool ret = false;
         if (modu is IModule) {
             m_modules.Add(((IModule)modu).ModuleName, (IModule)modu);
@@ -107,7 +110,7 @@ public class ModuleManager {
         return ret;
     }
 
-    public static bool ManageModule(Object modu, string name) {
+    public bool ManageModule(Object modu, string name) {
         bool ret = false;
         if (modu is IModule) {
             m_modules.Add(name, (IModule)modu);
@@ -116,13 +119,13 @@ public class ModuleManager {
         return ret;
     }
 
-    public static IModule Module(string modName) {
+    public IModule Module(string modName) {
         IModule ret = null;
         m_modules.TryGetValue(modName, out ret);
         return ret;
     }
 
-    public static bool AfterAllModulesLoaded() {
+    public bool AfterAllModulesLoaded() {
         bool ret = true;
         foreach (KeyValuePair<string,IModule> kvp in m_modules) {
             try {
@@ -143,7 +146,7 @@ public class ModuleManager {
         return ret;
     }
 
-    public static bool Start() {
+    public bool Start() {
         bool ret = true;
         foreach (KeyValuePair<string,IModule> kvp in m_modules) {
             try {
@@ -158,7 +161,7 @@ public class ModuleManager {
         return ret;
     }
 
-    public static bool Stop() {
+    public bool Stop() {
         foreach (KeyValuePair<string,IModule> kvp in m_modules) {
             try {
                 m_log.Log(LogLevel.DMODULE, kvp.Key + ".Stop()");
@@ -171,7 +174,7 @@ public class ModuleManager {
         return true;
     }
 
-    public static bool PrepareForUnload() {
+    public bool PrepareForUnload() {
         foreach (KeyValuePair<string,IModule> kvp in m_modules) {
             m_log.Log(LogLevel.DMODULE, kvp.Key + ".PrepareForUnload()");
             kvp.Value.PrepareForUnload();
@@ -179,7 +182,7 @@ public class ModuleManager {
         return true;
     }
 
-    public static bool Unload() {
+    public bool Unload() {
         foreach (KeyValuePair<string,IModule> kvp in m_modules) {
             m_log.Log(LogLevel.DMODULE, kvp.Key + ".Unload()");
             m_modules.Remove(kvp.Key);
@@ -192,10 +195,10 @@ public class ModuleManager {
     /// and call their post all loaded entries then start them.
     /// </summary>
     /// <returns>true if it looks like everything worked</returns>
-    public static bool LoadAndStartModules() {
+    public bool LoadAndStartModules() {
         bool successFlag = true;
         try {
-            OMVSD.OSD modulesRaw = Globals.Configuration.ParamValue("Modules");
+            OMVSD.OSD modulesRaw = m_lgb.AppParams.ParamValue("Modules");
             // modules are specified by an array of maps
             if ((modulesRaw != null) && (modulesRaw.Type == OMVSD.OSDType.Array)) {
                 OMVSD.OSDArray moduleArray = (OMVSD.OSDArray)modulesRaw;
@@ -203,7 +206,7 @@ public class ModuleManager {
                     string modAssembly = modSpec["Assembly"].AsString();
                     string modInterface = modSpec["Interface"].AsString();
                     string modName = modSpec["Name"].AsString();
-                    Object obj = ModuleManager.LoadModule(modAssembly, modInterface, modName, Globals.Configuration);
+                    Object obj = LoadModule(modAssembly, modInterface, modName);
                     if (obj == null) {
                         m_log.Log(LogLevel.DBADERROR, "Failed to load module."
                                 + " a='" + modAssembly
@@ -225,8 +228,8 @@ public class ModuleManager {
         }
 
         try {
-            if (successFlag && ModuleManager.AfterAllModulesLoaded()) {
-                ModuleManager.Start();
+            if (successFlag && AfterAllModulesLoaded()) {
+                Start();
                 successFlag = true;
             }
             else {

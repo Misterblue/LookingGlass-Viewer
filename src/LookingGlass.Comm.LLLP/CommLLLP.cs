@@ -197,10 +197,10 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
 
     #region IModule methods
 
-    public override void OnLoad(string name, IAppParameters parms) {
-        base.OnLoad(name, parms);
+    public override void OnLoad(string name, LookingGlassBase lgbase) {
+        base.OnLoad(name, lgbase);
         ModuleParams.AddDefaultParameter(ModuleName + ".Assets.CacheDir", 
-                    Globals.GetDefaultApplicationStorageDir(null),
+                    Utilities.GetDefaultApplicationStorageDir(null),
                     "Filesystem location to build the texture cache");
         ModuleParams.AddDefaultParameter(ModuleName + ".Assets.NoTextureFilename", 
                     Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "../LookingGlassResources/NoTexture.png"),
@@ -328,7 +328,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
                     StartLogin();
                 }
             }
-            if (!Globals.KeepRunning || (!m_shouldBeLoggedIn && IsLoggedIn)) {
+            if (!LGB.KeepRunning || (!m_shouldBeLoggedIn && IsLoggedIn)) {
                 // we shouldn't be logged in but it looks like we are
                 if (!m_isLoggingIn && !m_isLoggingOut) {
                     // not in logging transistion. start the logout process
@@ -351,8 +351,8 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
             m_loginFirst,
             m_loginLast,
             m_loginPassword,
-            Globals.ApplicationName, 
-            Globals.ApplicationVersion);
+            LookingGlassBase.ApplicationName, 
+            LookingGlassBase.ApplicationVersion);
 
         // Select sim in the grid
         // the format that we must pass is "uri:sim&x&y&z" or the strings "home" or "last"

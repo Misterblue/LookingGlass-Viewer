@@ -37,7 +37,7 @@ namespace LookingGlass.Framework.Logging {
 
         static LogManager() {
             // a global logger that makes sure logging is set up early on
-            m_log = LogManager.GetLogger(Globals.ApplicationName);
+            m_log = LogManager.GetLogger(LookingGlassBase.ApplicationName);
             // initially we assume all but this will be updated in Main
             CurrentLogLevel = LogLevel.DALL;
         }

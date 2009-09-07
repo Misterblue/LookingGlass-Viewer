@@ -33,11 +33,5 @@ namespace LookingGlass.View {
         World.World TheWorld { get; }
         // the renderer the viewer is connected to
         IRenderProvider Renderer { get; }
-
-        // Some renderers (Mogre, I'm looking at you) require the main thread to
-        // do their rendering and window management. This kludge lets main call into the
-        // viewer to give the main thread to the renderer. If the renderer doesn't
-        // need it, the function returns 'false'.
-        bool RendererThreadEntry();
     }
 }

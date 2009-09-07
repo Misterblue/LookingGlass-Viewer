@@ -112,9 +112,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     }
 
     #region IModule
-    public override void OnLoad(string name, IAppParameters parms) {
-        m_moduleName = name;
-        ModuleParams = parms;
+    public override void OnLoad(string name, LookingGlassBase lgbase) {
+        base.OnLoad(name, lgbase);
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Name", "LookingGlass",
                     "Name of the Ogre resources to load");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.SkyboxName", "LookingGlass/CloudyNoonSkyBox",
@@ -140,7 +139,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "File that lists the Ogre resources to load");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.DefaultNumMipmaps", "3",
                     "Default number of mip maps created for a texture (usually 6)");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.CacheDir", Globals.GetDefaultApplicationStorageDir(null),
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.CacheDir", Utilities.GetDefaultApplicationStorageDir(null),
                     "Directory to store cached meshs, textures, etc");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.PreLoadedDir", 
                     System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "../LookingGlassResources/Preloaded/"),
@@ -272,16 +271,16 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         betweenFramesCallbackHandle = new Ogr.BetweenFramesCallback(ProcessBetweenFrames);
         Ogr.SetBetweenFramesCallback(betweenFramesCallbackHandle);
 
-        m_sceneMagnification = float.Parse(Globals.Configuration.ParamString("Renderer.Ogre.LL.SceneMagnification"));
+        m_sceneMagnification = float.Parse(ModuleParams.ParamString("Renderer.Ogre.LL.SceneMagnification"));
 
-        m_betweenFrameTotalCost = Globals.Configuration.ParamInt("Renderer.Ogre.BetweenFrame.Costs.Total");
-        m_betweenFrameCreateMaterialCost = Globals.Configuration.ParamInt("Renderer.Ogre.BetweenFrame.Costs.CreateMaterial");
-        m_betweenFrameCreateSceneNodeCost = Globals.Configuration.ParamInt("Renderer.Ogre.BetweenFrame.Costs.CreateSceneNode");
-        m_betweenFrameCreateMeshCost = Globals.Configuration.ParamInt("Renderer.Ogre.BetweenFrame.Costs.CreateMesh");
-        m_betweenFrameRefreshMeshCost = Globals.Configuration.ParamInt("Renderer.Ogre.BetweenFrame.Costs.RefreshMesh");
-        m_betweenFrameMapRegionCost = Globals.Configuration.ParamInt("Renderer.Ogre.BetweenFrame.Costs.MapRegion");
-        m_betweenFrameUpdateTerrainCost = Globals.Configuration.ParamInt("Renderer.Ogre.BetweenFrame.Costs.UpdateTerrain");
-        m_betweenFrameMapTextureCost = Globals.Configuration.ParamInt("Renderer.Ogre.BetweenFrame.Costs.MapTexture");
+        m_betweenFrameTotalCost = ModuleParams.ParamInt("Renderer.Ogre.BetweenFrame.Costs.Total");
+        m_betweenFrameCreateMaterialCost = ModuleParams.ParamInt("Renderer.Ogre.BetweenFrame.Costs.CreateMaterial");
+        m_betweenFrameCreateSceneNodeCost = ModuleParams.ParamInt("Renderer.Ogre.BetweenFrame.Costs.CreateSceneNode");
+        m_betweenFrameCreateMeshCost = ModuleParams.ParamInt("Renderer.Ogre.BetweenFrame.Costs.CreateMesh");
+        m_betweenFrameRefreshMeshCost = ModuleParams.ParamInt("Renderer.Ogre.BetweenFrame.Costs.RefreshMesh");
+        m_betweenFrameMapRegionCost = ModuleParams.ParamInt("Renderer.Ogre.BetweenFrame.Costs.MapRegion");
+        m_betweenFrameUpdateTerrainCost = ModuleParams.ParamInt("Renderer.Ogre.BetweenFrame.Costs.UpdateTerrain");
+        m_betweenFrameMapTextureCost = ModuleParams.ParamInt("Renderer.Ogre.BetweenFrame.Costs.MapTexture");
 
         Ogr.InitializeOgre();
         m_sceneMgr = new OgreSceneMgr(Ogr.GetSceneMgr());
@@ -294,7 +293,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     }
     
     private bool CheckKeepRunning() {
-        return Globals.KeepRunning;
+        return LGB.KeepRunning;
     }
 
     private string GetAParameter(string parm) {
@@ -314,7 +313,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
 
     // ==========================================================================
     override public void Start() {
-        // start the rendering loop
+        m_log.Log(LogLevel.DRENDERDETAIL, "Start: requesting main thread");
+        LGB.GetMainThread(RendererThread);
         return;
     }
 
@@ -334,8 +334,9 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         get { return m_userInterface; }
     }
 
-    // pass the main thread to the renderer. If he doesn't want it, he returns 'false'
+    // Given the main thread. Run and then say we're all done.
     public bool RendererThread() {
+        m_log.Log(LogLevel.DRENDERDETAIL, "RendererThread: have main thread");
         /*
         // Try creating a thread just for the renderer
         // create a thread for the renderer
@@ -354,10 +355,10 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         int maxFramePerSec = ModuleParams.ParamInt(m_moduleName + ".Ogre.FramePerSecMax");
         int msPerFrame = 1000 / maxFramePerSec;
         int frameStart, frameEnd, frameDuration, frameLeft;
-        while (Globals.KeepRunning) {
+        while (LGB.KeepRunning) {
             frameStart = System.Environment.TickCount;
             if (!Ogr.RenderOneFrame()) {
-                Globals.KeepRunning = false;
+                LGB.KeepRunning = false;
             }
             frameEnd = System.Environment.TickCount;
             frameDuration = frameEnd - frameStart;
@@ -366,7 +367,11 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                 Thread.Sleep(frameLeft);
             }
         }
-        return true;
+        return false;
+    }
+
+    public bool RenderOneFrame() {
+        return Ogr.RenderOneFrame();
     }
 
     // pass the thread into the renderer
@@ -509,12 +514,12 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     /// </summary>
     /// <param name="cam"></param>
     public void UpdateCamera(CameraControl cam) {
-        // OMV.Quaternion orient = new OMV.Quaternion(OMV.Vector3.UnitX, -Globals.PI / 2)
-                    // * new OMV.Quaternion(OMV.Vector3.UnitZ, -Globals.PI / 2)
+        // OMV.Quaternion orient = new OMV.Quaternion(OMV.Vector3.UnitX, -Constants.PI / 2)
+                    // * new OMV.Quaternion(OMV.Vector3.UnitZ, -Constants.PI / 2)
                     // * cam.Direction;
         // we need to rotate the camera 90 to make it work out in Ogre. Not sure why.
-        // OMV.Quaternion orient = cam.Heading * OMV.Quaternion.CreateFromAxisAngle(OMV.Vector3.UnitZ, -Globals.PI / 2);
-        OMV.Quaternion orient = OMV.Quaternion.CreateFromAxisAngle(OMV.Vector3.UnitZ, -Globals.PI / 2) * cam.Heading;
+        // OMV.Quaternion orient = cam.Heading * OMV.Quaternion.CreateFromAxisAngle(OMV.Vector3.UnitZ, -Constants.PI / 2);
+        OMV.Quaternion orient = OMV.Quaternion.CreateFromAxisAngle(OMV.Vector3.UnitZ, -Constants.PI / 2) * cam.Heading;
         // OMV.Quaternion orient = cam.Heading;
         orient.Normalize();
         OMV.Vector3d pos = cam.GlobalPosition * m_sceneMagnification;
@@ -904,7 +909,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             m_betweenFramesQueue.ProcessQueue(m_betweenFrameTotalCost);
         }
 
-        return Globals.KeepRunning;
+        return LGB.KeepRunning;
     }
 }
 }

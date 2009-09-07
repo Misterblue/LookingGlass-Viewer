@@ -35,10 +35,7 @@ class Program {
     [STAThread]
     static void Main(string[] args) {
 
-        Globals.Configuration = new AppParameters();
-        // The MaxValue causes everything to be written. When done debugging (ha!), reduce to near zero.
-        Globals.Configuration.AddDefaultParameter("Log.FilterLevel", ((int)LogLevel.DNONDETAIL).ToString(),
-                    "Default, initial logging level");
+        LookingGlassBase LGB = new LookingGlassBase();
 
         try {
             m_Parameters = ParseArguments(args, false);
@@ -54,35 +51,35 @@ class Program {
                     break;
                 case "-first":
                 case "--first":
-                    Globals.Configuration.AddOverrideParameter("User.Firstname", kvp.Value);
+                    LGB.AppParams.AddOverrideParameter("User.Firstname", kvp.Value);
                     break;
                 case "-last":
                 case "--last":
-                    Globals.Configuration.AddOverrideParameter("User.Lastname", kvp.Value);
+                    LGB.AppParams.AddOverrideParameter("User.Lastname", kvp.Value);
                     break;
                 case "-password":
                 case "--password":
-                    Globals.Configuration.AddOverrideParameter("User.Password", kvp.Value);
+                    LGB.AppParams.AddOverrideParameter("User.Password", kvp.Value);
                     break;
                 case "--grid":
-                    Globals.Configuration.AddOverrideParameter("User.Grid", kvp.Value);
+                    LGB.AppParams.AddOverrideParameter("User.Grid", kvp.Value);
                     break;
                 case "--loginuri":
-                    Globals.Configuration.AddOverrideParameter("User.LoginURI", kvp.Value);
+                    LGB.AppParams.AddOverrideParameter("User.LoginURI", kvp.Value);
                     break;
                 case "--iniFile":
-                    Globals.Configuration.AddOverrideParameter("Settings.INIFile", kvp.Value);
+                    LGB.AppParams.AddOverrideParameter("Settings.INIFile", kvp.Value);
                     break;
                 case "--modulesFile":
-                    Globals.Configuration.AddOverrideParameter("Settings.Modules", kvp.Value);
+                    LGB.AppParams.AddOverrideParameter("Settings.Modules", kvp.Value);
                     break;
                 case "--cache":
-                    Globals.Configuration.AddOverrideParameter("Texture.CacheDir", kvp.Value);
+                    LGB.AppParams.AddOverrideParameter("Texture.CacheDir", kvp.Value);
                     break;
                 case "--param":
                     int splitPlace = kvp.Value.IndexOf(':');
                     if (splitPlace > 0) {
-                        Globals.Configuration.AddOverrideParameter(
+                        LGB.AppParams.AddOverrideParameter(
                                 kvp.Value.Substring(0, splitPlace - 1).Trim(),
                                 kvp.Value.Substring(splitPlace).Trim());
                     }
@@ -106,18 +103,18 @@ class Program {
             }
         }
         try {
-            Globals.ReadConfigurationFile();
+            LGB.ReadConfigurationFile();
         }
         catch (Exception e) {
             throw new Exception("Could not read configuration file: " + e.ToString());
         }
 
         // log level after all the parameters have been set
-        LogManager.CurrentLogLevel = (LogLevel)Globals.Configuration.ParamInt("Log.FilterLevel");
+        LogManager.CurrentLogLevel = (LogLevel)LGB.AppParams.ParamInt("Log.FilterLevel");
 
-        LookingGlassMain programInstance = new LookingGlassMain();
+        LGB.Initialize();
 
-        programInstance.Start();
+        LGB.Start();
 
         m_log.Log(LogLevel.DINIT, "EXIT");
     }

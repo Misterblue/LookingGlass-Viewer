@@ -42,16 +42,6 @@ namespace LookingGlass.Rest {
 public class RestHandler {
     private ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
 
-    private RestManager m_restMgr = null;
-    public RestManager RestMgr {
-        get {
-            if (m_restMgr == null) {
-                m_restMgr = (RestManager)ModuleManager.Module("RestManager");
-            }
-            return m_restMgr;
-        }
-    }
-
     public const string APINAME = "api";
 
     public const string RESTREQUESTERRORCODE = "RESTRequestError";
@@ -75,8 +65,8 @@ public class RestHandler {
         m_baseUrl = urlBase;
         m_processGet = pget;
         m_processPost = ppost;
-        RestMgr.Server.AddHandler("GET", null, "^/" + APINAME + urlBase, APIGetHandler);
-        RestMgr.Server.AddHandler("POST", null, "^/" + APINAME + urlBase, APIPostHandler);
+        RestManager.Instance.Server.AddHandler("GET", null, "^/" + APINAME + urlBase, APIGetHandler);
+        RestManager.Instance.Server.AddHandler("POST", null, "^/" + APINAME + urlBase, APIPostHandler);
     }
 
     /// <summary>
@@ -91,8 +81,8 @@ public class RestHandler {
         m_processPost = null;
         m_parameterSet = parms;
         m_parameterSetWritable = writable;
-        RestMgr.Server.AddHandler("GET", null, "^/" + APINAME + urlBase, ParamGetHandler);
-        RestMgr.Server.AddHandler("POST", null, "^/" + APINAME + urlBase, ParamPostHandler);
+        RestManager.Instance.Server.AddHandler("GET", null, "^/" + APINAME + urlBase, ParamGetHandler);
+        RestManager.Instance.Server.AddHandler("POST", null, "^/" + APINAME + urlBase, ParamPostHandler);
     }
 
     /// <summary>
@@ -106,7 +96,7 @@ public class RestHandler {
         m_processGet = null;
         m_processPost = null;
         m_displayable = displayable;
-        RestMgr.Server.AddHandler("GET", null, "^/" + APINAME + urlBase, DisplayableGetHandler);
+        RestManager.Instance.Server.AddHandler("GET", null, "^/" + APINAME + urlBase, DisplayableGetHandler);
     }
 
     private void APIGetHandler(IHttpClientContext context, IHttpRequest reqContext, IHttpResponse respContext) {
@@ -116,7 +106,7 @@ public class RestHandler {
             int afterPos = absURL.IndexOf(m_baseUrl.ToLower());
             string afterString = absURL.Substring(afterPos + m_baseUrl.Length);
             OMVSD.OSD resp = m_processGet(reqContext.Uri, afterString);
-            RestMgr.ConstructSimpleResponse(respContext, "text/json",
+            RestManager.Instance.ConstructSimpleResponse(respContext, "text/json",
                 delegate(ref StringBuilder buff) {
                     buff.Append(OMVSD.OSDParser.SerializeJsonString(resp));
                 }
@@ -125,7 +115,7 @@ public class RestHandler {
         catch (Exception e) {
             m_log.Log(LogLevel.DRESTDETAIL, "Failed getHandler: u=" 
                     + reqContext.Uri.ToString() + ":" +e.ToString());
-            RestMgr.ConstructErrorResponse(respContext, HttpStatusCode.InternalServerError,
+            RestManager.Instance.ConstructErrorResponse(respContext, HttpStatusCode.InternalServerError,
                 delegate(ref StringBuilder buff) {
                     buff.Append("<div>");
                     buff.Append("FAILED GETTING '" + reqContext.Uri.ToString() + "'");
@@ -153,7 +143,7 @@ public class RestHandler {
             OMVSD.OSD body = MapizeTheBody(reqContext, strBody);
             OMVSD.OSD resp = m_processPost(reqContext.Uri, afterString, body);
             if (resp != null) {
-                RestMgr.ConstructSimpleResponse(respContext, "text/json",
+                RestManager.Instance.ConstructSimpleResponse(respContext, "text/json",
                     delegate(ref StringBuilder buff) {
                         buff.Append(OMVSD.OSDParser.SerializeJsonString(resp));
                     }
@@ -163,7 +153,7 @@ public class RestHandler {
                 // the requester didn't like it at all
                 m_log.Log(LogLevel.DRESTDETAIL, "Call to postHandler return null. url="
                     + reqContext.Uri.ToString());
-                RestMgr.ConstructErrorResponse(respContext, HttpStatusCode.InternalServerError,
+                RestManager.Instance.ConstructErrorResponse(respContext, HttpStatusCode.InternalServerError,
                     delegate(ref StringBuilder buff) {
                         buff.Append("<div>");
                         buff.Append("FAILED PROCESSING '" + reqContext.Uri.ToString() + "'");
@@ -175,7 +165,7 @@ public class RestHandler {
         catch (Exception e) {
             m_log.Log(LogLevel.DRESTDETAIL, "Failed getHandler: u=" 
                     + reqContext.Uri.ToString() + ":" +e.ToString());
-            RestMgr.ConstructErrorResponse(respContext, HttpStatusCode.InternalServerError,
+            RestManager.Instance.ConstructErrorResponse(respContext, HttpStatusCode.InternalServerError,
                 delegate(ref StringBuilder buff) {
                     buff.Append("<div>");
                     buff.Append("FAILED GETTING '" + reqContext.Uri.ToString() + "'");
@@ -237,7 +227,7 @@ public class RestHandler {
                 OMVSD.OSD oneValue;
                 if (paramValues.TryGetValue(afterString, out oneValue)) {
                     // asking for one value from the set
-                    RestMgr.ConstructSimpleResponse(respContext, "text/json",
+                    RestManager.Instance.ConstructSimpleResponse(respContext, "text/json",
                         delegate(ref StringBuilder buff) {
                             buff.Append(OMVSD.OSDParser.SerializeJsonString(oneValue));
                         }
@@ -245,7 +235,7 @@ public class RestHandler {
                 }
                 else {
                     // asked for a specific value but we don't have one of those. return empty
-                    RestMgr.ConstructSimpleResponse(respContext, "text/json",
+                    RestManager.Instance.ConstructSimpleResponse(respContext, "text/json",
                         delegate(ref StringBuilder buff) {
                             buff.Append("{}");
                         }
@@ -254,7 +244,7 @@ public class RestHandler {
             }
             else {
                 // didn't specify a name. Return the whole parameter set
-                RestMgr.ConstructSimpleResponse(respContext, "text/json",
+                RestManager.Instance.ConstructSimpleResponse(respContext, "text/json",
                     delegate(ref StringBuilder buff) {
                         buff.Append(OMVSD.OSDParser.SerializeJsonString(paramValues));
                     }
@@ -264,7 +254,7 @@ public class RestHandler {
         catch (Exception e) {
             m_log.Log(LogLevel.DRESTDETAIL, "Failed getHandler: u=" 
                     + reqContext.Uri.ToString() + ":" +e.ToString());
-            RestMgr.ConstructErrorResponse(respContext, HttpStatusCode.InternalServerError,
+            RestManager.Instance.ConstructErrorResponse(respContext, HttpStatusCode.InternalServerError,
                 delegate(ref StringBuilder buff) {
                     buff.Append("<div>");
                     buff.Append("FAILED GETTING '" + reqContext.Uri.ToString() + "'");
@@ -296,7 +286,7 @@ public class RestHandler {
                         m_parameterSet.Update(akey, body[akey]);
                     }
                 }
-                RestMgr.ConstructSimpleResponse(respContext, "text/json",
+                RestManager.Instance.ConstructSimpleResponse(respContext, "text/json",
                     delegate(ref StringBuilder buff) {
                         buff.Append(OMVSD.OSDParser.SerializeJsonString(m_parameterSet.GetDisplayable()));
                     }
@@ -305,7 +295,7 @@ public class RestHandler {
             catch (Exception e) {
                 m_log.Log(LogLevel.DRESTDETAIL, "Failed postHandler: u="
                         + reqContext.Uri.ToString() + ":" + e.ToString());
-                RestMgr.ConstructErrorResponse(respContext, HttpStatusCode.InternalServerError,
+                RestManager.Instance.ConstructErrorResponse(respContext, HttpStatusCode.InternalServerError,
                     delegate(ref StringBuilder buff) {
                         buff.Append("<div>");
                         buff.Append("FAILED POSTING '" + reqContext.Uri.ToString() + "'");

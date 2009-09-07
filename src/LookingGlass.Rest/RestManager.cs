@@ -86,13 +86,23 @@ public class RestManager : ModuleBase, HttpServer.ILogWriter {
         } 
     }
 
+    private static RestManager m_instance = null;
+    public static RestManager Instance {
+        get {
+            if (m_instance == null) {
+                throw new LookingGlassException("CALLING FOR RESTMANAGER INSTANCE BEFORE SET!!!");
+            }
+            return m_instance;
+        }
+    }
+
     public RestManager() {
+        m_instance = this;
     }
 
     #region IModule methods
-    public override void OnLoad(string modName, IAppParameters parms) {
-        ModuleName = modName;
-        ModuleParams = parms;
+    public override void OnLoad(string modName, LookingGlassBase lgbase) {
+        base.OnLoad(modName, lgbase);
         ModuleParams.AddDefaultParameter("Rest.Manager.Port", "9144",
                     "Local port used for rest interfaces");
         ModuleParams.AddDefaultParameter("Rest.Manager.BaseURL", "http://127.0.0.1",
@@ -191,7 +201,7 @@ public class RestManager : ModuleBase, HttpServer.ILogWriter {
         StringBuilder buff = new StringBuilder();
         try {
             context.ContentType = MIMEDEFAULT;
-            context.AddHeader("Server", Globals.ApplicationName);
+            context.AddHeader("Server", LookingGlassBase.ApplicationName);
             // context.Connection = ConnectionType.Close;
             
             buff.Append("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\r\n");
@@ -258,7 +268,7 @@ public class RestManager : ModuleBase, HttpServer.ILogWriter {
         StringBuilder buff = new StringBuilder();
         try {
             context.ContentType = contentType == null ? MIMEDEFAULT : contentType;
-            context.AddHeader("Server", Globals.ApplicationName);
+            context.AddHeader("Server", LookingGlassBase.ApplicationName);
             // context.Connection = ConnectionType.Close;
 
             if (addContent != null) addContent(ref buff);
@@ -293,7 +303,7 @@ public class RestManager : ModuleBase, HttpServer.ILogWriter {
         StringBuilder buff = new StringBuilder();
         try {
             context.ContentType = MIMEDEFAULT;
-            context.AddHeader("Server", Globals.ApplicationName);
+            context.AddHeader("Server", LookingGlassBase.ApplicationName);
             // context.Connection = ConnectionType.Close;
 
             buff.Append("<body>\r\n");

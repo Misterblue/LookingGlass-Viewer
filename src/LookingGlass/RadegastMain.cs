@@ -36,31 +36,26 @@ class RadegastMain : IRadegastPlugin {
     public static RadegastInstance RadInstance = null;
     private ILog m_log = null;
 
-    LookingGlassMain m_lookingGlassInstance = null;
-
+    LookingGlass.LookingGlassBase m_lgb = null;
 
     public RadegastMain() {
-        m_log = LogManager.GetLogger("RadegastMain");
-        m_log.Log(LogLevel.DRADEGAST, "Entered constructor");
     }
 
     #region IRadegastPlugin methods
 
     public void StartPlugin(RadegastInstance inst) {
+        m_lgb = new LookingGlassBase();
+
+        m_log = LogManager.GetLogger("RadegastMain");
+
         m_log.Log(LogLevel.DRADEGAST, "StartPlugin()");
         RadInstance = inst;
 
-        Globals.Configuration = new AppParameters();
-        // The MaxValue causes everything to be written. When done debugging (ha!), reduce to near zero.
-        Globals.Configuration.AddDefaultParameter("Log.FilterLevel", ((int)LogLevel.DNONDETAIL).ToString(),
-                    "Default, initial logging level");
-
-
         // force a new default parameter files
-        Globals.Configuration.AddDefaultParameter("Settings.File", 
+        m_lgb.AppParams.AddDefaultParameter("Settings.File", 
             Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "RadegastLookingGlass.json"),
             "New default for running under Radecast");
-        Globals.Configuration.AddDefaultParameter("Settings.Modules", 
+        m_lgb.AppParams.AddDefaultParameter("Settings.Modules", 
             Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "RadegastModules.json"),
             "Modules configuration file");
 
@@ -71,12 +66,12 @@ class RadegastMain : IRadegastPlugin {
             string wHandle = windowPanel.Handle.ToString();
             m_log.Log(LogLevel.DRADEGASTDETAIL, "Connecting to external window {0}, w={1}, h={2}",
                 wHandle, windowPanel.Width, windowPanel.Height);
-            Globals.Configuration.AddDefaultParameter("Renderer.Ogre.ExternalWindow.Handle",
+            m_lgb.AppParams.AddDefaultParameter("Renderer.Ogre.ExternalWindow.Handle",
                 windowPanel.Handle.ToString(),
                 "The window handle to use for our rendering");
-            Globals.Configuration.AddDefaultParameter("Renderer.Ogre.ExternalWindow.Width",
+            m_lgb.AppParams.AddDefaultParameter("Renderer.Ogre.ExternalWindow.Width",
                 windowPanel.Width.ToString(), "width of external window");
-            Globals.Configuration.AddDefaultParameter("Renderer.Ogre.ExternalWindow.Height",
+            m_lgb.AppParams.AddDefaultParameter("Renderer.Ogre.ExternalWindow.Height",
                 windowPanel.Height.ToString(), "Height of external window");
         }
         else {
@@ -84,26 +79,28 @@ class RadegastMain : IRadegastPlugin {
         }
 
         try {
-            Globals.ReadConfigurationFile();
+            m_lgb.ReadConfigurationFile();
         }
         catch (Exception e) {
             throw new Exception("Could not read configuration file: " + e.ToString());
         }
 
         // log level after all the parameters have been set
-        LogManager.CurrentLogLevel = (LogLevel)Globals.Configuration.ParamInt("Log.FilterLevel");
+        LogManager.CurrentLogLevel = (LogLevel)m_lgb.AppParams.ParamInt("Log.FilterLevel");
 
         viewDialog.Show();
 
-        m_lookingGlassInstance = new LookingGlassMain();
+        m_lgb = new LookingGlassBase();
 
-        // this causes LookingGlass to load all it's modules and get running.
-        m_lookingGlassInstance.Start();
+        // cause LookingGlass to load all it's modules
+        m_lgb.Initialize();
+
+        // The dialog window will do all the image updating
     }
 
     public void StopPlugin(RadegastInstance inst) {
         m_log.Log(LogLevel.DRADEGAST, "StopPlugin()");
-        m_lookingGlassInstance.Stop();
+        m_lgb.Stop();
     }
 
     #endregion IRadegastPlugin methods

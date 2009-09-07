@@ -89,9 +89,8 @@ public sealed class World : ModuleBase, IWorld, IProvider {
         m_moduleName = System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name;
     }
 
-    public override void OnLoad(string name, IAppParameters parms) {
-        m_moduleName = name;
-        ModuleParams = parms;
+    public override void OnLoad(string name, LookingGlassBase lgbase) {
+        base.OnLoad(name, lgbase);
         m_instance = this;      // there is only one world
         m_entityDictionary = new OMV.DoubleDictionary<string, ulong, IEntity>();
         m_avatarDictionary = new Dictionary<string, IEntityAvatar>();
