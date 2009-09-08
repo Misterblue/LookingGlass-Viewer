@@ -75,6 +75,17 @@ public class LookingGlassBase {
     }
 
     /// <summary>
+    /// A kludge that allows passing of an out-of-context manager. If you are going to use
+    /// this for anything other that Radegast you better know what you're doing.
+    /// </summary>
+    private Object m_otherManager = null;
+    public Object OtherManager {
+        get { return m_otherManager; }
+        set { m_otherManager = value; }
+    }
+    
+
+    /// <summary>
     /// All of the parameters for the applicaiton are saved in this stucture
     /// </summary>
     private AppParameters m_configuration = null;

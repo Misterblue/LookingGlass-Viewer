@@ -40,14 +40,14 @@ namespace LookingGlass.Comm.LLLP {
 /// Communication handler for Linden Lab Legacy Protocol
 /// </summary>
 public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
-    private ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
+    protected ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
 
-    OMV.GridClient m_client;
+    protected OMV.GridClient m_client;
     // list of the region information build for the simulator
-    List<LLRegionContext> m_regionList;
+    protected List<LLRegionContext> m_regionList;
 
-    LLAssetContext m_defaultAssetContext = null;
-    private LLAssetContext DefaultAssetContext {
+    protected LLAssetContext m_defaultAssetContext = null;
+    protected LLAssetContext DefaultAssetContext {
         get {
             if (m_defaultAssetContext == null) {
                 // Create the asset contect for this communication instance
@@ -69,9 +69,9 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     /// and certain status indications.
     /// </summary>
     public bool SwitchingSims { get { return m_SwitchingSims; } }
-    private bool m_SwitchingSims;       // true when we're setting up the connection to a different sim
+    protected bool m_SwitchingSims;       // true when we're setting up the connection to a different sim
 
-    private ParameterSet m_connectionParams = null;
+    protected ParameterSet m_connectionParams = null;
     public ParameterSet ConnectionParams {
         get { return m_connectionParams; }
     }
@@ -82,13 +82,13 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     // The logging in and out flags are true when we're doing that. Use to make sure
     // we don't try logging in or out again.
     // The module flag 'm_connected' is set true when logged in and connected.
-    private Thread m_LoginThread = null;
-    private bool m_loaded = false;  // if comm is loaded and should be trying to connect
-    private bool m_shouldBeLoggedIn;    // true if we should be logged in
-    private bool m_isLoggingIn;         // true if we are in the process of loggin in
-    private bool m_isLoggingOut;        // true if we are in the process of logging out
-    private string m_loginFirst, m_loginLast, m_loginPassword, m_loginGrid, m_loginSim;
-    private string m_loginMsg = "";
+    protected Thread m_LoginThread = null;
+    protected bool m_loaded = false;  // if comm is loaded and should be trying to connect
+    protected bool m_shouldBeLoggedIn;    // true if we should be logged in
+    protected bool m_isLoggingIn;         // true if we are in the process of loggin in
+    protected bool m_isLoggingOut;        // true if we are in the process of logging out
+    protected string m_loginFirst, m_loginLast, m_loginPassword, m_loginGrid, m_loginSim;
+    protected string m_loginMsg = "";
     public const string FIELDFIRST = "first";
     public const string FIELDLAST = "last";
     public const string FIELDPASS = "password";
@@ -104,12 +104,16 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     public const string FIELDPOSITIONZ = "positionz";
 
 
-    private GridLists m_gridLists = null;
+    protected GridLists m_gridLists = null;
 
-    private IAgent m_myAgent = null;
-
+    protected IAgent m_myAgent = null;
 
     public CommLLLP() {
+        InitVariables();
+        InitLoginParameters();
+    }
+
+    protected void InitVariables() {
         m_moduleName = System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name;
         m_isConnected = false;
         m_isLoggedIn = false;
@@ -119,7 +123,9 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         m_regionList = new List<LLRegionContext>();
 
         m_gridLists = new GridLists();
+    }
 
+    protected void InitLoginParameters() {
         m_connectionParams.Add(FIELDFIRST, "");
         m_connectionParams.Add(FIELDLAST, "");
         m_connectionParams.Add(FIELDPASS, "");
@@ -165,7 +171,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     /// </summary>
     /// <param name="key"></param>
     /// <returns></returns>
-    private OMVSD.OSD RuntimeValueFetch(string key) {
+    protected OMVSD.OSD RuntimeValueFetch(string key) {
         OMVSD.OSD ret = null;
         try {
             if ((m_client != null) && (m_isConnected && m_isLoggedIn)) {
@@ -198,6 +204,10 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     #region IModule methods
 
     public override void OnLoad(string name, LookingGlassBase lgbase) {
+        OnLoad2(name, lgbase, true);
+    }
+
+    protected void OnLoad2(string name, LookingGlassBase lgbase, bool shouldInit) {
         base.OnLoad(name, lgbase);
         ModuleParams.AddDefaultParameter(ModuleName + ".Assets.CacheDir", 
                     Utilities.GetDefaultApplicationStorageDir(null),
@@ -214,10 +224,10 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
                     "false",
                     "Whether to enable multiple sims");
 
-        InitConnectionFramework();
+        if (shouldInit) InitConnectionFramework();
     }
 
-    private void InitConnectionFramework() {
+    protected void InitConnectionFramework() {
         // Initialize the SL client
         try {
             m_client = new OMV.GridClient();
@@ -257,13 +267,19 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     }
 
     public override void Start() {
+        Start2(true);
+    }
+
+    protected void Start2(bool shouldKeepLoggedin) {
         base.Start();
         m_loaded = true;
-        if (m_LoginThread == null) {
-            m_LoginThread = new Thread(KeepLoggedIn);
-            m_LoginThread.Name = "Communication Login";
-            m_log.Log(LogLevel.DCOMMDETAIL, "Starting keep logged in thread");
-            m_LoginThread.Start();
+        if (shouldKeepLoggedin) {
+            if (m_LoginThread == null) {
+                m_LoginThread = new Thread(KeepLoggedIn);
+                m_LoginThread.Name = "Communication Login";
+                m_log.Log(LogLevel.DCOMMDETAIL, "Starting keep logged in thread");
+                m_LoginThread.Start();
+            }
         }
     }
 
@@ -282,7 +298,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     }
 
 
-    public bool Connect(ParameterSet parms) {
+    public virtual bool Connect(ParameterSet parms) {
         // Are we already logged in?
         if (m_isLoggedIn || m_isLoggingIn) {
             return false;
@@ -310,7 +326,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         return true;
     }
 
-    public bool Disconnect() {
+    public virtual bool Disconnect() {
         m_shouldBeLoggedIn = false;
         m_log.Log(LogLevel.DCOMMDETAIL, "Should not be logged in");
         return true;
@@ -320,7 +336,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     /// Using its own thread, this sits around checking to see if we're logged in
     /// and, if not, starting the login dialog so we can get logged in.
     /// </summary>
-    private void KeepLoggedIn() {
+    protected void KeepLoggedIn() {
         while (m_loaded) {
             if (m_shouldBeLoggedIn && !IsLoggedIn) {
                 // we should be logged in and we are not
@@ -410,7 +426,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     }
 
 
-    private void Network_OnLogin(OMV.LoginStatus login, string message) {
+    protected virtual void Network_OnLogin(OMV.LoginStatus login, string message) {
         if (login == OMV.LoginStatus.Success) {
             m_log.Log(LogLevel.DCOMM, "Successful login: {0}", message);
             m_isConnected = true;
@@ -427,7 +443,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         }
     }
 
-    private void Network_OnDisconnected(OMV.NetworkManager.DisconnectType reason, string message) {
+    protected virtual void Network_OnDisconnected(OMV.NetworkManager.DisconnectType reason, string message) {
         m_log.Log(LogLevel.DCOMMDETAIL, "Disconnected");
         m_isConnected = false;
         //x BeginInvoke(
@@ -437,7 +453,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         //x });
     }
 
-    private void Network_OnEventQueueRunning(OMV.Simulator simulator) {
+    protected virtual void Network_OnEventQueueRunning(OMV.Simulator simulator) {
         m_log.Log(LogLevel.DCOMMDETAIL, "Event queue running on {0}", simulator.Name);
         if (simulator == m_client.Network.CurrentSim) {
             m_SwitchingSims = false;
@@ -476,7 +492,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
 
     #endregion ICommProvider
     // ===============================================================
-    private void Network_OnSimConnected(OMV.Simulator sim) {
+    protected virtual void Network_OnSimConnected(OMV.Simulator sim) {
         m_log.Log(LogLevel.DWORLDDETAIL, "Simulator connected {0}", sim.Name);
         LLRegionContext regionContext = FindRegion(sim);
         World.World.Instance.AddRegion(regionContext);
@@ -487,7 +503,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     }
 
     // ===============================================================
-    private void Network_OnCurrentSimChanged(OMV.Simulator prevSim) {
+    protected virtual void Network_OnCurrentSimChanged(OMV.Simulator prevSim) {
         // disable teleports until we have a good connection to the simulator (event queue working)
         if (!m_client.Network.CurrentSim.Caps.IsEventQueueRunning) {
             m_SwitchingSims = true;
@@ -500,7 +516,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     }
 
     // ===============================================================
-    private void Parcels_OnSimParcelsDownloaded(OMV.Simulator simulator, OMV.InternalDictionary<int, OMV.Parcel> simParcels, int[,] parcelMap) {
+    protected virtual void Parcels_OnSimParcelsDownloaded(OMV.Simulator simulator, OMV.InternalDictionary<int, OMV.Parcel> simParcels, int[,] parcelMap) {
         m_log.Log(LogLevel.DWORLDDETAIL, "Sim parcels downloaded");
         //x TotalPrims = 0;
         //x simParcels.ForEach(
@@ -510,7 +526,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     }
 
     // ===============================================================
-    private void Terrain_OnLandPatch(OMV.Simulator sim, int x, int y, int width, float[] data) {
+    protected virtual void Terrain_OnLandPatch(OMV.Simulator sim, int x, int y, int width, float[] data) {
         // m_log.Log(LogLevel.DWORLDDETAIL, "Land patch for {0}: {1}, {2}, {3}", 
         //             sim.Name, x.ToString(), y.ToString(), width.ToString());
         LLRegionContext regionContext = FindRegion(sim);
@@ -521,7 +537,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     }
 
     // ===============================================================
-    private void Objects_OnNewPrim(OMV.Simulator sim, OMV.Primitive prim, ulong regionHandle, ushort timeDilation) {
+    protected virtual void Objects_OnNewPrim(OMV.Simulator sim, OMV.Primitive prim, ulong regionHandle, ushort timeDilation) {
         LLRegionContext rcontext = FindRegion(sim);
         try {
             IEntity ent;
@@ -544,7 +560,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     }
 
     // ===============================================================
-    private void Objects_OnObjectUpdated(OMV.Simulator sim, OMV.ObjectUpdate update, ulong regionHandle, ushort timeDilation) {
+    protected virtual void Objects_OnObjectUpdated(OMV.Simulator sim, OMV.ObjectUpdate update, ulong regionHandle, ushort timeDilation) {
         m_log.Log(LogLevel.DCOMMDETAIL, "Object update: id={0}, p={1}, r={2}", 
             update.LocalID, update.Position.ToString(), update.Rotation.ToString());
         LLRegionContext rcontext = FindRegion(sim);
@@ -585,7 +601,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     }
 
     // ===============================================================
-    private void Objects_OnObjectKilled(OMV.Simulator sim, uint objectID) {
+    protected virtual void Objects_OnObjectKilled(OMV.Simulator sim, uint objectID) {
         m_log.Log(LogLevel.DWORLDDETAIL, "Object killed:");
         LLRegionContext rcontext = FindRegion(sim);
         try {
@@ -610,7 +626,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     /// <param name="av"></param>
     /// <param name="regionHandle"></param>
     /// <param name="timeDilation"></param>
-    private void Objects_OnNewAvatar(OMV.Simulator sim, OMV.Avatar av, ulong regionHandle, ushort timeDilation) {
+    protected virtual void Objects_OnNewAvatar(OMV.Simulator sim, OMV.Avatar av, ulong regionHandle, ushort timeDilation) {
         m_log.Log(LogLevel.DCOMMDETAIL, "Objects_OnNewAvatar:");
         m_log.Log(LogLevel.DCOMMDETAIL, "cntl={0}, parent={1}, p={2}, r={3}", 
                 av.ControlFlags.ToString("x"), av.ParentID, av.Position.ToString(), av.Rotation.ToString());
@@ -646,7 +662,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     /// <summary>
     /// Called when we just log in. We create our agent and put it into the world
     /// </summary>
-    private void Comm_OnLoggedIn() {
+    protected virtual void Comm_OnLoggedIn() {
         m_log.Log(LogLevel.DWORLDDETAIL, "Comm_OnLoggedIn:");
         if (m_myAgent != null) {
             m_log.Log(LogLevel.DWORLDDETAIL, "Comm_OnLoggedIn: Removing agent that is already here");
@@ -663,18 +679,18 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     }
 
     // ===============================================================
-    private void Comm_OnLoggedOut() {
+    protected virtual void Comm_OnLoggedOut() {
         m_log.Log(LogLevel.DWORLDDETAIL, "Comm_OnLoggedOut:");
     }
 
     // ===============================================================
-    private void Comm_OnAgentUpdated(IAgent agnt, UpdateCodes what) {
+    protected virtual void Comm_OnAgentUpdated(IAgent agnt, UpdateCodes what) {
         m_log.Log(LogLevel.DWORLDDETAIL, "Comm_OnAgentUpdated:");
     }
 
     // ===============================================================
     // given a simulator. Find the region info that we store the stuff in
-    private LLRegionContext FindRegion(OMV.Simulator sim) {
+    protected virtual LLRegionContext FindRegion(OMV.Simulator sim) {
         LLRegionContext ret = null;
         lock (m_regionList) {
             foreach (LLRegionContext reg in m_regionList) {

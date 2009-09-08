@@ -36,7 +36,8 @@ class RadegastMain : IRadegastPlugin {
     public static RadegastInstance RadInstance = null;
     private ILog m_log = null;
 
-    LookingGlass.LookingGlassBase m_lgb = null;
+    private LookingGlass.LookingGlassBase m_lgb = null;
+    private RadegastWindow m_viewDialog = null;
 
     public RadegastMain() {
     }
@@ -45,13 +46,14 @@ class RadegastMain : IRadegastPlugin {
 
     public void StartPlugin(RadegastInstance inst) {
         m_lgb = new LookingGlassBase();
+        m_lgb.OtherManager = inst;
 
         m_log = LogManager.GetLogger("RadegastMain");
 
         m_log.Log(LogLevel.DRADEGAST, "StartPlugin()");
         RadInstance = inst;
 
-        // force a new default parameter files
+        // force a new default parameter files to Radegast specific ones 
         m_lgb.AppParams.AddDefaultParameter("Settings.File", 
             Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "RadegastLookingGlass.json"),
             "New default for running under Radecast");
@@ -59,8 +61,10 @@ class RadegastMain : IRadegastPlugin {
             Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "RadegastModules.json"),
             "Modules configuration file");
 
-        RadegastWindow viewDialog = new RadegastWindow();
-        Control[] subControls = viewDialog.Controls.Find("LGWindow", true);
+        // Point the Ogre renderer to our panel window
+        // Ya, ya. I know it's RendererOgre specific. Fix that someday.
+        RadegastWindow m_viewDialog = new RadegastWindow(inst, m_lgb);
+        Control[] subControls = m_viewDialog.Controls.Find("LGWindow", true);
         if (subControls.Length == 1) {
             Control windowPanel = subControls[0];
             string wHandle = windowPanel.Handle.ToString();
@@ -88,18 +92,21 @@ class RadegastMain : IRadegastPlugin {
         // log level after all the parameters have been set
         LogManager.CurrentLogLevel = (LogLevel)m_lgb.AppParams.ParamInt("Log.FilterLevel");
 
-        viewDialog.Show();
-
-        m_lgb = new LookingGlassBase();
-
         // cause LookingGlass to load all it's modules
         m_lgb.Initialize();
+
+        // initialize the viewer dialog
+        m_viewDialog.Initialize();
+
+        // put the dialog up
+        m_viewDialog.Show();
 
         // The dialog window will do all the image updating
     }
 
     public void StopPlugin(RadegastInstance inst) {
         m_log.Log(LogLevel.DRADEGAST, "StopPlugin()");
+        m_viewDialog.Shutdown();
         m_lgb.Stop();
     }
 

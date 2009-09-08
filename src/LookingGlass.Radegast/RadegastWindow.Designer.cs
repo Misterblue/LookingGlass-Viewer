@@ -18,19 +18,31 @@
 
         #region Windows Form Designer generated code
 
+        private class DBPanel : System.Windows.Forms.Panel {
+            public DBPanel()
+                : base() {
+                DoubleBuffered = true;
+                SetStyle(System.Windows.Forms.ControlStyles.AllPaintingInWmPaint, true);
+                SetStyle(System.Windows.Forms.ControlStyles.UserPaint, true);
+                // SetStyle(System.Windows.Forms.ControlStyles.Opaque, true);
+            }
+        }
+
         /// <summary>
         /// Required method for Designer support - do not modify
         /// the contents of this method with the code editor.
         /// </summary>
         private void InitializeComponent() {
-            this.LGWindow = new System.Windows.Forms.Panel();
+            // this.LGWindow = new System.Windows.Forms.Panel();
+            this.LGWindow = new DBPanel();
             this.SuspendLayout();
             // 
             // LGWindow
             // 
-            this.LGWindow.Location = new System.Drawing.Point(5, 6);
+            this.LGWindow.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            this.LGWindow.Location = new System.Drawing.Point(1, 1);
             this.LGWindow.Name = "LGWindow";
-            this.LGWindow.Size = new System.Drawing.Size(798, 577);
+            this.LGWindow.Size = new System.Drawing.Size(802, 582);
             this.LGWindow.TabIndex = 0;
             // 
             // RadegastWindow

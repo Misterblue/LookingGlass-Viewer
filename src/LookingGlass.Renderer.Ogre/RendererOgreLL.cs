@@ -137,7 +137,7 @@ public class RendererOgreLL : IWorldRenderConv {
             if (!rcontext.TryGetEntityLocalID(prim.ParentID, out ri.parentEntity)) {
                 // we can't find the parent. Can't build render info.
                 // if we've been waiting for that parent, ask for same
-                if ((callCount != 0) && ((callCount % 5) == 0)) {
+                if ((callCount != 0) && ((callCount % 3) == 0)) {
                     rcontext.RequestLocalID(prim.ParentID);
                 }
                 return null;
