@@ -23,7 +23,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using LookingGlass.Comm;
 using OMV = OpenMetaverse;
 
 namespace LookingGlass.World {

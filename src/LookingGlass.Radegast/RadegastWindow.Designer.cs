@@ -18,14 +18,23 @@
 
         #region Windows Form Designer generated code
 
+        /// <summary>
+        /// Override class that wraps Panel and makes sure it doesn't get
+        /// painted so the OnPaint operation only is the callback taht we
+        /// registered in the regular RadegastWindow class.
+        /// </summary>
         private class DBPanel : System.Windows.Forms.Panel {
             public DBPanel()
                 : base() {
-                DoubleBuffered = true;
+                // DoubleBuffered = true;
                 SetStyle(System.Windows.Forms.ControlStyles.AllPaintingInWmPaint, true);
                 SetStyle(System.Windows.Forms.ControlStyles.UserPaint, true);
                 // SetStyle(System.Windows.Forms.ControlStyles.Opaque, true);
             }
+            protected override void OnPaintBackground(System.Windows.Forms.PaintEventArgs e) {
+                // base.OnPaintBackground(e);
+            }
+            
         }
 
         /// <summary>

@@ -53,6 +53,16 @@ class RadegastMain : IRadegastPlugin {
         m_log.Log(LogLevel.DRADEGAST, "StartPlugin()");
         RadInstance = inst;
 
+        // ToolStripMenuItem menuItem = new ToolStripMenuItem("LookingGlass", null, new EventHandler(startLGView));
+        // RadInstance.MainForm.ToolsMenu.DropDownItems.Add(menuItem);
+
+        // For the moment start the viewer before Radegast starts
+        // It will take a bunch of logic changes to make it so a viewer can be brought
+        // up after one has logged into a region.
+        startLGView(null, null);
+    }
+
+    public void startLGView(Object parm, EventArgs args) {
         // force a new default parameter files to Radegast specific ones 
         m_lgb.AppParams.AddDefaultParameter("Settings.File", 
             Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "RadegastLookingGlass.json"),
@@ -63,7 +73,7 @@ class RadegastMain : IRadegastPlugin {
 
         // Point the Ogre renderer to our panel window
         // Ya, ya. I know it's RendererOgre specific. Fix that someday.
-        RadegastWindow m_viewDialog = new RadegastWindow(inst, m_lgb);
+        RadegastWindow m_viewDialog = new RadegastWindow(RadInstance, m_lgb);
         Control[] subControls = m_viewDialog.Controls.Find("LGWindow", true);
         if (subControls.Length == 1) {
             Control windowPanel = subControls[0];

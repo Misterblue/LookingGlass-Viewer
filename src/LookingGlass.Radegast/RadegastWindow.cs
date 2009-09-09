@@ -65,12 +65,12 @@ public partial class RadegastWindow : Form {
         if (m_resizeEventHandler != null) m_renderPanel.Resize -= m_resizeEventHandler;
     }
 
-    private void radControl_Paint(object sender, PaintEventArgs e) {
+    public void radControl_Paint(object sender, PaintEventArgs e) {
         m_renderer.RenderOneFrame();
         return;
     }
 
-    private void radControl_Resize(object sender, EventArgs e) {
+    public void radControl_Resize(object sender, EventArgs e) {
         return;
     }
 }
