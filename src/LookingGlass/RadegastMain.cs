@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
+using LookingGlass.Comm.LLLP;
 using LookingGlass.Framework.Logging;
 using LookingGlass.Framework.Parameters;
 using LookingGlass.Radegast;
@@ -53,13 +54,13 @@ class RadegastMain : IRadegastPlugin {
         m_log.Log(LogLevel.DRADEGAST, "StartPlugin()");
         RadInstance = inst;
 
-        // ToolStripMenuItem menuItem = new ToolStripMenuItem("LookingGlass", null, new EventHandler(startLGView));
-        // RadInstance.MainForm.ToolsMenu.DropDownItems.Add(menuItem);
+        ToolStripMenuItem menuItem = new ToolStripMenuItem("LookingGlass", null, new EventHandler(startLGView));
+        RadInstance.MainForm.ToolsMenu.DropDownItems.Add(menuItem);
 
         // For the moment start the viewer before Radegast starts
         // It will take a bunch of logic changes to make it so a viewer can be brought
         // up after one has logged into a region.
-        startLGView(null, null);
+        // startLGView(null, null);
     }
 
     public void startLGView(Object parm, EventArgs args) {
@@ -104,7 +105,12 @@ class RadegastMain : IRadegastPlugin {
 
         // cause LookingGlass to load all it's modules
         m_lgb.Initialize();
+        m_log.Log(LogLevel.DRADEGASTDETAIL, "Completed LookingGlass initialization");
 
+        string radCommName = m_lgb.AppParams.ParamString("Radegast.Comm.Name");
+        CommLLLP worldComm = (CommLLLP)m_lgb.ModManager.Module(radCommName);
+        LoadWorldObjects.Load(RadInstance.Client, worldComm);
+            
         // initialize the viewer dialog
         m_viewDialog.Initialize();
 
@@ -116,8 +122,9 @@ class RadegastMain : IRadegastPlugin {
 
     public void StopPlugin(RadegastInstance inst) {
         m_log.Log(LogLevel.DRADEGAST, "StopPlugin()");
-        m_viewDialog.Shutdown();
         m_lgb.Stop();
+        m_viewDialog.Refresh();
+        m_viewDialog.Shutdown();
     }
 
     #endregion IRadegastPlugin methods

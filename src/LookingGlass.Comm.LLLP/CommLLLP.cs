@@ -492,7 +492,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
 
     #endregion ICommProvider
     // ===============================================================
-    protected virtual void Network_OnSimConnected(OMV.Simulator sim) {
+    public virtual void Network_OnSimConnected(OMV.Simulator sim) {
         m_log.Log(LogLevel.DWORLDDETAIL, "Simulator connected {0}", sim.Name);
         LLRegionContext regionContext = FindRegion(sim);
         World.World.Instance.AddRegion(regionContext);
@@ -503,7 +503,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     }
 
     // ===============================================================
-    protected virtual void Network_OnCurrentSimChanged(OMV.Simulator prevSim) {
+    public virtual void Network_OnCurrentSimChanged(OMV.Simulator prevSim) {
         // disable teleports until we have a good connection to the simulator (event queue working)
         if (!m_client.Network.CurrentSim.Caps.IsEventQueueRunning) {
             m_SwitchingSims = true;
@@ -516,7 +516,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     }
 
     // ===============================================================
-    protected virtual void Parcels_OnSimParcelsDownloaded(OMV.Simulator simulator, OMV.InternalDictionary<int, OMV.Parcel> simParcels, int[,] parcelMap) {
+    public virtual void Parcels_OnSimParcelsDownloaded(OMV.Simulator simulator, OMV.InternalDictionary<int, OMV.Parcel> simParcels, int[,] parcelMap) {
         m_log.Log(LogLevel.DWORLDDETAIL, "Sim parcels downloaded");
         //x TotalPrims = 0;
         //x simParcels.ForEach(
@@ -526,7 +526,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     }
 
     // ===============================================================
-    protected virtual void Terrain_OnLandPatch(OMV.Simulator sim, int x, int y, int width, float[] data) {
+    public virtual void Terrain_OnLandPatch(OMV.Simulator sim, int x, int y, int width, float[] data) {
         // m_log.Log(LogLevel.DWORLDDETAIL, "Land patch for {0}: {1}, {2}, {3}", 
         //             sim.Name, x.ToString(), y.ToString(), width.ToString());
         LLRegionContext regionContext = FindRegion(sim);
@@ -537,7 +537,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     }
 
     // ===============================================================
-    protected virtual void Objects_OnNewPrim(OMV.Simulator sim, OMV.Primitive prim, ulong regionHandle, ushort timeDilation) {
+    public virtual void Objects_OnNewPrim(OMV.Simulator sim, OMV.Primitive prim, ulong regionHandle, ushort timeDilation) {
         LLRegionContext rcontext = FindRegion(sim);
         try {
             IEntity ent;
@@ -560,7 +560,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     }
 
     // ===============================================================
-    protected virtual void Objects_OnObjectUpdated(OMV.Simulator sim, OMV.ObjectUpdate update, ulong regionHandle, ushort timeDilation) {
+    public virtual void Objects_OnObjectUpdated(OMV.Simulator sim, OMV.ObjectUpdate update, ulong regionHandle, ushort timeDilation) {
         m_log.Log(LogLevel.DCOMMDETAIL, "Object update: id={0}, p={1}, r={2}", 
             update.LocalID, update.Position.ToString(), update.Rotation.ToString());
         LLRegionContext rcontext = FindRegion(sim);
@@ -601,7 +601,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     }
 
     // ===============================================================
-    protected virtual void Objects_OnObjectKilled(OMV.Simulator sim, uint objectID) {
+    public virtual void Objects_OnObjectKilled(OMV.Simulator sim, uint objectID) {
         m_log.Log(LogLevel.DWORLDDETAIL, "Object killed:");
         LLRegionContext rcontext = FindRegion(sim);
         try {
@@ -626,7 +626,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     /// <param name="av"></param>
     /// <param name="regionHandle"></param>
     /// <param name="timeDilation"></param>
-    protected virtual void Objects_OnNewAvatar(OMV.Simulator sim, OMV.Avatar av, ulong regionHandle, ushort timeDilation) {
+    public virtual void Objects_OnNewAvatar(OMV.Simulator sim, OMV.Avatar av, ulong regionHandle, ushort timeDilation) {
         m_log.Log(LogLevel.DCOMMDETAIL, "Objects_OnNewAvatar:");
         m_log.Log(LogLevel.DCOMMDETAIL, "cntl={0}, parent={1}, p={2}, r={3}", 
                 av.ControlFlags.ToString("x"), av.ParentID, av.Position.ToString(), av.Rotation.ToString());
@@ -662,7 +662,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     /// <summary>
     /// Called when we just log in. We create our agent and put it into the world
     /// </summary>
-    protected virtual void Comm_OnLoggedIn() {
+    public virtual void Comm_OnLoggedIn() {
         m_log.Log(LogLevel.DWORLDDETAIL, "Comm_OnLoggedIn:");
         if (m_myAgent != null) {
             m_log.Log(LogLevel.DWORLDDETAIL, "Comm_OnLoggedIn: Removing agent that is already here");
@@ -679,18 +679,18 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     }
 
     // ===============================================================
-    protected virtual void Comm_OnLoggedOut() {
+    public virtual void Comm_OnLoggedOut() {
         m_log.Log(LogLevel.DWORLDDETAIL, "Comm_OnLoggedOut:");
     }
 
     // ===============================================================
-    protected virtual void Comm_OnAgentUpdated(IAgent agnt, UpdateCodes what) {
+    public virtual void Comm_OnAgentUpdated(IAgent agnt, UpdateCodes what) {
         m_log.Log(LogLevel.DWORLDDETAIL, "Comm_OnAgentUpdated:");
     }
 
     // ===============================================================
     // given a simulator. Find the region info that we store the stuff in
-    protected virtual LLRegionContext FindRegion(OMV.Simulator sim) {
+    public virtual LLRegionContext FindRegion(OMV.Simulator sim) {
         LLRegionContext ret = null;
         lock (m_regionList) {
             foreach (LLRegionContext reg in m_regionList) {
@@ -715,6 +715,21 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         }
         return ret;
     }
+
+    public LLRegionContext FindRegion(Predicate<LLRegionContext> pred) {
+        LLRegionContext ret = null;
+        lock (m_regionList) {
+            foreach (LLRegionContext rcb in m_regionList) {
+                if (pred(rcb)) {
+                    ret = rcb;
+                    break;
+                }
+            }
+        }
+        return ret;
+    }
+
+
 
 }
 }
