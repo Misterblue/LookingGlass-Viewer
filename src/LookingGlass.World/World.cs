@@ -68,9 +68,6 @@ public sealed class World : ModuleBase, IWorld, IProvider {
     // when an object is killed
     public event WorldEntityRemovedCallback OnWorldEntityRemoved;
 
-    // when the terrain information is changed
-    public event WorldTerrainUpdateCallback OnWorldTerrainUpdated;
-
     // When an agent is added to the world
     public event WorldAgentNewCallback OnAgentNew;
 
@@ -192,21 +189,6 @@ public sealed class World : ModuleBase, IWorld, IProvider {
             }
         }
         return ret;
-    }
-
-    public void UpdateRegion(RegionContextBase rcontext, UpdateCodes detail) {
-        switch (detail) {
-            case UpdateCodes.Terrain:
-                // I don't do anything with terrain. See if any viewers care.
-                if (OnWorldTerrainUpdated != null) OnWorldTerrainUpdated(rcontext);
-                break;
-            case UpdateCodes.Position:
-                m_log.Log(LogLevel.DWORLDDETAIL, "UpdateRegion: Code 'location'");
-                break;
-            default:
-                break;
-        }
-        return;
     }
 
     public void RemoveRegion(RegionContextBase rcontext) {

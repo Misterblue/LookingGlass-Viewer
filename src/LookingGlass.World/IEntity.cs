@@ -44,6 +44,9 @@ public interface IEntity : IDisposable {
     // consistant in a pull fashion. No network activity allowed.
     void Update();
 
+    // Notify the object that some of it state changed
+    void Changed(UpdateCodes what);
+
     /// <summary>
     /// An entity is decorated with additional Objects by other subsystems
     /// that either build information about or references to an entity.

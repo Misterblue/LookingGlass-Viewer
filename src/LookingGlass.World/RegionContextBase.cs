@@ -50,9 +50,6 @@ public abstract class RegionContextBase : EntityBase, IRegionContext, IDisposabl
     // when an object is killed
     public event RegionEntityRemovedCallback OnEntityRemoved;
 
-    // when the terrain information is changed
-    public event RegionTerrainUpdateCallback OnTerrainUpdated;
-
     # pragma warning restore 0067
     #endregion
 
@@ -78,6 +75,11 @@ public abstract class RegionContextBase : EntityBase, IRegionContext, IDisposabl
     // information on terrain for this region
     protected TerrainInfoBase m_terrainInfo = null;
     public TerrainInfoBase TerrainInfo { get { return m_terrainInfo; } }
+
+    public override void Changed(UpdateCodes what) {
+        base.Changed(what);
+        if (OnRegionUpdated != null) OnRegionUpdated(this, what);
+    }
 
     #region ENTITY MANAGEMENT
     public void AddEntity(IEntity entity) {

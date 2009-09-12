@@ -194,6 +194,12 @@ public abstract class EntityBase : IEntity {
     }
     #endregion ADDITIONS
 
+    // Tell the entity that something about it changed
+    virtual public void Changed(UpdateCodes what) {
+        return;
+    }
+
+    // cause the entity to update state. No networking
     virtual public void Update() {
         return;
     }

@@ -533,7 +533,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         // update the region's view of the terrain
         regionContext.TerrainInfo.UpdatePatch(regionContext, x, y, data);
         // tell the world the earth is moving
-        World.World.Instance.UpdateRegion(regionContext, World.UpdateCodes.Terrain);
+        regionContext.Changed(World.UpdateCodes.Terrain);
     }
 
     // ===============================================================

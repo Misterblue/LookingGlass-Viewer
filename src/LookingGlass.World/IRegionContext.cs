@@ -40,7 +40,6 @@ public delegate void RegionRegionDisconnectedCallback(RegionContextBase rcontext
 public delegate void RegionEntityNewCallback(IEntity ent);
 public delegate void RegionEntityUpdateCallback(IEntity ent, UpdateCodes what);
 public delegate void RegionEntityRemovedCallback(IEntity ent);
-public delegate void RegionTerrainUpdateCallback(RegionContextBase rcontext);
 
 // used in TryGetCreateentity calls to create the entity if needed
 public delegate IEntity RegionCreateEntityCallback();
@@ -60,8 +59,6 @@ public interface IRegionContext {
     event RegionEntityUpdateCallback OnEntityUpdate;
     // when an object is killed
     event RegionEntityRemovedCallback OnEntityRemoved;
-    // when the terrain information is changed
-    event RegionTerrainUpdateCallback OnTerrainUpdated;
 
     #endregion Events
 

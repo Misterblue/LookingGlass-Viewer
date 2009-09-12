@@ -30,10 +30,11 @@ namespace LookingGlass.World {
 public delegate void WorldRegionNewCallback(RegionContextBase rcontext);
 public delegate void WorldRegionUpdatedCallback(RegionContextBase rcontext, UpdateCodes what);
 public delegate void WorldRegionRemovedCallback(RegionContextBase rcontext);
+
 public delegate void WorldEntityNewCallback(IEntity ent);
 public delegate void WorldEntityUpdateCallback(IEntity ent, UpdateCodes what);
 public delegate void WorldEntityRemovedCallback(IEntity ent);
-public delegate void WorldTerrainUpdateCallback(RegionContextBase rcontext);
+
 public delegate void WorldAgentNewCallback(IAgent agnt);
 public delegate void WorldAgentUpdateCallback(IAgent agnt, UpdateCodes what);
 public delegate void WorldAgentRemovedCallback(IAgent agnt);
