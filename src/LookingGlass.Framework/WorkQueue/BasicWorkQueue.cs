@@ -56,6 +56,38 @@ public class BasicWorkQueue : IWorkQueue {
         ThreadPool.QueueUserWorkItem(new WaitCallback(this.DoWork), (object)w);
     }
 
+    /// <summary>
+    /// Experimental, untested entry which doesn't force the caller to create an
+    /// instance of a DoLaterBase class but to use s delegate. The calling sequence
+    /// would be something like:
+    /// m_workQueue.DoLater((DoLaterCallback)delegate() { 
+    ///     return LocalMethod(localParam1, localParam2, ...); 
+    /// });
+    /// </summary>
+    /// <param name="dlcb"></param>
+    public void DoLater(DoLaterCallback dlcb, Object parms) {
+        this.DoLater(new DoLaterDelegateCaller(dlcb, parms));
+    }
+
+    public void DoLater(int priority, DoLaterCallback dlcb, Object parms) {
+        DoLaterBase newDoer = new DoLaterDelegateCaller(dlcb, parms);
+        newDoer.order = priority;
+        this.DoLater(newDoer);
+    }
+
+    private class DoLaterDelegateCaller : DoLaterBase {
+        DoLaterCallback m_dlcb;
+        Object m_parameters;
+        public DoLaterDelegateCaller(DoLaterCallback dlcb, Object parms) {
+            m_dlcb = dlcb;
+            m_parameters = parms;
+        }
+        public override bool DoIt() {
+            return m_dlcb(m_parameters);
+        }
+    }
+
+
     private void DoWork(object w) {
         DoLaterBase ww = (DoLaterBase)w;
         m_currentRequests--;

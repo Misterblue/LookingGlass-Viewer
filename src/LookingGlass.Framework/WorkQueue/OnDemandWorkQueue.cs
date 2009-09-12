@@ -76,26 +76,27 @@ public class OnDemandWorkQueue : IWorkQueue {
     /// });
     /// </summary>
     /// <param name="dlcb"></param>
-    public void DoLater(DoLaterCallback dlcb) {
-        this.DoLater(new DoLaterDelegateCaller(dlcb));
+    public void DoLater(DoLaterCallback dlcb, Object parms) {
+        this.DoLater(new DoLaterDelegateCaller(dlcb, parms));
     }
 
-    public void DoLater(int priority, DoLaterCallback dlcb) {
-        DoLaterBase newDoer = new DoLaterDelegateCaller(dlcb);
+    public void DoLater(int priority, DoLaterCallback dlcb, Object parms) {
+        DoLaterBase newDoer = new DoLaterDelegateCaller(dlcb, parms);
         newDoer.order = priority;
         this.DoLater(newDoer);
     }
 
     private class DoLaterDelegateCaller : DoLaterBase {
         DoLaterCallback m_dlcb;
-        public DoLaterDelegateCaller(DoLaterCallback dlcb) {
+        Object m_parameters;
+        public DoLaterDelegateCaller(DoLaterCallback dlcb, Object parms) {
             m_dlcb = dlcb;
+            m_parameters = parms;
         }
         public override bool DoIt() {
-            return m_dlcb();
+            return m_dlcb(m_parameters);
         }
     }
-
 
     // requeuing the work item. Since requeuing, add the delay
     public void DoLaterRequeue(ref DoLaterBase w) {

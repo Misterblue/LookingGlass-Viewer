@@ -26,6 +26,8 @@ using System.Text;
 using LookingGlass;
 
 namespace LookingGlass.Framework.WorkQueue {
+    public delegate bool DoLaterCall(Object ob);
+    
     public interface IWorkQueue : IDisplayable {
 
         // queue work to do later
