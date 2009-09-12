@@ -89,6 +89,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     protected BasicWorkQueue m_workQueue = new BasicWorkQueue("OgreRendererWork");
     protected OnDemandWorkQueue m_betweenFramesQueue = new OnDemandWorkQueue("OgreBetweenFrames");
     private static int m_betweenFrameTotalCost = 300;
+    private static int m_betweenFrameMinTotalCost = 50;
     private static int m_betweenFrameCreateMaterialCost = 5;
     private static int m_betweenFrameCreateSceneNodeCost = 20;
     private static int m_betweenFrameCreateMeshCost = 20;
@@ -360,11 +361,18 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             if (!Ogr.RenderOneFrame()) {
                 LGB.KeepRunning = false;
             }
-            frameEnd = System.Environment.TickCount;
-            frameDuration = frameEnd - frameStart;
-            frameLeft = msPerFrame - frameDuration;
-            if (frameLeft > 10) {
-                Thread.Sleep(frameLeft);
+            while (true) {
+                frameEnd = System.Environment.TickCount;
+                frameDuration = frameEnd - frameStart;
+                frameLeft = msPerFrame - frameDuration;
+                if (frameLeft < 10) break;
+                if (IsProcessBetweenFramesWork()) {
+                    ProcessBetweenFrames(m_betweenFrameMinTotalCost);
+                }
+                else {
+                    Thread.Sleep(frameLeft);
+                    break;
+                }
             }
         }
         return false;
@@ -904,12 +912,20 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     /// If there is work queued to happen between frames. Do some of the work now.
     /// </summary>
     private bool ProcessBetweenFrames() {
+        return ProcessBetweenFrames(m_betweenFrameTotalCost);
+    }
+
+    private bool ProcessBetweenFrames(int cost) {
         ProcessWaitingMaterials();
         if (m_betweenFramesQueue != null) {
-            m_betweenFramesQueue.ProcessQueue(m_betweenFrameTotalCost);
+            m_betweenFramesQueue.ProcessQueue(cost);
         }
-
         return LGB.KeepRunning;
+    }
+
+    private bool IsProcessBetweenFramesWork() {
+        return ( (m_betweenFramesQueue.CurrentQueued > 0) 
+            || (waitingMaterials.Count > 0) );
     }
 }
 }
