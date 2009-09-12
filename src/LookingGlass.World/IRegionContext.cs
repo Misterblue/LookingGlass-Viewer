@@ -33,9 +33,34 @@ namespace LookingGlass.World {
     /// into the displayed view.
     /// </summary>
  
+
+public delegate void RegionRegionConnectedCallback(RegionContextBase rcontext);
+public delegate void RegionRegionChangingCallback(RegionContextBase rcontext);
+public delegate void RegionEntityNewCallback(IEntity ent);
+public delegate void RegionEntityUpdateCallback(IEntity ent, UpdateCodes what);
+public delegate void RegionEntityRemovedCallback(IEntity ent);
+public delegate void RegionTerrainUpdateCallback(RegionContextBase rcontext);
+
+// used in TryGetCreateentity calls to create the entity if needed
 public delegate IEntity RegionCreateEntityCallback();
 
 public interface IRegionContext {
+
+    #region Events
+    // when the underlying simulator is changing.
+    event RegionRegionChangingCallback OnRegionChanging;
+    // when a new simulator is initialized
+    event RegionRegionConnectedCallback OnRegionConnected;
+    // when new items are added to the world
+    event RegionEntityNewCallback OnEntityNew;
+    // when a prim is updated
+    event RegionEntityUpdateCallback OnEntityUpdate;
+    // when an object is killed
+    event RegionEntityRemovedCallback OnEntityRemoved;
+    // when the terrain information is changed
+    event RegionTerrainUpdateCallback OnTerrainUpdated;
+
+    #endregion Events
 
     // get the name of the region
     EntityName Name { get; }
@@ -52,11 +77,22 @@ public interface IRegionContext {
     // information on terrain for this region
     TerrainInfoBase TerrainInfo { get; }
 
+    // ENTITY MANAGEMENT
+    void AddEntity(IEntity entity);
+    void UpdateEntity(IEntity entity, UpdateCodes detail);
+    void RemoveEntity(IEntity entity);
+
+    bool TryGetEntity(ulong lgid, out IEntity ent);
+    bool TryGetEntity(string entName, out IEntity ent);
+    bool TryGetEntity(EntityName entName, out IEntity ent);
+    IEntity FindEntity(Predicate<IEntity> pred);
+
     // In  transition requests for getting region entities based on implementation
     // specific info. In this case the LLLP localID. This is part of the conversion
     // of entites being in the world to the entities being in regions.
-    bool TryGetEntityLocalID(uint entName, out IEntity ent);
-    bool TryGetCreateEntityLocalID(uint localID, out IEntity ent, WorldCreateEntityCallback creater);
-    bool TryGetCreateAvatar(EntityName ename, out IEntityAvatar ent, WorldCreateAvatarCallback creater);
+    bool TryGetEntityLocalID(RegionContextBase rcontext, uint entName, out IEntity ent);
+    bool TryGetCreateEntityLocalID(RegionContextBase rcontext, uint localID, 
+                out IEntity ent, RegionCreateEntityCallback creater);
+
 }
 }

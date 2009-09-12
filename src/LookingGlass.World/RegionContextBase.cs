@@ -23,16 +23,44 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using LookingGlass.Framework.Logging;
 using OMV = OpenMetaverse;
 
 namespace LookingGlass.World {
 public abstract class RegionContextBase : EntityBase, IRegionContext, IDisposable {
+    protected ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
+
+    #region Events
+    # pragma warning disable 0067   // disable unused event warning
+    // when the underlying simulator is changing.
+    public event RegionRegionConnectedCallback OnRegionConnected;
+
+    // when the underlying simulator is changing.
+    public event RegionRegionChangingCallback OnRegionChanging;
+
+    // when new items are added to the world
+    public event RegionEntityNewCallback OnEntityNew;
+
+    // when an entity is updated
+    public event RegionEntityUpdateCallback OnEntityUpdate;
+
+    // when an object is killed
+    public event RegionEntityRemovedCallback OnEntityRemoved;
+
+    // when the terrain information is changed
+    public event RegionTerrainUpdateCallback OnTerrainUpdated;
+
+    # pragma warning restore 0067
+    #endregion
+
+    private OMV.DoubleDictionary<string, ulong, IEntity> m_entityDictionary;
 
     protected WorldGroupCode m_worldGroup;
     public WorldGroupCode WorldGroup { get { return m_worldGroup; } }
 
     public RegionContextBase(RegionContextBase rcontext, AssetContextBase acontext) 
                 : base(rcontext, acontext) {
+        m_entityDictionary = new OpenMetaverse.DoubleDictionary<string, ulong, IEntity>();
     }
 
     protected OMV.Vector3 m_size = new OMV.Vector3(256f, 256f, 8000f);
@@ -46,23 +74,112 @@ public abstract class RegionContextBase : EntityBase, IRegionContext, IDisposabl
     protected TerrainInfoBase m_terrainInfo = null;
     public TerrainInfoBase TerrainInfo { get { return m_terrainInfo; } }
 
-    public bool TryGetEntityLocalID(uint entName, out IEntity ent) {
-        // someday, entities will be managed by regions. For the moment they are in the world
-        return World.Instance.TryGetEntityLocalID(this, entName, out ent);
+    #region ENTITY MANAGEMENT
+    public void AddEntity(IEntity entity) {
+        m_log.Log(LogLevel.DWORLDDETAIL, "AddEntity: " + entity.Name);
+        if (TrackEntity(entity)) {
+            // tell the viewer about this prim and let the renderer convert it
+            //    into the format needed for display
+            if (OnEntityNew != null) OnEntityNew(entity);
+        }
     }
 
-    public bool TryGetCreateEntityLocalID(uint localID, out IEntity ent, WorldCreateEntityCallback creater) {
-        // someday, entities will be managed by regions. For the moment they are in the world
-        return World.Instance.TryGetCreateEntityLocalID(this, localID, out ent, creater);
+    public void UpdateEntity(IEntity entity, UpdateCodes detail) {
+        m_log.Log(LogLevel.DWORLDDETAIL, "UpdateEntity: " + entity.Name);
+        if (OnEntityUpdate != null) OnEntityUpdate(entity, detail);
     }
 
-    public bool TryGetCreateAvatar(EntityName ename, out IEntityAvatar ent, WorldCreateAvatarCallback creater) {
-        // someday, entities will be managed by regions. For the moment they are in the world
-        return World.Instance.TryGetCreateAvatar(this, ename, out ent, creater);
+    public void RemoveEntity(IEntity entity) {
+        m_log.Log(LogLevel.DWORLDDETAIL, "RemoveEntity: " + entity.Name);
+        if (OnEntityRemoved != null) OnEntityRemoved(entity);
     }
+
+    private void SelectEntity(IEntity ent) {
+    }
+
+    private bool TrackEntity(IEntity ent) {
+        try {
+            if (m_entityDictionary.ContainsKey(ent.Name.Name)) {
+                m_log.Log(LogLevel.DWORLD, "Asked to add same entity again: " + ent.Name);
+            }
+            else {
+                m_entityDictionary.Add(ent.Name.Name, ent.LGID, ent);
+                return true;
+            }
+        }
+        catch {
+            // sometimes they send me the same entry twice
+            m_log.Log(LogLevel.DWORLD, "Asked to add same entity again: " + ent.Name);
+        }
+        return false;
+    }
+
+    private void UnTrackEntity(IEntity ent) {
+        m_entityDictionary.Remove(ent.Name.Name, ent.LGID);
+    }
+
+    private void ClearTrackedEntities() {
+        m_entityDictionary.Clear();
+    }
+    public bool TryGetEntity(ulong lgid, out IEntity ent) {
+        return m_entityDictionary.TryGetValue(lgid, out ent);
+    }
+
+    public bool TryGetEntity(string entName, out IEntity ent) {
+        return m_entityDictionary.TryGetValue(entName, out ent);
+    }
+
+    public bool TryGetEntity(EntityName entName, out IEntity ent) {
+        return m_entityDictionary.TryGetValue(entName.Name, out ent);
+    }
+
+    public bool TryGetEntityLocalID(RegionContextBase rcontext, uint localID, out IEntity ent) {
+        // it's a kludge, but localID is the same as global ID
+        // TODO: add some checking for rcontext since the localIDs are scoped by 'simulator'
+        // we are relying on a low collision rate for localIDs
+        // A linear search of the list takes way too long for the number of objects arriving
+        return TryGetEntity((ulong)localID, out ent);
+    }
+
+    /// <summary>
+    /// </summary>
+    /// <param name="localID"></param>
+    /// <param name="ent"></param>
+    /// <param name="createIt"></param>
+    /// <returns></returns>
+    public bool TryGetCreateEntityLocalID(RegionContextBase rcontext, uint localID, out IEntity ent, 
+                    RegionCreateEntityCallback createIt) {
+        try {
+            lock (m_entityDictionary) {
+                if (!TryGetEntityLocalID(rcontext, localID, out ent)) {
+                    IEntity newEntity = createIt();
+                    AddEntity(newEntity);
+                    ent = newEntity;
+                }
+            }
+            return true;
+        }
+        catch (Exception e) {
+            m_log.Log(LogLevel.DBADERROR, "TryGetCreateEntityLocalID: Failed to create entity: {0}", e.ToString());
+        }
+        ent = null;
+        return false;
+    }
+
+    public IEntity FindEntity(Predicate<IEntity> pred) {
+        return m_entityDictionary.FindValue(pred);
+    }
+    #endregion ENTITY MANAGEMENT
 
     public override void Dispose() {
         m_terrainInfo = null; // let the garbage collector work
+
+        // TODO: do something about the entity list
+        m_entityDictionary.ForEach(delegate(IEntity ent) {
+            ent.Dispose();
+        });
+        m_entityDictionary.Clear(); // release any entities we might have
+
         return;
     }
 }

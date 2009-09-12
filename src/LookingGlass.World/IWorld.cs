@@ -114,6 +114,7 @@ public interface IWorld {
     RegionContextBase FindRegion(Predicate<RegionContextBase> pred);
 
     // ENTITY MANAGEMENT
+    /*
     void AddEntity(IEntity entity);
     void UpdateEntity(IEntity entity, UpdateCodes detail);
     void RemoveEntity(IEntity entity);
@@ -130,6 +131,7 @@ public interface IWorld {
                 out IEntity ent, WorldCreateEntityCallback creater);
     bool TryGetCreateAvatar(RegionContextBase rcontext, EntityName ename,
                 out IEntityAvatar ent, WorldCreateAvatarCallback creater);
+    */
 
     // AGENT MANAGEMENT
     void AddAgent(IAgent agnt);

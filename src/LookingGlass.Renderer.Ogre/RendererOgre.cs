@@ -404,9 +404,6 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             DoLaterBase laterWork = new DoRender(m_sceneMgr, ent, m_log);
             laterWork.order = CalculateInterestOrder(ent);
             m_betweenFramesQueue.DoLater(laterWork);
-            // m_betweenFramesQueue.DoLater(CalculateInterestOrder(ent), (DoLaterCallback)delegate() {
-            //     return DoRenderIt(m_sceneMgr, ent, m_log);
-            // });
         }
         return;
     }

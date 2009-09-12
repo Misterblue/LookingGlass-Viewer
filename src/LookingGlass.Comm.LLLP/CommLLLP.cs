@@ -241,7 +241,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
             m_client.Settings.PARCEL_TRACKING = false;
             m_client.Settings.USE_INTERPOLATION_TIMER = false;  // don't need the library helping
             m_client.Settings.SEND_AGENT_UPDATES = true;
-            m_client.Self.Movement.AutoResetControls = false;
+            m_client.Self.Movement.AutoResetControls = false;   // Do the key up and down to turn on and off
             m_client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = true;
             m_client.Settings.USE_ASSET_CACHE = false;
             m_client.Settings.PIPELINE_REQUEST_TIMEOUT = 120 * 1000;
