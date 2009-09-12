@@ -640,7 +640,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         updateFlags |= UpdateCodes.CollisionPlane;
 
         EntityName avatarEntityName = LLEntityAvatar.AvatarEntityNameFromID(rcontext.AssetContext, av.ID);
-        if (World.World.Instance.TryGetCreateAvatar(rcontext, avatarEntityName, out updatedEntity, delegate() {
+        if (rcontext.TryGetCreateAvatar(avatarEntityName, out updatedEntity, delegate() {
                         m_log.Log(LogLevel.DCOMMDETAIL, "OnNewAvatar: creating avatar {0} {1} ({2})",
                             av.FirstName, av.LastName, av.ID.ToString());
                         IEntityAvatar newEnt = new LLEntityAvatar(rcontext.AssetContext,
@@ -649,7 +649,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
                     }) ) {
             updatedEntity.RelativePosition = av.Position;
             updatedEntity.Heading = av.Rotation;
-            World.World.Instance.UpdateEntity(updatedEntity, updateFlags);
+            rcontext.UpdateEntity(updatedEntity, updateFlags);
         }
         if (av.LocalID == m_client.Self.LocalID) {
             m_log.Log(LogLevel.DCOMMDETAIL, "OnNewAvatar: avatar update also updating agent");

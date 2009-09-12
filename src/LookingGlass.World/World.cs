@@ -42,7 +42,6 @@ public sealed class World : ModuleBase, IWorld, IProvider {
     get { return m_instance; }
     }
 
-    private Dictionary<string, IEntityAvatar> m_avatarDictionary;
 
     private List<IAgent> m_agentList;
 
@@ -94,7 +93,6 @@ public sealed class World : ModuleBase, IWorld, IProvider {
     public override void OnLoad(string name, LookingGlassBase lgbase) {
         base.OnLoad(name, lgbase);
         m_instance = this;      // there is only one world
-        m_avatarDictionary = new Dictionary<string, IEntityAvatar>();
         m_regionList = new List<RegionContextBase>();
         m_agentList = new List<IAgent>();
         ModuleParams.AddDefaultParameter(m_moduleName + ".Communication", "Comm", "Communication to connect to");

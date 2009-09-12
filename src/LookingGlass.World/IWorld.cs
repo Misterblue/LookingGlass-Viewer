@@ -132,11 +132,11 @@ public interface IWorld {
     bool TryGetEntityLocalID(RegionContextBase rcontext, uint entName, out IEntity ent);
     bool TryGetCreateEntityLocalID(RegionContextBase rcontext, uint localID, 
                 out IEntity ent, WorldCreateEntityCallback creater);
+    bool TryGetCreateAvatar(RegionContextBase rcontext, EntityName ename,
+                out IEntityAvatar ent, WorldCreateAvatarCallback creater);
     */
 
     // AGENT MANAGEMENT
-    bool TryGetCreateAvatar(RegionContextBase rcontext, EntityName ename,
-                out IEntityAvatar ent, WorldCreateAvatarCallback creater);
     void AddAgent(IAgent agnt);
     void UpdateAgent(IAgent agnt, UpdateCodes changed);
     void RemoveAgent(IAgent agnt);

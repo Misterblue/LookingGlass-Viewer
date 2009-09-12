@@ -36,7 +36,7 @@ namespace LookingGlass.World {
     // URI so we don't need to reparse the name to rebuild it in
     // different forms.
 // The basic name is available with the toString() method and string conversion
-public class EntityName {
+public class EntityName : IComparable {
     public const string HeaderSeparator = ":";
     public const string PartSeparator = "/";
 
@@ -98,6 +98,16 @@ public class EntityName {
         return this.Name;
     }
 
+    // IComparable method
+    public int CompareTo(Object other) {
+        if (other is EntityName) {
+            return this.Name.CompareTo(((EntityName)other).Name);
+        }
+        if (other is String) {
+            return this.Name.CompareTo((string)other);
+        }
+        throw new ArgumentException("EntityName.CompareTo: passed non EntityName or String");
+    }
 
     // Raw routine for combining the parts of the name.
     // We still don't handle headers properly

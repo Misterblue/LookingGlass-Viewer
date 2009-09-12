@@ -96,5 +96,9 @@ public interface IRegionContext {
     bool TryGetEntityLocalID(uint entName, out IEntity ent);
     bool TryGetCreateEntityLocalID(uint localID, out IEntity ent, RegionCreateEntityCallback creater);
 
+    // AVATAR MANAGEMENT
+    bool TryGetCreateAvatar(EntityName ename, out IEntityAvatar ent, WorldCreateAvatarCallback creater);
+    bool RemoveAvatar(IEntityAvatar av);
+
 }
 }

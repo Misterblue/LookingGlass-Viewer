@@ -57,6 +57,7 @@ public abstract class RegionContextBase : EntityBase, IRegionContext, IDisposabl
     #endregion
 
     private OMV.DoubleDictionary<string, ulong, IEntity> m_entityDictionary;
+    private Dictionary<EntityName, IEntityAvatar> m_avatarDictionary;
 
     protected WorldGroupCode m_worldGroup;
     public WorldGroupCode WorldGroup { get { return m_worldGroup; } }
@@ -64,6 +65,7 @@ public abstract class RegionContextBase : EntityBase, IRegionContext, IDisposabl
     public RegionContextBase(RegionContextBase rcontext, AssetContextBase acontext) 
                 : base(rcontext, acontext) {
         m_entityDictionary = new OpenMetaverse.DoubleDictionary<string, ulong, IEntity>();
+        m_avatarDictionary = new Dictionary<EntityName, IEntityAvatar>();
     }
 
     protected OMV.Vector3 m_size = new OMV.Vector3(256f, 256f, 8000f);
@@ -172,6 +174,43 @@ public abstract class RegionContextBase : EntityBase, IRegionContext, IDisposabl
         return m_entityDictionary.FindValue(pred);
     }
     #endregion ENTITY MANAGEMENT
+
+    #region AVATAR MANAGEMENT
+    public bool TryGetCreateAvatar(EntityName ename, out IEntityAvatar ent, WorldCreateAvatarCallback createIt) {
+        IEntityAvatar av = null; ;
+        try {
+            lock (m_avatarDictionary) {
+                if (!m_avatarDictionary.TryGetValue(ename, out av)) {
+                    av = createIt();
+                    m_avatarDictionary.Add(av.Name, av);
+                }
+                ent = av;
+            }
+            return true;
+        }
+        catch (Exception e) {
+            m_log.Log(LogLevel.DBADERROR, "TryGetCreateAvatar: Failed to create avatar: {0}", e.ToString());
+        }
+        ent = null;
+        return false;
+    }
+
+    public bool RemoveAvatar(IEntityAvatar av) {
+        IEntityAvatar av2 = null;
+        try {
+            lock (m_avatarDictionary) {
+                if (m_avatarDictionary.TryGetValue(av.Name, out av2)) {
+                    m_avatarDictionary.Remove(av2.Name);
+                }
+            }
+        }
+        catch (Exception e) {
+            m_log.Log(LogLevel.DBADERROR, "RemoveAvatar: Failed removing avatar: {0}", e.ToString());
+        }
+        return (av2 != null);
+    }
+
+    #endregion AVATAR MANAGEMENT
 
     public override void Dispose() {
         m_terrainInfo = null; // let the garbage collector work
