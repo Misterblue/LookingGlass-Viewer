@@ -27,8 +27,9 @@ using OMV = OpenMetaverse;
 
 namespace LookingGlass.World {
 
-public delegate void WorldRegionConnectedCallback(RegionContextBase rcontext);
-public delegate void WorldRegionChangingCallback(RegionContextBase rcontext);
+public delegate void WorldRegionNewCallback(RegionContextBase rcontext);
+public delegate void WorldRegionUpdatedCallback(RegionContextBase rcontext, UpdateCodes what);
+public delegate void WorldRegionRemovedCallback(RegionContextBase rcontext);
 public delegate void WorldEntityNewCallback(IEntity ent);
 public delegate void WorldEntityUpdateCallback(IEntity ent, UpdateCodes what);
 public delegate void WorldEntityRemovedCallback(IEntity ent);
@@ -85,18 +86,18 @@ public enum UpdateCodes : uint {
 public interface IWorld {
 
     #region Events
+    // when a new region is being added to the world
+    event WorldRegionNewCallback OnWorldRegionNew;
     // when the underlying simulator is changing.
-    event WorldRegionChangingCallback OnWorldRegionChanging;
-    // when a new simulator is initialized
-    event WorldRegionConnectedCallback OnWorldRegionConnected;
+    event WorldRegionUpdatedCallback OnWorldRegionUpdated;
+    // when a new region is being removed from the world
+    event WorldRegionRemovedCallback OnWorldRegionRemoved;
     // when new items are added to the world
     event WorldEntityNewCallback OnWorldEntityNew;
     // when a prim is updated
     event WorldEntityUpdateCallback OnWorldEntityUpdate;
     // when an object is killed
     event WorldEntityRemovedCallback OnWorldEntityRemoved;
-    // when the terrain information is changed
-    event WorldTerrainUpdateCallback OnWorldTerrainUpdated;
     // when a new agent is added to the system
     event WorldAgentNewCallback OnAgentNew;
     // when an agent is updated
@@ -108,12 +109,14 @@ public interface IWorld {
 
     // REGION MANAGEMENT
     void AddRegion(RegionContextBase rcontext);
-    void UpdateRegion(RegionContextBase rcontext, UpdateCodes detail);
     void RemoveRegion(RegionContextBase rcontext);
-    RegionContextBase GetRegion(string name);
+    RegionContextBase GetRegion(EntityName name);
     RegionContextBase FindRegion(Predicate<RegionContextBase> pred);
 
     // ENTITY MANAGEMENT
+    // A global request for an entity. Used by renderer because it looses context
+    // when called back from the depths of rendering.
+    bool TryGetEntity(EntityName entName, out IEntity ent);
     /*
     void AddEntity(IEntity entity);
     void UpdateEntity(IEntity entity, UpdateCodes detail);
@@ -129,11 +132,11 @@ public interface IWorld {
     bool TryGetEntityLocalID(RegionContextBase rcontext, uint entName, out IEntity ent);
     bool TryGetCreateEntityLocalID(RegionContextBase rcontext, uint localID, 
                 out IEntity ent, WorldCreateEntityCallback creater);
-    bool TryGetCreateAvatar(RegionContextBase rcontext, EntityName ename,
-                out IEntityAvatar ent, WorldCreateAvatarCallback creater);
     */
 
     // AGENT MANAGEMENT
+    bool TryGetCreateAvatar(RegionContextBase rcontext, EntityName ename,
+                out IEntityAvatar ent, WorldCreateAvatarCallback creater);
     void AddAgent(IAgent agnt);
     void UpdateAgent(IAgent agnt, UpdateCodes changed);
     void RemoveAgent(IAgent agnt);

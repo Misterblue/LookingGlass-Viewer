@@ -42,7 +42,6 @@ public sealed class World : ModuleBase, IWorld, IProvider {
     get { return m_instance; }
     }
 
-    private OMV.DoubleDictionary<string, ulong, IEntity> m_entityDictionary;
     private Dictionary<string, IEntityAvatar> m_avatarDictionary;
 
     private List<IAgent> m_agentList;
@@ -53,10 +52,13 @@ public sealed class World : ModuleBase, IWorld, IProvider {
     #region Events
     # pragma warning disable 0067   // disable unused event warning
     // when the underlying simulator is changing.
-    public event WorldRegionConnectedCallback OnWorldRegionConnected;
+    public event WorldRegionNewCallback OnWorldRegionNew;
 
     // when the underlying simulator is changing.
-    public event WorldRegionChangingCallback OnWorldRegionChanging;
+    public event WorldRegionUpdatedCallback OnWorldRegionUpdated;
+    
+    // when the underlying simulator is changing.
+    public event WorldRegionRemovedCallback OnWorldRegionRemoved;
 
     // when new items are added to the world
     public event WorldEntityNewCallback OnWorldEntityNew;
@@ -92,84 +94,11 @@ public sealed class World : ModuleBase, IWorld, IProvider {
     public override void OnLoad(string name, LookingGlassBase lgbase) {
         base.OnLoad(name, lgbase);
         m_instance = this;      // there is only one world
-        m_entityDictionary = new OMV.DoubleDictionary<string, ulong, IEntity>();
         m_avatarDictionary = new Dictionary<string, IEntityAvatar>();
         m_regionList = new List<RegionContextBase>();
         m_agentList = new List<IAgent>();
         ModuleParams.AddDefaultParameter(m_moduleName + ".Communication", "Comm", "Communication to connect to");
     }
-
-    #region IWorldProvider methods
-
-    public bool TryGetEntity(ulong lgid, out IEntity ent) {
-        return m_entityDictionary.TryGetValue(lgid, out ent);
-    }
-
-    public bool TryGetEntity(string entName, out IEntity ent) {
-        return m_entityDictionary.TryGetValue(entName, out ent);
-    }
-
-    public bool TryGetEntity(EntityName entName, out IEntity ent) {
-        return m_entityDictionary.TryGetValue(entName.Name, out ent);
-    }
-
-    public bool TryGetEntityLocalID(RegionContextBase rcontext, uint localID, out IEntity ent) {
-        // it's a kludge, but localID is the same as global ID
-        // TODO: add some checking for rcontext since the localIDs are scoped by 'simulator'
-        // we are relying on a low collision rate for localIDs
-        // A linear search of the list takes way too long for the number of objects arriving
-        return TryGetEntity((ulong)localID, out ent);
-    }
-
-    /// <summary>
-    /// </summary>
-    /// <param name="localID"></param>
-    /// <param name="ent"></param>
-    /// <param name="createIt"></param>
-    /// <returns></returns>
-    public bool TryGetCreateEntityLocalID(RegionContextBase rcontext, uint localID, out IEntity ent, 
-                    WorldCreateEntityCallback createIt) {
-        try {
-            lock (m_entityDictionary) {
-                if (!TryGetEntityLocalID(rcontext, localID, out ent)) {
-                    IEntity newEntity = createIt();
-                    AddEntity(newEntity);
-                    ent = newEntity;
-                }
-            }
-            return true;
-        }
-        catch (Exception e) {
-            m_log.Log(LogLevel.DBADERROR, "TryGetCreateEntityLocalID: Failed to create entity: {0}", e.ToString());
-        }
-        ent = null;
-        return false;
-    }
-
-    public bool TryGetCreateAvatar(RegionContextBase rcontext, EntityName ename, out IEntityAvatar ent, 
-                    WorldCreateAvatarCallback createIt) {
-        IEntityAvatar av = null; ;
-        try {
-            lock (m_avatarDictionary) {
-                if (!m_avatarDictionary.TryGetValue(ename.Name, out av)) {
-                    av = createIt();
-                    m_avatarDictionary.Add(av.Name.Name, av);
-                }
-                ent = av;
-            }
-            return true;
-        }
-        catch (Exception e) {
-            m_log.Log(LogLevel.DBADERROR, "TryGetCreateAvatar: Failed to create avatar: {0}", e.ToString());
-        }
-        ent = null;
-        return false;
-    }
-
-    public IEntity FindEntity(Predicate<IEntity> pred) {
-        return m_entityDictionary.FindValue(pred);
-    }
-    #endregion IWorldProvider methods
 
     #region IModule methods
     override public bool AfterAllModulesLoaded() {
@@ -196,10 +125,52 @@ public sealed class World : ModuleBase, IWorld, IProvider {
     #region Region Management
     public void AddRegion(RegionContextBase rcontext) {
         m_log.Log(LogLevel.DWORLDDETAIL, "Simulator connected " + rcontext.Name);
-        if (OnWorldRegionConnected != null) OnWorldRegionConnected(rcontext);
+        RegionContextBase foundRegion = null;
+        lock (m_regionList) {
+            foundRegion = GetRegion(rcontext.Name);
+            if (foundRegion == null) {
+                // we don't know about this region. Add it and connect to events
+                m_regionList.Add(rcontext);
+                if (Region_OnNewEntityCallback == null) {
+                    Region_OnNewEntityCallback = new RegionEntityNewCallback(Region_OnNewEntity);
+                }
+                rcontext.OnEntityNew += Region_OnNewEntityCallback;
+                if (Region_OnRemovedEntityCallback == null) {
+                    Region_OnRemovedEntityCallback = new RegionEntityRemovedCallback(Region_OnNewEntity);
+                }
+                rcontext.OnEntityRemoved += Region_OnRemovedEntityCallback;
+                if (Region_OnRegionUpdatedCallback == null) {
+                    Region_OnRegionUpdatedCallback = new RegionRegionUpdatedCallback(Region_OnRegionUpdated);
+                }
+                rcontext.OnRegionUpdated += Region_OnRegionUpdatedCallback;
+            }
+        }
+        if (foundRegion == null) {
+            if (OnWorldRegionNew != null) OnWorldRegionNew(rcontext);
+        }
     }
 
-    public RegionContextBase GetRegion(string name) {
+    #region REGION EVENT PROCESSING
+    private RegionEntityNewCallback Region_OnNewEntityCallback = null;
+    private void Region_OnNewEntity(IEntity ent) {
+        if (OnWorldEntityNew != null) OnWorldEntityNew(ent);
+        return;
+    }
+
+    private RegionEntityRemovedCallback Region_OnRemovedEntityCallback = null;
+    private void Region_OnRemovedEntity(IEntity ent) {
+        if (OnWorldEntityRemoved != null) OnWorldEntityRemoved(ent);
+        return;
+    }
+
+    private RegionRegionUpdatedCallback Region_OnRegionUpdatedCallback = null;
+    private void Region_OnRegionUpdated(RegionContextBase rcontext, UpdateCodes what) {
+        if (OnWorldRegionUpdated != null) OnWorldRegionUpdated(rcontext, what);
+        return;
+    }
+    #endregion REGION EVENT PROCESSING
+
+    public RegionContextBase GetRegion(EntityName name) {
         RegionContextBase ret = null;
         lock (m_regionList) {
             foreach (RegionContextBase rcb in m_regionList) {
@@ -240,58 +211,43 @@ public sealed class World : ModuleBase, IWorld, IProvider {
         return;
     }
 
-    public void RemoveRegion(RegionContextBase rcontext) {}
+    public void RemoveRegion(RegionContextBase rcontext) {
+        RegionContextBase foundRegion = null;
+        lock (m_regionList) {
+            foundRegion = GetRegion(rcontext.Name);
+            if (foundRegion != null) {
+                // we know about this region so remove it and disconnect from events
+                m_regionList.Remove(foundRegion);
+                if (Region_OnNewEntityCallback != null) {
+                    rcontext.OnEntityNew -= Region_OnNewEntityCallback;
+                }
+                if (Region_OnRemovedEntityCallback != null) {
+                    rcontext.OnEntityRemoved -= Region_OnRemovedEntityCallback;
+                }
+                if (Region_OnRegionUpdatedCallback != null) {
+                    rcontext.OnRegionUpdated -= Region_OnRegionUpdatedCallback;
+                }
+                if (OnWorldRegionRemoved != null) OnWorldRegionRemoved(rcontext);
+            }
+            else {
+                m_log.Log(LogLevel.DBADERROR, "RemoveRegion: asked to remove region we don't have. Name={0}", rcontext.Name);
+            }
+        }
+    }
 
     #endregion Region Management
 
-    #region Entity Management
-    public void AddEntity(IEntity entity) {
-        m_log.Log(LogLevel.DWORLDDETAIL, "AddEntity: " + entity.Name);
-        if (TrackEntity(entity)) {
-            // tell the viewer about this prim and let the renderer convert it
-            //    into the format needed for display
-            if (OnWorldEntityNew != null) OnWorldEntityNew(entity);
-        }
-    }
-
-    public void UpdateEntity(IEntity entity, UpdateCodes detail) {
-        m_log.Log(LogLevel.DWORLDDETAIL, "UpdateEntity: " + entity.Name);
-        if (OnWorldEntityUpdate != null) OnWorldEntityUpdate(entity, detail);
-    }
-
-    public void RemoveEntity(IEntity entity) {
-        m_log.Log(LogLevel.DWORLDDETAIL, "RemoveEntity: " + entity.Name);
-        if (OnWorldEntityRemoved != null) OnWorldEntityRemoved(entity);
-    }
-
-    private void SelectEntity(IEntity ent) {
-    }
-
-    private bool TrackEntity(IEntity ent) {
-        try {
-            if (m_entityDictionary.ContainsKey(ent.Name.Name)) {
-                m_log.Log(LogLevel.DWORLD, "Asked to add same entity again: " + ent.Name);
-            }
-            else {
-                m_entityDictionary.Add(ent.Name.Name, ent.LGID, ent);
-                return true;
+    public bool TryGetEntity(EntityName entName, out IEntity ent) {
+        IEntity ret = null;
+        lock (m_regionList) {
+            foreach (RegionContextBase rcb in m_regionList) {
+                rcb.TryGetEntity(entName, out ret);
+                if (ret != null) break;
             }
         }
-        catch {
-            // sometimes they send me the same entry twice
-            m_log.Log(LogLevel.DWORLD, "Asked to add same entity again: " + ent.Name);
-        }
-        return false;
+        ent = ret;
+        return (ret != null);
     }
-
-    private void UnTrackEntity(IEntity ent) {
-        m_entityDictionary.Remove(ent.Name.Name, ent.LGID);
-    }
-
-    private void ClearTrackedEntities() {
-        m_entityDictionary.Clear();
-    }
-    #endregion Entity Management
 
     #region Agent Management
     public void AddAgent(IAgent agnt) {

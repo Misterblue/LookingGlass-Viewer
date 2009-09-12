@@ -118,15 +118,15 @@ public class Viewer : ModuleBase, IViewProvider {
         m_cameraLookAt = new OMV.Vector3d(0d, 0d, 0d);
 
         // connect me to the world so I can know when things change in the world
-        TheWorld.OnWorldRegionConnected += new WorldRegionConnectedCallback(OnRegionConnected);
-        TheWorld.OnWorldRegionChanging += new WorldRegionChangingCallback(OnRegionChanged);
-        TheWorld.OnWorldEntityNew += new WorldEntityNewCallback(OnEntityNew);
-        TheWorld.OnWorldEntityUpdate += new WorldEntityUpdateCallback(OnEntityUpdate);
-        TheWorld.OnWorldEntityRemoved += new WorldEntityRemovedCallback(OnEntityRemoved);
-        TheWorld.OnWorldTerrainUpdated += new WorldTerrainUpdateCallback(OnTerrainUpdated);
-        TheWorld.OnAgentNew += new WorldAgentNewCallback(OnAgentNew);
-        TheWorld.OnAgentUpdate += new WorldAgentUpdateCallback(OnAgentUpdate);
-        TheWorld.OnAgentRemoved += new WorldAgentRemovedCallback(OnAgentRemoved);
+        TheWorld.OnWorldRegionNew += new WorldRegionNewCallback(World_OnRegionNew);
+        TheWorld.OnWorldRegionUpdated += new WorldRegionUpdatedCallback(World_OnRegionUpdated);
+        TheWorld.OnWorldRegionRemoved += new WorldRegionRemovedCallback(World_OnRegionRemoved);
+        TheWorld.OnWorldEntityNew += new WorldEntityNewCallback(World_OnEntityNew);
+        TheWorld.OnWorldEntityUpdate += new WorldEntityUpdateCallback(World_OnEntityUpdate);
+        TheWorld.OnWorldEntityRemoved += new WorldEntityRemovedCallback(World_OnEntityRemoved);
+        TheWorld.OnAgentNew += new WorldAgentNewCallback(World_OnAgentNew);
+        TheWorld.OnAgentUpdate += new WorldAgentUpdateCallback(World_OnAgentUpdate);
+        TheWorld.OnAgentRemoved += new WorldAgentRemovedCallback(World_OnAgentRemoved);
 
         m_log.Log(LogLevel.DINIT, "exiting AfterAllModulesLoaded()");
         return true;
@@ -175,17 +175,17 @@ public class Viewer : ModuleBase, IViewProvider {
 
     #endregion IViewProvider methods
 
-    private void OnEntityNew(IEntity ent) {
+    private void World_OnEntityNew(IEntity ent) {
         // m_log.Log(LogLevel.DVIEWDETAIL, "OnEntityNew: Telling renderer about a new entity");
         Renderer.Render(ent);
     }
 
-    private void OnNewFoliage(IEntity ent) {
+    private void World_OnNewFoliage(IEntity ent) {
         m_log.Log(LogLevel.DVIEWDETAIL, "OnNewFoliage: Telling renderer about a new foliage entity");
         return;
     }
 
-    private void OnEntityUpdate(IEntity ent, World.UpdateCodes what) {
+    private void World_OnEntityUpdate(IEntity ent, World.UpdateCodes what) {
         if (ent is IEntityAvatar) {
             m_log.Log(LogLevel.DVIEWDETAIL, "OnEntityUpdate: Avatar.");
         }
@@ -195,40 +195,40 @@ public class Viewer : ModuleBase, IViewProvider {
         return;
     }
 
-    private void OnEntityRemoved(IEntity ent) {
+    private void World_OnEntityRemoved(IEntity ent) {
         m_log.Log(LogLevel.DVIEWDETAIL, "OnEntityRemoved: ");
-        return;
-    }
-
-    /// <summary>
-    /// Terrain has changed.
-    /// </summary>
-    /// <remarks>
-    /// This is first attempt at terrain. The description of the land comes in
-    /// as a heightmap defined by OMV. The renderer will have to deal with that.
-    /// How to generalize this so it works for any world representation?
-    /// What about a cylindrical spaceship world?
-    /// </remarks>
-    /// <param name="sim"></param>
-    private void OnTerrainUpdated(RegionContextBase reg) {
-        // m_log.Log(LogLevel.DVIEWDETAIL, "OnTerrainUpdated: ");
-        Renderer.UpdateTerrain(reg);
         return;
     }
 
     // When a region is connected, one job is to map it into the view.
     // Chat with the renderer to enhance the rcontext with mapping info
-    private void OnRegionConnected(RegionContextBase rcontext) {
-        m_log.Log(LogLevel.DVIEWDETAIL, "OnRegionConnected: ");
+    private void World_OnRegionNew(RegionContextBase rcontext) {
+        m_log.Log(LogLevel.DVIEWDETAIL, "OnRegionNew: ");
         Renderer.MapRegionIntoView(rcontext);
         return;
     }
 
-    private void OnRegionChanged(IRegionContext rcontext) {
-        m_log.Log(LogLevel.DVIEWDETAIL, "OnRegionChanged: ");
-        // clean up the old lists -- all new stuff is coming
+    private void World_OnRegionUpdated(RegionContextBase rcontext, UpdateCodes what) {
+        m_log.Log(LogLevel.DVIEWDETAIL, "OnRegionUpdated: ");
+        if ((what & UpdateCodes.Terrain) != 0) {
+            // This is first attempt at terrain. The description of the land comes in
+            // as a heightmap defined by OMV. The renderer will have to deal with that.
+            // How to generalize this so it works for any world representation?
+            // What about a cylindrical spaceship world?
+            Renderer.UpdateTerrain(rcontext);
+        }
+        // TODO: other things to test?
         return;
     }
+
+    // When a region is connected, one job is to map it into the view.
+    // Chat with the renderer to enhance the rcontext with mapping info
+    private void World_OnRegionRemoved(RegionContextBase rcontext) {
+        m_log.Log(LogLevel.DVIEWDETAIL, "OnRegionRemoved: ");
+        // TODO: when we have proper region management
+        return;
+    }
+
 
     // called when the camera changes position or orientation
     private void OnCameraUpdate(CameraControl cam) {
@@ -332,7 +332,7 @@ public class Viewer : ModuleBase, IViewProvider {
     // When an agent is added to the scene
     // At the moment we don't have good control for associating an agent with the viewer.
     // Assume the last agent is the one we are tracking.
-    private void OnAgentNew(IAgent agnt) {
+    private void World_OnAgentNew(IAgent agnt) {
         m_log.Log(LogLevel.DVIEWDETAIL, "OnAgentNew: ");
         m_trackedAgent = agnt;
         if (m_mainCamera != null) {
@@ -344,7 +344,7 @@ public class Viewer : ModuleBase, IViewProvider {
         return;
     }
 
-    private void OnAgentUpdate(IAgent agnt, UpdateCodes what) {
+    private void World_OnAgentUpdate(IAgent agnt, UpdateCodes what) {
         // m_log.Log(LogLevel.DVIEWDETAIL, "OnAgentUpdate: p={0}, h={1}", agnt.GlobalPosition.ToString(), agnt.Heading.ToString());
         if ((what & (UpdateCodes.Rotation | UpdateCodes.Position)) != 0) {
             if (m_cameraMode == CameraMode.TrackingAgent) {
@@ -368,7 +368,7 @@ public class Viewer : ModuleBase, IViewProvider {
         return;
     }
 
-    private void OnAgentRemoved(IAgent agnt) {
+    private void World_OnAgentRemoved(IAgent agnt) {
         m_log.Log(LogLevel.DVIEWDETAIL, "OnAgentRemoved: ");
         return;
     }

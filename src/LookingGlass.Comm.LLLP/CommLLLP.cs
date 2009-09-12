@@ -547,7 +547,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
                         return newEnt;
                     }) ) {
                 // if new or not, assume everything about this entity has changed
-                World.World.Instance.UpdateEntity(ent, UpdateCodes.FullUpdate);
+                rcontext.UpdateEntity(ent, UpdateCodes.FullUpdate);
             }
             else {
                 m_log.Log(LogLevel.DBADERROR, "FAILED CREATION OF NEW PRIM");
@@ -578,7 +578,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
             if ((updateFlags & UpdateCodes.Rotation) != 0) {
                 updatedEntity.Heading = update.Rotation;
             }
-            World.World.Instance.UpdateEntity(updatedEntity, updateFlags);
+            rcontext.UpdateEntity(updatedEntity, updateFlags);
         }
         if (update.Avatar) {
             // this is an update to an avatar. See if it's an update to our agent.
@@ -608,7 +608,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
             IEntity removedEntity;
             if (rcontext.TryGetEntityLocalID(objectID, out removedEntity)) {
                 // we need a handle to the objectID
-                World.World.Instance.RemoveEntity(removedEntity);
+                rcontext.RemoveEntity(removedEntity);
             }
         }
         catch (Exception e) {

@@ -35,7 +35,8 @@ namespace LookingGlass.World {
  
 
 public delegate void RegionRegionConnectedCallback(RegionContextBase rcontext);
-public delegate void RegionRegionChangingCallback(RegionContextBase rcontext);
+public delegate void RegionRegionUpdatedCallback(RegionContextBase rcontext, UpdateCodes what);
+public delegate void RegionRegionDisconnectedCallback(RegionContextBase rcontext);
 public delegate void RegionEntityNewCallback(IEntity ent);
 public delegate void RegionEntityUpdateCallback(IEntity ent, UpdateCodes what);
 public delegate void RegionEntityRemovedCallback(IEntity ent);
@@ -47,10 +48,12 @@ public delegate IEntity RegionCreateEntityCallback();
 public interface IRegionContext {
 
     #region Events
-    // when the underlying simulator is changing.
-    event RegionRegionChangingCallback OnRegionChanging;
     // when a new simulator is initialized
     event RegionRegionConnectedCallback OnRegionConnected;
+    // when the underlying simulator is changing.
+    event RegionRegionUpdatedCallback OnRegionUpdated;
+    // when a new simulator is not active an probably going away
+    event RegionRegionDisconnectedCallback OnRegionDisconnected;
     // when new items are added to the world
     event RegionEntityNewCallback OnEntityNew;
     // when a prim is updated
@@ -90,9 +93,8 @@ public interface IRegionContext {
     // In  transition requests for getting region entities based on implementation
     // specific info. In this case the LLLP localID. This is part of the conversion
     // of entites being in the world to the entities being in regions.
-    bool TryGetEntityLocalID(RegionContextBase rcontext, uint entName, out IEntity ent);
-    bool TryGetCreateEntityLocalID(RegionContextBase rcontext, uint localID, 
-                out IEntity ent, RegionCreateEntityCallback creater);
+    bool TryGetEntityLocalID(uint entName, out IEntity ent);
+    bool TryGetCreateEntityLocalID(uint localID, out IEntity ent, RegionCreateEntityCallback creater);
 
 }
 }

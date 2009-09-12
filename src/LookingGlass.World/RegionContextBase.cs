@@ -35,8 +35,11 @@ public abstract class RegionContextBase : EntityBase, IRegionContext, IDisposabl
     // when the underlying simulator is changing.
     public event RegionRegionConnectedCallback OnRegionConnected;
 
+    // when some state of  the region has changed
+    public event RegionRegionUpdatedCallback OnRegionUpdated;
+
     // when the underlying simulator is changing.
-    public event RegionRegionChangingCallback OnRegionChanging;
+    public event RegionRegionDisconnectedCallback OnRegionDisconnected;
 
     // when new items are added to the world
     public event RegionEntityNewCallback OnEntityNew;
@@ -133,7 +136,7 @@ public abstract class RegionContextBase : EntityBase, IRegionContext, IDisposabl
         return m_entityDictionary.TryGetValue(entName.Name, out ent);
     }
 
-    public bool TryGetEntityLocalID(RegionContextBase rcontext, uint localID, out IEntity ent) {
+    public bool TryGetEntityLocalID(uint localID, out IEntity ent) {
         // it's a kludge, but localID is the same as global ID
         // TODO: add some checking for rcontext since the localIDs are scoped by 'simulator'
         // we are relying on a low collision rate for localIDs
@@ -147,11 +150,10 @@ public abstract class RegionContextBase : EntityBase, IRegionContext, IDisposabl
     /// <param name="ent"></param>
     /// <param name="createIt"></param>
     /// <returns></returns>
-    public bool TryGetCreateEntityLocalID(RegionContextBase rcontext, uint localID, out IEntity ent, 
-                    RegionCreateEntityCallback createIt) {
+    public bool TryGetCreateEntityLocalID(uint localID, out IEntity ent, RegionCreateEntityCallback createIt) {
         try {
             lock (m_entityDictionary) {
-                if (!TryGetEntityLocalID(rcontext, localID, out ent)) {
+                if (!TryGetEntityLocalID(localID, out ent)) {
                     IEntity newEntity = createIt();
                     AddEntity(newEntity);
                     ent = newEntity;

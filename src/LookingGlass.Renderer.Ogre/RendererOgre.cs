@@ -704,7 +704,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         
         override public bool DoIt() {
             // type information is at the end of the name. remove if there
-            string eName = EntityNameOgre.ConvertOgreResourceToEntityNameX(m_meshName);
+            EntityName eName = EntityNameOgre.ConvertOgreResourceToEntityName(m_meshName);
             // the terrible kludge here is that the name of the mesh is the name of
             //   the entity. We reach back into the worlds and find the underlying
             //   entity then we can construct the mesh.
