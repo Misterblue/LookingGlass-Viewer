@@ -33,6 +33,8 @@ public sealed class LLRegionContext : RegionContextBase {
     private OMV.Simulator m_simulator;
     public OMV.Simulator Simulator { get { return m_simulator; } }
 
+    private Dictionary<uint, int> m_recentLocalIDRequests = null;
+
     public LLRegionContext(RegionContextBase rcontext, AssetContextBase acontext, 
                         LLTerrainInfo tinfo, OMV.Simulator sim) 
                 : base(rcontext, acontext) {
@@ -44,6 +46,7 @@ public sealed class LLRegionContext : RegionContextBase {
         m_simulator = sim;
         // this should be more general as "GRID/SIM"
         m_name = new EntityName(sim.Name);
+        m_recentLocalIDRequests = new Dictionary<uint, int>();
     }
 
     /// <summary>
@@ -51,8 +54,19 @@ public sealed class LLRegionContext : RegionContextBase {
     /// </summary>
     /// <param name="localID"></param>
     public void RequestLocalID(uint localID) {
-        LogManager.Log.Log(LogLevel.DCOMMDETAIL, "LLRegionContext.RequestLocalID: asking for {0}/{1}", this.Name, localID);
-        m_comm.Objects.RequestObject(this.Simulator, localID);
+        int now = System.Environment.TickCount;
+        if (m_recentLocalIDRequests.ContainsKey(localID)) {
+            // we've asked for this localID recently. See how recent.
+            if (m_recentLocalIDRequests[localID] < (now - 20 * 1000)) {
+                // it was a while ago. Time to ask again
+                m_recentLocalIDRequests.Remove(localID);
+            }
+        }
+        if (!m_recentLocalIDRequests.ContainsKey(localID)) {
+            LogManager.Log.Log(LogLevel.DCOMMDETAIL, "LLRegionContext.RequestLocalID: asking for {0}/{1}", this.Name, localID);
+            m_recentLocalIDRequests.Add(localID, now);
+            m_comm.Objects.RequestObject(this.Simulator, localID);
+        }
     }
 
     public override void Dispose() {

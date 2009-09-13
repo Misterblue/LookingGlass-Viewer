@@ -122,7 +122,6 @@ private:
 	Ogre::Light* m_sun;				// the light that is the sun
 	float m_sunDistance;			// distance sun is from the focal point
 	Ogre::Light* m_moon;			// the light that is the moon
-	void UpdateSun();				// move the sun to the local area
 
 	Ogre::String m_cacheDir; 
 	Ogre::String m_preloadedDir; 

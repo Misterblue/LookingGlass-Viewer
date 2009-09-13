@@ -34,9 +34,10 @@ namespace LookingGlass.World {
     /// </summary>
  
 
-public delegate void RegionRegionConnectedCallback(RegionContextBase rcontext);
+public delegate void RegionRegionStateChangeCallback(RegionContextBase rcontext, RegionStateCode code);
+
 public delegate void RegionRegionUpdatedCallback(RegionContextBase rcontext, UpdateCodes what);
-public delegate void RegionRegionDisconnectedCallback(RegionContextBase rcontext);
+
 public delegate void RegionEntityNewCallback(IEntity ent);
 public delegate void RegionEntityUpdateCallback(IEntity ent, UpdateCodes what);
 public delegate void RegionEntityRemovedCallback(IEntity ent);
@@ -47,19 +48,18 @@ public delegate IEntity RegionCreateEntityCallback();
 public interface IRegionContext {
 
     #region Events
-    // when a new simulator is initialized
-    event RegionRegionConnectedCallback OnRegionConnected;
+    // when a regions state changes
+    event RegionRegionStateChangeCallback OnRegionStateChange;
+
     // when the underlying simulator is changing.
     event RegionRegionUpdatedCallback OnRegionUpdated;
-    // when a new simulator is not active an probably going away
-    event RegionRegionDisconnectedCallback OnRegionDisconnected;
+
     // when new items are added to the world
     event RegionEntityNewCallback OnEntityNew;
     // when a prim is updated
     event RegionEntityUpdateCallback OnEntityUpdate;
     // when an object is killed
     event RegionEntityRemovedCallback OnEntityRemoved;
-
     #endregion Events
 
     // get the name of the region
@@ -67,6 +67,9 @@ public interface IRegionContext {
 
     // get the type of the region
     WorldGroupCode WorldGroup { get; }
+
+    // state of teh region
+    RegionState State { get; }
 
     // the size of the region (bounding box)
     OMV.Vector3 Size { get; }

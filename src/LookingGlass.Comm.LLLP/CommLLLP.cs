@@ -496,6 +496,8 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         m_log.Log(LogLevel.DWORLDDETAIL, "Simulator connected {0}", sim.Name);
         LLRegionContext regionContext = FindRegion(sim);
         World.World.Instance.AddRegion(regionContext);
+        // this region is online and here. This can start a lot of IO
+        regionContext.State.State = RegionStateCode.Online;
         // this is needed to make the avatar appear
         // TODO: figure out if the linking between agent and appearance is right
         // m_client.Appearance.SetPreviousAppearance(true);

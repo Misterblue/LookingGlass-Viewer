@@ -72,7 +72,12 @@ public class RestManager : ModuleBase, HttpServer.ILogWriter {
     protected int m_port;
     public int Port { get { return m_port; } }
 
+    // Some system wide rest handlers to make information available
     RestHandler m_workQueueRestHandler = null;
+    RestHandler m_paramDefaultRestHandler = null;
+    RestHandler m_paramIniRestHandler = null;
+    RestHandler m_paramUserRestHandler = null;
+    RestHandler m_paramOverrideRestHandler = null;
 
     protected string m_baseURL;
     // return the full base URL with the port added
@@ -153,6 +158,12 @@ public class RestManager : ModuleBase, HttpServer.ILogWriter {
         // some Framework structures that can be referenced
         m_log.Log(LogLevel.DINITDETAIL, "Registering work queue stats at 'api/stats/workQueues'");
         m_workQueueRestHandler = new RestHandler("/stats/workQueues", WorkQueueManager.Instance);
+
+        m_log.Log(LogLevel.DINITDETAIL, "Registering parmeters at 'api/params/Default' and 'Ini', 'User', 'Override'");
+        m_paramDefaultRestHandler = new RestHandler("/params/Default", m_lgb.AppParams.DefaultParameters);
+        m_paramIniRestHandler = new RestHandler("/params/Ini", m_lgb.AppParams.IniParameters);
+        m_paramUserRestHandler = new RestHandler("/params/User", m_lgb.AppParams.UserParameters);
+        m_paramOverrideRestHandler = new RestHandler("/params/Override", m_lgb.AppParams.OverrideParameters);
 
         m_log.Log(LogLevel.DINIT, "exiting AfterAllModulesLoaded()");
         return true;

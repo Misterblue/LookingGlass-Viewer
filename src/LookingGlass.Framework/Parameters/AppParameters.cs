@@ -42,9 +42,13 @@ public class AppParameters : IAppParameters, IParameterPersist {
     }
 
     protected ParameterSet m_defaultParams;
+    public ParameterSet DefaultParameters { get { return m_defaultParams; } }
     protected ParameterSet m_iniParams;
+    public ParameterSet IniParameters { get { return m_iniParams; } }
     protected ParameterSet m_userParams;
+    public ParameterSet UserParameters { get { return m_userParams; } }
     protected ParameterSet m_overrideParams;
+    public ParameterSet OverrideParameters { get { return m_overrideParams; } }
 
     public AppParameters() {
         m_defaultParams = new ParameterSet();

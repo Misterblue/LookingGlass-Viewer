@@ -120,7 +120,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.SkyboxName", "LookingGlass/CloudyNoonSkyBox",
                     "Name of the skybox resource to use");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.ShadowTechnique", "none",
-                    "Shadow technique: none, additive, modulative, stencil");
+                    "Shadow technique: none, texture-additive, texture-modulative, stencil-modulative, stencil-additive");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.ShadowFarDistance", "100",
                     "Integer units of distance within which to do shadows (mul by magnification)");
         // cp.AddParameter(m_moduleName + ".Ogre.Renderer", "Direct3D9 Rendering Subsystem",

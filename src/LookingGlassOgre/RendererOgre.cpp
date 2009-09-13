@@ -50,6 +50,11 @@ namespace RendererOgre {
 		// TODO: there is a lot of rendering to turn off.
 	}
 
+	// The main program calls in here with the main window thread. This is required
+	// to keep the windows message pump going and so OpenGL is happy with 
+	// its creation happening on the same thread as rendering.
+	// The frame rate is capped and sleeps are inserted to return control to
+	// the windowing system when the max frame rate is reached.
 	bool RendererOgre::renderingThread() {
 		Log("DEBUG: LookingGlassOrge: Starting rendering");
 		int maxFPS = LookingGlassOgr::GetParameterInt("Renderer.Ogre.FramePerSecMax");
@@ -75,6 +80,10 @@ namespace RendererOgre {
 		return true;
 	}
 
+	// As an alternate to using the above rendering thread entry, the main
+	// program can call this to render each frame.
+	// Note that his also called the message pump to make screen resizing and
+	// movement happen on the Ogre frame.
 	bool RendererOgre::renderOneFrame() {
 		bool ret = false;
 		if (m_root != NULL) {
@@ -101,20 +110,8 @@ namespace RendererOgre {
 			}
 			*/
 			m_recalculateVisibility = true;
-
-			// terrible kludge since we don't have interest information sent to us
-			m_sunFocalPoint = Ogre::Vector3(px, 30, pz);
-			UpdateSun();
 		}
 		return;
-	}
-
-	void RendererOgre::UpdateSun() {
-		if (m_sun != NULL) {
-			// we don't need to update the directional light position
-			// m_sun->setPosition(m_sunFocalPoint.x, 1000.0f, m_sunFocalPoint.z);
-			// LookingGlassOgr::Log("UpdateSun: x=%f, z=%f", (double)m_sunFocalPoint.x, (double)m_sunFocalPoint.z);
-		}
 	}
 
 	// Called from managed code via InitializeOgre().
@@ -128,6 +125,7 @@ namespace RendererOgre {
 		m_defaultTerrainMaterial = LookingGlassOgr::GetParameter("Renderer.Ogre.DefaultTerrainMaterial");
 		m_serializeMeshes = LookingGlassOgr::GetParameterBool("Renderer.Ogre.SerializeMeshes");
 
+		// visibility culling parameters
 		m_shouldCullMeshes = LookingGlassOgr::GetParameterBool("Renderer.Ogre.Visibility.Cull.Meshes");
 		m_shouldCullTextures = LookingGlassOgr::GetParameterBool("Renderer.Ogre.Visibility.Cull.Textures");
 		m_shouldCullByFrustrum = LookingGlassOgr::GetParameterBool("Renderer.Ogre.Visibility.Cull.Frustrum");
@@ -147,7 +145,6 @@ namespace RendererOgre {
 		);
 		m_recalculateVisibility = true;
 
-
 		m_root = new Ogre::Root(GetParameter("Renderer.Ogre.PluginFilename"));
 		Log("DEBUG: LookingGlassOrge: after new Ogre::Root()");
 		// if detail logging is turned off, I don't want Ogre yakking up a storm either
@@ -165,6 +162,7 @@ namespace RendererOgre {
 		// turn on the resource system
         initOgreResources();
 
+		// create the viewer components
         createScene();
         createCamera();
         createLight();
@@ -216,18 +214,14 @@ namespace RendererOgre {
 		Ogre::MeshManager::getSingleton().setListener(new OLMeshSerializerListener(this));
 		// Ogre::ScriptCompilerManager::getSingleton().setListener(new OLScriptCompilerListener(this));
 
-		// Create the archive system that will find our meshes
+		// Create the archive system that will find the predefined meshes/textures
 		Ogre::ArchiveManager::getSingleton().addArchiveFactory(new OLPreloadArchiveFactory() );
-
-		// Where predefined textures and such are stored
 		Log("createLookingGlassResourceGroups: addResourceLocation %s", m_preloadedDir.c_str());
 		Ogre::ResourceGroupManager::getSingleton().addResourceLocation(m_preloadedDir,
 						OLPreloadTypeName, OLResourceGroupName, true);
 
 		// Create the archive system that will find our meshes
 		Ogre::ArchiveManager::getSingleton().addArchiveFactory(new OLArchiveFactory() );
-
-		// Where the meshes are to be stored
 		Log("createLookingGlassResourceGroups: addResourceLocation %s", m_cacheDir.c_str());
 		Ogre::ResourceGroupManager::getSingleton().addResourceLocation(m_cacheDir,
 						OLArchiveTypeName, OLResourceGroupName, true);
@@ -246,7 +240,7 @@ namespace RendererOgre {
         rs->setConfigOption("Full Screen", "No");
         rs->setConfigOption("Video Mode", GetParameter("Renderer.Ogre.VideoMode"));
 
-		// Two types of initialization here. Get own own window or use a passed window
+		// Two types of initialization here. Get own window or use a passed window
 		Ogre::String windowHandle = LookingGlassOgr::GetParameter("Renderer.Ogre.ExternalWindow.Handle");
 		if (windowHandle.length() == 0) {
 			m_window = m_root->initialise(true, GetParameter("Renderer.Ogre.Name"));
@@ -255,7 +249,7 @@ namespace RendererOgre {
 			m_window = m_root->initialise(false);
 			Ogre::NameValuePairList createParams;
 			createParams["externalWindowHandle"] = windowHandle;
-			createParams["title"] = GetParameter("Renderer.Ogre.name");
+			createParams["title"] = GetParameter("Renderer.Ogre.Name");
 			// createParams["left"] = something;
 			// createParams["right"] = something;
 			// createParams["depthBuffer"] = something;
@@ -278,8 +272,8 @@ namespace RendererOgre {
 		Log("DEBUG: LookingGlassOrge: createScene");
 		try {
 			const char* sceneName = GetParameter("Renderer.Ogre.Name");
-			// m_sceneMgr = m_root->createSceneManager(Ogre::ST_EXTERIOR_CLOSE, sceneName);
-			m_sceneMgr = m_root->createSceneManager(Ogre::ST_GENERIC, sceneName);
+			m_sceneMgr = m_root->createSceneManager(Ogre::ST_EXTERIOR_CLOSE, sceneName);
+			// m_sceneMgr = m_root->createSceneManager(Ogre::ST_GENERIC, sceneName);
 			// ambient has to be adjusted for time of day. Set it initially
 			// m_sceneMgr->setAmbientLight(Ogre::ColourValue(0.5, 0.5, 0.5));
 			m_sceneMgr->setAmbientLight(LookingGlassOgr::GetParameterColor("Renderer.Ogre.Ambient"));

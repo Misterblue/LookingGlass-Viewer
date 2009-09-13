@@ -61,9 +61,9 @@ public class LoadWorldObjects {
     // Return 'true' if we don't have this region in our world yet
     private static bool WeDontKnowAboutThisSimulator(OMV.Simulator sim, OMV.GridClient netComm, CommLLLP worldComm) {
         LLRegionContext regn = worldComm.FindRegion(delegate(LLRegionContext rgn) {
-            return rgn.Simulator == sim;
+            return rgn.Simulator.ID == sim.ID;
         });
-        return regn == null;
+        return (regn == null);
     }
 
     private static void AddAvatars(OMV.Simulator sim, OMV.GridClient netComm, CommLLLP worldComm) {

@@ -50,30 +50,24 @@ public sealed class World : ModuleBase, IWorld, IProvider {
 
     #region Events
     # pragma warning disable 0067   // disable unused event warning
-    // when the underlying simulator is changing.
+    // A new region has been added to the world
     public event WorldRegionNewCallback OnWorldRegionNew;
-
-    // when the underlying simulator is changing.
+    // A known region has changed it's state (terrain, location, ...)
     public event WorldRegionUpdatedCallback OnWorldRegionUpdated;
-    
-    // when the underlying simulator is changing.
+    // a region is removed from the world
     public event WorldRegionRemovedCallback OnWorldRegionRemoved;
 
     // when new items are added to the world
     public event WorldEntityNewCallback OnWorldEntityNew;
-
     // when an entity is updated
     public event WorldEntityUpdateCallback OnWorldEntityUpdate;
-
     // when an object is killed
     public event WorldEntityRemovedCallback OnWorldEntityRemoved;
 
     // When an agent is added to the world
     public event WorldAgentNewCallback OnAgentNew;
-
     // When an agent is added to the world
     public event WorldAgentUpdateCallback OnAgentUpdate;
-
     // When an agent is removed from the world
     public event WorldAgentRemovedCallback OnAgentRemoved;
     # pragma warning restore 0067
@@ -126,20 +120,24 @@ public sealed class World : ModuleBase, IWorld, IProvider {
             if (foundRegion == null) {
                 // we don't know about this region. Add it and connect to events
                 m_regionList.Add(rcontext);
+
                 if (Region_OnNewEntityCallback == null) {
                     Region_OnNewEntityCallback = new RegionEntityNewCallback(Region_OnNewEntity);
                 }
                 rcontext.OnEntityNew += Region_OnNewEntityCallback;
+
                 if (Region_OnRemovedEntityCallback == null) {
                     Region_OnRemovedEntityCallback = new RegionEntityRemovedCallback(Region_OnNewEntity);
                 }
                 rcontext.OnEntityRemoved += Region_OnRemovedEntityCallback;
+
                 if (Region_OnRegionUpdatedCallback == null) {
                     Region_OnRegionUpdatedCallback = new RegionRegionUpdatedCallback(Region_OnRegionUpdated);
                 }
                 rcontext.OnRegionUpdated += Region_OnRegionUpdatedCallback;
             }
         }
+        // tell the world there is a new region (do it outside the lock)
         if (foundRegion == null) {
             if (OnWorldRegionNew != null) OnWorldRegionNew(rcontext);
         }
@@ -217,6 +215,15 @@ public sealed class World : ModuleBase, IWorld, IProvider {
 
     #endregion Region Management
 
+    /// <summary>
+    /// A global call to find an entity. We ask all the regions if they have it.
+    /// This is only here because the renderer looses the context for an entity
+    /// when control passes into the renderer and then back. The renderer only
+    /// has the name of the entity.
+    /// </summary>
+    /// <param name="entName">the name of the entity to look for</param>
+    /// <param name="ent">place to store the reference to the found entity</param>
+    /// <returns>'true' if entity found</returns>
     public bool TryGetEntity(EntityName entName, out IEntity ent) {
         IEntity ret = null;
         lock (m_regionList) {

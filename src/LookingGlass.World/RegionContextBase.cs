@@ -33,13 +33,10 @@ public abstract class RegionContextBase : EntityBase, IRegionContext, IDisposabl
     #region Events
     # pragma warning disable 0067   // disable unused event warning
     // when the underlying simulator is changing.
-    public event RegionRegionConnectedCallback OnRegionConnected;
+    public event RegionRegionStateChangeCallback OnRegionStateChange;
 
     // when some state of  the region has changed
     public event RegionRegionUpdatedCallback OnRegionUpdated;
-
-    // when the underlying simulator is changing.
-    public event RegionRegionDisconnectedCallback OnRegionDisconnected;
 
     // when new items are added to the world
     public event RegionEntityNewCallback OnEntityNew;
@@ -59,10 +56,23 @@ public abstract class RegionContextBase : EntityBase, IRegionContext, IDisposabl
     protected WorldGroupCode m_worldGroup;
     public WorldGroupCode WorldGroup { get { return m_worldGroup; } }
 
+    private RegionStateChangedCallback m_regionStateChangedCallback;
+    protected RegionState m_regionState;
+    public RegionState State {
+        get { return m_regionState;  }
+    }
+
     public RegionContextBase(RegionContextBase rcontext, AssetContextBase acontext) 
                 : base(rcontext, acontext) {
         m_entityDictionary = new OpenMetaverse.DoubleDictionary<string, ulong, IEntity>();
         m_avatarDictionary = new Dictionary<EntityName, IEntityAvatar>();
+        m_regionState = new RegionState();
+        m_regionStateChangedCallback = new RegionStateChangedCallback(State_OnChange);
+        State.OnStateChanged += m_regionStateChangedCallback;
+    }
+
+    private void State_OnChange(RegionStateCode newState) {
+        if (OnRegionStateChange != null) OnRegionStateChange(this, newState);
     }
 
     protected OMV.Vector3 m_size = new OMV.Vector3(256f, 256f, 8000f);
@@ -216,6 +226,9 @@ public abstract class RegionContextBase : EntityBase, IRegionContext, IDisposabl
 
     public override void Dispose() {
         m_terrainInfo = null; // let the garbage collector work
+        if (m_regionState != null && m_regionStateChangedCallback != null) {
+            State.OnStateChanged -= m_regionStateChangedCallback;
+        }
 
         // TODO: do something about the entity list
         m_entityDictionary.ForEach(delegate(IEntity ent) {

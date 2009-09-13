@@ -93,12 +93,14 @@ public interface IWorld {
     event WorldRegionUpdatedCallback OnWorldRegionUpdated;
     // when a new region is being removed from the world
     event WorldRegionRemovedCallback OnWorldRegionRemoved;
+    
     // when new items are added to the world
     event WorldEntityNewCallback OnWorldEntityNew;
     // when a prim is updated
     event WorldEntityUpdateCallback OnWorldEntityUpdate;
     // when an object is killed
     event WorldEntityRemovedCallback OnWorldEntityRemoved;
+
     // when a new agent is added to the system
     event WorldAgentNewCallback OnAgentNew;
     // when an agent is updated
