@@ -190,7 +190,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.SerializeMeshes", "true",
                     "Write out meshes to files");
 
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Ambient", "<0.2,0.2,0.2>",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Ambient", "<0.4,0.4,0.4>",
                     "color value for initial ambient lighting");
 
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.Cull.Frustrum", "false",

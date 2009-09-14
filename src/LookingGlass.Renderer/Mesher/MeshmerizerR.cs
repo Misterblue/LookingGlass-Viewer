@@ -298,8 +298,8 @@ public class MeshmerizerR : OMVR.IRendering {
         byte sculptType = (byte)prim.Sculpt.Type;
         bool mirror = ((sculptType & 128) != 0);
         bool invert = ((sculptType & 64) != 0);
-        // mirror = false; // TODO: libomv doesn't support these and letting them flop around causes problems
-        // invert = false;
+        // bool mirror = false; // TODO: libomv doesn't support these and letting them flop around causes problems
+        // bool invert = false;
         OMV.SculptType omSculptType = (OMV.SculptType)(sculptType & 0x07);
 
         PrimMesher.SculptMesh.SculptType smSculptType;
@@ -440,7 +440,6 @@ public class MeshmerizerR : OMVR.IRendering {
 
         // need a check for plainer vs default
         // just do default for now (I don't know what planar is)
-        /*
         LogManager.Log.Log(LogLevel.DRENDERDETAIL,
             "TransformTex: c=" + vertices.Count.ToString()
             + ", rot=" + teFace.Rotation
@@ -451,16 +450,22 @@ public class MeshmerizerR : OMVR.IRendering {
             + ", cos=" + cosineAngle.ToString()
             + ", sin=" + sinAngle.ToString()
             );
-         */
         for (int ii=0; ii<vertices.Count; ii++ ) {
             // tex coord comes to us as a number between zero and one
             // transform about the center of the texture
             OMVR.Vertex vert = vertices[ii];
+            // repeat, offset, rotate
+            float tX = (vert.TexCoord.X - 0.5f) * teFace.RepeatU + teFace.OffsetU;
+            float tY = (vert.TexCoord.Y - 0.5f) * teFace.RepeatV - teFace.OffsetV;
+            vert.TexCoord.X = (tX * cosineAngle - tY * sinAngle) + 0.5f;
+            vert.TexCoord.Y = (tX * sinAngle + tY * cosineAngle) + 0.5f;
+            /*
             float tX = vert.TexCoord.X - 0.5f;
             float tY = vert.TexCoord.Y - 0.5f;
             // rotate, scale, offset
-            vert.TexCoord.X = (tX * cosineAngle + tY * sinAngle) * teFace.RepeatU + teFace.OffsetU + 0.5f;
-            vert.TexCoord.Y = (-tX * sinAngle + tY * cosineAngle) * teFace.RepeatV + teFace.OffsetV + 0.5f;
+            vert.TexCoord.X = (tX * cosineAngle + tY * sinAngle) * teFace.RepeatU - teFace.OffsetU + 0.5f;
+            vert.TexCoord.Y = (-tX * sinAngle + tY * cosineAngle) * teFace.RepeatV - teFace.OffsetV + 0.5f;
+             */
             vertices[ii] = vert;
         }
         return;

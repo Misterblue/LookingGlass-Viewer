@@ -72,8 +72,8 @@ public class RendererOgreLL : IWorldRenderConv {
             // m_useRendererMeshScaling = true; // use Ogre to scale the mesh
             m_useRendererMeshScaling = false; // scale the mesh in the meshmerizer
             amesher.ShouldScaleMesh = !m_useRendererMeshScaling;
-            m_useRendererTextureScaling = false; // use software texture face scaling
-            // m_useRendererTextureScaling = true; // use Ogre texture scaling rather than computing it
+            // m_useRendererTextureScaling = false; // use software texture face scaling
+            m_useRendererTextureScaling = true; // use Ogre texture scaling rather than computing it
             m_meshMaker = amesher;
         }
 
@@ -426,7 +426,7 @@ public class RendererOgreLL : IWorldRenderConv {
                 textureParams[pBase + (int)Ogr.CreateMaterialParam.scaleU] = 1f / textureFace.RepeatU;
                 textureParams[pBase + (int)Ogr.CreateMaterialParam.scaleV] = 1f / textureFace.RepeatV;
                 textureParams[pBase + (int)Ogr.CreateMaterialParam.scrollU] = textureFace.OffsetU;
-                textureParams[pBase + (int)Ogr.CreateMaterialParam.scrollV] = textureFace.OffsetV;
+                textureParams[pBase + (int)Ogr.CreateMaterialParam.scrollV] = -textureFace.OffsetV;
                 textureParams[pBase + (int)Ogr.CreateMaterialParam.rotate] = textureFace.Rotation;
             }
             else {

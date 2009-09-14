@@ -51,6 +51,7 @@ public sealed class LLRegionContext : RegionContextBase {
 
     /// <summary>
     /// Called to request a particular local ID should be sent to us. Very LLLP dependent.
+    /// This is rare enough  that we don't bother locking.
     /// </summary>
     /// <param name="localID"></param>
     public void RequestLocalID(uint localID) {
