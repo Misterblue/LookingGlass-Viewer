@@ -455,17 +455,15 @@ public class MeshmerizerR : OMVR.IRendering {
             // transform about the center of the texture
             OMVR.Vertex vert = vertices[ii];
             // repeat, offset, rotate
-            float tX = (vert.TexCoord.X - 0.5f) * teFace.RepeatU + teFace.OffsetU;
-            float tY = (vert.TexCoord.Y - 0.5f) * teFace.RepeatV - teFace.OffsetV;
-            vert.TexCoord.X = (tX * cosineAngle - tY * sinAngle) + 0.5f;
-            vert.TexCoord.Y = (tX * sinAngle + tY * cosineAngle) + 0.5f;
-            /*
+            // float tX = (vert.TexCoord.X - 0.5f) * teFace.RepeatU + teFace.OffsetU;
+            // float tY = (vert.TexCoord.Y - 0.5f) * teFace.RepeatV - teFace.OffsetV;
+            // vert.TexCoord.X = (tX * cosineAngle - tY * sinAngle) + 0.5f;
+            // vert.TexCoord.Y = (tX * sinAngle + tY * cosineAngle) + 0.5f;
             float tX = vert.TexCoord.X - 0.5f;
             float tY = vert.TexCoord.Y - 0.5f;
             // rotate, scale, offset
-            vert.TexCoord.X = (tX * cosineAngle + tY * sinAngle) * teFace.RepeatU - teFace.OffsetU + 0.5f;
-            vert.TexCoord.Y = (-tX * sinAngle + tY * cosineAngle) * teFace.RepeatV - teFace.OffsetV + 0.5f;
-             */
+            vert.TexCoord.X = (tX * cosineAngle - tY * sinAngle) * teFace.RepeatU - teFace.OffsetU + 0.5f;
+            vert.TexCoord.Y = (tX * sinAngle + tY * cosineAngle) * teFace.RepeatV - teFace.OffsetV + 0.5f;
             vertices[ii] = vert;
         }
         return;
