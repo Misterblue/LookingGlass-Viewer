@@ -23,7 +23,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Threading;
+using LookingGlass.Framework.WorkQueue;
 
 namespace LookingGlass.World {
 
@@ -43,7 +43,11 @@ public delegate void RegionStateChangedCallback(RegionStateCode code);
 public class RegionState {
     public event RegionStateChangedCallback OnStateChanged;
 
+    // one work queue for all the state update work
+    private static BasicWorkQueue m_stateWork = null;
+
     private RegionStateCode m_regionState;
+
     public RegionStateCode State {
         get { return m_regionState; }
         set {
@@ -52,20 +56,30 @@ public class RegionState {
                 m_regionState = newState;
                 // if (OnStateChanged != null) OnStateChanged(m_regionState);
                 if (OnStateChanged != null) {
-                    OnStateChanged.BeginInvoke(m_regionState, EndInvokeCallback, OnStateChanged);
+                    // queue the state changed event to happen on another thread
+                    m_stateWork.DoLater(new OnStateChangedLater(OnStateChanged, m_regionState));
                 }
             }
         }
     }
 
-    // callback so teh BeginInvoke has a matching EndInvoke
-    private static void EndInvokeCallback(IAsyncResult ar) {
-        RegionStateChangedCallback callback = (RegionStateChangedCallback)ar.AsyncState;
-        callback.EndInvoke(ar);
-        if (ar.AsyncWaitHandle != null) ar.AsyncWaitHandle.Close();
+    private class OnStateChangedLater : DoLaterBase {
+        RegionStateChangedCallback m_callback;
+        RegionStateCode m_code;
+        public OnStateChangedLater(RegionStateChangedCallback c, RegionStateCode r) {
+            m_callback = c;
+            m_code = r;
+        }
+        public override bool DoIt() {
+            m_callback(m_code);
+            return true;
+        }
     }
 
     public RegionState() {
+        if (m_stateWork == null) {
+            m_stateWork = new BasicWorkQueue("OnStateChanged");
+        }
         m_regionState = RegionStateCode.Uninitialized;
     }
 

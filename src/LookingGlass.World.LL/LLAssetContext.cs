@@ -166,10 +166,7 @@ public sealed class LLAssetContext : AssetContextBase {
         if (File.Exists(textureFilename)) {
             m_log.Log(LogLevel.DTEXTUREDETAIL, "DoTextureLoad: Texture file alreayd exists for " + worldID);
             bool hasTransparancy = CheckTextureFileForTransparancy(textureFilename);
-            // can't check for transparancy
-            ThreadPool.QueueUserWorkItem((WaitCallback)delegate(Object x) {
-                finishCall(textureEntityName, hasTransparancy);
-            });
+            m_completionWork.DoLater(new FinishCallDoLater(finishCall, textureEntityName, hasTransparancy));
         }
         else {
             bool sendRequest = false;
@@ -195,6 +192,21 @@ public sealed class LLAssetContext : AssetContextBase {
             }
         }
         return;
+    }
+
+    private class FinishCallDoLater : DoLaterBase {
+        DownloadFinishedCallback m_callback;
+        string m_textureEntityName;
+        bool m_hasTransparancy;
+        public FinishCallDoLater(DownloadFinishedCallback cb, string tName, bool hasT) {
+            m_callback = cb;
+            m_textureEntityName = tName;
+            m_hasTransparancy = hasT;
+        }
+        public override bool DoIt() {
+            m_callback(m_textureEntityName, m_hasTransparancy);
+            return true;
+        }
     }
 
     /// <summary>
