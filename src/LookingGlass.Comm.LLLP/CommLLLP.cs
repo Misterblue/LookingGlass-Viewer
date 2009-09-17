@@ -250,6 +250,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
             m_client.Settings.ALWAYS_REQUEST_PARCEL_DWELL = false;
             // m_client.Settings.Apply();
             // Crank up the throttle on texture downloads
+            m_client.Throttle.Total(2000000.0f);
             m_client.Throttle.Texture = 446000.0f;
 
             m_client.Network.OnLogin += new OMV.NetworkManager.LoginCallback(Network_OnLogin);
