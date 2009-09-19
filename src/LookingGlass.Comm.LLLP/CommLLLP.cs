@@ -244,7 +244,10 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
             m_client.Settings.OBJECT_TRACKING = false; // We use our own object tracking system
             m_client.Settings.AVATAR_TRACKING = true; //but we want to use the libsl avatar system
             m_client.Settings.SEND_AGENT_APPEARANCE = false;    // for the moment, don't do appearance
+            m_client.Settings.SEND_AGENT_THROTTLE = true;    // tell them how fast we want it when connected
             m_client.Settings.PARCEL_TRACKING = false;
+            m_client.Settings.ALWAYS_REQUEST_PARCEL_ACL = false;
+            m_client.Settings.ALWAYS_REQUEST_PARCEL_DWELL = false;
             m_client.Settings.USE_INTERPOLATION_TIMER = false;  // don't need the library helping
             m_client.Settings.SEND_AGENT_UPDATES = true;
             m_client.Self.Movement.AutoResetControls = false;   // Do the key up and down to turn on and off
@@ -252,9 +255,6 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
             m_client.Settings.USE_ASSET_CACHE = false;
             m_client.Settings.PIPELINE_REQUEST_TIMEOUT = 120 * 1000;
             m_client.Settings.ASSET_CACHE_DIR = ModuleParams.ParamString(ModuleName + ".Assets.CacheDir");
-            m_client.Settings.ALWAYS_REQUEST_PARCEL_ACL = false;
-            m_client.Settings.ALWAYS_REQUEST_PARCEL_DWELL = false;
-            // m_client.Settings.Apply();
             // Crank up the throttle on texture downloads
             m_client.Throttle.Total = 2000000.0f;
             m_client.Throttle.Texture = 446000.0f;
@@ -421,7 +421,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         }
         else {
             try {
-                Client.Network.BeginLogin(loginParams);
+                Client.Network.Login(loginParams);
             }
             catch (Exception e) {
                 m_log.Log(LogLevel.DBADERROR, "BeginLogin exception: " + e.ToString());
@@ -503,10 +503,13 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         m_log.Log(LogLevel.DWORLDDETAIL, "Simulator connected {0}", sim.Name);
         LLRegionContext regionContext = FindRegion(sim);
         World.World.Instance.AddRegion(regionContext);
+
         // this region is online and here. This can start a lot of IO
         regionContext.State.State = RegionStateCode.Online;
+
         // if we'd queued up actions, do them now that it's online
         DoAnyWaitingEvents(regionContext);
+
         // this is needed to make the avatar appear
         // TODO: figure out if the linking between agent and appearance is right
         // m_client.Appearance.SetPreviousAppearance(true);
