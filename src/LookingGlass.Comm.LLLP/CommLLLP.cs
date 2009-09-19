@@ -49,6 +49,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
 
     // while we wait for a region to be online, we queue requests here
     protected Dictionary<RegionContextBase, OnDemandWorkQueue> m_waitTilOnline;
+    protected bool m_shouldWaitTilOnline = false;
 
     protected LLAssetContext m_defaultAssetContext = null;
     protected LLAssetContext DefaultAssetContext {
@@ -786,12 +787,14 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
 
     private void QueueTilOnline(RegionContextBase rcontext, CommActionCode cac, Object p1, Object p2, Object p3, Object p4) {
         lock (m_waitTilOnline) {
-            if (!m_waitTilOnline.ContainsKey(rcontext)) {
-                m_log.Log(LogLevel.DCOMMDETAIL, "QueueTilOnline: creating queue for {0}", rcontext.Name);
-                m_waitTilOnline.Add(rcontext, new OnDemandWorkQueue("QueueTilOnline:" + rcontext.Name));
+            if (m_shouldWaitTilOnline) {
+                if (!m_waitTilOnline.ContainsKey(rcontext)) {
+                    m_log.Log(LogLevel.DCOMMDETAIL, "QueueTilOnline: creating queue for {0}", rcontext.Name);
+                    m_waitTilOnline.Add(rcontext, new OnDemandWorkQueue("QueueTilOnline:" + rcontext.Name));
+                }
+                m_log.Log(LogLevel.DCOMMDETAIL, "QueueTilOnline: queuing action {0} for {1}", cac, rcontext.Name);
+                m_waitTilOnline[rcontext].DoLater(DoCommAction, new ParamBlock(cac, p1, p2, p3, p4));
             }
-            m_log.Log(LogLevel.DCOMMDETAIL, "QueueTilOnline: queuing action {0} for {1}", cac, rcontext.Name);
-            m_waitTilOnline[rcontext].DoLater(DoCommAction, new ParamBlock(cac, p1, p2, p3, p4));
         }
     }
 
