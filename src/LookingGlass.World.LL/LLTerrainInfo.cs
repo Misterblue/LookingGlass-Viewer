@@ -111,8 +111,8 @@ public class LLTerrainInfo : TerrainInfoBase {
                     CreateZeroHeight(ref newHM);
                     minHeight = maxHeight = 0f;
                 }
-            }
 
+            }
             m_heightMap = newHM;
             m_heightMapWidth = TerrainPatchWidth;   // X
             m_heightMapLength = TerrainPatchLength;
@@ -122,7 +122,7 @@ public class LLTerrainInfo : TerrainInfoBase {
                     "LLTerrainInfo: New terrain:"
                     + " min=" + m_minimumHeight.ToString()
                     + " max=" + m_maximumHeight.ToString()
-                    );
+                );
         }
     }
 
