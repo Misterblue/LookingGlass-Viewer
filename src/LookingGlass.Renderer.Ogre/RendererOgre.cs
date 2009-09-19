@@ -201,13 +201,13 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "unload culled object meshes");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.Cull.Textures", "true",
                     "unload culled textures");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.MaxDistance", "100",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.MaxDistance", "200",
                     "the maximum distance to see any entites (far clip)");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.MinDistance", "30",
                     "below this distance, everything is visible");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.OnlyLargeAfter", "90",
                     "After this distance, only large things are visible");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.Large", "8",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.Large", "7",
                     "How big is considered 'large' for 'OnlyLargeAfter' calculation");
 
         m_stats = new StatisticManager(m_moduleName);
