@@ -112,7 +112,6 @@ public class OnDemandWorkQueue : IWorkQueue {
     /// <param name="w"></param>
     private void AddToWorkQueue(DoLaterBase w) {
         lock (m_workQueue) {
-            /*
             // Experimental code trying to give some order to the requests
             LinkedListNode<DoLaterBase> foundItem = null;
             for (LinkedListNode<DoLaterBase> ii = m_workQueue.First; ii != null; ii = ii.Next) {
@@ -129,8 +128,7 @@ public class OnDemandWorkQueue : IWorkQueue {
                 // just put it on the end
                 m_workQueue.AddLast(w);
             }
-            */
-            m_workQueue.AddLast(w);
+            // m_workQueue.AddLast(w);
         }
     }
 
