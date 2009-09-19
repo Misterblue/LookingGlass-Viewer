@@ -30,6 +30,7 @@ using LookingGlass.Comm;
 using LookingGlass.Framework.Logging;
 using LookingGlass.Framework.Modules;
 using LookingGlass.Framework.Parameters;
+using LookingGlass.Framework.WorkQueue;
 using LookingGlass.World;
 using LookingGlass.World.LL;
 using OMV = OpenMetaverse;
@@ -45,6 +46,9 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     protected OMV.GridClient m_client;
     // list of the region information build for the simulator
     protected List<LLRegionContext> m_regionList;
+
+    // while we wait for a region to be online, we queue requests here
+    protected Dictionary<RegionContextBase, OnDemandWorkQueue> m_waitTilOnline;
 
     protected LLAssetContext m_defaultAssetContext = null;
     protected LLAssetContext DefaultAssetContext {
@@ -121,6 +125,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         m_isLoggingOut = false;
         m_connectionParams = new ParameterSet();
         m_regionList = new List<LLRegionContext>();
+        m_waitTilOnline = new Dictionary<RegionContextBase,OnDemandWorkQueue>();
 
         m_gridLists = new GridLists();
     }
@@ -499,6 +504,8 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         World.World.Instance.AddRegion(regionContext);
         // this region is online and here. This can start a lot of IO
         regionContext.State.State = RegionStateCode.Online;
+        // if we'd queued up actions, do them now that it's online
+        DoAnyWaitingEvents(regionContext);
         // this is needed to make the avatar appear
         // TODO: figure out if the linking between agent and appearance is right
         // m_client.Appearance.SetPreviousAppearance(true);
@@ -536,12 +543,18 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         // update the region's view of the terrain
         regionContext.TerrainInfo.UpdatePatch(regionContext, x, y, data);
         // tell the world the earth is moving
+        if (regionContext.State.IfNotOnline(delegate() {
+                QueueTilOnline(regionContext, CommActionCode.RegionStateChange, regionContext, World.UpdateCodes.Terrain);
+            }) ) return;
         regionContext.Changed(World.UpdateCodes.Terrain);
     }
 
     // ===============================================================
     public virtual void Objects_OnNewPrim(OMV.Simulator sim, OMV.Primitive prim, ulong regionHandle, ushort timeDilation) {
         LLRegionContext rcontext = FindRegion(sim);
+        if (rcontext.State.IfNotOnline(delegate() {
+                QueueTilOnline(rcontext, CommActionCode.OnNewPrim, sim, prim, regionHandle, timeDilation);
+            }) ) return;
         try {
             IEntity ent;
             if (rcontext.TryGetCreateEntityLocalID(prim.LocalID, out ent, delegate() {
@@ -564,11 +577,14 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
 
     // ===============================================================
     public virtual void Objects_OnObjectUpdated(OMV.Simulator sim, OMV.ObjectUpdate update, ulong regionHandle, ushort timeDilation) {
+        LLRegionContext rcontext = FindRegion(sim);
+        if (rcontext.State.IfNotOnline(delegate() {
+                QueueTilOnline(rcontext, CommActionCode.OnObjectUpdated, sim, update, regionHandle, timeDilation);
+            }) ) return;
         m_log.Log(LogLevel.DCOMMDETAIL, "Object update: id={0}, p={1}, r={2}", 
             update.LocalID, update.Position.ToString(), update.Rotation.ToString());
-        LLRegionContext rcontext = FindRegion(sim);
-        IEntity updatedEntity;
         // assume somethings changed no matter what
+        IEntity updatedEntity;
         UpdateCodes updateFlags = UpdateCodes.Acceleration | UpdateCodes.AngularVelocity
                 | UpdateCodes.Position | UpdateCodes.Rotation | UpdateCodes.Velocity;
         if (update.Avatar) updateFlags |= UpdateCodes.CollisionPlane;
@@ -605,8 +621,11 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
 
     // ===============================================================
     public virtual void Objects_OnObjectKilled(OMV.Simulator sim, uint objectID) {
-        m_log.Log(LogLevel.DWORLDDETAIL, "Object killed:");
         LLRegionContext rcontext = FindRegion(sim);
+        if (rcontext.State.IfNotOnline(delegate() {
+                QueueTilOnline(rcontext, CommActionCode.OnObjectKilled, sim, objectID);
+            }) ) return;
+        m_log.Log(LogLevel.DWORLDDETAIL, "Object killed:");
         try {
             IEntity removedEntity;
             if (rcontext.TryGetEntityLocalID(objectID, out removedEntity)) {
@@ -630,11 +649,14 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     /// <param name="regionHandle"></param>
     /// <param name="timeDilation"></param>
     public virtual void Objects_OnNewAvatar(OMV.Simulator sim, OMV.Avatar av, ulong regionHandle, ushort timeDilation) {
+        LLRegionContext rcontext = FindRegion(sim);
+        if (rcontext.State.IfNotOnline(delegate() {
+                QueueTilOnline(rcontext, CommActionCode.OnNewAvatar, sim, av, regionHandle, timeDilation);
+            }) ) return;
         m_log.Log(LogLevel.DCOMMDETAIL, "Objects_OnNewAvatar:");
         m_log.Log(LogLevel.DCOMMDETAIL, "cntl={0}, parent={1}, p={2}, r={3}", 
                 av.ControlFlags.ToString("x"), av.ParentID, av.Position.ToString(), av.Rotation.ToString());
 
-        LLRegionContext rcontext = FindRegion(sim);
 
         IEntityAvatar updatedEntity;
         // assume somethings changed no matter what
@@ -731,6 +753,94 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         }
         return ret;
     }
+
+    #region DELAYED REGION MANAGEMENT
+    // We get events before the sim comes online. This is a way to queue up those
+    // events until we're online.
+    public enum CommActionCode {
+        RegionStateChange,
+        OnNewPrim,
+        OnObjectUpdated,
+        OnObjectKilled,
+        OnNewAvatar
+    }
+
+    struct ParamBlock {
+        public CommActionCode cac;
+        public Object p1; public Object p2; public Object p3; public Object p4;
+        public ParamBlock(CommActionCode pcac, Object pp1, Object pp2, Object pp3, Object pp4) {
+            cac = pcac;  p1 = pp1; p2 = pp2; p3 = pp3; p4 = pp4;
+        }
+    }
+    private void QueueTilOnline(RegionContextBase rcontext, CommActionCode cac, Object p1) {
+        QueueTilOnline(rcontext, cac, p1, null, null, null);
+    }
+
+    private void QueueTilOnline(RegionContextBase rcontext, CommActionCode cac, Object p1, Object p2) {
+        QueueTilOnline(rcontext, cac, p1, p2, null, null);
+    }
+
+    private void QueueTilOnline(RegionContextBase rcontext, CommActionCode cac, Object p1, Object p2, Object p3) {
+        QueueTilOnline(rcontext, cac, p1, p2, p3, null);
+    }
+
+    private void QueueTilOnline(RegionContextBase rcontext, CommActionCode cac, Object p1, Object p2, Object p3, Object p4) {
+        lock (m_waitTilOnline) {
+            if (!m_waitTilOnline.ContainsKey(rcontext)) {
+                m_log.Log(LogLevel.DCOMMDETAIL, "QueueTilOnline: queuing action {0} for {1}", cac, rcontext.Name);
+                m_waitTilOnline.Add(rcontext, new OnDemandWorkQueue("QueueTilOnline:" + rcontext.Name));
+            }
+            m_waitTilOnline[rcontext].DoLater(DoCommAction, new ParamBlock(cac, p1, p2, p3, p4));
+        }
+    }
+
+    private bool DoCommAction(Object oparms) {
+        ParamBlock parms = (ParamBlock)oparms;
+        m_log.Log(LogLevel.DCOMMDETAIL, "DoCommAction: executing queued action {0}", parms.cac);
+        RegionAction(parms.cac, parms.p1, parms.p2, parms.p3, parms.p4);
+        return true;
+    }
+
+    private void DoAnyWaitingEvents(RegionContextBase rcontext) {
+        lock (m_waitTilOnline) {
+            m_log.Log(LogLevel.DCOMMDETAIL, "DoAnyWaitingEvents: unqueuing waiting events for {0}", rcontext.Name);
+            if (m_waitTilOnline.ContainsKey(rcontext)) {
+                OnDemandWorkQueue q = m_waitTilOnline[rcontext];
+                m_waitTilOnline.Remove(rcontext);
+                while (q.TotalQueued > 0) {
+                    q.ProcessQueue(1000);
+                }
+            }
+        }
+    }
+
+    public void RegionAction(CommActionCode cac, Object p1, Object p2, Object p3, Object p4) {
+        switch (cac) {
+            case CommActionCode.RegionStateChange:
+                m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: RegionStateChange");
+                ((RegionContextBase)p1).Changed((World.UpdateCodes)p2);
+                break;
+            case CommActionCode.OnNewPrim:
+                m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: OnNewPrim");
+                Objects_OnNewPrim((OMV.Simulator)p1, (OMV.Primitive)p2, (ulong)p3, (ushort)p4);
+                break;
+            case CommActionCode.OnObjectUpdated:
+                m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: OnObjectUpdated");
+                Objects_OnObjectUpdated((OMV.Simulator)p1, (OMV.ObjectUpdate)p2, (ulong)p3, (ushort)p4);
+                break;
+            case CommActionCode.OnObjectKilled:
+                m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: OnObjectKilled");
+                Objects_OnObjectKilled((OMV.Simulator)p1, (uint)p2);
+                break;
+            case CommActionCode.OnNewAvatar:
+                m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: OnNewAvatar");
+                Objects_OnNewAvatar((OMV.Simulator)p1, (OMV.Avatar)p2, (ulong)p3, (ushort)p4);
+                break;
+            default:
+                break;
+        }
+    }
+    #endregion DELAYED REGION MANAGEMENT
 
 
 

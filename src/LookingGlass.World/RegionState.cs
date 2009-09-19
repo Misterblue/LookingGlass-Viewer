@@ -39,6 +39,7 @@ public enum RegionStateCode : uint {
 }
 
 public delegate void RegionStateChangedCallback(RegionStateCode code);
+public delegate void RegionStateCheckCallback();
 
 public class RegionState {
     public event RegionStateChangedCallback OnStateChanged;
@@ -47,17 +48,20 @@ public class RegionState {
     private static BasicWorkQueue m_stateWork = null;
 
     private RegionStateCode m_regionState;
+    private Object m_regionStateLock;
 
     public RegionStateCode State {
         get { return m_regionState; }
         set {
             RegionStateCode newState = value;
-            if (m_regionState != newState) {
-                m_regionState = newState;
-                // if (OnStateChanged != null) OnStateChanged(m_regionState);
-                if (OnStateChanged != null) {
-                    // queue the state changed event to happen on another thread
-                    m_stateWork.DoLater(new OnStateChangedLater(OnStateChanged, m_regionState));
+            lock (m_regionStateLock) {
+                if (m_regionState != newState) {
+                    m_regionState = newState;
+                    // if (OnStateChanged != null) OnStateChanged(m_regionState);
+                    if (OnStateChanged != null) {
+                        // queue the state changed event to happen on another thread
+                        m_stateWork.DoLater(new OnStateChangedLater(OnStateChanged, m_regionState));
+                    }
                 }
             }
         }
@@ -81,6 +85,7 @@ public class RegionState {
             m_stateWork = new BasicWorkQueue("OnStateChanged");
         }
         m_regionState = RegionStateCode.Uninitialized;
+        m_regionStateLock = new Object();
     }
 
     /// <summary>
@@ -91,6 +96,33 @@ public class RegionState {
     /// </summary>
     public bool isOnline {
         get { return ((m_regionState & (RegionStateCode.Online)) != 0); }
+    }
+
+    // Will perform the callback if we're not online. The callback is done while
+    // the state is locked thus preventing race conditions.
+    // Returns 'true' if we called the delegate
+    public bool IfNotOnline(RegionStateCheckCallback rscc) {
+        bool ret = false;
+        lock (m_regionStateLock) {
+            if (!isOnline) {
+                rscc();
+                ret = true;
+            }
+        }
+        return ret;
+    }
+    // Will perform the callback if we're online. The callback is done while
+    // the state is locked thus preventing race conditions.
+    // Returns 'true' if we called the delegate
+    public bool IfOnline(RegionStateCheckCallback rscc) {
+        bool ret = false;
+        lock (m_regionStateLock) {
+            if (isOnline) {
+                rscc();
+                ret = true;
+            }
+        }
+        return ret;
     }
 }
 

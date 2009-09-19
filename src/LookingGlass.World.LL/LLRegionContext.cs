@@ -39,13 +39,21 @@ public sealed class LLRegionContext : RegionContextBase {
                         LLTerrainInfo tinfo, OMV.Simulator sim) 
                 : base(rcontext, acontext) {
         m_terrainInfo = tinfo;
+
+        // until we have a better protocol, we know the sims are a fixed size
         m_size = new OMV.Vector3(256f, 256f, 8000f);
+
+        // believe it or not the world coordinates of a sim are hidden in the handle
         uint x, y;
         OMV.Utils.LongToUInts(sim.Handle, out x, out y);
         m_worldBase = new OMV.Vector3d((double)x, (double)y, 0d);
+
         m_simulator = sim;
+
         // this should be more general as "GRID/SIM"
         m_name = new EntityName(sim.Name);
+
+        // a cache of requested localIDs so we don't ask too often
         m_recentLocalIDRequests = new Dictionary<uint, int>();
     }
 
@@ -71,7 +79,8 @@ public sealed class LLRegionContext : RegionContextBase {
     }
 
     public override void Dispose() {
-        throw new NotImplementedException();
+        base.Dispose();
+        m_simulator = null;
     }
 
     private OMV.GridClient m_comm;

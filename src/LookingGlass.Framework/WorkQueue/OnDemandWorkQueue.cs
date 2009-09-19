@@ -47,12 +47,12 @@ public class OnDemandWorkQueue : IWorkQueue {
 
     public long CurrentQueued { get { return (long)m_workQueue.Count; } }
 
-    protected LinkedList<DoLaterBase> m_workQueue;
+    protected SortedList<float, DoLaterBase> m_workQueue;
 
     public OnDemandWorkQueue(string nam) {
         m_queueName = nam;
         m_totalRequests = 0;
-        m_workQueue = new LinkedList<DoLaterBase>();
+        m_workQueue = new SortedList<float, DoLaterBase>();
         WorkQueueManager.Instance.Register(this);
     }
 
@@ -71,9 +71,9 @@ public class OnDemandWorkQueue : IWorkQueue {
     /// Experimental, untested entry which doesn't force the caller to create an
     /// instance of a DoLaterBase class but to use s delegate. The calling sequence
     /// would be something like:
-    /// m_workQueue.DoLater((DoLaterCallback)delegate() { 
-    ///     return LocalMethod(localParam1, localParam2, ...); 
-    /// });
+    /// workQueue.DoLater((DoLaterCallback)delegate(Object parms) { 
+    ///     return LocalMethod(parms); 
+    /// }, params);
     /// </summary>
     /// <param name="dlcb"></param>
     public void DoLater(DoLaterCallback dlcb, Object parms) {
@@ -112,25 +112,8 @@ public class OnDemandWorkQueue : IWorkQueue {
     /// <param name="w"></param>
     private void AddToWorkQueue(DoLaterBase w) {
         lock (m_workQueue) {
-            /*
-            // Experimental code trying to give some order to the requests
-            LinkedListNode<DoLaterBase> foundItem = null;
-            for (LinkedListNode<DoLaterBase> ii = m_workQueue.First; ii != null; ii = ii.Next) {
-                if (w.order < ii.Value.order) {
-                    foundItem = ii;
-                    break;
-                }
-            }
-            if (foundItem != null) {
-                // we're pointing to an element to put our element before
-                m_workQueue.AddBefore(foundItem, w);
-            }
-            else {
-                // just put it on the end
-                m_workQueue.AddLast(w);
-            }
-            */
-            m_workQueue.AddLast(w);
+            m_workQueue.Add(w.order, w);
+            // m_workQueue.AddLast(w);
         }
     }
 
@@ -152,17 +135,19 @@ public class OnDemandWorkQueue : IWorkQueue {
         while ((totalCost < maximumCost) && (totalCounter > 0) && (m_workQueue.Count > 0)) {
             now = System.Environment.TickCount;
             found = null;
+            int indx = 0;
             lock (m_workQueue) {
                 // find an entry in the list who's time has come
-                foreach (DoLaterBase ww in m_workQueue) {
-                    if (ww.remainingWait < now) {
-                        found = ww;
+                foreach (KeyValuePair<float,DoLaterBase>kvp in m_workQueue) {
+                    if (kvp.Value.remainingWait < now) {
+                        found = kvp.Value;
                         break;
                     }
+                    indx++;
                 }
                 if (found != null) {
                     // if found, remove from list
-                    m_workQueue.Remove(found);
+                    m_workQueue.Remove(indx);
                 }
             }
             if (found == null) {
