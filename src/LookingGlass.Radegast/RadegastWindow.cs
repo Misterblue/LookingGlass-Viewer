@@ -66,7 +66,12 @@ public partial class RadegastWindow : Form {
     }
 
     public void radControl_Paint(object sender, PaintEventArgs e) {
-        m_renderer.RenderOneFrame();
+        if (this.InvokeRequired) {
+            BeginInvoke((MethodInvoker)delegate() { m_renderer.RenderOneFrame(); });
+        }
+        else {
+            m_renderer.RenderOneFrame();
+        }
         return;
     }
 
