@@ -49,7 +49,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
 
     // while we wait for a region to be online, we queue requests here
     protected Dictionary<RegionContextBase, OnDemandWorkQueue> m_waitTilOnline;
-    protected bool m_shouldWaitTilOnline = false;
+    protected bool m_shouldWaitTilOnline = true;
 
     protected LLAssetContext m_defaultAssetContext = null;
     protected LLAssetContext DefaultAssetContext {
@@ -238,12 +238,13 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         try {
             m_client = new OMV.GridClient();
             m_client.Settings.ENABLE_CAPS = true;
+            m_client.Settings.ENABLE_SIMSTATS = true;
             m_client.Settings.MULTIPLE_SIMS = ModuleParams.ParamBool(ModuleName + ".Settings.MultipleSims");
             m_client.Settings.ALWAYS_DECODE_OBJECTS = true;
             m_client.Settings.ALWAYS_REQUEST_OBJECTS = true;
-            m_client.Settings.OBJECT_TRACKING = false; // We use our own object tracking system
+            m_client.Settings.OBJECT_TRACKING = true; // We use our own object tracking system
             m_client.Settings.AVATAR_TRACKING = true; //but we want to use the libsl avatar system
-            m_client.Settings.SEND_AGENT_APPEARANCE = false;    // for the moment, don't do appearance
+            m_client.Settings.SEND_AGENT_APPEARANCE = true;    // for the moment, don't do appearance
             m_client.Settings.SEND_AGENT_THROTTLE = true;    // tell them how fast we want it when connected
             m_client.Settings.PARCEL_TRACKING = false;
             m_client.Settings.ALWAYS_REQUEST_PARCEL_ACL = false;
@@ -257,7 +258,9 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
             m_client.Settings.ASSET_CACHE_DIR = ModuleParams.ParamString(ModuleName + ".Assets.CacheDir");
             // Crank up the throttle on texture downloads
             m_client.Throttle.Total = 2000000.0f;
-            m_client.Throttle.Texture = 446000.0f;
+            m_client.Throttle.Texture = 2446000.0f;
+            m_client.Throttle.Asset = 2446000.0f;
+            m_client.Settings.THROTTLE_OUTGOING_PACKETS = true;
 
             m_client.Network.OnLogin += new OMV.NetworkManager.LoginCallback(Network_OnLogin);
             m_client.Network.OnDisconnected += new OMV.NetworkManager.DisconnectedCallback(Network_OnDisconnected);
@@ -814,7 +817,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
             if (m_waitTilOnline.ContainsKey(rcontext)) {
                 OnDemandWorkQueue q = m_waitTilOnline[rcontext];
                 m_waitTilOnline.Remove(rcontext);
-                while (q.TotalQueued > 0) {
+                while (q.CurrentQueued > 0) {
                     q.ProcessQueue(1000);
                 }
             }
