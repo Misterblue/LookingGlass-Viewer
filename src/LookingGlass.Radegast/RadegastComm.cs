@@ -114,7 +114,7 @@ public class RadegastComm : CommLLLP {
      */
 
 
-    protected override void Network_OnLogin(OMV.LoginStatus login, string message) {
+    public override void Network_OnLogin(OMV.LoginStatus login, string message) {
         switch (m_radInstance.Netcom.LoginOptions.Grid) {
             case global::Radegast.Netcom.LoginGrid.MainGrid:
                 m_loginGrid = "SecondLife";

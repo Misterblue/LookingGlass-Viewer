@@ -128,6 +128,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         m_regionList = new List<LLRegionContext>();
         m_waitTilOnline = new Dictionary<RegionContextBase,OnDemandWorkQueue>();
 
+        m_loginGrid = "Unknown";
         m_gridLists = new GridLists();
     }
 
@@ -436,7 +437,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     }
 
 
-    protected virtual void Network_OnLogin(OMV.LoginStatus login, string message) {
+    public virtual void Network_OnLogin(OMV.LoginStatus login, string message) {
         if (login == OMV.LoginStatus.Success) {
             m_log.Log(LogLevel.DCOMM, "Successful login: {0}", message);
             m_isConnected = true;
@@ -453,7 +454,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         }
     }
 
-    protected virtual void Network_OnDisconnected(OMV.NetworkManager.DisconnectType reason, string message) {
+    public virtual void Network_OnDisconnected(OMV.NetworkManager.DisconnectType reason, string message) {
         m_log.Log(LogLevel.DCOMMDETAIL, "Disconnected");
         m_isConnected = false;
         //x BeginInvoke(
@@ -463,7 +464,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         //x });
     }
 
-    protected virtual void Network_OnEventQueueRunning(OMV.Simulator simulator) {
+    public virtual void Network_OnEventQueueRunning(OMV.Simulator simulator) {
         m_log.Log(LogLevel.DCOMMDETAIL, "Event queue running on {0}", simulator.Name);
         if (simulator == m_client.Network.CurrentSim) {
             m_SwitchingSims = false;

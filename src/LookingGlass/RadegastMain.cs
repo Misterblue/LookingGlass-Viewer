@@ -29,6 +29,7 @@ using LookingGlass.Comm.LLLP;
 using LookingGlass.Framework.Logging;
 using LookingGlass.Framework.Parameters;
 using LookingGlass.Radegast;
+using OMV = OpenMetaverse;
 using Radegast;
 
 namespace LookingGlass {
@@ -109,6 +110,15 @@ class RadegastMain : IRadegastPlugin {
 
         string radCommName = m_lgb.AppParams.ParamString("Radegast.Comm.Name");
         CommLLLP worldComm = (CommLLLP)m_lgb.ModManager.Module(radCommName);
+
+        // this sets up a bunch of structures and naming
+        m_log.Log(LogLevel.DRADEGASTDETAIL, "RadegastMain: Network_OnLogin");
+        worldComm.Network_OnLogin(OMV.LoginStatus.Success, "Radegast prelogin");
+        m_log.Log(LogLevel.DRADEGASTDETAIL, "RadegastMain: Network_OnSimConnected for {0}",
+                        RadInstance.Client.Network.CurrentSim.Name);
+        worldComm.Network_OnSimConnected(RadInstance.Client.Network.CurrentSim);
+
+        // copy the objects that are already in the comm layer into the world
         LoadWorldObjects.Load(RadInstance.Client, worldComm);
             
         // initialize the viewer dialog
