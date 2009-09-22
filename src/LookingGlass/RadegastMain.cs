@@ -116,6 +116,8 @@ class RadegastMain : IRadegastPlugin {
         worldComm.Network_OnLogin(OMV.LoginStatus.Success, "Radegast prelogin");
         m_log.Log(LogLevel.DRADEGASTDETAIL, "RadegastMain: Network_OnSimConnected for {0}",
                         RadInstance.Client.Network.CurrentSim.Name);
+
+        // this adds the base region early so some structures are initialized
         worldComm.Network_OnSimConnected(RadInstance.Client.Network.CurrentSim);
 
         // copy the objects that are already in the comm layer into the world

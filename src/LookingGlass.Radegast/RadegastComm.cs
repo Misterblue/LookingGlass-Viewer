@@ -72,7 +72,7 @@ public class RadegastComm : CommLLLP {
             // m_client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = true;
             // m_client.Settings.USE_ASSET_CACHE = false;
             m_client.Settings.PIPELINE_REQUEST_TIMEOUT = 120 * 1000;
-            m_client.Settings.ASSET_CACHE_DIR = ModuleParams.ParamString(ModuleName + ".Assets.CacheDir");
+            // m_client.Settings.ASSET_CACHE_DIR = ModuleParams.ParamString(ModuleName + ".Assets.CacheDir");
             // m_client.Settings.ALWAYS_REQUEST_PARCEL_ACL = false;
             // m_client.Settings.ALWAYS_REQUEST_PARCEL_DWELL = false;
             // m_client.Settings.Apply();

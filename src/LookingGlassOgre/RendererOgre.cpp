@@ -84,11 +84,12 @@ namespace RendererOgre {
 	// program can call this to render each frame.
 	// Note that his also called the message pump to make screen resizing and
 	// movement happen on the Ogre frame.
-	bool RendererOgre::renderOneFrame() {
+	// If the passed parameter is 'true' we call the windows message pump
+	bool RendererOgre::renderOneFrame(bool pump) {
 		bool ret = false;
 		if (m_root != NULL) {
 			ret = m_root->renderOneFrame();
-			Ogre::WindowEventUtilities::messagePump();
+			if (pump) Ogre::WindowEventUtilities::messagePump();
 		}
 		return ret;
 	}

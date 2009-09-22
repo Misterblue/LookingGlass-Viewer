@@ -57,6 +57,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
             if (m_defaultAssetContext == null) {
                 // Create the asset contect for this communication instance
                 // this should happen after connected. reconnection is a problem.
+                m_log.Log(LogLevel.DBADERROR, "CommLLLP: creating default for grid {0}", m_loginGrid);
                 m_defaultAssetContext = new LLAssetContext(m_loginGrid);
                 m_defaultAssetContext.InitializeContext(Client, ModuleName,
                     ModuleParams.ParamString(ModuleName + ".Assets.CacheDir"),
@@ -181,7 +182,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     protected OMVSD.OSD RuntimeValueFetch(string key) {
         OMVSD.OSD ret = null;
         try {
-            if ((m_client != null) && (m_isConnected && m_isLoggedIn)) {
+            if ((m_client != null) && (IsConnected && m_isLoggedIn)) {
                 switch (key) {
                     case FIELDCURRENTSIM:
                         ret = new OMVSD.OSDString(m_client.Network.CurrentSim.Name);
@@ -506,6 +507,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     public virtual void Network_OnSimConnected(OMV.Simulator sim) {
         m_log.Log(LogLevel.DWORLDDETAIL, "Simulator connected {0}", sim.Name);
         LLRegionContext regionContext = FindRegion(sim);
+        if (regionContext == null) return;
         World.World.Instance.AddRegion(regionContext);
 
         // this region is online and here. This can start a lot of IO
@@ -529,6 +531,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         if (prevSim != null) {      // there is no prev sim the first time
             m_log.Log(LogLevel.DWORLDDETAIL, "Simulator changed from {0}", prevSim.Name);
             LLRegionContext regionContext = FindRegion(prevSim);
+            if (regionContext == null) return;
             // TODO: what to do with this operation?
         }
     }
@@ -548,6 +551,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         // m_log.Log(LogLevel.DWORLDDETAIL, "Land patch for {0}: {1}, {2}, {3}", 
         //             sim.Name, x.ToString(), y.ToString(), width.ToString());
         LLRegionContext regionContext = FindRegion(sim);
+        if (regionContext == null) return;
         // update the region's view of the terrain
         regionContext.TerrainInfo.UpdatePatch(regionContext, x, y, data);
         // tell the world the earth is moving
@@ -560,6 +564,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     // ===============================================================
     public virtual void Objects_OnNewPrim(OMV.Simulator sim, OMV.Primitive prim, ulong regionHandle, ushort timeDilation) {
         LLRegionContext rcontext = FindRegion(sim);
+        if (rcontext == null) return;
         if (rcontext.State.IfNotOnline(delegate() {
                 QueueTilOnline(rcontext, CommActionCode.OnNewPrim, sim, prim, regionHandle, timeDilation);
             }) ) return;
@@ -586,6 +591,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     // ===============================================================
     public virtual void Objects_OnObjectUpdated(OMV.Simulator sim, OMV.ObjectUpdate update, ulong regionHandle, ushort timeDilation) {
         LLRegionContext rcontext = FindRegion(sim);
+        if (rcontext == null) return;
         if (rcontext.State.IfNotOnline(delegate() {
                 QueueTilOnline(rcontext, CommActionCode.OnObjectUpdated, sim, update, regionHandle, timeDilation);
             }) ) return;
@@ -630,6 +636,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     // ===============================================================
     public virtual void Objects_OnObjectKilled(OMV.Simulator sim, uint objectID) {
         LLRegionContext rcontext = FindRegion(sim);
+        if (rcontext == null) return;
         if (rcontext.State.IfNotOnline(delegate() {
                 QueueTilOnline(rcontext, CommActionCode.OnObjectKilled, sim, objectID);
             }) ) return;
@@ -658,6 +665,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     /// <param name="timeDilation"></param>
     public virtual void Objects_OnNewAvatar(OMV.Simulator sim, OMV.Avatar av, ulong regionHandle, ushort timeDilation) {
         LLRegionContext rcontext = FindRegion(sim);
+        if (rcontext == null) return;
         if (rcontext.State.IfNotOnline(delegate() {
                 QueueTilOnline(rcontext, CommActionCode.OnNewAvatar, sim, av, regionHandle, timeDilation);
             }) ) return;
@@ -723,27 +731,30 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
 
     // ===============================================================
     // given a simulator. Find the region info that we store the stuff in
+    // Note that, if we are not connected, we just return null thus showing our unhappiness.
     public virtual LLRegionContext FindRegion(OMV.Simulator sim) {
         LLRegionContext ret = null;
-        lock (m_regionList) {
-            foreach (LLRegionContext reg in m_regionList) {
-                if (reg.Simulator.ID == sim.ID) {
-                    ret = reg;
-                    break;
+        if (IsConnected) {
+            lock (m_regionList) {
+                foreach (LLRegionContext reg in m_regionList) {
+                    if (reg.Simulator.ID == sim.ID) {
+                        ret = reg;
+                        break;
+                    }
                 }
-            }
-            if (ret == null) {
-                LLTerrainInfo llterr = new LLTerrainInfo(null, DefaultAssetContext);
-                llterr.WaterHeight = sim.WaterHeight;
-                // TODO: copy terrain texture IDs
+                if (ret == null) {
+                    LLTerrainInfo llterr = new LLTerrainInfo(null, DefaultAssetContext);
+                    llterr.WaterHeight = sim.WaterHeight;
+                    // TODO: copy terrain texture IDs
 
-                ret = new LLRegionContext(null, DefaultAssetContext, llterr, sim);
-                ret.Name = new EntityNameLL(m_loginGrid + "/Region/" + sim.ToString().Trim());
-                ret.RegionContext = ret;    // since we don't know ourself before
-                ret.Comm = m_client;
-                ret.TerrainInfo.RegionContext = ret;
-                m_regionList.Add(ret);
-                m_log.Log(LogLevel.DWORLDDETAIL, "Creating region context for " + ret.Name);
+                    ret = new LLRegionContext(null, DefaultAssetContext, llterr, sim);
+                    ret.Name = new EntityNameLL(m_loginGrid + "/Region/" + sim.ToString().Trim());
+                    ret.RegionContext = ret;    // since we don't know ourself before
+                    ret.Comm = m_client;
+                    ret.TerrainInfo.RegionContext = ret;
+                    m_regionList.Add(ret);
+                    m_log.Log(LogLevel.DWORLDDETAIL, "Creating region context for " + ret.Name);
+                }
             }
         }
         return ret;

@@ -59,8 +59,8 @@ extern "C" DLLExport bool RenderingThread() {
 }
 
 // a call that renders only one frams
-extern "C" DLLExport bool RenderOneFrame() {
-	return m_ro->renderOneFrame();
+extern "C" DLLExport bool RenderOneFrame(bool pump) {
+	return m_ro->renderOneFrame(pump);
 }
 
 // ==========================================================
