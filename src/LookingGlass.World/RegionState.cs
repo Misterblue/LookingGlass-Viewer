@@ -23,6 +23,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using LookingGlass.Framework.Logging;
 using LookingGlass.Framework.WorkQueue;
 
 namespace LookingGlass.World {
@@ -100,7 +101,7 @@ public class RegionState {
 
     // Will perform the callback if we're not online. The callback is done while
     // the state is locked thus preventing race conditions.
-    // Returns 'true' if we called the delegate
+    // Returns 'true' if the region is not online and we called the delegate
     public bool IfNotOnline(RegionStateCheckCallback rscc) {
         bool ret = false;
         lock (m_regionStateLock) {

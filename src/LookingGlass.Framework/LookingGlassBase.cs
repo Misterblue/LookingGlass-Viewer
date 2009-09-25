@@ -24,12 +24,13 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using LookingGlass.Framework;
 using LookingGlass.Framework.Logging;
 using LookingGlass.Framework.Modules;
 using LookingGlass.Framework.Parameters;
 
 namespace LookingGlass {
-public class LookingGlassBase {
+public class LookingGlassBase : IInstance<LookingGlassBase> {
     // static things that are accessed very early (mostly by logger)
     private static string m_applicationName = "LookingGlass";
     public static string ApplicationName { get { return m_applicationName; } }
@@ -105,7 +106,8 @@ public class LookingGlassBase {
     /// Once configuration parameters are in place, this call will cause modules to
     /// be loaded and all the infrastructure to configure itself.
     /// </summary>
-    public void Initialize() {
+    /// <returns>'false' if everything didn't initialize. Shouldn't keep running</returns>
+    public bool Initialize() {
         KeepRunning = true;
 
         try {
@@ -121,12 +123,12 @@ public class LookingGlassBase {
 
         if (KeepRunning) {
             m_log.Log(LogLevel.DINIT, "Completed main module startup");
+            System.Threading.ThreadPool.SetMaxThreads(100, 1000);
         }
         else {
             m_log.Log(LogLevel.DBADERROR, "STARTEVERYTHING FAILED. NOT RUNNING");
         }
-
-        System.Threading.ThreadPool.SetMaxThreads(100, 1000);
+        return KeepRunning;
     }
 
     /// <summary>
@@ -156,6 +158,8 @@ public class LookingGlassBase {
     public void Stop() {
         // this causes all threads things to shutdown
         KeepRunning = false;
+        Thread.Sleep(3 * 1000);
+        StopEverything();
     }
 
     public delegate bool MainThreadCallback();

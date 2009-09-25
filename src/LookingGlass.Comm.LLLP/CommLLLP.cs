@@ -220,6 +220,9 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         ModuleParams.AddDefaultParameter(ModuleName + ".Assets.CacheDir", 
                     Utilities.GetDefaultApplicationStorageDir(null),
                     "Filesystem location to build the texture cache");
+        ModuleParams.AddDefaultParameter(ModuleName + ".Assets.OMVResources",
+                    "../LookingGlassResources/openmetaverse_data",
+                    "Directory for resources used by libopenmetaverse (mostly for appearance)");
         ModuleParams.AddDefaultParameter(ModuleName + ".Assets.NoTextureFilename", 
                     Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "../LookingGlassResources/NoTexture.png"),
                     "Filesystem location to build the texture cache");
@@ -258,6 +261,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
             m_client.Settings.USE_ASSET_CACHE = false;
             m_client.Settings.PIPELINE_REQUEST_TIMEOUT = 120 * 1000;
             m_client.Settings.ASSET_CACHE_DIR = ModuleParams.ParamString(ModuleName + ".Assets.CacheDir");
+            OMV.Settings.RESOURCE_DIR = ModuleParams.ParamString(ModuleName + ".Assets.OMVResources");
             // Crank up the throttle on texture downloads
             m_client.Throttle.Total = 2000000.0f;
             m_client.Throttle.Texture = 2446000.0f;
@@ -505,6 +509,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     #endregion ICommProvider
     // ===============================================================
     public virtual void Network_OnSimConnected(OMV.Simulator sim) {
+        m_isConnected = true;   // good enough reason to think we're connected
         m_log.Log(LogLevel.DWORLDDETAIL, "Simulator connected {0}", sim.Name);
         LLRegionContext regionContext = FindRegion(sim);
         if (regionContext == null) return;

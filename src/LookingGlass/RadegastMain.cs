@@ -105,8 +105,11 @@ class RadegastMain : IRadegastPlugin {
         LogManager.CurrentLogLevel = (LogLevel)m_lgb.AppParams.ParamInt("Log.FilterLevel");
 
         // cause LookingGlass to load all it's modules
-        m_lgb.Initialize();
-        m_log.Log(LogLevel.DRADEGASTDETAIL, "Completed LookingGlass initialization");
+        if (!m_lgb.Initialize()) {
+            m_log.Log(LogLevel.DRADEGASTDETAIL, "RadegastMain: Failed LookingGlass initialization. Bailing");
+            return;
+        }
+        m_log.Log(LogLevel.DRADEGASTDETAIL, "RadegastMain: Completed LookingGlass initialization");
 
         string radCommName = m_lgb.AppParams.ParamString("Radegast.Comm.Name");
         CommLLLP worldComm = (CommLLLP)m_lgb.ModManager.Module(radCommName);

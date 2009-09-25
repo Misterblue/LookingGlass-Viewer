@@ -23,6 +23,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using LookingGlass.Comm;
 using LookingGlass.Framework;
 using LookingGlass.Framework.Logging;
@@ -42,20 +43,53 @@ public class LoadWorldObjects {
 
     public static void Load(OMV.GridClient netComm, CommLLLP worldComm) {
         LogManager.Log.Log(LogLevel.DCOMMDETAIL, "LoadWorldObjects: loading existing context");
+        List<OMV.Simulator> simsToLoad = new List<OMV.Simulator>();
         lock (netComm.Network.Simulators) {
             foreach (OMV.Simulator sim in netComm.Network.Simulators) {
                 if (WeDontKnowAboutThisSimulator(sim, netComm, worldComm)) {
                     // tell the world about this simulator
                     LogManager.Log.Log(LogLevel.DCOMMDETAIL, "LoadWorldObjects: adding simulator {0}", sim.Name);
                     worldComm.Network_OnSimConnected(sim);
-                    // add the avatars
-                    AddAvatars(sim, netComm, worldComm);
-                    // add all the objects
-                    AddObjects(sim, netComm, worldComm);
+                    simsToLoad.Add(sim);
                 }
             }
         }
-        LogManager.Log.Log(LogLevel.DCOMMDETAIL, "LoadWorldObjects: completed loading existing context");
+        Object[] loadParams = { simsToLoad, netComm, worldComm };
+        ThreadPool.QueueUserWorkItem(LoadSims, loadParams);
+        LogManager.Log.Log(LogLevel.DCOMMDETAIL, "LoadWorldObjects: started thread to load sim objects");
+    }
+
+    /// <summary>
+    /// Routine called on a separate thread to load the avatars and objects from the simulators
+    /// into LookingGlass.
+    /// </summary>
+    /// <param name="loadParam"></param>
+    private static void LoadSims(Object loadParam) {
+        LogManager.Log.Log(LogLevel.DCOMMDETAIL, "LoadWorldObjects: starting to load sim objects");
+        try {
+            Object[] loadParams = (Object[])loadParam;
+            List<OMV.Simulator> simsToLoad = (List<OMV.Simulator>)loadParams[0];
+            OMV.GridClient netComm = (OMV.GridClient)loadParams[1];
+            CommLLLP worldComm = (CommLLLP)loadParams[2];
+
+            OMV.Simulator simm = null;
+            try {
+                foreach (OMV.Simulator sim in simsToLoad) {
+                    simm = sim;
+                    LogManager.Log.Log(LogLevel.DCOMMDETAIL, "LoadWorldObjects: loading avatars and objects for sim {0}", sim.Name);
+                    AddAvatars(sim, netComm, worldComm);
+                    AddObjects(sim, netComm, worldComm);
+                }
+            }
+            catch (Exception e) {
+                LogManager.Log.Log(LogLevel.DCOMMDETAIL, "LoadWorldObjects: exception loading {0}: {1}",
+                    (simm == null ? "NULL" : simm.Name), e.ToString());
+            }
+        }
+        catch (Exception e) {
+            LogManager.Log.Log(LogLevel.DCOMMDETAIL, "LoadWorldObjects: exception: {0}", e.ToString());
+        }
+        LogManager.Log.Log(LogLevel.DCOMMDETAIL, "LoadWorldObjects: completed loading sim objects");
     }
 
     // Return 'true' if we don't have this region in our world yet

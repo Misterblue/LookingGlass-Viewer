@@ -23,13 +23,14 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using LookingGlass.Framework.Logging;
 using LookingGlass.Framework.Statistics;
 using OMVSD = OpenMetaverse.StructuredData;
 
 namespace LookingGlass.Framework.WorkQueue {
     // A static class which keeps a list of all the allocated work queues
     // and can serve up statistics about them.
-    public class WorkQueueManager : IDisplayable {
+    public class WorkQueueManager : IDisplayable , IInstance<WorkQueueManager> {
 
         private List<IWorkQueue> m_queues;
 
@@ -46,6 +47,7 @@ namespace LookingGlass.Framework.WorkQueue {
         }
 
         public void Register(IWorkQueue wq) {
+            Logging.LogManager.Log.Log(LogLevel.DINITDETAIL, "WorkQueueManager: registering queue {0}", wq.Name);
             lock (m_queues) m_queues.Add(wq);
         }
 

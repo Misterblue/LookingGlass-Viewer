@@ -112,9 +112,9 @@ class Program {
         // log level after all the parameters have been set
         LogManager.CurrentLogLevel = (LogLevel)LGB.AppParams.ParamInt("Log.FilterLevel");
 
-        LGB.Initialize();
-
-        LGB.Start();
+        if (LGB.Initialize()) {
+            LGB.Start();
+        }
 
         m_log.Log(LogLevel.DINIT, "EXIT");
     }
