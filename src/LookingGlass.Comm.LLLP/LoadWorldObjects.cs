@@ -102,16 +102,25 @@ public class LoadWorldObjects {
 
     private static void AddAvatars(OMV.Simulator sim, OMV.GridClient netComm, CommLLLP worldComm) {
         LogManager.Log.Log(LogLevel.DCOMMDETAIL, "LoadWorldObjects: loading {0} avatars", sim.ObjectsAvatars.Count);
+        List<OMV.Avatar> avatarsToNew = new List<OpenMetaverse.Avatar>();
         sim.ObjectsAvatars.ForEach(delegate(OMV.Avatar av) {
-            worldComm.Objects_OnNewAvatar(sim, av, sim.Handle, 0);
+            avatarsToNew.Add(av);
         });
+        // this happens outside the avatar list lock
+        foreach (OMV.Avatar av in avatarsToNew) {
+            worldComm.Objects_OnNewAvatar(sim, av, sim.Handle, 0);
+        }
     }
 
     private static void AddObjects(OMV.Simulator sim, OMV.GridClient netComm, CommLLLP worldComm) {
         LogManager.Log.Log(LogLevel.DCOMMDETAIL, "LoadWorldObjects: loading {0} primitives", sim.ObjectsPrimitives.Count);
+        List<OMV.Primitive> primsToNew = new List<OpenMetaverse.Primitive>();
         sim.ObjectsPrimitives.ForEach(delegate(OMV.Primitive prim) {
-            worldComm.Objects_OnNewPrim(sim, prim, sim.Handle, 0);
+            primsToNew.Add(prim);
         });
+        foreach (OMV.Primitive prim in primsToNew) {
+            worldComm.Objects_OnNewPrim(sim, prim, sim.Handle, 0);
+        }
     }
 
 

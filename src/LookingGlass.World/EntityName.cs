@@ -49,13 +49,18 @@ public class EntityName : IComparable {
     // presuming it is "HOST/ENTITYID"
     public EntityName(string name) {
         m_fullName = name;
-        m_header = ExtractHeaderPartFromEntityName(name);
-        m_host = ExtractHostPartFromEntityName(name);
-        m_entity = ExtractEntityFromEntityName(name);
+        m_header = this.ExtractHeaderPartFromEntityName();
+        m_host = this.ExtractHostPartFromEntityName();
+        m_entity = this.ExtractEntityFromEntityName();
     }
 
     public EntityName(IEntity entityContext, string name) 
             : this(entityContext.AssetContext, name)
+    {
+    }
+
+    public EntityName(EntityName entName) 
+            : this(entName.Name)
     {
     }
 
@@ -123,7 +128,7 @@ public class EntityName : IComparable {
     }
 
     // we really don't do headers yet
-    public virtual string ExtractHeaderPartFromEntityName(string entName) {
+    public virtual string ExtractHeaderPartFromEntityName() {
         return "";
     }
 
@@ -136,18 +141,18 @@ public class EntityName : IComparable {
 
     // default way to get the host part out of an entity name
     // The default format is HOSTPART + "/" + ENTITYPART
-    public virtual string ExtractHostPartFromEntityName(string entName) {
-        int pos = entName.IndexOf(PartSeparator);
+    public virtual string ExtractHostPartFromEntityName() {
+        int pos = this.Name.IndexOf(PartSeparator);
         if (pos > 0) {
-            return entName.Substring(0, pos);
+            return this.Name.Substring(0, pos);
         }
         return "";
     }
 
-    public virtual string ExtractEntityFromEntityName(string entName) {
-        int pos = entName.IndexOf(PartSeparator);
+    public virtual string ExtractEntityFromEntityName() {
+        int pos = this.Name.IndexOf(PartSeparator);
         if (pos >= 0) {
-            return entName.Substring(pos + 1);
+            return this.Name.Substring(pos + 1);
         }
         return "";
     }

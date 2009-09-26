@@ -867,7 +867,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         public override bool DoIt() {
             // note the super kludge since we don't know the real asset context
             // This information is hopefully coded into the entity name
-            AssetContextBase.RequestTextureLoad(m_entName.Name, AssetContextBase.AssetType.Texture, TextureLoadedCallback);
+            AssetContextBase.RequestTextureLoad(m_entName, AssetContextBase.AssetType.Texture, TextureLoadedCallback);
             return true;
         }
 
@@ -913,6 +913,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     }
 
     private bool ProcessBetweenFrames(int cost) {
+        // m_log.Log(LogLevel.DRENDERDETAIL, "Process between frames");
         ProcessWaitingMaterials();
         if (m_betweenFramesQueue != null) {
             m_betweenFramesQueue.ProcessQueue(cost);

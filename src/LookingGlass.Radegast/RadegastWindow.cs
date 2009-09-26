@@ -8,6 +8,7 @@ using System.Threading;
 using System.Windows.Forms;
 using Radegast;
 using LookingGlass;
+using LookingGlass.Framework.Logging;
 using LookingGlass.Renderer;
 
 namespace LookingGlass.Radegast {
@@ -67,9 +68,11 @@ public partial class RadegastWindow : Form {
 
     public void radControl_Paint(object sender, PaintEventArgs e) {
         if (this.InvokeRequired) {
+            LogManager.Log.Log(LogLevel.DALL, "radControl_Paint: InvokeRequired for RenderOneFrame");
             BeginInvoke((MethodInvoker)delegate() { m_renderer.RenderOneFrame(false); });
         }
         else {
+            LogManager.Log.Log(LogLevel.DALL, "radControl_Paint: RenderOneFrame");
             m_renderer.RenderOneFrame(false);
         }
         return;

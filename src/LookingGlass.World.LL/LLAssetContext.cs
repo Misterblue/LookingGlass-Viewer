@@ -143,8 +143,8 @@ public sealed class LLAssetContext : AssetContextBase {
     /// </summary>
     /// <param name="textureEntityName"></param>
     /// <returns></returns>
-    public override bool isTextureOwner(string textureEntityName) {
-        return textureEntityName.StartsWith(m_Name + EntityName.PartSeparator);
+    public override bool isTextureOwner(EntityName textureEntityName) {
+        return textureEntityName.Name.StartsWith(m_Name + EntityName.PartSeparator);
     }
 
     /// <summary>
@@ -156,9 +156,9 @@ public sealed class LLAssetContext : AssetContextBase {
     // TODO: if we get a request for the same texture by two different routines
     // at the same time, this doesn't do all the callbacks
     // To enable this feature, remove the dictionary and checks for already fetching
-    public override void DoTextureLoad(string textureEntityName, AssetType typ, DownloadFinishedCallback finishCall) {
+    public override void DoTextureLoad(EntityName textureEntityName, AssetType typ, DownloadFinishedCallback finishCall) {
         EntityNameLL textureEnt = new EntityNameLL(textureEntityName);
-        string worldID = textureEnt.ExtractEntityFromEntityName(textureEntityName);
+        string worldID = textureEnt.EntityPart;
         OMV.UUID binID = new OMV.UUID(worldID);
 
         // do we already have the file?
@@ -166,7 +166,7 @@ public sealed class LLAssetContext : AssetContextBase {
         if (File.Exists(textureFilename)) {
             m_log.Log(LogLevel.DTEXTUREDETAIL, "DoTextureLoad: Texture file alreayd exists for " + worldID);
             bool hasTransparancy = CheckTextureFileForTransparancy(textureFilename);
-            m_completionWork.DoLater(new FinishCallDoLater(finishCall, textureEntityName, hasTransparancy));
+            m_completionWork.DoLater(new FinishCallDoLater(finishCall, textureEntityName.Name, hasTransparancy));
         }
         else {
             bool sendRequest = false;

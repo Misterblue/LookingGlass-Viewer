@@ -222,7 +222,7 @@ public class RendererOgreLL : IWorldRenderConv {
                         m_log.Log(LogLevel.DRENDERDETAIL, "CreateMeshResource: waiting for texture for sculpty {0}", ent.Name.Name);
                         // Don't have the texture now so ask for the texture to be loaded.
                         // Note that we ignore the callback and let the work queue requeing get us back here
-                        ent.AssetContext.DoTextureLoad(textureEnt.Name, AssetContextBase.AssetType.SculptieTexture, 
+                        ent.AssetContext.DoTextureLoad(textureEnt, AssetContextBase.AssetType.SculptieTexture, 
                             delegate(string name, bool trans) { return; });
                         // This will cause the work queue to requeue the mesh creation and call us
                         //   back later to retry creating the mesh

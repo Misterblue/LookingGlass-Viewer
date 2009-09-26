@@ -72,7 +72,7 @@ public abstract class AssetContextBase : IDisposable {
     /// call to the OnDownload* events will show it's progress.
     /// </summary>
     /// <param name="textureEntityName">the entity name of this texture</param>
-    public abstract void DoTextureLoad(string textureEntityName, AssetType typ, DownloadFinishedCallback finished);
+    public abstract void DoTextureLoad(EntityName textureEntityName, AssetType typ, DownloadFinishedCallback finished);
 
     /// <summary>
     /// Just get the real texture and return it to us. If the texture is not immediately available
@@ -91,7 +91,7 @@ public abstract class AssetContextBase : IDisposable {
     /// <param name="textureEntityName"></param>
     /// <param name="finished"></param>
     /// <returns></returns>
-    public static void RequestTextureLoad(string textureEntityName, AssetType typ, DownloadFinishedCallback finished) {
+    public static void RequestTextureLoad(EntityName textureEntityName, AssetType typ, DownloadFinishedCallback finished) {
         AssetContextBase textureOwner = null;
         lock (AssetContexts) {
             foreach (AssetContextBase acb in AssetContexts) {
@@ -115,7 +115,7 @@ public abstract class AssetContextBase : IDisposable {
     /// </summary>
     /// <param name="textureEntityName"></param>
     /// <returns></returns>
-    public abstract bool isTextureOwner(string textureEntityName);
+    public abstract bool isTextureOwner(EntityName textureEntityName);
 
     virtual public void Dispose() {
         lock (AssetContexts) {

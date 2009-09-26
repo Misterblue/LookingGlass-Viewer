@@ -65,6 +65,7 @@ class RadegastMain : IRadegastPlugin {
     }
 
     public void startLGView(Object parm, EventArgs args) {
+        m_log.Log(LogLevel.DRADEGAST, "startLGView()");
         // force a new default parameter files to Radegast specific ones 
         m_lgb.AppParams.AddDefaultParameter("Settings.File", 
             Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "RadegastLookingGlass.json"),

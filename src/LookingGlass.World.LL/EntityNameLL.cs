@@ -37,6 +37,10 @@ public class EntityNameLL : EntityName {
     public EntityNameLL(string name) : base(name) {
     }
 
+    public EntityNameLL(EntityName ent) 
+            : base(ent.Name) {
+    }
+
     public EntityNameLL(IEntity entityContext, string name) 
             : base(entityContext.AssetContext, name) {
     }
@@ -81,15 +85,15 @@ public class EntityNameLL : EntityName {
     private const string HostPartMatch = @"^(.*)/........-....-....-....-.*$";
     private const string HostPartReplace = @"$1";
     // the host part is embedded in the name somewhere. See if we can find it.
-    public override string ExtractHostPartFromEntityName(string entName) {
-        return Regex.Replace(entName, HostPartMatch, HostPartReplace);
+    public override string ExtractHostPartFromEntityName() {
+        return Regex.Replace(this.Name, HostPartMatch, HostPartReplace);
     }
 
     private const string UUIDMatch = @"^.*/(........-....-....-....-............).*$";
     private const string UUIDReplace = @"$1";
     // LL entities have a UUID in them of the real name of the entity
-    public override string ExtractEntityFromEntityName(string entName) {
-        return Regex.Replace(entName, UUIDMatch, UUIDReplace);
+    public override string ExtractEntityFromEntityName() {
+        return Regex.Replace(this.Name, UUIDMatch, UUIDReplace);
     }
 
 }
