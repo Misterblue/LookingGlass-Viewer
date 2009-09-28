@@ -43,7 +43,6 @@ public sealed class LLAssetContext : AssetContextBase {
 
     private ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
 
-    private OMV.TexturePipeline m_texturePipe;
     private OMV.GridClient m_client;
     private int m_maxRequests;
     private BasicWorkQueue m_completionWork;
@@ -76,7 +75,6 @@ public sealed class LLAssetContext : AssetContextBase {
 
     public LLAssetContext() : base() {
         m_Name = "Unknown";
-        m_texturePipe = null;
     }
 
     public LLAssetContext(string name) : base() {
@@ -98,8 +96,6 @@ public sealed class LLAssetContext : AssetContextBase {
         m_cacheDir = cacheDir;
         m_maxRequests = maxrequests;
         m_client.Settings.MAX_CONCURRENT_TEXTURE_DOWNLOADS = m_maxRequests;
-        m_texturePipe = new OMV.TexturePipeline(m_client);
-        // m_texturePipe.OnDownloadFinished += new OMV.TexturePipeline.DownloadFinishedCallback(OnACDownloadFinished);
         // m_client.Assets.OnImageReceived += new OMV.AssetManager.ImageReceivedCallback(OnImageReceived);
         m_client.Assets.Cache.ComputeAssetCacheFilename = ComputeTextureFilename;
     }
@@ -168,20 +164,19 @@ public sealed class LLAssetContext : AssetContextBase {
                     m_log.Log(LogLevel.DTEXTUREDETAIL, "DoTextureLoad: Already waiting for " + worldID);
                 }
                 else {
-                    if (m_texturePipe != null) {
-                        WaitingInfo wi = new WaitingInfo(binID, finishCall);
-                        wi.filename = textureFilename;
-                        wi.type = typ;
-                        m_waiting.Add(binID, wi);
-                        sendRequest = true;
-                    }
+                    WaitingInfo wi = new WaitingInfo(binID, finishCall);
+                    wi.filename = textureFilename;
+                    wi.type = typ;
+                    m_waiting.Add(binID, wi);
+                    sendRequest = true;
                 }
             }
             if (sendRequest) {
                 // this is here because RequestTexture might immediately call the callback
                 //   and we should be outside the lock
                 m_log.Log(LogLevel.DTEXTUREDETAIL, "DoTextureLoad: Requesting: " + textureEntityName);
-                m_texturePipe.RequestTexture(binID, OMV.ImageType.Normal, 50f, 0, 0, OnACDownloadFinished, false);
+                // m_texturePipe.RequestTexture(binID, OMV.ImageType.Normal, 50f, 0, 0, OnACDownloadFinished, false);
+                m_client.Assets.RequestImage(binID, OMV.ImageType.Normal, 50f, 0, 0, OnACDownloadFinished, false);
             }
         }
         return;
@@ -442,10 +437,6 @@ public sealed class LLAssetContext : AssetContextBase {
     }
 
     public override void Dispose() {
-        if (m_texturePipe != null) {
-            // m_texturePipe.Shutdown();    // pipeline shuts down when disconnected
-            m_texturePipe = null;
-        }
         base.Dispose();
     }
 
