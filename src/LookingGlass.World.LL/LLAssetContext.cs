@@ -68,7 +68,7 @@ public sealed class LLAssetContext : AssetContextBase {
     }
 
     private string m_cacheDir;
-    public string CacheDir {
+    public override string CacheDirBase {
         get { return m_cacheDir; }
     }
 
@@ -92,7 +92,7 @@ public sealed class LLAssetContext : AssetContextBase {
     /// <param name="maxrequests"></param>
     public void InitializeContext(OMV.GridClient gclient, string commName, string cacheDir, int maxrequests) {
         m_waiting = new Dictionary<OMV.UUID, WaitingInfo>();
-        m_completionWork = new BasicWorkQueue("LLAssetContext.Completion");
+        m_completionWork = new BasicWorkQueue("LLAssetContextCompletion");
         m_client = gclient;
         m_commName = commName;
         m_cacheDir = cacheDir;
@@ -106,7 +106,7 @@ public sealed class LLAssetContext : AssetContextBase {
 
     public string ComputeTextureFilename(string cacheDir, OMV.UUID textureID) {
         EntityNameLL entName = EntityNameLL.ConvertTextureWorldIDToEntityName(this, textureID);
-        string textureFilename = Path.Combine(CacheDir, entName.CacheFilename);
+        string textureFilename = Path.Combine(CacheDirBase, entName.CacheFilename);
         // m_log.Log(LogLevel.DTEXTUREDETAIL, "ComputeTextureFilename: " + textureFilename);
 
         // make sure the recieving directory is there for the texture
@@ -124,15 +124,6 @@ public sealed class LLAssetContext : AssetContextBase {
         string textureDirName = Path.GetDirectoryName(filename);
         if (!Directory.Exists(textureDirName)) {
             Directory.CreateDirectory(textureDirName);
-        }
-    }
-
-    // we set it in TexturePipeline and then just use that setting
-    public override string CacheDirBase {
-        get {
-            if (m_client != null)
-                return m_client.Settings.ASSET_CACHE_DIR;
-            return null;
         }
     }
 
@@ -162,10 +153,11 @@ public sealed class LLAssetContext : AssetContextBase {
         OMV.UUID binID = new OMV.UUID(worldID);
 
         // do we already have the file?
-        string textureFilename = Path.Combine(CacheDir, textureEnt.CacheFilename);
+        string textureFilename = Path.Combine(CacheDirBase, textureEnt.CacheFilename);
         if (File.Exists(textureFilename)) {
             m_log.Log(LogLevel.DTEXTUREDETAIL, "DoTextureLoad: Texture file alreayd exists for " + worldID);
             bool hasTransparancy = CheckTextureFileForTransparancy(textureFilename);
+            // make the callback happen on a new thread so things don't get tangled (caller getting the callback)
             m_completionWork.DoLater(new FinishCallDoLater(finishCall, textureEntityName.Name, hasTransparancy));
         }
         else {
@@ -187,6 +179,7 @@ public sealed class LLAssetContext : AssetContextBase {
             }
             if (sendRequest) {
                 // this is here because RequestTexture might immediately call the callback
+                //   and we should be outside the lock
                 m_log.Log(LogLevel.DTEXTUREDETAIL, "DoTextureLoad: Requesting: " + textureEntityName);
                 m_texturePipe.RequestTexture(binID, OMV.ImageType.Normal, 50f, 0, 0, OnACDownloadFinished, false);
             }
@@ -264,7 +257,7 @@ public sealed class LLAssetContext : AssetContextBase {
         if ((state == OMV.TextureRequestState.NotFound) || (state == OMV.TextureRequestState.Timeout)) {
             try {
                 EntityNameLL tempTexture = EntityNameLL.ConvertTextureWorldIDToEntityName(this, assetWorldID.ToString());
-                string tempTextureFilename = Path.Combine(CacheDir, tempTexture.CacheFilename);
+                string tempTextureFilename = Path.Combine(CacheDirBase, tempTexture.CacheFilename);
                 string textureDirName = Path.GetDirectoryName(tempTextureFilename);
                 if (!Directory.Exists(textureDirName)) {
                     Directory.CreateDirectory(textureDirName);
@@ -428,7 +421,7 @@ public sealed class LLAssetContext : AssetContextBase {
     public override System.Drawing.Bitmap GetTexture(EntityName textureEnt) {
         Bitmap bitmap = null;
         try {
-            string textureFilename = Path.Combine(CacheDir, textureEnt.CacheFilename);
+            string textureFilename = Path.Combine(CacheDirBase, textureEnt.CacheFilename);
             if (File.Exists(textureFilename)) {
                 bitmap = (Bitmap)Bitmap.FromFile(textureFilename);
             }

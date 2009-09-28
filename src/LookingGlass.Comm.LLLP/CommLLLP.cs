@@ -57,8 +57,8 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
             if (m_defaultAssetContext == null) {
                 // Create the asset contect for this communication instance
                 // this should happen after connected. reconnection is a problem.
-                m_log.Log(LogLevel.DBADERROR, "CommLLLP: creating default for grid {0}", m_loginGrid);
-                m_defaultAssetContext = new LLAssetContext(m_loginGrid);
+                m_log.Log(LogLevel.DBADERROR, "CommLLLP: creating default asset context for grid {0}", m_loginGrid);
+                m_defaultAssetContext = new LLAssetContext(LoggedInGridName);
                 m_defaultAssetContext.InitializeContext(Client, ModuleName,
                     ModuleParams.ParamString(ModuleName + ".Assets.CacheDir"),
                     ModuleParams.ParamInt(ModuleName + ".Texture.MaxRequests"));
@@ -94,6 +94,8 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     protected bool m_isLoggingIn;         // true if we are in the process of loggin in
     protected bool m_isLoggingOut;        // true if we are in the process of logging out
     protected string m_loginFirst, m_loginLast, m_loginPassword, m_loginGrid, m_loginSim;
+    // m_loginGrid has the displayable name. LoggedInGridName has cannoicalized name for app use.
+    protected string LoggedInGridName { get { return m_loginGrid.Replace(".", "_").ToLower(); } }
     protected string m_loginMsg = "";
     public const string FIELDFIRST = "first";
     public const string FIELDLAST = "last";
@@ -753,7 +755,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
                     // TODO: copy terrain texture IDs
 
                     ret = new LLRegionContext(null, DefaultAssetContext, llterr, sim);
-                    ret.Name = new EntityNameLL(m_loginGrid + "/Region/" + sim.ToString().Trim());
+                    ret.Name = new EntityNameLL(LoggedInGridName + "/Region/" + sim.ToString().Trim());
                     ret.RegionContext = ret;    // since we don't know ourself before
                     ret.Comm = m_client;
                     ret.TerrainInfo.RegionContext = ret;
