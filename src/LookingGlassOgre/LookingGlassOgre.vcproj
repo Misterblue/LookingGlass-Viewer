@@ -296,6 +296,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SkyManager.h"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.h"
 				>
 			</File>
