@@ -1,6 +1,6 @@
 {
 // Uncomment this if you like lots of debug output
-"Log.FilterLevel": "2147483647",	// log everything
+// "Log.FilterLevel": "2147483647",	// log everything
 // "Log.FilterLevel": "1073744896",	// RENDER and RENDERDETAIL
 
 // ====================================================
@@ -63,7 +63,7 @@
 
 // ====================================================
 "Comm.Texture.MaxRequests": "4",
-"Comm.Settings.MultipleSims": "false",
+"Comm.Settings.MultipleSims": "true",
 
 // ====================================================
 "CommLLLPRest.Comm": "Comm",
