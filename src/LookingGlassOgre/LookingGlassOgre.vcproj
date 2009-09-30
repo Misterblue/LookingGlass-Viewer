@@ -222,6 +222,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ProcessBetweenFrame.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\RendererOgre.cpp"
 				>
 			</File>
@@ -281,6 +285,10 @@
 			</File>
 			<File
 				RelativePath=".\OLPreloadArchive.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ProcessBetweenFrame.h"
 				>
 			</File>
 			<File

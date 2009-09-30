@@ -752,91 +752,57 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         }
     }
 
-    // ==========================================================================
-    private struct AWaitingMaterial {
-        public EntityNameOgre contextEntity;
-        public string materialName;
-        public AWaitingMaterial(EntityNameOgre con, string mat) {
-            contextEntity = con;
-            materialName = mat;
-        }
-    }
-
-    // Experiement: what if we create the materials as requested
-    private void RequestMaterialX(string contextEntity, string matName) {
-        m_log.Log(LogLevel.DRENDERDETAIL, "Request for materialX " + matName);
-        try{
-            EntityNameOgre entName = EntityNameOgre.ConvertOgreResourceToEntityName(contextEntity);
-            IEntity ent;
-            if (World.World.Instance.TryGetEntity(entName, out ent)) {
-                if (RendererOgre.GetWorldRenderConv(ent) == null) {
-                    // the rendering context is not set up. Odd but not fatal
-                    // try again later
-                    m_log.Log(LogLevel.DRENDERDETAIL, "RequestMaterial. No context so queuing");
-                    waitingMaterials.Enqueue(new AWaitingMaterial(entName, matName));
-                }
-                else {
-                    // Create the material resource and then make the rendering redisplay
-                    RendererOgre.GetWorldRenderConv(ent).CreateMaterialResource(m_sceneMgr, ent, matName);
-                    Ogr.RefreshResource(Ogr.ResourceTypeMaterial, matName);
-                }
-            }
-            else {
-                // we couldn't find the entity for the material. not good
-                m_log.Log(LogLevel.DBADERROR, "ProcessWaitingMaterials: could not find entity for material " + matName);
-            }
-        }
-        catch (Exception e) {
-            m_log.Log(LogLevel.DBADERROR, "ProcessWaitingMaterials: exception realizing material: " + e.ToString());
-        }
-        return;
-    }
-
-    private Queue<AWaitingMaterial> waitingMaterials = new Queue<AWaitingMaterial>();
+    /// <summary>
+    /// Request from the C++ world to create a specific material resource. We queue
+    /// the request on a work queue so the renderer can get back to work.
+    /// The material information is gathered and then sent back to the renderer.
+    /// </summary>
+    /// <param name="contextEntity"></param>
+    /// <param name="matName"></param>
     private void RequestMaterial(string contextEntity, string matName) {
-        m_log.Log(LogLevel.DRENDERDETAIL, "Request for material2 " + matName);
+        m_log.Log(LogLevel.DRENDERDETAIL, "Request for material " + matName);
         EntityNameOgre entName = EntityNameOgre.ConvertOgreResourceToEntityName(contextEntity);
-        lock (waitingMaterials) {
-            waitingMaterials.Enqueue(new AWaitingMaterial(entName, matName));
-        }
+        m_workQueue.DoLater(new RequestMaterialDoLater(m_sceneMgr, entName, matName));
         return;
     }
 
-    // Called between frames to create soem of the required materials
-    private void ProcessWaitingMaterials() {
-        // take one tenth of the total between frame work to create materials
-        int cnt = m_betweenFrameTotalCost / 10 / m_betweenFrameCreateMaterialCost;
-        while ((waitingMaterials.Count > 0) && (--cnt > 0)) {
-            // the manual ways it's thread safe. Throws if the queue is empty
+    private class RequestMaterialDoLater : DoLaterBase {
+        OgreSceneMgr m_sceneMgr;
+        EntityNameOgre m_entName;
+        string m_matName;
+        public RequestMaterialDoLater(OgreSceneMgr smgr, EntityNameOgre entName, string matName) {
+            m_sceneMgr = smgr;
+            m_entName = entName;
+            m_matName = matName;
+        }
+        public override bool DoIt() {
             try {
-                AWaitingMaterial wm = waitingMaterials.Dequeue();
                 IEntity ent;
-                if (World.World.Instance.TryGetEntity(wm.contextEntity, out ent)) {
+                if (World.World.Instance.TryGetEntity(m_entName, out ent)) {
                     // LogManager.Log.Log(LogLevel.DRENDERDETAIL, "RequestMaterialLater.DoIt(): converting {0}", entName);
                     if (RendererOgre.GetWorldRenderConv(ent) == null) {
                         // the rendering context is not set up. Odd but not fatal
                         // try again later
-                        waitingMaterials.Enqueue(wm);
+                        return false;
                     }
                     else {
                         // Create the material resource and then make the rendering redisplay
-                        int interval = m_statCreateMaterialInterval.In();
-                        RendererOgre.GetWorldRenderConv(ent).CreateMaterialResource(m_sceneMgr, ent, wm.materialName);
-                        m_statCreateMaterialInterval.Out(interval);
+                        RendererOgre.GetWorldRenderConv(ent).CreateMaterialResource(m_sceneMgr, ent, m_matName);
 
-                        interval = m_statRefreshMaterialInterval.In();
-                        Ogr.RefreshResource(Ogr.ResourceTypeMaterial, wm.materialName);
-                        m_statRefreshMaterialInterval.Out(interval);
+                        Ogr.RefreshResourceBF(Ogr.ResourceTypeMaterial, m_matName);
                     }
                 }
                 else {
                     // we couldn't find the entity for the material. not good
-                    m_log.Log(LogLevel.DBADERROR, "ProcessWaitingMaterials: could not find entity for material " + wm.materialName);
+                    LogManager.Log.Log(LogLevel.DBADERROR, 
+                        "ProcessWaitingMaterials: could not find entity for material {0}", m_matName);
                 }
             }
             catch (Exception e) {
-                m_log.Log(LogLevel.DBADERROR, "ProcessWaitingMaterials: exception realizing material: " + e.ToString());
+                LogManager.Log.Log(LogLevel.DBADERROR, 
+                    "ProcessWaitingMaterials: exception realizing material: {0}", e.ToString());
             }
+            return true;
         }
     }
 
@@ -914,7 +880,6 @@ public class RendererOgre : ModuleBase, IRenderProvider {
 
     private bool ProcessBetweenFrames(int cost) {
         // m_log.Log(LogLevel.DRENDERDETAIL, "Process between frames");
-        ProcessWaitingMaterials();
         if (m_betweenFramesQueue != null) {
             m_betweenFramesQueue.ProcessQueue(cost);
         }
@@ -922,8 +887,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     }
 
     private bool IsProcessBetweenFramesWork() {
-        return ( (m_betweenFramesQueue.CurrentQueued > 0) 
-            || (waitingMaterials.Count > 0) );
+        return ( m_betweenFramesQueue.CurrentQueued > 0 );
     }
 }
 }

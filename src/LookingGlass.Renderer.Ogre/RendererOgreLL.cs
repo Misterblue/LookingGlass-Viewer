@@ -164,7 +164,7 @@ public class RendererOgreLL : IWorldRenderConv {
 
         // while we're in the neighborhood, we can create the materials
         if (m_buildMaterialsAtRenderInfoTime) {
-            CreateMaterialResource6X(ent, prim);
+            CreateMaterialResource6(ent, prim);
         }
 
         return ri;
@@ -410,7 +410,7 @@ public class RendererOgreLL : IWorldRenderConv {
         string textureOgreResourceName = "";
         CreateMaterialParameters(ent, prim, 0, textureParams, faceNum, out textureOgreResourceName);
         m_log.Log(LogLevel.DRENDERDETAIL, "CreateMaterialResource2: m=" + materialName + ",o=" + textureOgreResourceName);
-        Ogr.CreateMaterialResource2(materialName, textureOgreResourceName, textureParams);
+        Ogr.CreateMaterialResource2BF(materialName, textureOgreResourceName, textureParams);
     }
 
     private void CreateMaterialParameters(IEntity ent, OMV.Primitive prim, int pBase, float[] textureParams, 
@@ -488,6 +488,7 @@ public class RendererOgreLL : IWorldRenderConv {
         }
     }
 
+    /* Temp not use to see if between frame change is good enough. Don't have two optimizations.
     /// <summary>
     /// Create six of the basic materials for this prim. This is passed to Ogre in one big lump
     /// to make things go a lot quicker.
@@ -516,6 +517,7 @@ public class RendererOgreLL : IWorldRenderConv {
             textureParams
         );
     }
+     */
 
     /// <summary>
     /// We have a new region to place in the view. Create the scene node for the 

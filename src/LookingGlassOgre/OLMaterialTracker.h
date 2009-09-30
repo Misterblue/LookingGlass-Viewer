@@ -50,6 +50,9 @@ public:
 	void GetMeshesToRefreshForTexture(std::list<Ogre::MeshPtr>*, const Ogre::String&, bool);
 	void ReloadMeshes(std::list<Ogre::MeshPtr>*);
 
+	// refresh the material of specified type
+	void RefreshResource(const Ogre::String&, const int);
+
 	// remember the material is modified and reload the using entities
 	void MarkMaterialModified(const Ogre::String);
 

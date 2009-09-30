@@ -118,6 +118,28 @@ void OLMaterialTracker::MakeMaterialDefault(Ogre::MaterialPtr matPtr) {
 	mat->load();
 }
 
+// Internal request to refresh a resource
+void OLMaterialTracker::RefreshResource(const Ogre::String& resName, const int rType) {
+	if (rType == LookingGlassOgr::ResourceTypeMesh) {
+		Ogre::MeshPtr theMesh = (Ogre::MeshPtr)Ogre::MeshManager::getSingleton().getByName(resName);
+		// unload it and let the renderer decide if it needs to be loaded again
+		// NOTE: unload doesn't work here. We get exceptions if we unload while reload doesn't fail
+		if (!theMesh.isNull()) theMesh->reload();
+	}
+	if (rType == LookingGlassOgr::ResourceTypeMaterial) {
+		// mark it so the work happens later between frames (more queues to manage correctly someday)
+		MarkMaterialModified(resName);
+	}
+	if (rType == LookingGlassOgr::ResourceTypeTexture) {
+		Ogre::TextureManager::getSingleton().unload(resName);
+		MarkTextureModified(resName, false);
+	}
+	if (rType == LookingGlassOgr::ResourceTypeTransparentTexture) {
+		Ogre::TextureManager::getSingleton().unload(resName);
+		MarkTextureModified(resName, true);
+	}
+}
+
 // A material has been modified. Remember it's name and, between frames, reload the
 // entities that contain the material.
 void OLMaterialTracker::MarkMaterialModified(const Ogre::String materialName) {

@@ -98,6 +98,9 @@ static class Ogr {
         float nearClip, float farClip, float aspect);
     [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
     public static extern void RefreshResource(int type, [MarshalAs(UnmanagedType.LPStr)]string resourceName);
+    // queue for between frame processing
+    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
+    public static extern void RefreshResourceBF(int type, [MarshalAs(UnmanagedType.LPStr)]string resourceName);
     [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
     public static extern void CreateMeshResource([MarshalAs(UnmanagedType.LPStr)]string resourceName,
                             [MarshalAs(UnmanagedType.LPArray)] int[] faceCounts, 
@@ -109,6 +112,11 @@ static class Ogr {
                             float glow, bool fullBright, int shiny, int bump);
     [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
     public static extern void CreateMaterialResource2([MarshalAs(UnmanagedType.LPStr)]string resourceName,
+                            [MarshalAs(UnmanagedType.LPStr)]string textureName,
+                            [MarshalAs(UnmanagedType.LPArray)] float[] parms);
+    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
+    // queue and do between frame version of above
+    public static extern void CreateMaterialResource2BF([MarshalAs(UnmanagedType.LPStr)]string resourceName,
                             [MarshalAs(UnmanagedType.LPStr)]string textureName,
                             [MarshalAs(UnmanagedType.LPArray)] float[] parms);
     [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]

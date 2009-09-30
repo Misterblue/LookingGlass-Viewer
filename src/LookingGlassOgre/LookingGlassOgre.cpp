@@ -27,6 +27,7 @@
 #include <stdarg.h>
 #include "LookingGlassOgre.h"
 #include "RendererOgre.h"
+#include "ProcessBetweenFrame.h"
 
 // The switch yard from the managed to unmanaged.
 // All of the external entry points are declared in this module.
@@ -92,7 +93,10 @@ extern "C" DLLExport void UpdateCamera(float px, float py, float pz,
 }
 extern "C" DLLExport void RefreshResource(int rType, char* resourceName) {
 	Ogre::String resName = resourceName;
-	RefreshResourceI(resName, rType);
+	m_ro->MaterialTracker()->RefreshResource(resName, rType);
+}
+extern "C" DLLExport void RefreshResourceBF(int rType, char* resourceName) {
+	ProcessBetweenFrame::RefreshResource(resourceName, rType);
 }
 extern "C" DLLExport void CreateMeshResource(const char* meshName, const int* faceCounts, const float* faceVertices) {
 	m_ro->CreateMeshResource(meshName, faceCounts, faceVertices);
@@ -106,6 +110,10 @@ extern "C" DLLExport void CreateMaterialResource(const char* matName, char* text
 extern "C" DLLExport void CreateMaterialResource2(const char* matName, char* textureName, 
 												  const float* parms) {
 	m_ro->MaterialTracker()->CreateMaterialResource2(matName, textureName, parms);
+}
+extern "C" DLLExport void CreateMaterialResource2BF(const char* matName, char* textureName, 
+												  const float* parms) {
+	  ProcessBetweenFrame::CreateMaterialResource2(matName, textureName, parms);
 }
 
 extern "C" DLLExport void CreateMaterialResource6(
@@ -283,26 +291,5 @@ void LookingGlassOgr::RequestResource(const char* contextEntName, const char* pa
 	}
 }
 
-// Internal request to refresh a resource
-void LookingGlassOgr::RefreshResourceI(const Ogre::String& resName, const int rType) {
-	if (rType == LookingGlassOgr::ResourceTypeMesh) {
-		Ogre::MeshPtr theMesh = (Ogre::MeshPtr)Ogre::MeshManager::getSingleton().getByName(resName);
-		// unload it and let the renderer decide if it needs to be loaded again
-		// NOTE: unload doesn't work here. We get exceptions if we unload while reload doesn't fail
-		if (!theMesh.isNull()) theMesh->reload();
-	}
-	if (rType == LookingGlassOgr::ResourceTypeMaterial) {
-		// mark it so the work happens later between frames (more queues to manage correctly someday)
-		m_ro->MaterialTracker()->MarkMaterialModified(resName);
-	}
-	if (rType == LookingGlassOgr::ResourceTypeTexture) {
-		Ogre::TextureManager::getSingleton().unload(resName);
-		m_ro->MaterialTracker()->MarkTextureModified(resName, false);
-	}
-	if (rType == LookingGlassOgr::ResourceTypeTransparentTexture) {
-		Ogre::TextureManager::getSingleton().unload(resName);
-		m_ro->MaterialTracker()->MarkTextureModified(resName, true);
-	}
-}
 
 }
