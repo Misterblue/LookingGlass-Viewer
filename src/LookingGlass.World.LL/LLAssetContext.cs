@@ -43,8 +43,8 @@ public sealed class LLAssetContext : AssetContextBase {
 
     private ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
 
-
-    public static readonly  object FileSystemAccessLock = new object();
+    // used to lock access to the filesystem so the threads and instances of this don't get too tangled
+    public static readonly object FileSystemAccessLock = new object();
 
     private OMV.GridClient m_client;
     private int m_maxRequests;
@@ -109,7 +109,7 @@ public sealed class LLAssetContext : AssetContextBase {
         // m_log.Log(LogLevel.DTEXTUREDETAIL, "ComputeTextureFilename: " + textureFilename);
 
         // make sure the recieving directory is there for the texture
-        lock (FileSystemAccessLock) MakeParentDirectoriesExist(textureFilename);
+        MakeParentDirectoriesExist(textureFilename);
 
         // m_log.Log(LogLevel.DTEXTUREDETAIL, "ComputerTextureFilename: returning " + textureFilename);
         return textureFilename;
@@ -121,9 +121,10 @@ public sealed class LLAssetContext : AssetContextBase {
     /// <param name="filename"></param>
     private static void MakeParentDirectoriesExist(string filename) {
         string textureDirName = Path.GetDirectoryName(filename);
-        lock (LLAssetContext.FileSystemAccessLock) if (!Directory.Exists(textureDirName))
-            {
-            Directory.CreateDirectory(textureDirName);
+        lock (LLAssetContext.FileSystemAccessLock) {
+            if (!Directory.Exists(textureDirName)) {
+                Directory.CreateDirectory(textureDirName);
+            }
         }
     }
 
@@ -154,34 +155,35 @@ public sealed class LLAssetContext : AssetContextBase {
 
         // do we already have the file?
         string textureFilename = Path.Combine(CacheDirBase, textureEnt.CacheFilename);
-        lock (FileSystemAccessLock) if (File.Exists(textureFilename))
-            {
-            m_log.Log(LogLevel.DTEXTUREDETAIL, "DoTextureLoad: Texture file alreayd exists for " + worldID);
-            bool hasTransparancy = CheckTextureFileForTransparancy(textureFilename);
-            // make the callback happen on a new thread so things don't get tangled (caller getting the callback)
-            m_completionWork.DoLater(new FinishCallDoLater(finishCall, textureEntityName.Name, hasTransparancy));
-        }
-        else {
-            bool sendRequest = false;
-            lock (m_waiting) {
-                // if this is already being requested, don't waste our time
-                if (m_waiting.ContainsKey(binID)) {
-                    m_log.Log(LogLevel.DTEXTUREDETAIL, "DoTextureLoad: Already waiting for " + worldID);
-                }
-                else {
-                    WaitingInfo wi = new WaitingInfo(binID, finishCall);
-                    wi.filename = textureFilename;
-                    wi.type = typ;
-                    m_waiting.Add(binID, wi);
-                    sendRequest = true;
-                }
+        lock (FileSystemAccessLock) {
+            if (File.Exists(textureFilename)) {
+                m_log.Log(LogLevel.DTEXTUREDETAIL, "DoTextureLoad: Texture file alreayd exists for " + worldID);
+                bool hasTransparancy = CheckTextureFileForTransparancy(textureFilename);
+                // make the callback happen on a new thread so things don't get tangled (caller getting the callback)
+                m_completionWork.DoLater(new FinishCallDoLater(finishCall, textureEntityName.Name, hasTransparancy));
             }
-            if (sendRequest) {
-                // this is here because RequestTexture might immediately call the callback
-                //   and we should be outside the lock
-                m_log.Log(LogLevel.DTEXTUREDETAIL, "DoTextureLoad: Requesting: " + textureEntityName);
-                // m_texturePipe.RequestTexture(binID, OMV.ImageType.Normal, 50f, 0, 0, OnACDownloadFinished, false);
-                m_client.Assets.RequestImage(binID, OMV.ImageType.Normal, 50f, 0, 0, OnACDownloadFinished, false);
+            else {
+                bool sendRequest = false;
+                lock (m_waiting) {
+                    // if this is already being requested, don't waste our time
+                    if (m_waiting.ContainsKey(binID)) {
+                        m_log.Log(LogLevel.DTEXTUREDETAIL, "DoTextureLoad: Already waiting for " + worldID);
+                    }
+                    else {
+                        WaitingInfo wi = new WaitingInfo(binID, finishCall);
+                        wi.filename = textureFilename;
+                        wi.type = typ;
+                        m_waiting.Add(binID, wi);
+                        sendRequest = true;
+                    }
+                }
+                if (sendRequest) {
+                    // this is here because RequestTexture might immediately call the callback
+                    //   and we should be outside the lock
+                    m_log.Log(LogLevel.DTEXTUREDETAIL, "DoTextureLoad: Requesting: " + textureEntityName);
+                    // m_texturePipe.RequestTexture(binID, OMV.ImageType.Normal, 50f, 0, 0, OnACDownloadFinished, false);
+                    m_client.Assets.RequestImage(binID, OMV.ImageType.Normal, 50f, 0, 0, OnACDownloadFinished, false);
+                }
             }
         }
         return;
@@ -266,7 +268,11 @@ public sealed class LLAssetContext : AssetContextBase {
                 string noTextureFilename = LookingGlassBase.Instance.AppParams.ParamString(m_commName + ".Assets.NoTextureFilename");
                 // if we copy the no texture file into the filesystem, we will never retry to
                 // fetch the texture. This copy is not a good thing.
-                lock (FileSystemAccessLock) if (!File.Exists(tempTextureFilename)) File.Copy(noTextureFilename, tempTextureFilename);
+                lock (FileSystemAccessLock) {
+                    if (!File.Exists(tempTextureFilename)) {
+                        File.Copy(noTextureFilename, tempTextureFilename);
+                    }
+                }
                 m_log.Log(LogLevel.DTEXTURE, 
                     "TextureDownload: Texture fetch failed={0}. Using not found texture.", tempTexture.Name);
             }
@@ -337,11 +343,12 @@ public sealed class LLAssetContext : AssetContextBase {
                                         graphics.DrawImage(tempImage, 0, 0);
                                         graphics.Flush();
                                     }
-                                    lock (LLAssetContext.FileSystemAccessLock) using (FileStream fileStream = File.Open(wii.filename, FileMode.Create))
-                                        {
-                                        textureBitmap.Save(fileStream, System.Drawing.Imaging.ImageFormat.Png);
-                                        fileStream.Flush();
-                                        fileStream.Close();
+                                    lock (LLAssetContext.FileSystemAccessLock) {
+                                        using (FileStream fileStream = File.Open(wii.filename, FileMode.Create)) {
+                                            textureBitmap.Save(fileStream, System.Drawing.Imaging.ImageFormat.Png);
+                                            fileStream.Flush();
+                                            fileStream.Close();
+                                        }
                                     }
                                 }
                             }
@@ -351,11 +358,12 @@ public sealed class LLAssetContext : AssetContextBase {
                         }
                         else {
                             // Just save the JPEG2000 file
-                            lock (LLAssetContext.FileSystemAccessLock) using (FileStream fileStream = File.Open(wii.filename, FileMode.Create))
-                                {
-                                fileStream.Flush();
-                                fileStream.Write(m_assetTexture.AssetData, 0, m_assetTexture.AssetData.Length);
-                                fileStream.Close();
+                            lock (LLAssetContext.FileSystemAccessLock) {
+                                using (FileStream fileStream = File.Open(wii.filename, FileMode.Create)) {
+                                    fileStream.Flush();
+                                    fileStream.Write(m_assetTexture.AssetData, 0, m_assetTexture.AssetData.Length);
+                                    fileStream.Close();
+                                }
                             }
                         }
                         m_logg.Log(LogLevel.DTEXTUREDETAIL, "Download finished callback: " + wii.worldID.ToString());
@@ -391,11 +399,12 @@ public sealed class LLAssetContext : AssetContextBase {
                                     graphics.Flush();
                                 }
 
-                                lock (LLAssetContext.FileSystemAccessLock) using (FileStream fileStream = File.Open(wii.filename, FileMode.Create))
-                                    {
-                                    textureBitmap.Save(fileStream, System.Drawing.Imaging.ImageFormat.Png);
-                                    fileStream.Flush();
-                                    fileStream.Close();
+                                lock (LLAssetContext.FileSystemAccessLock) {
+                                    using (FileStream fileStream = File.Open(wii.filename, FileMode.Create)) {
+                                        textureBitmap.Save(fileStream, System.Drawing.Imaging.ImageFormat.Png);
+                                        fileStream.Flush();
+                                        fileStream.Close();
+                                    }
                                 }
                             }
                             m_logg.Log(LogLevel.DTEXTUREDETAIL, "Download sculpty finished callback: " + wii.worldID.ToString());
@@ -424,24 +433,23 @@ public sealed class LLAssetContext : AssetContextBase {
     /// <returns></returns>
     public override System.Drawing.Bitmap GetTexture(EntityName textureEnt) {
         Bitmap bitmap = null;
-        try
-        {
+        try {
             string textureFilename = Path.Combine(CacheDirBase, textureEnt.CacheFilename);
-            lock (LLAssetContext.FileSystemAccessLock) if (File.Exists(textureFilename))
-                {
+            lock (LLAssetContext.FileSystemAccessLock) {
+                if (File.Exists(textureFilename)) {
                     bitmap = (Bitmap)Bitmap.FromFile(textureFilename);
                 }
-                else
-                {
+                else {
                     // the texture is not there yet. Return null to tell the caller they are out of luck
                     bitmap = null;
                 }
+            }
         }
-        catch (OutOfMemoryException)
-        {
+        catch (OutOfMemoryException) {
+            m_log.Log(LogLevel.DBADERROR, "GetTexture: OUT OF MEMORY!!!");
+            bitmap = null;
         }
-        catch (Exception e)
-        {
+        catch (Exception e) {
             m_log.Log(LogLevel.DBADERROR, "GetTexture: Exception getting texture {0}: {1}",
                 textureEnt.Name, e.ToString());
             bitmap = null;
