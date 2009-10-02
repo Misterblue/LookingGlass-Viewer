@@ -414,8 +414,8 @@ namespace RendererOgre {
 		Ogre::String entName = eName;
 		Ogre::String manualObjectName = "MO/" + entName;
 		Ogre::String baseMaterialName = entName;
-		const int* fC = &faceCounts[0];
-		const float* fV = &faceVertices[0];
+		const int* fC = &faceCounts[1];
+		const float* fV = &faceVertices[1];
 		const int faces = *fC;
 		fC += 1;
 
@@ -559,8 +559,8 @@ namespace RendererOgre {
 		Ogre::String entName = eName;
 		Ogre::String manualObjectName = "MO/" + entName;
 		Ogre::String baseMaterialName = entName;
-		const int* fC = &faceCounts[0];
-		const float* fV = &faceVertices[0];
+		const int* fC = &faceCounts[1];
+		const float* fV = &faceVertices[1];
 		const int faces = *fC;
 		fC += 1;
 

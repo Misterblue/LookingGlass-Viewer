@@ -40,6 +40,7 @@ public:
 
 	void RefreshResource(char*, int);
 	void CreateMaterialResource2(const char*, char*, const float*);
+	void CreateMeshResource(const char*, const int*, const float*);
 
 private:
 };

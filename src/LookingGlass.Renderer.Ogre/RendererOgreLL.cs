@@ -261,16 +261,17 @@ public class RendererOgreLL : IWorldRenderConv {
 
             // we pass two one-dimensional arrays of floating point numbers over to the
             // unmanaged code. The first array contains:
-            //   faceCounts[0] = number of faces
-            //   faceCounts[1] = offset in second array for beginning of vertex info for face 1
-            //   faceCounts[2] = number of vertices for face 1
-            //   faceCounts[3] = stride for vertex info for face 1 (= 8)
-            //   faceCounts[4] = offset in second array for beginning of indices info for face 1
-            //   faceCounts[5] = number of indices for face 1
-            //   faceCounts[6] = stride for indices (= 3)
-            //   faceCounts[7] = offset in second array for beginning of vertex info for face 2
-            //   faceCounts[8] = number of vertices for face 2
-            //   faceCounts[9] = stride for vertex info for face 2 (= 8)
+            //   faceCounts[0] = total number of int's in this array (for alloc and freeing in Ogre)
+            //   faceCounts[1] = number of faces
+            //   faceCounts[2] = offset in second array for beginning of vertex info for face 1
+            //   faceCounts[3] = number of vertices for face 1
+            //   faceCounts[4] = stride for vertex info for face 1 (= 8)
+            //   faceCounts[5] = offset in second array for beginning of indices info for face 1
+            //   faceCounts[6] = number of indices for face 1
+            //   faceCounts[7] = stride for indices (= 3)
+            //   faceCounts[8] = offset in second array for beginning of vertex info for face 2
+            //   faceCounts[9] = number of vertices for face 2
+            //   faceCounts[10] = stride for vertex info for face 2 (= 8)
             //   etc
             // The second array contains the vertex info in the order:
             //   v.X, v.Y, v.Z, t.X, t.Y, n.X, n.Y, n.Z
@@ -281,12 +282,13 @@ public class RendererOgreLL : IWorldRenderConv {
             const int verticesStride = 8;
             const int indicesStride = 3;
             // calculate how many floating point numbers we're pushing over
-            int[] faceCounts = new int[mesh.Faces.Count * faceCountsStride + 1];
-            faceCounts[0] = mesh.Faces.Count;
+            int[] faceCounts = new int[mesh.Faces.Count * faceCountsStride + 2];
+            faceCounts[0] = faceCounts.Length;
+            faceCounts[1] = mesh.Faces.Count;
             int totalVertices = 0;
             for (int j = 0; j < mesh.Faces.Count; j++) {
                 OMVR.Face face = mesh.Faces[j];
-                int faceBase = j * faceCountsStride + 1;
+                int faceBase = j * faceCountsStride + 2;
                 // m_log.Log(LogLevel.DRENDERDETAIL, "Mesh F" + j.ToString() + ":"
                 //     + " vcnt=" + face.Vertices.Count.ToString()
                 //     + " icnt=" + face.Indices.Count.ToString());
@@ -300,8 +302,9 @@ public class RendererOgreLL : IWorldRenderConv {
                 totalVertices += face.Indices.Count;
             }
 
-            float[] faceVertices = new float[totalVertices];
-            int vertI = 0;
+            float[] faceVertices = new float[totalVertices+2];
+            faceVertices[0] = faceVertices.Length;
+            int vertI = 1;
             for (int j = 0; j < mesh.Faces.Count; j++) {
                 OMVR.Face face = mesh.Faces[j];
 
@@ -358,7 +361,7 @@ public class RendererOgreLL : IWorldRenderConv {
                 + " vi=" + vertI
                 );
             // Now create the mesh
-            Ogr.CreateMeshResource(meshName, faceCounts, faceVertices);
+            Ogr.CreateMeshResourceBF(meshName, faceCounts, faceVertices);
         }
         return true;
     }

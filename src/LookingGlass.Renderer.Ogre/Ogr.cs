@@ -106,6 +106,10 @@ static class Ogr {
                             [MarshalAs(UnmanagedType.LPArray)] int[] faceCounts, 
                             [MarshalAs(UnmanagedType.LPArray)] float[] faceVertices);
     [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
+    public static extern void CreateMeshResourceBF([MarshalAs(UnmanagedType.LPStr)]string resourceName,
+                            [MarshalAs(UnmanagedType.LPArray)] int[] faceCounts, 
+                            [MarshalAs(UnmanagedType.LPArray)] float[] faceVertices);
+    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
     public static extern void CreateMaterialResource([MarshalAs(UnmanagedType.LPStr)]string resourceName,
                             [MarshalAs(UnmanagedType.LPStr)]string textureName,
                             float colorR, float colorG, float colorB, float colorA,

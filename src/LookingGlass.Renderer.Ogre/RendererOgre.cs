@@ -676,18 +676,9 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         return;
     }
 
-    private Dictionary<string, int> waitingMeshes = new Dictionary<string,int>();
     private void RequestMesh(string contextEntity, string meshName) {
-        lock (waitingMeshes) {
-            if (waitingMeshes.ContainsKey(meshName)) {
-                m_log.Log(LogLevel.DRENDERDETAIL, "Dup request for mesh " + meshName);
-            }
-            else {
-                m_log.Log(LogLevel.DRENDERDETAIL, "Request for mesh " + meshName);
-                waitingMeshes.Add(meshName, 0);
-                m_betweenFramesQueue.DoLater(new RequestMeshLater(this, m_sceneMgr, meshName));
-            }
-        }
+        m_log.Log(LogLevel.DRENDERDETAIL, "Request for mesh " + meshName);
+        m_workQueue.DoLater(new RequestMeshLater(this, m_sceneMgr, meshName));
         return;
     }
 
@@ -699,51 +690,30 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             m_renderer = renderer;
             m_sceneMgr = sMgr;
             m_meshName = meshName;
-            this.cost = m_betweenFrameCreateMeshCost;
         }
         
         override public bool DoIt() {
-            // type information is at the end of the name. remove if there
-            EntityName eName = EntityNameOgre.ConvertOgreResourceToEntityName(m_meshName);
-            // the terrible kludge here is that the name of the mesh is the name of
-            //   the entity. We reach back into the worlds and find the underlying
-            //   entity then we can construct the mesh.
-            IEntity ent;
-            if (!World.World.Instance.TryGetEntity(eName, out ent)) {
-                LogManager.Log.Log(LogLevel.DBADERROR, "RendererOgre.RequestMeshLater: could not find entity " + eName);
-                return true;
-            }
-            // Create mesh resource. In this case its most likely a .mesh file in the cache
-            if (!RendererOgre.GetWorldRenderConv(ent).CreateMeshResource(m_sceneMgr, ent, m_meshName)) {
-                // we need to wait until some resource exists before we can complete this creation
-                return false;
-            }
-
-            LogManager.Log.Log(LogLevel.DRENDERDETAIL, "RendererOgre.RequestMeshLater: queuing refresh for {0}, cnt={1}",
-                        m_meshName, m_renderer.waitingMeshes.Count);
-            m_renderer.m_betweenFramesQueue.DoLater(new RefreshMeshResourceLater(m_renderer, m_meshName));
-
-            return true;
-        }
-    }
-
-    // do the final unloading of the mesh between frames
-    private sealed class RefreshMeshResourceLater : DoLaterBase {
-        RendererOgre m_renderer;
-        string m_meshName;
-        public RefreshMeshResourceLater(RendererOgre renderer, string meshName) : base() {
-            m_renderer = renderer;
-            m_meshName = meshName;
-            this.cost = m_betweenFrameRefreshMeshCost;
-        }
-        public override bool DoIt() {
             try {
-                // tell Ogre to refresh (reload) the resource
-                Ogr.RefreshResource(Ogr.ResourceTypeMesh, m_meshName);
-                // we're no longer waiting for the mesh
-                lock (m_renderer.waitingMeshes) {
-                    m_renderer.waitingMeshes.Remove(m_meshName);
+                // type information is at the end of the name. remove if there
+                EntityName eName = EntityNameOgre.ConvertOgreResourceToEntityName(m_meshName);
+                // the terrible kludge here is that the name of the mesh is the name of
+                //   the entity. We reach back into the worlds and find the underlying
+                //   entity then we can construct the mesh.
+                IEntity ent;
+                if (!World.World.Instance.TryGetEntity(eName, out ent)) {
+                    LogManager.Log.Log(LogLevel.DBADERROR, "RendererOgre.RequestMeshLater: could not find entity " + eName);
+                    return true;
                 }
+                // Create mesh resource. In this case its most likely a .mesh file in the cache
+                // The actual mesh creation is queued and done later between frames
+                if (!RendererOgre.GetWorldRenderConv(ent).CreateMeshResource(m_sceneMgr, ent, m_meshName)) {
+                    // we need to wait until some resource exists before we can complete this creation
+                    return false;
+                }
+
+                // tell Ogre to refresh (reload) the resource
+                LogManager.Log.Log(LogLevel.DRENDERDETAIL, "RendererOgre.RequestMeshLater: refresh for {0}", m_meshName);
+                Ogr.RefreshResourceBF(Ogr.ResourceTypeMesh, m_meshName);
             }
             catch {
                 // an oddity but not fatal
@@ -842,7 +812,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             LogManager.Log.Log(LogLevel.DRENDERDETAIL, 
                     "TextureLoadedCallback {0}: Load complete. Name: {1}", this.sequence, textureEntityName);
             EntityNameOgre entName = new EntityNameOgre(textureEntityName);
-            m_renderer.m_betweenFramesQueue.DoLater(new RequestTextureCompletionLater(entName, hasTransparancy));
+            m_renderer.m_workQueue.DoLater(new RequestTextureCompletionLater(entName, hasTransparancy));
             return;
         }
 
@@ -860,10 +830,10 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "RequestTextureCompleteLater {0}: Load complete. Refreshing texture {1}, t={2}", 
                             this.sequence, ogreResourceName, m_hasTransparancy);
                 if (m_hasTransparancy) {
-                    Ogr.RefreshResource(Ogr.ResourceTypeTransparentTexture, ogreResourceName);
+                    Ogr.RefreshResourceBF(Ogr.ResourceTypeTransparentTexture, ogreResourceName);
                 }
                 else {
-                    Ogr.RefreshResource(Ogr.ResourceTypeTexture, ogreResourceName);
+                    Ogr.RefreshResourceBF(Ogr.ResourceTypeTexture, ogreResourceName);
                 }
                 return true;
             }

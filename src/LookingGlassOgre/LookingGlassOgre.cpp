@@ -100,6 +100,9 @@ extern "C" DLLExport void RefreshResourceBF(int rType, char* resourceName) {
 extern "C" DLLExport void CreateMeshResource(const char* meshName, const int* faceCounts, const float* faceVertices) {
 	m_ro->CreateMeshResource(meshName, faceCounts, faceVertices);
 }
+extern "C" DLLExport void CreateMeshResourceBF(const char* meshName, const int* faceCounts, const float* faceVertices) {
+	m_ro->ProcessBetweenFrame()->CreateMeshResource(meshName, faceCounts, faceVertices);
+}
 extern "C" DLLExport void CreateMaterialResource(const char* matName, char* textureName,
 		 const float colorR, const float colorG, const float colorB, const float colorA,
 		 const float glow, const bool fullBright, const int shiny, const int bump) {

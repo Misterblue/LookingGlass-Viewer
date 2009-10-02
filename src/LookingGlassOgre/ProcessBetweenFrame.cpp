@@ -57,6 +57,14 @@ struct CreateMaterialResourceQd {
 	float parms[OLMaterialTracker::OLMaterialTracker::CreateMaterialSize];
 };
 
+const int CreateMeshResourceCode = 3;
+struct CreateMeshResourceQd {
+	int type;
+	Ogre::String meshName;
+	int* faceCounts;
+	float* faceVertices;
+};
+
 ProcessBetweenFrame::ProcessBetweenFrame(RendererOgre::RendererOgre* ro) {
 	m_singleton = this;
 	m_ro = ro;
@@ -84,6 +92,17 @@ void ProcessBetweenFrame::CreateMaterialResource2(const char* matName, char* tex
 	m_betweenFrameWork.push((GenericQd*)cmrq);
 }
 
+void ProcessBetweenFrame::CreateMeshResource(const char* meshName, const int* faceCounts, const float* faceVertices) {
+	CreateMeshResourceQd* cmrq = OGRE_NEW_T(CreateMeshResourceQd, Ogre::MEMCATEGORY_GENERAL);
+	cmrq->type = CreateMeshResourceCode;
+	cmrq->meshName = Ogre::String(meshName);
+	cmrq->faceCounts = (int*)OGRE_MALLOC((*faceCounts) * sizeof(int), Ogre::MEMCATEGORY_GENERAL);
+	memcpy(cmrq->faceCounts, faceCounts, (*faceCounts) * sizeof(int));
+	cmrq->faceVertices = (float*)OGRE_MALLOC((*faceVertices) * sizeof(float), Ogre::MEMCATEGORY_GENERAL);
+	memcpy(cmrq->faceVertices, faceVertices, (*faceVertices) * sizeof(float));
+	m_betweenFrameWork.push((GenericQd*)cmrq);
+}
+
 // we're between frames, on our own thread so we can do the work without locking
 bool ProcessBetweenFrame::frameRenderingQueued(const Ogre::FrameEvent& evt) {
 	while (!m_betweenFrameWork.empty()) {
@@ -103,6 +122,15 @@ bool ProcessBetweenFrame::frameRenderingQueued(const Ogre::FrameEvent& evt) {
 						cmrq->matName.c_str(), cmrq->texName.c_str(), cmrq->parms);
 				cmrq->matName.clear();
 				cmrq->texName.clear();
+				OGRE_FREE(cmrq, Ogre::MEMCATEGORY_GENERAL);
+				break;
+			 }
+			case CreateMeshResourceCode: {
+				CreateMeshResourceQd* cmrq = (CreateMeshResourceQd*)workGeneric;
+				m_ro->CreateMeshResource(cmrq->meshName.c_str(), cmrq->faceCounts, cmrq->faceVertices);
+				cmrq->meshName.clear();
+				OGRE_FREE(cmrq->faceCounts, Ogre::MEMCATEGORY_GENERAL);
+				OGRE_FREE(cmrq->faceVertices, Ogre::MEMCATEGORY_GENERAL);
 				OGRE_FREE(cmrq, Ogre::MEMCATEGORY_GENERAL);
 				break;
 			 }
