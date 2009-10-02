@@ -24,13 +24,19 @@
 
 #include "LGOCommon.h"
 
+// forward definition
+namespace RendererOgre { class RendererOgre; }
+
 namespace ProcessBetweenFrame {
 
 class ProcessBetweenFrame : public Ogre::FrameListener {
 
 public:
-	ProcessBetweenFrame();
+	ProcessBetweenFrame(RendererOgre::RendererOgre*);
 	~ProcessBetweenFrame();
+
+	// Ogre::FrameListener
+	bool frameRenderingQueued(const Ogre::FrameEvent&);
 
 	void RefreshResource(char*, int);
 	void CreateMaterialResource2(const char*, char*, const float*);

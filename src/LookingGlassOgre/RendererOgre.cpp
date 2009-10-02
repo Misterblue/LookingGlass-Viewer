@@ -210,6 +210,7 @@ namespace RendererOgre {
 
 		// routines for managing and loading materials
 		m_materialTracker = new OLMaterialTracker::OLMaterialTracker(this);
+		m_processBetweenFrame = new ProcessBetweenFrame::ProcessBetweenFrame(this);
 
 		// listener to catch references to materials in meshes when they are read in
 		Ogre::MeshManager::getSingleton().setListener(new OLMeshSerializerListener(this));

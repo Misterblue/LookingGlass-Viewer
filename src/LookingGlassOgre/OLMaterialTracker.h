@@ -86,7 +86,8 @@ public:
 		CreateMaterialRotate,
 		CreateMaterialMappingType,
 		CreateMaterialMediaFlags,
-		CreateMaterialTransparancy
+		CreateMaterialTransparancy,
+		CreateMaterialSize
 	};
 
 private:

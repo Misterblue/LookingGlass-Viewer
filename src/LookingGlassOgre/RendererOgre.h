@@ -25,6 +25,7 @@
 #include "LGOCommon.h"
 #include "UserIO.h"
 #include "OLMaterialTracker.h"
+#include "ProcessBetweenFrame.h"
 
 namespace RendererOgre {
 
@@ -67,6 +68,7 @@ public:
 
 	// when a material resource is changed, tell Ogre to reload the things that use it
 	OLMaterialTracker::OLMaterialTracker* MaterialTracker() { return m_materialTracker; }
+	ProcessBetweenFrame::ProcessBetweenFrame* ProcessBetweenFrame() { return m_processBetweenFrame; }
 
 	// Utility functions
 	void Log(const char*, ...);
@@ -115,6 +117,7 @@ private:
 	// USER IO
 	UserIO* m_userio;
 	OLMaterialTracker::OLMaterialTracker* m_materialTracker;
+	ProcessBetweenFrame::ProcessBetweenFrame* m_processBetweenFrame;
 
 	// environmental light stuff waiting for the day we have a real sky system
 	Ogre::Vector3 m_sunFocalPoint;	// where the sun is pointing

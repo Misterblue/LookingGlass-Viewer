@@ -28,22 +28,87 @@
 #include "ProcessBetweenFrame.h"
 #include "LookingGlassOgre.h"
 #include "RendererOgre.h"
+#include "OLMaterialTracker.h"
 
 namespace ProcessBetweenFrame {
 
 std::queue<void*> m_betweenFrameWork;
+ProcessBetweenFrame* m_singleton;
+RendererOgre::RendererOgre* m_ro;
 
-ProcessBetweenFrame::ProcessBetweenFrame() {
+const int GenericCode = 0;
+struct GenericQd {
+	int type;
+	int data;
+};
+
+const int RefreshResourceCode = 1;
+struct RefreshResourceQd {
+	int type;
+	Ogre::String matName;
+	int rType;
+};
+
+const int CreateMaterialResourceCode = 2;
+struct CreateMaterialResourceQd {
+	int type;
+	Ogre::String matName;
+	Ogre::String texName;
+	float parms[OLMaterialTracker::OLMaterialTracker::CreateMaterialSize];
+};
+
+ProcessBetweenFrame::ProcessBetweenFrame(RendererOgre::RendererOgre* ro) {
+	m_singleton = this;
+	m_ro = ro;
+	LookingGlassOgr::GetOgreRoot()->addFrameListener(this);
 }
 
 ProcessBetweenFrame::~ProcessBetweenFrame() {
+	LookingGlassOgr::GetOgreRoot()->removeFrameListener(this);
 }
 
-
 void ProcessBetweenFrame::RefreshResource(char* resourceName, int rType) {
+	RefreshResourceQd* rrq = OGRE_NEW_T(RefreshResourceQd, Ogre::MEMCATEGORY_GENERAL);
+	rrq->type = RefreshResourceCode;
+	rrq->matName = Ogre::String(resourceName);
+	rrq->rType = rType;
+	m_betweenFrameWork.push((GenericQd*)rrq);
 }
 
 void ProcessBetweenFrame::CreateMaterialResource2(const char* matName, char* texName, const float* parms) {
+	CreateMaterialResourceQd* cmrq = OGRE_NEW_T(CreateMaterialResourceQd, Ogre::MEMCATEGORY_GENERAL);
+	cmrq->type = CreateMaterialResourceCode;
+	cmrq->matName = Ogre::String(matName);
+	cmrq->texName = Ogre::String(texName);
+	memcpy(cmrq->parms, parms, OLMaterialTracker::OLMaterialTracker::CreateMaterialSize*sizeof(float));
+	m_betweenFrameWork.push((GenericQd*)cmrq);
+}
+
+// we're between frames, on our own thread so we can do the work without locking
+bool ProcessBetweenFrame::frameRenderingQueued(const Ogre::FrameEvent& evt) {
+	while (!m_betweenFrameWork.empty()) {
+		GenericQd* workGeneric = (GenericQd*)m_betweenFrameWork.front();
+		m_betweenFrameWork.pop();
+		switch (workGeneric->type) {
+			case RefreshResourceCode: {
+				RefreshResourceQd* rrq = (RefreshResourceQd*)workGeneric;
+				m_ro->MaterialTracker()->RefreshResource(rrq->matName.c_str(), rrq->rType);
+				rrq->matName.clear();
+				OGRE_FREE(rrq, Ogre::MEMCATEGORY_GENERAL);
+				break;
+			}
+			case CreateMaterialResourceCode: {
+				CreateMaterialResourceQd* cmrq = (CreateMaterialResourceQd*)workGeneric;
+				m_ro->MaterialTracker()->CreateMaterialResource2(
+						cmrq->matName.c_str(), cmrq->texName.c_str(), cmrq->parms);
+				cmrq->matName.clear();
+				cmrq->texName.clear();
+				OGRE_FREE(cmrq, Ogre::MEMCATEGORY_GENERAL);
+				break;
+			 }
+		}
+	}
+	return true;
 }
 
 }

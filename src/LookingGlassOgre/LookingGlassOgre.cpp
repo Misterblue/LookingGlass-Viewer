@@ -89,14 +89,13 @@ extern "C" DLLExport void UpdateCamera(float px, float py, float pz,
 									   float dw, float dx, float dy, float dz,
 									   float nearClip, float farClip, float aspect) {
 	m_ro->updateCamera(px, py, pz, dw, dx, dy, dz, nearClip, farClip, aspect);
-	return;
 }
 extern "C" DLLExport void RefreshResource(int rType, char* resourceName) {
 	Ogre::String resName = resourceName;
 	m_ro->MaterialTracker()->RefreshResource(resName, rType);
 }
 extern "C" DLLExport void RefreshResourceBF(int rType, char* resourceName) {
-	ProcessBetweenFrame::RefreshResource(resourceName, rType);
+	m_ro->ProcessBetweenFrame()->RefreshResource(resourceName, rType);
 }
 extern "C" DLLExport void CreateMeshResource(const char* meshName, const int* faceCounts, const float* faceVertices) {
 	m_ro->CreateMeshResource(meshName, faceCounts, faceVertices);
@@ -113,7 +112,7 @@ extern "C" DLLExport void CreateMaterialResource2(const char* matName, char* tex
 }
 extern "C" DLLExport void CreateMaterialResource2BF(const char* matName, char* textureName, 
 												  const float* parms) {
-	  ProcessBetweenFrame::CreateMaterialResource2(matName, textureName, parms);
+	  m_ro->ProcessBetweenFrame()->CreateMaterialResource2(matName, textureName, parms);
 }
 
 extern "C" DLLExport void CreateMaterialResource6(
