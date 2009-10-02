@@ -70,8 +70,7 @@ public class LLTerrainInfo : TerrainInfoBase {
                 try {
                     LLRegionContext llreg = (LLRegionContext)reg;
                     OMV.Simulator sim = llreg.Simulator;
-                    if (!llreg.Comm.Terrain.SimPatches.ContainsKey(sim.Handle))
-                    {
+                    if (!llreg.Comm.Terrain.SimPatches.ContainsKey(sim.Handle)) {
                         return;
                     }
                     OMV.TerrainPatch[] patch = llreg.Comm.Terrain.SimPatches[sim.Handle];
