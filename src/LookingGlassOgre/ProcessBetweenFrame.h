@@ -41,6 +41,15 @@ public:
 	void RefreshResource(char*, int);
 	void CreateMaterialResource2(const char*, char*, const float*);
 	void CreateMeshResource(const char*, const int*, const float*);
+	void CreateMeshSceneNode( Ogre::SceneManager* sceneMgr, 
+					char* sceneNodeName, 
+					Ogre::SceneNode* parentNode,
+					char* entityName,
+					char* meshName,
+					bool inheritScale, bool inheritOrientation,
+					float px, float py, float pz,
+					float sx, float sy, float sz,
+					float ow, float ox, float oy, float oz);
 
 private:
 };

@@ -174,6 +174,17 @@ static class Ogr {
                 float rw, float rx, float ry, float rz
         );
     [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
+    public static extern bool CreateMeshSceneNodeBF(
+                System.IntPtr sceneMgr,
+                [MarshalAs(UnmanagedType.LPStr)]string sceneNodeName,
+                [MarshalAs(UnmanagedType.LPStr)]string parentNodeName,
+                [MarshalAs(UnmanagedType.LPStr)]string entityName,
+                [MarshalAs(UnmanagedType.LPStr)]string meshName,
+                bool scale, bool orientation,
+                float px, float py, float pz, float sx, float sy, float sz,
+                float rw, float rx, float ry, float rz
+        );
+    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
     public static extern System.IntPtr CreateChildSceneNode(System.IntPtr node);
     [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
     public static extern void AddEntity(System.IntPtr sceneMgr, System.IntPtr sceneNode,

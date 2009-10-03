@@ -446,7 +446,7 @@ public sealed class LLAssetContext : AssetContextBase {
             }
         }
         catch (OutOfMemoryException) {
-            m_log.Log(LogLevel.DBADERROR, "GetTexture: OUT OF MEMORY!!!");
+            // m_log.Log(LogLevel.DBADERROR, "GetTexture: OUT OF MEMORY!!!");
             bitmap = null;
         }
         catch (Exception e) {

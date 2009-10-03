@@ -157,11 +157,6 @@ public class RendererOgreLL : IWorldRenderConv {
             ri.scale = new OMV.Vector3(m_sceneMagnification, m_sceneMagnification, m_sceneMagnification);
         }
 
-        // The region has a root node. Dig through the LL specific data structures to find it
-        if (ent is LLEntityBase) {
-            ri.RegionRoot = ent.RegionContext.Addition(RendererOgre.AddRegionSceneNode);
-        }
-
         // while we're in the neighborhood, we can create the materials
         if (m_buildMaterialsAtRenderInfoTime) {
             CreateMaterialResource6(ent, prim);
@@ -534,7 +529,7 @@ public class RendererOgreLL : IWorldRenderConv {
             // a SL compatible region
             LLRegionContext llrcontext = (LLRegionContext)rcontext;
             // if we don't have a region scene node create one
-            if (llrcontext.Addition(RendererOgre.AddRegionSceneNode) == null) {
+            if (RendererOgre.GetRegionSceneNode(llrcontext) == null) {
                 // this funny rotation of the region's scenenode causes the region
                 // to be twisted from LL coordinates (Z up) to Ogre coords (Y up)
                 // Anything added under this node will not need to be converted.
@@ -546,7 +541,7 @@ public class RendererOgreLL : IWorldRenderConv {
                         -(float)rcontext.WorldBase.Y * m_sceneMagnification
                         );
 
-                OgreSceneNode node = m_sceneMgr.CreateSceneNode("RegionSceneNode/" + rcontext.Name,
+                OgreSceneNode node = m_sceneMgr.CreateSceneNode(EntityNameOgre.ConvertToOgreSceneNodeName(rcontext.Name),
                         null,        // because NULL, will add to root
                         false, true,
                         (float)rcontext.WorldBase.X * m_sceneMagnification,

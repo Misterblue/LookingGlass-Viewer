@@ -79,5 +79,23 @@ namespace LookingGlass.Renderer.Ogr {
                             px, py, pz, sx, sy, sz, rw, rx, ry, rz);
             return new OgreSceneNode(newNode, nodeName);
         }
+
+        // Create the scene node between frames.
+        // This queues the operation to do later when the processing is between frames
+        // Returns true if queued or false if we couldn't resolve the parentNodeName to
+        // and actual node.
+        public bool CreateMeshSceneNodeBF(
+                string sceneNodeName,   // name of scene node to create
+                string parentNodeName,  // name of the parent to connect it to (or zero)
+                string meshName,      // name of the entity (mesh) to add to the scene node
+                bool scale, bool orientation,
+                float px, float py, float pz, float sx, float sy, float sz,
+                float rw, float rx, float ry, float rz) {
+            return Ogr.CreateMeshSceneNodeBF(m_sceneMgr, sceneNodeName, parentNodeName, 
+                        EntityNameOgre.ConvertToOgreEntityName(new EntityNameOgre(meshName)),
+                        meshName,
+                        scale, orientation,
+                        px, py, pz, sx, sy, sz, rw, rx, ry, rz);
+        }
     }
 }

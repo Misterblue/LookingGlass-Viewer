@@ -81,7 +81,9 @@ namespace LookingGlass.Renderer.Ogr {
         /// </summary>
         /// <param name="entName"></param>
         public void AddEntity(OgreSceneMgr sceneMgr, string meshName) {
-            Ogr.AddEntity(sceneMgr.BasePtr, m_realSceneNode, "Entity/" + meshName, meshName);
+            Ogr.AddEntity(sceneMgr.BasePtr, m_realSceneNode, 
+                EntityNameOgre.ConvertToOgreEntityName(new EntityNameOgre(meshName)),
+                meshName);
             return;
         }
 

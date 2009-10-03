@@ -156,6 +156,34 @@ extern "C" DLLExport Ogre::SceneManager* GetSceneMgr() {
 extern "C" DLLExport Ogre::SceneNode* RootNode(Ogre::SceneManager* sceneMgr) {
 	return sceneMgr->getRootSceneNode();
 }
+extern "C" DLLExport bool CreateMeshSceneNodeBF(
+					Ogre::SceneManager* sceneMgr, 
+					char* sceneNodeName,
+					char* parentNodeName,
+					char* entityName,
+					char* meshName,
+					bool inheritScale, bool inheritOrientation,
+					float px, float py, float pz,
+					float sx, float sy, float sz,
+					float ow, float ox, float oy, float oz) {
+	Ogre::SceneNode* parentNode = NULL;
+	if (parentNodeName != 0) {
+		Ogre::String parentNodeNameS = Ogre::String(parentNodeName);
+		if (sceneMgr->hasSceneNode(parentNodeNameS)) {
+			parentNode = sceneMgr->getSceneNode(parentNodeNameS);
+		}
+		else {
+			return false;	// cannot create it now
+		}
+	}
+	m_ro->ProcessBetweenFrame()->CreateMeshSceneNode(sceneMgr, 
+			sceneNodeName, parentNode, entityName, meshName,
+			inheritScale, inheritOrientation,
+			px, py, pz, sx, sy, sz,
+			ow, ox, oy, oz);
+	return true;	// successful creation
+}
+
 extern "C" DLLExport Ogre::SceneNode* CreateSceneNode(
 					Ogre::SceneManager* sceneMgr, 
 					char* nodeName,
@@ -164,30 +192,14 @@ extern "C" DLLExport Ogre::SceneNode* CreateSceneNode(
 					float px, float py, float pz,
 					float sx, float sy, float sz,
 					float ow, float ox, float oy, float oz) {
-	Ogre::SceneNode* node = NULL;
-	Ogre::Quaternion rot = Ogre::Quaternion(ow, ox, oy, oz);
-
-	if (parentNode == 0) {
-		node = sceneMgr->getRootSceneNode()->createChildSceneNode(nodeName);
-	}
-	else {
-		node = parentNode->createChildSceneNode(nodeName);
-	}
-	node->setInheritScale(inheritScale);
-	node->setInheritOrientation(inheritOrientation);
-	node->setScale(sx, sy, sz);
-	node->translate(px, py, pz);
-	node->rotate(rot);
-	node->setVisible(true);
-	node->setInitialState();
-	return node;
-
+	return m_ro->CreateSceneNode(sceneMgr, nodeName, parentNode,
+		inheritScale, inheritOrientation, px, py, pz, sx, sy, sz, ow, ox, oy, oz);
 }
 extern "C" DLLExport Ogre::SceneNode* CreateChildSceneNode(Ogre::SceneNode* node) {
 	return node->createChildSceneNode();
 }
 extern "C" DLLExport void AddEntity(Ogre::SceneManager* sceneMgr, Ogre::SceneNode* sceneNode, 
-									char* entName, char* meshName) {
+									const char* entName, const char* meshName) {
 	m_ro->AddEntity(sceneMgr, sceneNode, entName, meshName);
 }
 extern "C" DLLExport void SceneNodeScale(Ogre::SceneNode* sceneNode, float sX, float sY, float sZ) {

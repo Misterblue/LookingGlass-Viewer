@@ -43,6 +43,10 @@ public class EntityNameOgre : EntityName {
         : base(name) {
     }
 
+    public EntityNameOgre(string header, string host, string entity)
+        : base(header, host, entity) {
+    }
+
     public EntityNameOgre(IEntity entityContext, string name) 
             : base(entityContext.AssetContext, name) {
     }
@@ -73,6 +77,7 @@ public class EntityNameOgre : EntityName {
 
     // Ogre presumes that entity name will be the filename in the cache. Make the
     // entity name on the Ogre side have the cache filename format
+    // Used for meshes, materials
     public static string ConvertToOgreNameX(EntityName entName, string extension) {
         string entReplace = Regex.Replace(entName.EntityPart, EntityNameMatch, OgreNameReplace);
         // if the replacement didn't happen entReplace == entName
@@ -82,15 +87,49 @@ public class EntityNameOgre : EntityName {
         return newName;
     }
 
+    public static EntityName ConvertToOgreNameY(EntityName entName, string extension) {
+        string entReplace = Regex.Replace(entName.EntityPart, EntityNameMatch, OgreNameReplace);
+        // if the replacement didn't happen entReplace == entName
+        if (extension != null) entReplace += extension;
+        EntityName newName = new EntityNameOgre(entName.HeaderPart, entName.HostPart, entReplace);
+        return newName;
+    }
+
+    // Each entity has a scene node and this is the conversion from the name of the
+    // entity to the name of the scene node that contains it.
+    public static EntityName ConvertToOgreMaterialName(EntityName entName) {
+        return ConvertToOgreNameY(entName, ".material");
+    }
+
+    // Each entity has a scene node and this is the conversion from the name of the
+    // entity to the name of the scene node that contains it.
+    public static EntityName ConvertToOgreMeshName(EntityName entName) {
+        return ConvertToOgreNameY(entName, ".mesh");
+    }
+
+    // Each entity has a scene node and this is the conversion from the name of the
+    // entity to the name of the scene node that contains it.
+    public static string ConvertToOgreSceneNodeName(EntityName entName) {
+        return "SceneNode/" + entName.Name;
+    }
+
+    // Each entity has a scene node and this is the conversion from the name of the
+    // entity to the name of the scene node that contains it.
+    public static string ConvertToOgreEntityName(EntityName entName) {
+        return "Entity/" + entName.Name;
+    }
+
     // private const string OgreNameMatch = @"^(.*)/.../.../.../([^/]*)$";
     private const string OgreNameMatch = @"^(.*)/[0-9a-f]/([^/]*)$";
     private const string EntityNameReplace = @"$1/$2";
 
     // Ogre resources have been decorated with extensions and dash numbers which we remove
-    // and then undo  the ConvertToOgreName to get back the origional enity namne
+    // and then undo  the ConvertToOgreName to get back the origional entity namne
     public static string ConvertOgreResourceToEntityNameX(string resName) {
         int pos;
         string oldName = resName;
+        if (oldName.StartsWith("SceneNode/")) oldName = oldName.Substring(10);
+        if (oldName.StartsWith("Entity/")) oldName = oldName.Substring(7);
         // Remove the ".material"
         if (oldName.EndsWith(".material")) {
             oldName = oldName.Substring(0, oldName.Length - 9);

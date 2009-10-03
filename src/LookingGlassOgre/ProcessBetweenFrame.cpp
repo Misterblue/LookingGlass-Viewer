@@ -65,6 +65,20 @@ struct CreateMeshResourceQd {
 	float* faceVertices;
 };
 
+const int CreateMeshSceneNodeCode = 4;
+struct CreateMeshSceneNodeQd {
+	int type;
+	Ogre::SceneManager* sceneMgr; 
+	Ogre::String sceneNodeName;
+	Ogre::SceneNode* parentNode;
+	Ogre::String entityName;
+	Ogre::String meshName;
+	bool inheritScale; bool inheritOrientation;
+	float px; float py; float pz;
+	float sx; float sy; float sz;
+	float ow; float ox; float oy; float oz;
+};
+
 ProcessBetweenFrame::ProcessBetweenFrame(RendererOgre::RendererOgre* ro) {
 	m_singleton = this;
 	m_ro = ro;
@@ -103,6 +117,29 @@ void ProcessBetweenFrame::CreateMeshResource(const char* meshName, const int* fa
 	m_betweenFrameWork.push((GenericQd*)cmrq);
 }
 
+void ProcessBetweenFrame::CreateMeshSceneNode(Ogre::SceneManager* sceneMgr, char* sceneNodeName,
+					Ogre::SceneNode* parentNode,
+					char* entityName,
+					char* meshName,
+					bool inheritScale, bool inheritOrientation,
+					float px, float py, float pz,
+					float sx, float sy, float sz,
+					float ow, float ox, float oy, float oz) {
+	CreateMeshSceneNodeQd* csnq = OGRE_NEW_T(CreateMeshSceneNodeQd, Ogre::MEMCATEGORY_GENERAL);
+	csnq->type = CreateMeshSceneNodeCode;
+	csnq->sceneMgr = sceneMgr;
+	csnq->sceneNodeName = Ogre::String(sceneNodeName);
+	csnq->parentNode = parentNode;
+	csnq->entityName = Ogre::String(entityName);
+	csnq->meshName = Ogre::String(meshName);
+	csnq->inheritScale = inheritScale;
+	csnq->inheritOrientation = inheritOrientation;
+	csnq->px = px; csnq->py = py; csnq->pz = pz;
+	csnq->sx = sx; csnq->sy = sy; csnq->sz = sz;
+	csnq->ow = ow; csnq->ox = ox; csnq->oy = oy; csnq->oz = oz;
+	m_betweenFrameWork.push((GenericQd*)csnq);
+}
+
 // we're between frames, on our own thread so we can do the work without locking
 bool ProcessBetweenFrame::frameRenderingQueued(const Ogre::FrameEvent& evt) {
 	while (!m_betweenFrameWork.empty()) {
@@ -124,7 +161,7 @@ bool ProcessBetweenFrame::frameRenderingQueued(const Ogre::FrameEvent& evt) {
 				cmrq->texName.clear();
 				OGRE_FREE(cmrq, Ogre::MEMCATEGORY_GENERAL);
 				break;
-			 }
+			}
 			case CreateMeshResourceCode: {
 				CreateMeshResourceQd* cmrq = (CreateMeshResourceQd*)workGeneric;
 				m_ro->CreateMeshResource(cmrq->meshName.c_str(), cmrq->faceCounts, cmrq->faceVertices);
@@ -133,7 +170,22 @@ bool ProcessBetweenFrame::frameRenderingQueued(const Ogre::FrameEvent& evt) {
 				OGRE_FREE(cmrq->faceVertices, Ogre::MEMCATEGORY_GENERAL);
 				OGRE_FREE(cmrq, Ogre::MEMCATEGORY_GENERAL);
 				break;
-			 }
+			}
+			case CreateMeshSceneNodeCode: {
+				CreateMeshSceneNodeQd* csnq = (CreateMeshSceneNodeQd*)workGeneric;
+				Ogre::SceneNode* node = m_ro->CreateSceneNode(
+					csnq->sceneMgr, csnq->sceneNodeName.c_str(), csnq->parentNode,
+					csnq->inheritScale, csnq->inheritOrientation,
+					csnq->px, csnq->py, csnq->pz,
+					csnq->sx, csnq->sy, csnq->sz,
+					csnq->ow, csnq->ox, csnq->oy, csnq->oz);
+				m_ro->AddEntity(csnq->sceneMgr, node, csnq->entityName.c_str(), csnq->meshName.c_str());
+				csnq->sceneNodeName.clear();
+				csnq->entityName.clear();
+				csnq->meshName.clear();
+				OGRE_FREE(csnq, Ogre::MEMCATEGORY_GENERAL);
+				break;
+			}
 		}
 	}
 	return true;

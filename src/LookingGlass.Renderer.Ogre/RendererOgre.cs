@@ -49,10 +49,10 @@ public class RendererOgre : ModuleBase, IRenderProvider {
 
     // we decorate IEntities with SceneNodes. This is our slot in the IEntity addition table
     // SceneNode of the entity itself
-    public static int AddSceneNode;
-    public static string AddSceneNodeName = "OgreSceneNode";
-    public static OgreSceneNode GetSceneNode(IEntity ent) {
-        return (OgreSceneNode)ent.Addition(RendererOgre.AddSceneNode);
+    public static int AddSceneNodeName;
+    public static string AddSceneNodeNameName = "OgreSceneNodeName";
+    public static string GetSceneNodeName(IEntity ent) {
+        return (string)ent.Addition(RendererOgre.AddSceneNodeName);
     }
     // SceneNode of the region if this is a IRegionContext
     public static int AddRegionSceneNode;
@@ -138,7 +138,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "File that lists Ogre plugins to load");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.ResourcesFilename", "resources.cfg",
                     "File that lists the Ogre resources to load");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.DefaultNumMipmaps", "3",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.DefaultNumMipmaps", "2",
                     "Default number of mip maps created for a texture (usually 6)");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.CacheDir", Utilities.GetDefaultApplicationStorageDir(null),
                     "Directory to store cached meshs, textures, etc");
@@ -218,7 +218,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         m_statTexturesRequested = m_stats.GetCounter("TexturesRequested");
 
         // renderer keeps rendering specific data in an entity's addition/subsystem slots
-        AddSceneNode = EntityBase.AddAdditionSubsystem(RendererOgre.AddSceneNodeName);
+        AddSceneNodeName = EntityBase.AddAdditionSubsystem(RendererOgre.AddSceneNodeNameName);
         AddRegionSceneNode = EntityBase.AddAdditionSubsystem(RendererOgre.AddRegionSceneNodeName);
         AddTerrainSceneNode = EntityBase.AddAdditionSubsystem(RendererOgre.AddTerrainSceneNodeName);
         AddWorldRenderConv = EntityBase.AddAdditionSubsystem(RendererOgre.AddWorldRenderConvName);
@@ -397,13 +397,13 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             ent.SetAddition(RendererOgre.AddWorldRenderConv, RendererOgreLL.Instance);
         }
         // does the entity have a scene node assocated with it already?
-        if (RendererOgre.GetSceneNode(ent) == null) {
+        if (RendererOgre.GetSceneNodeName(ent) == null) {
             // race condition: two Render()s for the same entity. This check is performed
             // again in the processing routine with some locking. The check here is
             // an optimization
             DoLaterBase laterWork = new DoRender(m_sceneMgr, ent, m_log);
             laterWork.order = CalculateInterestOrder(ent);
-            m_betweenFramesQueue.DoLater(laterWork);
+            m_workQueue.DoLater(laterWork);
         }
         return;
     }
@@ -421,9 +421,10 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         }
 
         override public bool DoIt() {
-            if (RendererOgre.GetSceneNode(m_ent) == null) {
+            if (RendererOgre.GetSceneNodeName(m_ent) == null) {
                 try {
-                    // m_log.Log(LogLevel.DRENDERDETAIL, "Adding SceneNode to new entity " + ent.Name);
+                    // m_log.Log(LogLevel.DRENDERDETAIL, "Adding SceneNode to new entity " + m_ent.Name);
+                    string entitySceneNodeName = EntityNameOgre.ConvertToOgreSceneNodeName(m_ent.Name);
                     if (m_ri == null) {
                         m_ri = RendererOgre.GetWorldRenderConv(m_ent).RenderingInfo(m_sceneMgr, m_ent, this.timesRequeued);
                         if (m_ri == null) {
@@ -436,47 +437,37 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     }
 
                     // Find a handle to the parent for this node
-                    OgreSceneNode parentNode = null;
+                    string parentSceneNodeName = null;
                     if (m_ri.parentEntity != null) {
                         // this entity has a parent entity. create scene node off his
                         IEntity parentEnt = m_ri.parentEntity;
-                        parentNode = RendererOgre.GetSceneNode(parentEnt);
-                        if (parentNode == null) {
-                            m_log.Log(LogLevel.DRENDERDETAIL, "Delaying rendering {0}/{1}. {2} waiting for parent {3}",
-                                this.sequence, this.timesRequeued, m_ent.Name.Name, 
-                                (parentEnt == null ? "NULL" : parentEnt.Name.Name));
-                            return false;   // if I must have parent, requeue if no parent
-                        }
+                        parentSceneNodeName = EntityNameOgre.ConvertToOgreSceneNodeName(parentEnt.Name);
                     }
                     else {
-                        if (m_ri.RegionRoot == null) {
-                            // no root scene node for this entity so place it at the real root
-                            parentNode = m_sceneMgr.RootNode();
-                            // m_log.Log(LogLevel.DRENDERDETAIL, "SceneNode child of root for " + m_ent.Name);
-                        }
-                        else {
-                            parentNode = (OgreSceneNode)m_ri.RegionRoot;
-                            // m_log.Log(LogLevel.DRENDERDETAIL, "SceneNode child of region root for " + m_ent.Name);
-                        }
+                        parentSceneNodeName = EntityNameOgre.ConvertToOgreSceneNodeName(m_ent.RegionContext.Name);
                     }
 
                     // Create the scene node for this entity
-                    OgreSceneNode node = m_sceneMgr.CreateSceneNode(m_ent.Name.ToString(),
-                                parentNode, false, true,
-                                m_ri.position.X, m_ri.position.Y, m_ri.position.Z,
-                                m_ri.scale.X, m_ri.scale.Y, m_ri.scale.Z,
-                                m_ri.rotation.W, m_ri.rotation.X, m_ri.rotation.Y, m_ri.rotation.Z
-                    );
-
-                    // TODO: is this the correct info to save in our slot?
-                    m_ent.SetAddition(RendererOgre.AddSceneNode, node);
-
-                    // Add the definition for the object on to the scene node
+                    // and add the definition for the object on to the scene node
                     // This will cause the load function to be called and create all
                     //   the callbacks that will actually create the object
-                    string entObjectName = (string)m_ri.basicObject;
-                    // m_log.Log(LogLevel.DRENDERDETAIL, "AddEntity " + entObjectName);
-                    node.AddEntity(m_sceneMgr, entObjectName);
+                    string entMeshName = (string)m_ri.basicObject;
+                    if (!m_sceneMgr.CreateMeshSceneNodeBF(entitySceneNodeName,
+                                        parentSceneNodeName, 
+                                        entMeshName,
+                                        false, true,
+                                        m_ri.position.X, m_ri.position.Y, m_ri.position.Z,
+                                        m_ri.scale.X, m_ri.scale.Y, m_ri.scale.Z,
+                                        m_ri.rotation.W, m_ri.rotation.X, m_ri.rotation.Y, m_ri.rotation.Z )) {
+                        m_log.Log(LogLevel.DRENDERDETAIL, "Delaying rendering {0}/{1}. {2} waiting for parent {3}",
+                            this.sequence, this.timesRequeued, m_ent.Name.Name, 
+                            (parentSceneNodeName == null ? "NULL" : parentSceneNodeName));
+                        return false;   // if I must have parent, requeue if no parent
+                    }
+
+                    // Add the name of the created scene node name so we know it's created and
+                    // we can find it later.
+                    m_ent.SetAddition(RendererOgre.AddSceneNodeName, entitySceneNodeName);
                 }
                 catch (Exception e) {
                     m_log.Log(LogLevel.DBADERROR, "Render: Failed conversion: " + e.ToString());
@@ -803,6 +794,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         public override bool DoIt() {
             // note the super kludge since we don't know the real asset context
             // This information is hopefully coded into the entity name
+            // The callback can (and will) be called multiple times as the texture gets better resolution
             AssetContextBase.RequestTextureLoad(m_entName, AssetContextBase.AssetType.Texture, TextureLoadedCallback);
             return true;
         }

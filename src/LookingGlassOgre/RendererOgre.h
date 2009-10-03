@@ -54,7 +54,11 @@ public:
 	// update objects anvironment routines
 	void updateCamera(float, float, float, float, float, float, float, float, float, float);
 
-	void AddEntity(Ogre::SceneManager*, Ogre::SceneNode*, char*, char*);
+	void AddEntity(Ogre::SceneManager*, Ogre::SceneNode*, const char*, const char*);
+	Ogre::SceneNode* RendererOgre::CreateSceneNode(Ogre::SceneManager* sceneMgr, const char* nodeName,
+					Ogre::SceneNode* parentNode, bool inheritScale, bool inheritOrientation,
+					float px, float py, float pz, float sx, float sy, float sz,
+					float ow, float ox, float oy, float oz);
 	void CreateMeshResource(const char*, const int[], const float[]);
 	void CreateMeshResource2(const char*, const int[], const float[]);	// experimental
 	void GenTerrainMesh(Ogre::SceneManager*, Ogre::SceneNode*, const int, const int, const float*);

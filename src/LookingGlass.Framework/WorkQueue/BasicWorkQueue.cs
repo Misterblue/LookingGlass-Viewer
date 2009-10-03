@@ -39,7 +39,7 @@ public class BasicWorkQueue : IWorkQueue {
     public string Name { get { return m_queueName; } }
 
     private long m_currentRequests;
-    public long CurrentQueued { get { return (long)(m_currentRequests + doEvenLater.Count); } }
+    public long CurrentQueued { get { return (long)m_currentRequests; } }
 
     public BasicWorkQueue(string nam) {
         m_queueName = nam;
@@ -53,6 +53,16 @@ public class BasicWorkQueue : IWorkQueue {
             LogManager.Log.Log(LogLevel.DRENDERDETAIL, "{0}DoLater: Queuing, c={1}", m_queueName, m_totalRequests);
         }
         w.containingClass = this;
+        w.remainingWait = 0;    // the first time through, do it now
+        w.timesRequeued = 0;
+        ThreadPool.QueueUserWorkItem(new WaitCallback(this.DoWork), (object)w);
+    }
+
+    public void DoLaterRequeue(DoLaterBase w){
+        m_currentRequests++;
+        if ((m_totalRequests++ % 100) == 0) {
+            LogManager.Log.Log(LogLevel.DRENDERDETAIL, "{0}DoLater: Queuing, c={1}", m_queueName, m_totalRequests);
+        }
         ThreadPool.QueueUserWorkItem(new WaitCallback(this.DoWork), (object)w);
     }
 
@@ -111,8 +121,10 @@ public class BasicWorkQueue : IWorkQueue {
     private static List<DoLaterBase> doEvenLater = new List<DoLaterBase>();
     private static Thread doEvenLaterThread = null;
     private static void DoItEvenLater(DoLaterBase w) {
+        w.timesRequeued++;
         lock (doEvenLater) {
-            w.remainingWait = System.Environment.TickCount + w.requeueWait;    // wait at least the total time
+            int nextTime = Math.Min(w.requeueWait * w.timesRequeued, 5000);
+            w.remainingWait = System.Environment.TickCount + nextTime;
             doEvenLater.Add(w);
             if (doEvenLaterThread == null) {    // is there another thread doing the requeuing?
                 doEvenLaterThread = Thread.CurrentThread;   // no, looks like I'm stuck
@@ -148,8 +160,9 @@ public class BasicWorkQueue : IWorkQueue {
                     // find how much time to wait for the remaining
                     sleepTime = int.MaxValue;
                     foreach (DoLaterBase jj in doEvenLater) {
-                        sleepTime = Math.Min(sleepTime, jj.remainingWait - now);
+                        sleepTime = Math.Min(sleepTime, jj.remainingWait);
                     }
+                    sleepTime -= now;
                 }
                 else {
                     // if no more to wait on, this thread is free
@@ -159,7 +172,7 @@ public class BasicWorkQueue : IWorkQueue {
             // if there are some things done waiting, let them free outside the lock
             if (doneWaiting != null) {
                 foreach (DoLaterBase ll in doneWaiting) {
-                    ((BasicWorkQueue)ll.containingClass).DoLater(ll);
+                    ((BasicWorkQueue)ll.containingClass).DoLaterRequeue(ll);
                 }
                 doneWaiting.Clear();
                 doneWaiting = null;

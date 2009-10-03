@@ -64,16 +64,24 @@ public sealed class LLRegionContext : RegionContextBase {
     /// <param name="localID"></param>
     public void RequestLocalID(uint localID) {
         int now = System.Environment.TickCount;
-        if (m_recentLocalIDRequests.ContainsKey(localID)) {
-            // we've asked for this localID recently. See how recent.
-            if (m_recentLocalIDRequests[localID] < (now - 20 * 1000)) {
-                // it was a while ago. Time to ask again
-                m_recentLocalIDRequests.Remove(localID);
+        uint requestID = 0;
+        lock (m_recentLocalIDRequests) {
+            if (m_recentLocalIDRequests.ContainsKey(localID)) {
+                // we've asked for this localID recently. See how recent.
+                if (m_recentLocalIDRequests[localID] < now) {
+                    // it was a while ago. Time to ask again
+                    m_recentLocalIDRequests.Remove(localID);
+                }
+            }
+            if (!m_recentLocalIDRequests.ContainsKey(localID)) {
+                // remember the time when we should try again
+                m_recentLocalIDRequests.Add(localID, now + (10 * 1000));
+                requestID = localID;
             }
         }
-        if (!m_recentLocalIDRequests.ContainsKey(localID)) {
+        if (requestID != 0) {
+            // send the packet outside the lock
             LogManager.Log.Log(LogLevel.DCOMMDETAIL, "LLRegionContext.RequestLocalID: asking for {0}/{1}", this.Name, localID);
-            m_recentLocalIDRequests.Add(localID, now);
             m_comm.Objects.RequestObject(this.Simulator, localID);
         }
     }

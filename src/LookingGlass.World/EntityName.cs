@@ -54,6 +54,13 @@ public class EntityName : IComparable {
         m_entity = this.ExtractEntityFromEntityName();
     }
 
+    public EntityName(string header, string host, string entity) {
+        m_header = header;
+        m_host = host;
+        m_entity = entity;
+        m_fullName = null;
+    }
+
     public EntityName(IEntity entityContext, string name) 
             : this(entityContext.AssetContext, name)
     {
@@ -116,23 +123,34 @@ public class EntityName : IComparable {
 
     // Raw routine for combining the parts of the name.
     // We still don't handle headers properly
-    public string CombineEntityName(string header, string host, string ent) {
-        string ret;
+    // Can be overridden for context specific changes
+    public virtual string CombineEntityName(string header, string host, string ent) {
+        string ret = "";
+        if (header != null && header.Length != 0) {
+            if (header.EndsWith(HeaderSeparator)) {
+                ret = header;
+            }
+            else {
+                ret = header + HeaderSeparator;
+            }
+        }
         if (host.EndsWith(PartSeparator)) {
-            ret = header + host + ent;
+            ret += host + ent;
         }
         else {
-            ret = header + host + PartSeparator + ent;
+            ret += host + PartSeparator + ent;
         }
         return ret;
     }
 
     // we really don't do headers yet
+    // Can be overridden for context specific changes
     public virtual string ExtractHeaderPartFromEntityName() {
         return "";
     }
 
     // the default way to build a cache filename.
+    // Can be overridden for context specific changes
     public virtual string CacheFilename {
         get {
             return CombineEntityName(HeaderPart, HostPart, EntityPart);
@@ -141,6 +159,7 @@ public class EntityName : IComparable {
 
     // default way to get the host part out of an entity name
     // The default format is HOSTPART + "/" + ENTITYPART
+    // Can be overridden for context specific changes
     public virtual string ExtractHostPartFromEntityName() {
         int pos = this.Name.IndexOf(PartSeparator);
         if (pos > 0) {
@@ -149,6 +168,7 @@ public class EntityName : IComparable {
         return "";
     }
 
+    // Can be overridden for context specific changes
     public virtual string ExtractEntityFromEntityName() {
         int pos = this.Name.IndexOf(PartSeparator);
         if (pos >= 0) {

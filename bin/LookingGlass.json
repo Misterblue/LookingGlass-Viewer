@@ -62,7 +62,7 @@
 "Renderer.Ogre.BetweenFrame.Costs.Total": "1000",
 
 // ====================================================
-"Comm.Texture.MaxRequests": "4",
+"Comm.Texture.MaxRequests": "8",
 "Comm.Settings.MultipleSims": "false",
 
 // ====================================================

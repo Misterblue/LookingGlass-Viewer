@@ -390,7 +390,7 @@ namespace RendererOgre {
 
 	// ============= REQUESTS TO DO WORK
 	void RendererOgre::AddEntity(Ogre::SceneManager* sceneMgr, Ogre::SceneNode* sceneNode,
-		char* entName, char* meshName) {
+							const char* entName, const char* meshName) {
 		// Log("RendererOgre::AddEntity: declare %s, t=%s, g=%s", meshName,
 		// 						"Mesh", meshResourceGroupName);
 		Ogre::ResourceGroupManager::getSingleton().declareResource(meshName,
@@ -405,6 +405,31 @@ namespace RendererOgre {
 		sceneNode->attachObject(ent);
 		m_recalculateVisibility = true;
 		return;
+	}
+
+	Ogre::SceneNode* RendererOgre::CreateSceneNode( Ogre::SceneManager* sceneMgr, const char* nodeName,
+					Ogre::SceneNode* parentNode,
+					bool inheritScale, bool inheritOrientation,
+					float px, float py, float pz,
+					float sx, float sy, float sz,
+					float ow, float ox, float oy, float oz) {
+		Ogre::SceneNode* node = NULL;
+		Ogre::Quaternion rot = Ogre::Quaternion(ow, ox, oy, oz);
+
+		if (parentNode == 0) {
+			node = sceneMgr->getRootSceneNode()->createChildSceneNode(nodeName);
+		}
+		else {
+			node = parentNode->createChildSceneNode(nodeName);
+		}
+		node->setInheritScale(inheritScale);
+		node->setInheritOrientation(inheritOrientation);
+		node->setScale(sx, sy, sz);
+		node->translate(px, py, pz);
+		node->rotate(rot);
+		node->setVisible(true);
+		node->setInitialState();
+		return node;
 	}
 
 	// Passed a bunch of vertices and index information, create the mesh that goes with it.
