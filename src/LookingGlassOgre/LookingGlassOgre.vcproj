@@ -234,6 +234,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SkyBoxSimple.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -301,6 +305,10 @@
 			</File>
 			<File
 				RelativePath=".\ResourceListeners.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SkyBoxSimple.h"
 				>
 			</File>
 			<File

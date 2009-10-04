@@ -163,6 +163,11 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "LoadingTexture.png",
                     "Resource name of  the default texture");
 
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Sky", "Default",
+                    "Name of the key system to use");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.SkyX.Detail", "High",
+                    "For SkyX, the detail (shaders) used");
+
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.LL.SceneMagnification", "1",
                     "Magnification of LL coordinates into Ogre space");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.LL.RenderInfoMaterialCreate", "true",

@@ -24,14 +24,25 @@
 
 #include "LGOCommon.h"
 
-abstract class SkyManager : Ogre::FrameListener {
+// forward definition
+namespace RendererOgre { class RendererOgre; }
+
+namespace LGSky {
+
+class SkyManager : public Ogre::FrameListener {
 public:
-	SkyManager(RendererOgre::RendererOgre*);
-	~SkyManager();
+	// SkyManager(RendererOgre::RendererOgre*);
+	// virtual ~SkyManager();
 
-	void Initialize();
-	void Start();
-	void Stop();
+	// called when intializing Ogre
+	virtual void Initialize() {};
+	// called when we're about to start rendering
+	virtual void Start() {};
+	// called when we're shutting down rendering
+	virtual void Stop() {};
 
+	// Ogre::FrameListener
+	virtual bool frameRenderingQueued(const Ogre::FrameEvent&) { return true; };
+};
 
 }

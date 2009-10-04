@@ -31,6 +31,7 @@
 #include "OLArchive.h"
 #include "OLPreloadArchive.h"
 #include "ResourceListeners.h"
+#include "SkyBoxSimple.h"
 
 namespace RendererOgre {
 
@@ -172,8 +173,8 @@ namespace RendererOgre {
 		// create the viewer components
         createScene();
         createCamera();
-        createLight();
         createViewport();
+        createLight();
         createSky();
         createFrameListener();
 		if (LookingGlassOgr::userIOCallback != NULL) {
@@ -313,7 +314,7 @@ namespace RendererOgre {
 	}
 
 	void RendererOgre::createCamera() {
-		Log("DEBUG: LookingGlassOrge: createCamera");
+		Log("DEBUG: RendererOgre: createCamera");
 		m_camera = m_sceneMgr->createCamera("MainCamera");
 		m_camera->setPosition(0.0, 0.0, 0.0);
 		m_camera->setDirection(0.0, 0.0, -1.0);
@@ -325,7 +326,8 @@ namespace RendererOgre {
 	}
 
 	void RendererOgre::createLight() {
-		Log("DEBUG: LookingGlassOrge: createLight");
+		Log("DEBUG: RendererOgre: createLight");
+		/*
         // TODO: decide if I should connect  this to a scene node
         //    might make moving and control easier
 		m_sunDistance = 2000.0;
@@ -340,16 +342,21 @@ namespace RendererOgre {
 		// m_sun->setDirection(0.0f, 1.0f, 0.0f);
 		m_sun->setCastShadows(true);
 		m_sun->setVisible(true);
+		*/
 	}
 
 	void RendererOgre::createViewport() {
-		Log("DEBUG: LookingGlassOrge: createViewport");
+		Log("DEBUG: RendererOgre: createViewport");
 		m_viewport = m_window->addViewport(m_camera);
 		m_viewport->setBackgroundColour(Ogre::ColourValue(0.0f, 0.0f, 0.25f));
 		m_camera->setAspectRatio((float)m_viewport->getActualWidth() / (float)m_viewport->getActualHeight());
 	}
 
 	void RendererOgre::createSky() {
+		Log("DEBUG: RendererOgre: createsky");
+		m_sky = new LGSky::SkyBoxSimple(this);
+		m_sky->Initialize();
+		/*
 		try {
 			// Ogre::String skyboxName = "LookingGlass/CloudyNoonSkyBox";
 			Ogre::String skyboxName = GetParameter("Renderer.Ogre.SkyboxName");
@@ -360,6 +367,7 @@ namespace RendererOgre {
 			Log("Failed to set scene skybox");
 			m_sceneMgr->setSkyBox(false, "");
 		}
+		*/
 	}
 
 	void RendererOgre::createFrameListener() {

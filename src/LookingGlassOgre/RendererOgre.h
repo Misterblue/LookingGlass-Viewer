@@ -26,6 +26,7 @@
 #include "UserIO.h"
 #include "OLMaterialTracker.h"
 #include "ProcessBetweenFrame.h"
+#include "SkyManager.h"
 
 namespace RendererOgre {
 
@@ -81,6 +82,8 @@ public:
 	void formatIt(Ogre::String&, const char*, ...);
 	const bool checkKeepRunning();
 
+	LGSky::SkyManager* m_sky;
+
 private:
 	// OGRE INITIALIZATION ROUTINES
     void loadOgreResources(const char*);
@@ -122,13 +125,6 @@ private:
 	UserIO* m_userio;
 	OLMaterialTracker::OLMaterialTracker* m_materialTracker;
 	ProcessBetweenFrame::ProcessBetweenFrame* m_processBetweenFrame;
-
-	// environmental light stuff waiting for the day we have a real sky system
-	Ogre::Vector3 m_sunFocalPoint;	// where the sun is pointing
-	// default if not using some fancy sky system
-	Ogre::Light* m_sun;				// the light that is the sun
-	float m_sunDistance;			// distance sun is from the focal point
-	Ogre::Light* m_moon;			// the light that is the moon
 
 	Ogre::String m_cacheDir; 
 	Ogre::String m_preloadedDir; 
