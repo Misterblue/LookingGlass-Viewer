@@ -259,16 +259,16 @@ public sealed class LLAssetContext : AssetContextBase {
         OMV.UUID assetWorldID = assetTexture.AssetID;
         if ((state == OMV.TextureRequestState.NotFound) || (state == OMV.TextureRequestState.Timeout)) {
             try {
+                // get the name of the entity from the WorldID that we have
                 EntityNameLL tempTexture = EntityNameLL.ConvertTextureWorldIDToEntityName(this, assetWorldID.ToString());
+                // calculate the filename this entity would have in the cache
                 string tempTextureFilename = Path.Combine(CacheDirBase, tempTexture.CacheFilename);
-                string textureDirName = Path.GetDirectoryName(tempTextureFilename);
-                if (!Directory.Exists(textureDirName)) {
-                    Directory.CreateDirectory(textureDirName);
-                }
-                string noTextureFilename = LookingGlassBase.Instance.AppParams.ParamString(m_commName + ".Assets.NoTextureFilename");
-                // if we copy the no texture file into the filesystem, we will never retry to
-                // fetch the texture. This copy is not a good thing.
+                MakeParentDirectoriesExist(tempTextureFilename);
+
                 lock (FileSystemAccessLock) {
+                    string noTextureFilename = LookingGlassBase.Instance.AppParams.ParamString(m_commName + ".Assets.NoTextureFilename");
+                    // if we copy the no texture file into the filesystem, we will never retry to
+                    // fetch the texture. This copy is not a good thing.
                     if (!File.Exists(tempTextureFilename)) {
                         File.Copy(noTextureFilename, tempTextureFilename);
                     }
@@ -291,8 +291,11 @@ public sealed class LLAssetContext : AssetContextBase {
                 }
             }
             // now remove the ones from the list (we cannot remove while transversing the list)
-            foreach (WaitingInfo wx in toCall) {
-                m_waiting.Remove(wx.worldID);
+            // only remove them if the code is not for just a progress update
+            if (state != OMV.TextureRequestState.Progress) {
+                foreach (WaitingInfo wx in toCall) {
+                    m_waiting.Remove(wx.worldID);
+                }
             }
         }
         m_completionWork.DoLater(new CompleteDownloadLater(this, assetTexture, toCall, m_commName, m_log));
@@ -400,10 +403,14 @@ public sealed class LLAssetContext : AssetContextBase {
                                 }
 
                                 lock (LLAssetContext.FileSystemAccessLock) {
+                                    string tempFilename = wii.filename + ".tmp";
                                     using (FileStream fileStream = File.Open(wii.filename, FileMode.Create)) {
                                         textureBitmap.Save(fileStream, System.Drawing.Imaging.ImageFormat.Png);
                                         fileStream.Flush();
                                         fileStream.Close();
+                                        // attempt to make the creation of the file almost atomic
+                                        FileInfo fi = new FileInfo(tempFilename);
+                                        fi.MoveTo(wii.filename);
                                     }
                                 }
                             }

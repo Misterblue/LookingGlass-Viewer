@@ -142,7 +142,10 @@ void ProcessBetweenFrame::CreateMeshSceneNode(Ogre::SceneManager* sceneMgr, char
 
 // we're between frames, on our own thread so we can do the work without locking
 bool ProcessBetweenFrame::frameRenderingQueued(const Ogre::FrameEvent& evt) {
+	int loopCount = 30;
 	while (!m_betweenFrameWork.empty()) {
+		// only do so much work each frame
+		if (loopCount-- < 0) break;
 		GenericQd* workGeneric = (GenericQd*)m_betweenFrameWork.front();
 		m_betweenFrameWork.pop();
 		switch (workGeneric->type) {

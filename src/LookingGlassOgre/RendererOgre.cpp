@@ -153,15 +153,21 @@ namespace RendererOgre {
 			Ogre::LogManager::getSingleton().setLogDetail(Ogre::LL_LOW);
 		}
 
-		// load the resource info from the Ogre config files
-		loadOgreResources(GetParameter("Renderer.Ogre.ResourcesFilename"));
-		// set up the render system (window, size, OS connection, ...)
-        configureOgreRenderSystem();
+		try {
+			// load the resource info from the Ogre config files
+			loadOgreResources(GetParameter("Renderer.Ogre.ResourcesFilename"));
+			// set up the render system (window, size, OS connection, ...)
+	        configureOgreRenderSystem();
 
-		// setup our special resource groups for meshes and materials
-		createLookingGlassResourceGroups();
-		// turn on the resource system
-        initOgreResources();
+			// setup our special resource groups for meshes and materials
+			createLookingGlassResourceGroups();
+			// turn on the resource system
+	        initOgreResources();
+		}
+		catch (char* str) {
+			Log("DEBUG: LookingGlassOrge: exception initializing: {0}", str);
+			return;
+		}
 
 		// create the viewer components
         createScene();
@@ -372,10 +378,15 @@ namespace RendererOgre {
 		return true;
 	}
 
+	int betweenFrameCounter = 0;
 	bool RendererOgre::frameRenderingQueued(const Ogre::FrameEvent& evt) {
 		if (m_window->isClosed()) return false;	// if you close the window we leave
+		betweenFrameCounter++;
 		if (LookingGlassOgr::betweenFramesCallback != NULL) {
-			return (*LookingGlassOgr::betweenFramesCallback)();
+			// the C# code uses this for terrain and regions so don't do it often
+			if ((betweenFrameCounter % 5) == 0) {
+				return (*LookingGlassOgr::betweenFramesCallback)();
+			}
 		}
 		return true;
 	}

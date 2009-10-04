@@ -62,7 +62,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="..\..\lib\Ogre\lib\OgreMain.lib ..\..\lib\Ogre\lib\OIS.lib ..\..\lib\Caelum\lib\caelum.lib"
+				AdditionalDependencies="..\..\lib\Ogre\lib\OgreMain.lib ..\..\lib\Ogre\lib\OIS.lib"
 				OutputFile="..\..\bin\$(ProjectName).dll"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\..\lib\Ogre\lib"

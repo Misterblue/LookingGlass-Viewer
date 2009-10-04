@@ -98,6 +98,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     private static int m_betweenFrameUpdateTerrainCost = 50;
     private static int m_betweenFrameMapTextureCost = 10;
 
+    public static Object BetweenFrameLock = new Object();
+
     // private Thread m_rendererThread = null;
 
     private RestHandler m_restHandler;
@@ -283,7 +285,14 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         m_betweenFrameUpdateTerrainCost = ModuleParams.ParamInt("Renderer.Ogre.BetweenFrame.Costs.UpdateTerrain");
         m_betweenFrameMapTextureCost = ModuleParams.ParamInt("Renderer.Ogre.BetweenFrame.Costs.MapTexture");
 
-        Ogr.InitializeOgre();
+        try {
+            Ogr.InitializeOgre();
+        }
+        catch (Exception e) {
+            m_log.Log(LogLevel.DBADERROR, "EXCEPTION INITIALIZING OGRE: {0}", e.ToString());
+            return false;
+        }
+
         m_sceneMgr = new OgreSceneMgr(Ogr.GetSceneMgr());
 
         return true;
@@ -421,10 +430,15 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         }
 
         override public bool DoIt() {
-            if (RendererOgre.GetSceneNodeName(m_ent) == null) {
+            string entitySceneNodeName = EntityNameOgre.ConvertToOgreSceneNodeName(m_ent.Name);
+            lock (m_ent) {
+                if (RendererOgre.GetSceneNodeName(m_ent) != null) {
+                    // if this has already been processed, just return success
+                    return true;
+                }
                 try {
                     // m_log.Log(LogLevel.DRENDERDETAIL, "Adding SceneNode to new entity " + m_ent.Name);
-                    string entitySceneNodeName = EntityNameOgre.ConvertToOgreSceneNodeName(m_ent.Name);
+
                     if (m_ri == null) {
                         m_ri = RendererOgre.GetWorldRenderConv(m_ent).RenderingInfo(m_sceneMgr, m_ent, this.timesRequeued);
                         if (m_ri == null) {
@@ -452,17 +466,19 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     // This will cause the load function to be called and create all
                     //   the callbacks that will actually create the object
                     string entMeshName = (string)m_ri.basicObject;
-                    if (!m_sceneMgr.CreateMeshSceneNodeBF(entitySceneNodeName,
-                                        parentSceneNodeName, 
+                    lock (RendererOgre.BetweenFrameLock) {
+                        if (!m_sceneMgr.CreateMeshSceneNodeBF(entitySceneNodeName,
+                                        parentSceneNodeName,
                                         entMeshName,
                                         false, true,
                                         m_ri.position.X, m_ri.position.Y, m_ri.position.Z,
                                         m_ri.scale.X, m_ri.scale.Y, m_ri.scale.Z,
-                                        m_ri.rotation.W, m_ri.rotation.X, m_ri.rotation.Y, m_ri.rotation.Z )) {
-                        m_log.Log(LogLevel.DRENDERDETAIL, "Delaying rendering {0}/{1}. {2} waiting for parent {3}",
-                            this.sequence, this.timesRequeued, m_ent.Name.Name, 
-                            (parentSceneNodeName == null ? "NULL" : parentSceneNodeName));
-                        return false;   // if I must have parent, requeue if no parent
+                                        m_ri.rotation.W, m_ri.rotation.X, m_ri.rotation.Y, m_ri.rotation.Z)) {
+                            m_log.Log(LogLevel.DRENDERDETAIL, "Delaying rendering {0}/{1}. {2} waiting for parent {3}",
+                                this.sequence, this.timesRequeued, m_ent.Name.Name,
+                                (parentSceneNodeName == null ? "NULL" : parentSceneNodeName));
+                            return false;   // if I must have parent, requeue if no parent
+                        }
                     }
 
                     // Add the name of the created scene node name so we know it's created and
@@ -472,8 +488,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                 catch (Exception e) {
                     m_log.Log(LogLevel.DBADERROR, "Render: Failed conversion: " + e.ToString());
                 }
-
             }
+
             return true;
         }
 
@@ -704,7 +720,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
 
                 // tell Ogre to refresh (reload) the resource
                 LogManager.Log.Log(LogLevel.DRENDERDETAIL, "RendererOgre.RequestMeshLater: refresh for {0}", m_meshName);
-                Ogr.RefreshResourceBF(Ogr.ResourceTypeMesh, m_meshName);
+                lock (RendererOgre.BetweenFrameLock) Ogr.RefreshResourceBF(Ogr.ResourceTypeMesh, m_meshName);
             }
             catch {
                 // an oddity but not fatal
@@ -750,7 +766,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                         // Create the material resource and then make the rendering redisplay
                         RendererOgre.GetWorldRenderConv(ent).CreateMaterialResource(m_sceneMgr, ent, m_matName);
 
-                        Ogr.RefreshResourceBF(Ogr.ResourceTypeMaterial, m_matName);
+                        lock (RendererOgre.BetweenFrameLock) Ogr.RefreshResourceBF(Ogr.ResourceTypeMaterial, m_matName);
                     }
                 }
                 else {
@@ -822,10 +838,10 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "RequestTextureCompleteLater {0}: Load complete. Refreshing texture {1}, t={2}", 
                             this.sequence, ogreResourceName, m_hasTransparancy);
                 if (m_hasTransparancy) {
-                    Ogr.RefreshResourceBF(Ogr.ResourceTypeTransparentTexture, ogreResourceName);
+                    lock (RendererOgre.BetweenFrameLock) Ogr.RefreshResourceBF(Ogr.ResourceTypeTransparentTexture, ogreResourceName);
                 }
                 else {
-                    Ogr.RefreshResourceBF(Ogr.ResourceTypeTexture, ogreResourceName);
+                    lock (RendererOgre.BetweenFrameLock) Ogr.RefreshResourceBF(Ogr.ResourceTypeTexture, ogreResourceName);
                 }
                 return true;
             }

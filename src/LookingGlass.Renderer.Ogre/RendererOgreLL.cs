@@ -356,7 +356,7 @@ public class RendererOgreLL : IWorldRenderConv {
                 + " vi=" + vertI
                 );
             // Now create the mesh
-            Ogr.CreateMeshResourceBF(meshName, faceCounts, faceVertices);
+            lock (RendererOgre.BetweenFrameLock) Ogr.CreateMeshResourceBF(meshName, faceCounts, faceVertices);
         }
         return true;
     }
@@ -406,12 +406,12 @@ public class RendererOgreLL : IWorldRenderConv {
     private void CreateMaterialResource2(IEntity ent, OMV.Primitive prim, string materialName, int faceNum) {
         float[] textureParams = new float[(int)Ogr.CreateMaterialParam.maxParam];
         string textureOgreResourceName = "";
-        CreateMaterialParameters(ent, prim, 0, textureParams, faceNum, out textureOgreResourceName);
+        CreateMaterialParameters(ent, prim, 0, ref textureParams, faceNum, out textureOgreResourceName);
         m_log.Log(LogLevel.DRENDERDETAIL, "CreateMaterialResource2: m=" + materialName + ",o=" + textureOgreResourceName);
-        Ogr.CreateMaterialResource2BF(materialName, textureOgreResourceName, textureParams);
+        lock (RendererOgre.BetweenFrameLock) Ogr.CreateMaterialResource2BF(materialName, textureOgreResourceName, textureParams);
     }
 
-    private void CreateMaterialParameters(IEntity ent, OMV.Primitive prim, int pBase, float[] textureParams, 
+    private void CreateMaterialParameters(IEntity ent, OMV.Primitive prim, int pBase, ref float[] textureParams, 
                     int faceNum, out String texName) {
         OMV.Primitive.TextureEntryFace textureFace = prim.Textures.GetFace((uint)faceNum);
         OMV.UUID textureID = OMV.Primitive.TextureEntry.WHITE_TEXTURE;
@@ -504,7 +504,7 @@ public class RendererOgreLL : IWorldRenderConv {
         int pBase = 1;
         string textureOgreName;
         for (int j = 0; j < genCount; j++) {
-            CreateMaterialParameters(ent, prim, pBase, textureParams, j, out textureOgreName);
+            CreateMaterialParameters(ent, prim, pBase, ref textureParams, j, out textureOgreName);
             materialNames[j] = EntityNameOgre.ConvertToOgreMaterialNameX(ent.Name, j);
             textureOgreNames[j] = textureOgreName;
             pBase += (int)textureParams[0];
