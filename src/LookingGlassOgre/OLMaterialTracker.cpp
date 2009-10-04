@@ -162,7 +162,7 @@ void OLMaterialTracker::MarkTextureModified(const Ogre::String materialName, boo
 }
 
 // between frames, if there were material modified, refresh their containing entities
-bool OLMaterialTracker::frameRenderingQueued(const Ogre::FrameEvent&) {
+bool OLMaterialTracker::frameEnded(const Ogre::FrameEvent&) {
 	Ogre::String matName;
 	std::list<Ogre::MeshPtr> m_meshesToChange;
 	int cnt = 10;

@@ -29,7 +29,7 @@ namespace RendererOgre { class RendererOgre; }
 
 namespace LGSky {
 
-class SkyManager : public Ogre::FrameListener {
+class SkyManager {
 public:
 	// SkyManager(RendererOgre::RendererOgre*);
 	// virtual ~SkyManager();
@@ -41,8 +41,6 @@ public:
 	// called when we're shutting down rendering
 	virtual void Stop() {};
 
-	// Ogre::FrameListener
-	virtual bool frameRenderingQueued(const Ogre::FrameEvent&) { return true; };
 };
 
 }

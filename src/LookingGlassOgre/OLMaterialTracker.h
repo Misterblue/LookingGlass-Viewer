@@ -60,7 +60,7 @@ public:
 	void MarkTextureModified(const Ogre::String, bool);
 
 	// Ogre::FrameListener
-	bool frameRenderingQueued(const Ogre::FrameEvent&);
+	bool frameEnded(const Ogre::FrameEvent&);
 
 	// given some parameters, update an existing material with new definitions
 	void CreateMaterialResource(const char*, const char*, 

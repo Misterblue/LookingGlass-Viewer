@@ -36,7 +36,7 @@ public:
 	~ProcessBetweenFrame();
 
 	// Ogre::FrameListener
-	bool frameRenderingQueued(const Ogre::FrameEvent&);
+	bool frameEnded(const Ogre::FrameEvent&);
 
 	void RefreshResource(char*, int);
 	void CreateMaterialResource2(const char*, char*, const float*);

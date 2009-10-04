@@ -32,6 +32,7 @@
 #include "OLPreloadArchive.h"
 #include "ResourceListeners.h"
 #include "SkyBoxSimple.h"
+#include "SkyBoxSkyX.h"
 
 namespace RendererOgre {
 
@@ -49,6 +50,10 @@ namespace RendererOgre {
 
 	RendererOgre::~RendererOgre() {
 		// TODO: there is a lot of rendering to turn off.
+		if (m_sky != NULL) {
+			m_sky->Stop();
+			m_sky = NULL;
+		}
 	}
 
 	// The main program calls in here with the main window thread. This is required
@@ -174,7 +179,6 @@ namespace RendererOgre {
         createScene();
         createCamera();
         createViewport();
-        createLight();
         createSky();
         createFrameListener();
 		if (LookingGlassOgr::userIOCallback != NULL) {
@@ -325,26 +329,6 @@ namespace RendererOgre {
 		AssertNonNull(m_camera, "createCamera: m_camera is NULL");
 	}
 
-	void RendererOgre::createLight() {
-		Log("DEBUG: RendererOgre: createLight");
-		/*
-        // TODO: decide if I should connect  this to a scene node
-        //    might make moving and control easier
-		m_sunDistance = 2000.0;
-		m_sunFocalPoint = Ogre::Vector3(128.0, 0.0, 128.0);
-		m_sun = m_sceneMgr->createLight("sun");
-		m_sun->setType(Ogre::Light::LT_DIRECTIONAL);	// directional and sun-like
-		m_sun->setDiffuseColour(Ogre::ColourValue::White);
-		m_sun->setPosition(0.0f, 1000.0f, 0.0f);
-		Ogre::Vector3 sunDirection(0.0f, -1.0f, 1.0f);
-		sunDirection.normalise();
-		m_sun->setDirection(sunDirection);
-		// m_sun->setDirection(0.0f, 1.0f, 0.0f);
-		m_sun->setCastShadows(true);
-		m_sun->setVisible(true);
-		*/
-	}
-
 	void RendererOgre::createViewport() {
 		Log("DEBUG: RendererOgre: createViewport");
 		m_viewport = m_window->addViewport(m_camera);
@@ -354,20 +338,18 @@ namespace RendererOgre {
 
 	void RendererOgre::createSky() {
 		Log("DEBUG: RendererOgre: createsky");
-		m_sky = new LGSky::SkyBoxSimple(this);
-		m_sky->Initialize();
-		/*
-		try {
-			// Ogre::String skyboxName = "LookingGlass/CloudyNoonSkyBox";
-			Ogre::String skyboxName = GetParameter("Renderer.Ogre.SkyboxName");
-			m_sceneMgr->setSkyBox(true, skyboxName);
-			LookingGlassOgr::Log("createSky: setting skybox to %s", skyboxName.c_str());
+		const char* skyName = LookingGlassOgr::GetParameter("Renderer.Ogre.Sky");
+		if (stricmp(skyName, "Default") == 0) {
+			LookingGlassOgr::Log("RendererOgre::createSky: using SkyBoxSimple");
+			m_sky = new LGSky::SkyBoxSimple(this);
+			m_sky->Initialize();
 		}
-		catch (Ogre::Exception e) {
-			Log("Failed to set scene skybox");
-			m_sceneMgr->setSkyBox(false, "");
+		if (stricmp(skyName, "SkyX") == 0) {
+			LookingGlassOgr::Log("RendererOgre::createSky: using SkyBoxSkyX");
+			m_sky = new LGSky::SkyBoxSkyX(this);
+			m_sky->Initialize();
 		}
-		*/
+		m_sky->Start();
 	}
 
 	void RendererOgre::createFrameListener() {
