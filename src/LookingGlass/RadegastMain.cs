@@ -55,13 +55,12 @@ class RadegastMain : IRadegastPlugin {
         m_log.Log(LogLevel.DRADEGAST, "StartPlugin()");
         RadInstance = inst;
 
+        // put the menu entry in. Clicking will initialize and run LookingGlass
         ToolStripMenuItem menuItem = new ToolStripMenuItem("LookingGlass", null, new EventHandler(startLGView));
         RadInstance.MainForm.ToolsMenu.DropDownItems.Add(menuItem);
 
-        // For the moment start the viewer before Radegast starts
-        // It will take a bunch of logic changes to make it so a viewer can be brought
-        // up after one has logged into a region.
-        // startLGView(null, null);
+        // make it so libomv decodes the sim terrain so when LG opens, terrain is there
+        RadInstance.Client.Settings.STORE_LAND_PATCHES = true;
     }
 
     public void startLGView(Object parm, EventArgs args) {
@@ -135,9 +134,15 @@ class RadegastMain : IRadegastPlugin {
 
     public void StopPlugin(RadegastInstance inst) {
         m_log.Log(LogLevel.DRADEGAST, "StopPlugin()");
-        m_lgb.Stop();
-        m_viewDialog.Refresh();
-        m_viewDialog.Shutdown();
+        if (m_lgb != null) {
+            m_lgb.Stop();
+            m_lgb = null;
+        }
+        if (m_viewDialog != null) {
+            m_viewDialog.Refresh();
+            m_viewDialog.Shutdown();
+            m_viewDialog = null;
+        }
     }
 
     #endregion IRadegastPlugin methods

@@ -116,10 +116,10 @@ public class RadegastComm : CommLLLP {
     public override void Network_OnLogin(OMV.LoginStatus login, string message) {
         switch (m_radInstance.Netcom.LoginOptions.Grid) {
             case global::Radegast.Netcom.LoginGrid.MainGrid:
-                m_loginGrid = "SecondLife";
+                m_loginGrid = "SecondLife.com";
                 break;
             case global::Radegast.Netcom.LoginGrid.BetaGrid:
-                m_loginGrid = "SecondLifeBeta";
+                m_loginGrid = "beta.SecondLifeBeta.com";
                 break;
             case global::Radegast.Netcom.LoginGrid.Custom:
                 Uri loginUri = new Uri(m_radInstance.Netcom.LoginOptions.GridCustomLoginUri);

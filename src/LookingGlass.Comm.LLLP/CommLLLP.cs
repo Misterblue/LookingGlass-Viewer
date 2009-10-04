@@ -231,7 +231,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         ModuleParams.AddDefaultParameter(ModuleName + ".Assets.ConvertPNG", "true",
                     "whether to convert incoming JPEG2000 files to PNG files in the cache");
         ModuleParams.AddDefaultParameter(ModuleName + ".Texture.MaxRequests", 
-                    "8",
+                    "20",
                     "Maximum number of outstanding textures requests");
         ModuleParams.AddDefaultParameter(ModuleName + ".Settings.MultipleSims", 
                     "false",
