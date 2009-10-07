@@ -339,16 +339,15 @@ namespace RendererOgre {
 	void RendererOgre::createSky() {
 		Log("DEBUG: RendererOgre: createsky");
 		const char* skyName = LookingGlassOgr::GetParameter("Renderer.Ogre.Sky");
-		if (stricmp(skyName, "Default") == 0) {
-			LookingGlassOgr::Log("RendererOgre::createSky: using SkyBoxSimple");
-			m_sky = new LGSky::SkyBoxSimple(this);
-			m_sky->Initialize();
-		}
 		if (stricmp(skyName, "SkyX") == 0) {
 			LookingGlassOgr::Log("RendererOgre::createSky: using SkyBoxSkyX");
 			m_sky = new LGSky::SkyBoxSkyX(this);
-			m_sky->Initialize();
 		}
+		else {
+			LookingGlassOgr::Log("RendererOgre::createSky: using SkyBoxSimple");
+			m_sky = new LGSky::SkyBoxSimple(this);
+		}
+		m_sky->Initialize();
 		m_sky->Start();
 	}
 

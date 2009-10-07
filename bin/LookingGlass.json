@@ -45,8 +45,8 @@
 "Viewer.Renderer.Name": "Renderer",
 
 // ====================================================
-"Renderer.Ogre.Renderer": "OpenGL Rendering Subsystem",
-// "Renderer.Ogre.Renderer": "Direct3D9 Rendering Subsystem",
+// "Renderer.Ogre.Renderer": "OpenGL Rendering Subsystem",
+"Renderer.Ogre.Renderer": "Direct3D9 Rendering Subsystem",
 "Renderer.Ogre.VideoMode": "800 x 600@ 32-bit colour",
 // Shadow technique: none, texture-modulative, stencil-modulative, texture-additive, stencil-additive
 "Renderer.Ogre.ShadowTechnique": "none",
@@ -60,10 +60,11 @@
 "Renderer.Ogre.Visibility.OnlyLargeAfter": "120",
 "Renderer.Ogre.Visibility.Large": "8",
 "Renderer.Ogre.BetweenFrame.Costs.Total": "1000",
+// "Renderer.Ogre.Sky": "SkyX",
 
 // ====================================================
 "Comm.Texture.MaxRequests": "20",
-"Comm.Settings.MultipleSims": "false",
+"Comm.Settings.MultipleSims": "true",
 
 // ====================================================
 "CommLLLPRest.Comm": "Comm",
