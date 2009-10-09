@@ -491,7 +491,9 @@ namespace RendererOgre {
 		Ogre::MeshPtr mesh = mo->convertToMesh(entName , OLResourceGroupName);
 		mo->clear();
 		m_sceneMgr->destroyManualObject(mo);
+
 		mesh->buildEdgeList();
+		// mesh->generateLodLevels(m_lodDistances, Ogre::ProgressiveMesh::VertexReductionQuota::VRQ_PROPORTIONAL, 0.5f);
 
 		if (m_serializeMeshes) {
 			// serialize the mesh to the filesystem
@@ -565,11 +567,10 @@ namespace RendererOgre {
 		mo->clear();
 		m_sceneMgr->destroyManualObject(mo);
 
-		CreateParentDirectory(targetFilename);
-			
 		if (m_meshSerializer == NULL) {
 			m_meshSerializer = new Ogre::MeshSerializer();
 		}
+		CreateParentDirectory(targetFilename);
 		m_meshSerializer->exportMesh(mesh.getPointer(), targetFilename);
 
 		// since this is called only once, we don't bother freeing the mesh

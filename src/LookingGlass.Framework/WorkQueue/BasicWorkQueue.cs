@@ -38,32 +38,30 @@ public class BasicWorkQueue : IWorkQueue {
     private string m_queueName = "";
     public string Name { get { return m_queueName; } }
 
-    private long m_currentRequests;
-    public long CurrentQueued { get { return (long)m_currentRequests; } }
+    private Queue<DoLaterBase> m_workItems;
+    private int m_activeWorkProcessors;
+    private int m_workProcessorsMax = 10;
+
+    public long CurrentQueued { get { return (long)m_workItems.Count; } }
 
     public BasicWorkQueue(string nam) {
+        m_workItems = new Queue<DoLaterBase>();
         m_queueName = nam;
         m_totalRequests = 0;
         WorkQueueManager.Instance.Register(this);
     }
 
+    // Do some work later
     public void DoLater(DoLaterBase w){
-        m_currentRequests++;
-        if ((m_totalRequests++ % 100) == 0) {
-            LogManager.Log.Log(LogLevel.DRENDERDETAIL, "{0}DoLater: Queuing, c={1}", m_queueName, m_totalRequests);
-        }
         w.containingClass = this;
         w.remainingWait = 0;    // the first time through, do it now
         w.timesRequeued = 0;
-        ThreadPool.QueueUserWorkItem(new WaitCallback(this.DoWork), (object)w);
+        AddWorkItemToQueue(w);
     }
 
+    // Doing the work didn't work the first time so we again add it to the queue
     public void DoLaterRequeue(DoLaterBase w){
-        m_currentRequests++;
-        if ((m_totalRequests++ % 100) == 0) {
-            LogManager.Log.Log(LogLevel.DRENDERDETAIL, "{0}DoLater: Queuing, c={1}", m_queueName, m_totalRequests);
-        }
-        ThreadPool.QueueUserWorkItem(new WaitCallback(this.DoWork), (object)w);
+        AddWorkItemToQueue(w);
     }
 
     /// <summary>
@@ -97,14 +95,42 @@ public class BasicWorkQueue : IWorkQueue {
         }
     }
 
-
-    private void DoWork(object w) {
-        DoLaterBase ww = (DoLaterBase)w;
-        m_currentRequests--;
-        if (!ww.DoIt()) {
-            // LogManager.Log.Log(LogLevel.DRENDERDETAIL, "{0}.DoLater: DoWork: DoEvenLater", m_queueName);
-            DoItEvenLater(ww);
+    // Add a new work item to the work queue. If we don't have the maximum number
+    // of worker threads already working on the queue, start a new thread from
+    // the pool to empty the queue.
+    private void AddWorkItemToQueue(DoLaterBase w) {
+        if ((m_totalRequests++ % 100) == 0) {
+            LogManager.Log.Log(LogLevel.DRENDERDETAIL, "{0}DoLater: Queuing, c={1}", m_queueName, m_totalRequests);
         }
+        lock (m_workItems) {
+            m_workItems.Enqueue(w);
+            if (m_activeWorkProcessors < m_workProcessorsMax) {
+                m_activeWorkProcessors++;
+                ThreadPool.QueueUserWorkItem(new WaitCallback(this.DoWork), null);
+            }
+        }
+    }
+
+    // Worker threads come here to take items off the work queue.
+    // Multiple threads loop around here taking items off the work queue and
+    //   processing them. When there are no more things to do, the threads
+    //   return which puts them back in the thread pool.
+    private void DoWork(object x) {
+        while (m_workItems.Count > 0) {
+            DoLaterBase w = null;
+            lock (m_workItems) {
+                if (m_workItems.Count > 0) {
+                    w = m_workItems.Dequeue();
+                }
+            }
+            if (w != null) {
+                if (!w.DoIt()) {
+                    // LogManager.Log.Log(LogLevel.DRENDERDETAIL, "{0}.DoLater: DoWork: DoEvenLater", m_queueName);
+                    DoItEvenLater(w);
+                }
+            }
+        }
+        m_activeWorkProcessors--;
     }
 
     /// <summary>

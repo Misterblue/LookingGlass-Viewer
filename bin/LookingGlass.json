@@ -64,7 +64,7 @@
 
 // ====================================================
 "Comm.Texture.MaxRequests": "20",
-"Comm.Settings.MultipleSims": "true",
+"Comm.Settings.MultipleSims": "false",
 
 // ====================================================
 "CommLLLPRest.Comm": "Comm",

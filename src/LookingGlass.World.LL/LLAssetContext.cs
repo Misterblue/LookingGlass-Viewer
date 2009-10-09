@@ -404,7 +404,7 @@ public sealed class LLAssetContext : AssetContextBase {
 
                                 lock (LLAssetContext.FileSystemAccessLock) {
                                     string tempFilename = wii.filename + ".tmp";
-                                    using (FileStream fileStream = File.Open(wii.filename, FileMode.Create)) {
+                                    using (FileStream fileStream = File.Open(tempFilename, FileMode.Create)) {
                                         textureBitmap.Save(fileStream, System.Drawing.Imaging.ImageFormat.Png);
                                         fileStream.Flush();
                                         fileStream.Close();
@@ -418,11 +418,11 @@ public sealed class LLAssetContext : AssetContextBase {
                             wii.callback(textureEntityName.Name, false);
                         }
                         else {
-                            m_logg.Log(LogLevel.DBADERROR, "TEXTURE DOWNLOAD COMPLETE. FAILED JPEG2 DECODE FOR {0}", textureEntityName.Name);
+                            m_logg.Log(LogLevel.DBADERROR, "SCULPTIE TEXTURE DOWNLOAD COMPLETE. FAILED JPEG2 DECODE FOR {0}", textureEntityName.Name);
                         }
                     }
                     catch (Exception e) {
-                        m_logg.Log(LogLevel.DBADERROR, "TEXTURE DOWNLOAD COMPLETE. FAILED FILE CREATION FOR {0}: {1}", 
+                        m_logg.Log(LogLevel.DBADERROR, "SCULPTIE TEXTURE DOWNLOAD COMPLETE. FAILED FILE CREATION FOR {0}: {1}", 
                             textureEntityName.Name, e.ToString());
                     }
                 }
