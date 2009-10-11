@@ -221,7 +221,9 @@ namespace RendererOgre {
 
 		// routines for managing and loading materials
 		m_materialTracker = new OLMaterialTracker::OLMaterialTracker(this);
-		m_processBetweenFrame = new ProcessBetweenFrame::ProcessBetweenFrame(this);
+		int betweenWork = LookingGlassOgr::GetParameterInt("Renderer.Ogre.BetweenFrame.WorkItems");
+		if (betweenWork ==0) betweenWork = 200;
+		m_processBetweenFrame = new ProcessBetweenFrame::ProcessBetweenFrame(this, betweenWork);
 
 		// listener to catch references to materials in meshes when they are read in
 		Ogre::MeshManager::getSingleton().setListener(new OLMeshSerializerListener(this));
@@ -488,17 +490,27 @@ namespace RendererOgre {
 		// 	Ogre::MeshManager::getSingleton().unload(entName);
 		// 	Ogre::MeshManager::getSingleton().remove(entName);
 		// }
-		Ogre::MeshPtr mesh = mo->convertToMesh(entName , OLResourceGroupName);
-		mo->clear();
-		m_sceneMgr->destroyManualObject(mo);
+		try {
+			// Ogre::MeshManager::getSingleton().load(entName);
+			Ogre::MeshPtr mesh = mo->convertToMesh(entName , OLResourceGroupName);
+			mo->clear();
+			m_sceneMgr->destroyManualObject(mo);
+			mo = 0;
 
-		mesh->buildEdgeList();
-		// mesh->generateLodLevels(m_lodDistances, Ogre::ProgressiveMesh::VertexReductionQuota::VRQ_PROPORTIONAL, 0.5f);
+			mesh->buildEdgeList();
+			// mesh->generateLodLevels(m_lodDistances, Ogre::ProgressiveMesh::VertexReductionQuota::VRQ_PROPORTIONAL, 0.5f);
 
-		if (m_serializeMeshes) {
-			// serialize the mesh to the filesystem
-			meshToResource(mesh, entName);
+			if (m_serializeMeshes) {
+				// serialize the mesh to the filesystem
+				meshToResource(mesh, entName);
 		}
+		}
+		catch (Ogre::Exception &e) {
+			Log("RendererOgre::CreateMeshResource: failure generating mesh: %s", e.getDescription().c_str());
+			// This will leave the mesh as the default loading shape
+			// and potentially create an ManualObject leak
+		}
+
 
 		return;
 	}

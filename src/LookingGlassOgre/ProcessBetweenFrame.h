@@ -32,7 +32,7 @@ namespace ProcessBetweenFrame {
 class ProcessBetweenFrame : public Ogre::FrameListener {
 
 public:
-	ProcessBetweenFrame(RendererOgre::RendererOgre*);
+	ProcessBetweenFrame(RendererOgre::RendererOgre*, int workItems);
 	~ProcessBetweenFrame();
 
 	// Ogre::FrameListener
@@ -52,6 +52,7 @@ public:
 					float ow, float ox, float oy, float oz);
 
 private:
+	int m_numWorkItemsToDoBetweenFrames;
 };
 
 }

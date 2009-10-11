@@ -37,11 +37,18 @@ public:
 	void Start();
 	void Stop();
 
-	bool frameStarted(const Ogre::FrameEvent &e);
+	void AddSkyPass(Ogre::MaterialPtr matP);
+
+	// bool frameStarted(const Ogre::FrameEvent &e);
+	bool frameRenderingQueued(const Ogre::FrameEvent &e);
+	// bool frameEnded(const Ogre::FrameEvent &e);
 
 private:
 	RendererOgre::RendererOgre* m_ro;
 	SkyX::SkyX* m_SkyX;
+
+	Ogre::Light* m_sun;				// the light that is the sun
+	Ogre::Light* m_moon;			// the light that is the moon
 
 };
 }

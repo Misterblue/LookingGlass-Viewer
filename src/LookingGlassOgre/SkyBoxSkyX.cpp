@@ -43,6 +43,24 @@ void SkyBoxSkyX::Start() {
 	// Add a basic cloud layer
 	m_SkyX->getCloudsManager()->add(SkyX::CloudLayer::Options(/* Default options */));
 
+	m_sun = m_ro->m_sceneMgr->createLight("sun");
+	m_sun->setType(Ogre::Light::LT_DIRECTIONAL);	// directional and sun-like
+	m_sun->setDiffuseColour(LookingGlassOgr::GetParameterColor("Renderer.Ogre.Sun.Color"));
+	m_sun->setCastShadows(true);
+
+	m_moon = m_ro->m_sceneMgr->createLight("moon");
+	m_moon->setType(Ogre::Light::LT_DIRECTIONAL);	// directional and sun-like
+	m_moon->setDiffuseColour(Ogre::ColourValue(LookingGlassOgr::GetParameterColor("Renderer.Ogre.Moon.Color")));
+	m_moon->setCastShadows(true);
+
+	if (LookingGlassOgr::GetParameterBool("Renderer.Ogre.SkyX.LightingHDR")) {
+		m_SkyX->setLightingMode(m_SkyX->LM_HDR);
+	}
+	else {
+		m_SkyX->setLightingMode(m_SkyX->LM_LDR);
+	}
+
+
 	// Add frame listener
 	m_ro->m_root->addFrameListener(this);
 
@@ -55,15 +73,13 @@ void SkyBoxSkyX::Stop() {
 	}
 }
 
-/* THINGS WE HAVEN'T ADDED YET
-		// Add our ground atmospheric scattering pass to terrain material
-		mSkyX->getGPUManager()->addGroundPass(
-			static_cast<Ogre::MaterialPtr>(Ogre::MaterialManager::getSingleton().
-			getByName("Terrain"))->getTechnique(0)->createPass(), 5000, Ogre::SBT_TRANSPARENT_COLOUR);
-*/
+void SkyBoxSkyX::AddSkyPass(Ogre::MaterialPtr matP) {
+	return;
+}
 
-bool SkyBoxSkyX::frameStarted(const Ogre::FrameEvent &e) {
 
+// bool SkyBoxSkyX::frameStarted(const Ogre::FrameEvent &e) {
+bool SkyBoxSkyX::frameRenderingQueued(const Ogre::FrameEvent &e) {
 /*
 		// Check camera height
 		Ogre::RaySceneQuery * raySceneQuery = 
@@ -80,6 +96,25 @@ bool SkyBoxSkyX::frameStarted(const Ogre::FrameEvent &e) {
 			}
         }
 		*/
+
+		m_sun->setPosition(m_SkyX->getAtmosphereManager()->getSunPosition());
+		m_sun->setDirection(m_SkyX->getAtmosphereManager()->getSunDirection());
+		// if below the horizon, turn it off
+		if (m_sun->getPosition().y < 0) {
+			m_sun->setVisible(false);
+		}
+		else {
+			m_sun->setVisible(true);
+		}
+		m_moon->setPosition(m_SkyX->getMoonManager()->getMoonSceneNode()->getPosition());
+		m_moon->setDirection(m_SkyX->getCamera()->getPosition() - m_moon->getPosition());
+		// if below the horizon, turn it off
+		if (m_moon->getPosition().y < 0) {
+			m_moon->setVisible(false);
+		}
+		else {
+			m_moon->setVisible(true);
+		}
 
 		m_SkyX->update(e.timeSinceLastFrame);
 

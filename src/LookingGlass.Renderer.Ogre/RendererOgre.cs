@@ -163,11 +163,6 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "LoadingTexture.png",
                     "Resource name of  the default texture");
 
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Sky", "Default",
-                    "Name of the key system to use");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.SkyX.Detail", "High",
-                    "For SkyX, the detail (shaders) used");
-
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.LL.SceneMagnification", "1",
                     "Magnification of LL coordinates into Ogre space");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.LL.RenderInfoMaterialCreate", "true",
@@ -175,8 +170,10 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.LL.EarlyMaterialCreate", "false",
                     "Create materials while creating mesh rather than waiting");
 
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.BetweenFrame.Costs.Total", "300",
-                    "The total cost of operations to do between frames");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.BetweenFrame.WorkItems", "3000",
+                    "Number of queued C++ work items to do between each frame");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.BetweenFrame.Costs.Total", "1000",
+                    "The total cost of C# operations to do between each frame");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.BetweenFrame.Costs.CreateMaterial", "5",
                     "The cost of creating a material");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.BetweenFrame.Costs.CreateSceneNode", "20",
@@ -197,8 +194,17 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.SerializeMeshes", "true",
                     "Write out meshes to files");
 
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Sky", "Default",
+                    "Name of the key system to use");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.SkyX.LightingHDR", "true",
+                    "Use high resolution lighting shaders");
+
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Ambient", "<0.4,0.4,0.4>",
                     "color value for initial ambient lighting");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Sun.Color", "<1.0,1.0,1.0>",
+                    "Color of light from the sun at noon");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Moon.Color", "<0.5,0.5,0.6>",
+                    "Color of light from the moon");
 
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.Cull.Frustrum", "false",
                     "whether to cull (unload) objects if not visible in camera frustrum");

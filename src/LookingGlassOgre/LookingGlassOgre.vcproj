@@ -143,6 +143,7 @@
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\lib\Ogre\lib;..\..\lib\SkyX\SkyX\bin"
 				GenerateDebugInformation="true"
+				ProgramDatabaseFile="../../bin/$(TargetName).pdb"
 				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"

@@ -41,6 +41,11 @@ public:
 	// called when we're shutting down rendering
 	virtual void Stop() {};
 
+	// TODO: some way to handle the updates that the sky needs to make to
+	//   terrain and anything else.
+	// This is a place holder
+	virtual void AddSkyPass(Ogre::MaterialPtr mat) {};
+
 };
 
 }

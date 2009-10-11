@@ -79,9 +79,10 @@ struct CreateMeshSceneNodeQd {
 	float ow; float ox; float oy; float oz;
 };
 
-ProcessBetweenFrame::ProcessBetweenFrame(RendererOgre::RendererOgre* ro) {
+ProcessBetweenFrame::ProcessBetweenFrame(RendererOgre::RendererOgre* ro, int workItems) {
 	m_singleton = this;
 	m_ro = ro;
+	m_numWorkItemsToDoBetweenFrames = workItems;
 	LookingGlassOgr::GetOgreRoot()->addFrameListener(this);
 }
 
@@ -142,7 +143,7 @@ void ProcessBetweenFrame::CreateMeshSceneNode(Ogre::SceneManager* sceneMgr, char
 
 // we're between frames, on our own thread so we can do the work without locking
 bool ProcessBetweenFrame::frameEnded(const Ogre::FrameEvent& evt) {
-	int loopCount = 200;
+	int loopCount = m_numWorkItemsToDoBetweenFrames;
 	while (!m_betweenFrameWork.empty()) {
 		// only do so much work each frame
 		if (loopCount-- < 0) break;
