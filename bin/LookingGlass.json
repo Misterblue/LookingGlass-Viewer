@@ -46,8 +46,8 @@
 "Viewer.Camera.AboveAgent": "10",
 
 // ====================================================
-//"Renderer.Ogre.Renderer": "OpenGL Rendering Subsystem",
-"Renderer.Ogre.Renderer": "Direct3D9 Rendering Subsystem",
+"Renderer.Ogre.Renderer": "OpenGL Rendering Subsystem",
+// "Renderer.Ogre.Renderer": "Direct3D9 Rendering Subsystem",
 "Renderer.Ogre.VideoMode": "800 x 600@ 32-bit colour",
 // Shadow technique: none, texture-modulative, stencil-modulative, texture-additive, stencil-additive
 "Renderer.Ogre.ShadowTechnique": "none",
@@ -60,7 +60,6 @@
 "Renderer.Ogre.Visibility.MinDistance": "30",
 "Renderer.Ogre.Visibility.OnlyLargeAfter": "120",
 "Renderer.Ogre.Visibility.Large": "8",
-"Renderer.Ogre.BetweenFrames.WorkItems": "3000",
 // currently only works with Direct3D9
 // "Renderer.Ogre.Sky": "SkyX",
 

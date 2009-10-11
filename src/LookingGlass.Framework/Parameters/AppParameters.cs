@@ -92,7 +92,7 @@ public class AppParameters : IAppParameters, IParameterPersist {
 
     #region IAppParameters
     public void AddDefaultParameter(string key, string value, string desc) {
-        m_defaultParams.Add(key, value);
+        m_defaultParams.Add(key, value, desc);
     }
 
     public void AddIniParameter(string key, string value, string desc) {

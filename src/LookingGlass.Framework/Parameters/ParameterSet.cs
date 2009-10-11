@@ -41,6 +41,7 @@ public class ParameterSet : IParameters, IDisplayable {
     }
 
     protected OMVSD.OSDMap m_params = null;
+    protected OMVSD.OSDMap m_paramDescription = null;
 
     // A parameter can have the value of a delegate that is called when referenced
     // to get the actual runtime value.
@@ -52,6 +53,7 @@ public class ParameterSet : IParameters, IDisplayable {
 
     public ParameterSet() {
         m_params = new OMVSD.OSDMap();
+        m_paramDescription = new OMVSD.OSDMap();
         ParamErrorMethod = paramErrorType.eNullValue;
         m_runtimeValues = new Dictionary<string, ParameterSetRuntimeValue>();
     }
@@ -110,6 +112,17 @@ public class ParameterSet : IParameters, IDisplayable {
 
     public bool HasParameter(string key) {
         return m_params.ContainsKey(key.ToLower());
+    }
+
+    public void Add(string key, string value, string desc) {
+        string lkey = key.ToLower();
+        lock (m_paramDescription) {
+            if (m_paramDescription.ContainsKey(lkey)) {
+                m_paramDescription.Remove(lkey);
+            }
+            m_paramDescription.Add(lkey, new OMVSD.OSDString(desc));
+            Add(key, value);
+        }
     }
 
     public void Add(string key, string value) {
