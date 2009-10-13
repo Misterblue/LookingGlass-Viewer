@@ -380,14 +380,16 @@ public class ParameterSet : IParameters, IDisplayable {
     /// </summary>
     /// <returns></returns>
     public OMVSD.OSDMap GetDisplayable() {
-        if (m_runtimeValues.Count == 0) {
-            // shortcut if there are no delegates
-            return m_params;
-        }
         try {
             OMVSD.OSDMap built = new OMVSD.OSDMap();
             this.ForEach(delegate(string k, OMVSD.OSD v) {
-               built.Add(k, v);
+                OMVSD.OSDMap valueMap = new OMVSD.OSDMap();
+                valueMap.Add("parameter", new OMVSD.OSDString(k));
+                valueMap.Add("value", v);
+                if (m_paramDescription.ContainsKey(k)) {
+                    valueMap.Add("description", m_paramDescription[k.ToLower()]);
+                }
+                built.Add(k, valueMap);
             });
             return built;
         }
