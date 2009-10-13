@@ -583,7 +583,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
                         return newEnt;
                     }) ) {
                 // if new or not, assume everything about this entity has changed
-                rcontext.UpdateEntity(ent, UpdateCodes.FullUpdate);
+                rcontext.UpdateEntity(ent, UpdateCodes.FullUpdate | UpdateCodes.New);
             }
             else {
                 m_log.Log(LogLevel.DBADERROR, "FAILED CREATION OF NEW PRIM");
@@ -605,7 +605,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         m_log.Log(LogLevel.DCOMMDETAIL, "Object update: id={0}, p={1}, r={2}", 
             update.LocalID, update.Position.ToString(), update.Rotation.ToString());
         // assume somethings changed no matter what
-        IEntity updatedEntity;
+        IEntity updatedEntity = null;
         UpdateCodes updateFlags = UpdateCodes.Acceleration | UpdateCodes.AngularVelocity
                 | UpdateCodes.Position | UpdateCodes.Rotation | UpdateCodes.Velocity;
         if (update.Avatar) updateFlags |= UpdateCodes.CollisionPlane;
@@ -619,6 +619,9 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
                 updatedEntity.Heading = update.Rotation;
             }
             rcontext.UpdateEntity(updatedEntity, updateFlags);
+        }
+        else {
+            m_log.Log(LogLevel.DCOMM, "OnObjectUpdated: can't find local ID {0}. NOT UPDATING", update.LocalID);
         }
         if (update.Avatar) {
             // this is an update to an avatar. See if it's an update to our agent.
@@ -697,6 +700,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
                     }) ) {
             updatedEntity.RelativePosition = av.Position;
             updatedEntity.Heading = av.Rotation;
+            updateFlags |= UpdateCodes.New;     // a new avatar
             rcontext.UpdateEntity(updatedEntity, updateFlags);
         }
         if (av.LocalID == m_client.Self.LocalID) {
@@ -831,14 +835,17 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     }
 
     private void DoAnyWaitingEvents(RegionContextBase rcontext) {
+        OnDemandWorkQueue q = null;
         lock (m_waitTilOnline) {
             m_log.Log(LogLevel.DCOMMDETAIL, "DoAnyWaitingEvents: unqueuing waiting events for {0}", rcontext.Name);
             if (m_waitTilOnline.ContainsKey(rcontext)) {
-                OnDemandWorkQueue q = m_waitTilOnline[rcontext];
+                q = m_waitTilOnline[rcontext];
                 m_waitTilOnline.Remove(rcontext);
-                while (q.CurrentQueued > 0) {
-                    q.ProcessQueue(1000);
-                }
+            }
+        }
+        if (q != null) {
+            while (q.CurrentQueued > 0) {
+                q.ProcessQueue(1000);
             }
         }
     }

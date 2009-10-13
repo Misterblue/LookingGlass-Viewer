@@ -72,8 +72,9 @@ public enum UpdateCodes : uint {
     ExtraData =       1 << 20,
     Sound =           1 << 21,
     Joint =           1 << 22,
-    Terrain =         1 << 23,
-    FullUpdate = UInt32.MaxValue
+    Terrain =         1 << 23,  
+    New =             1 << 30,  // a new item
+    FullUpdate =      0x0fffffff
 }
 
     /// <summary>

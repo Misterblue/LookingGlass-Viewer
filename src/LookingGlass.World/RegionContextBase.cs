@@ -64,7 +64,7 @@ public abstract class RegionContextBase : EntityBase, IRegionContext, IDisposabl
 
     public RegionContextBase(RegionContextBase rcontext, AssetContextBase acontext) 
                 : base(rcontext, acontext) {
-        m_entityDictionary = new OpenMetaverse.DoubleDictionary<string, ulong, IEntity>();
+        m_entityDictionary = new OMV.DoubleDictionary<string, ulong, IEntity>();
         m_avatarDictionary = new Dictionary<EntityName, IEntityAvatar>();
         m_regionState = new RegionState();
         m_regionStateChangedCallback = new RegionStateChangedCallback(State_OnChange);
@@ -163,7 +163,7 @@ public abstract class RegionContextBase : EntityBase, IRegionContext, IDisposabl
     /// <param name="localID"></param>
     /// <param name="ent"></param>
     /// <param name="createIt"></param>
-    /// <returns></returns>
+    /// <returns>true if we created a new entry</returns>
     public bool TryGetCreateEntityLocalID(uint localID, out IEntity ent, RegionCreateEntityCallback createIt) {
         try {
             lock (m_entityDictionary) {
@@ -188,6 +188,13 @@ public abstract class RegionContextBase : EntityBase, IRegionContext, IDisposabl
     #endregion ENTITY MANAGEMENT
 
     #region AVATAR MANAGEMENT
+    /// <summary>
+    /// Get the avatar entity or call the callback to create a new avatar that we can return
+    /// </summary>
+    /// <param name="ename">Name of the avatar entity we want</param>
+    /// <param name="ent">returned avatar entity</param>
+    /// <param name="createIt">delegate to call to create the avatar if not found</param>
+    /// <returns>'true' if a new avatar was created</returns>
     public bool TryGetCreateAvatar(EntityName ename, out IEntityAvatar ent, WorldCreateAvatarCallback createIt) {
         IEntityAvatar av = null; ;
         try {
@@ -207,6 +214,11 @@ public abstract class RegionContextBase : EntityBase, IRegionContext, IDisposabl
         return false;
     }
 
+    /// <summary>
+    /// Remove the specified avatar
+    /// </summary>
+    /// <param name="av"></param>
+    /// <returns>'true' if we actually deleted an avatar</returns>
     public bool RemoveAvatar(IEntityAvatar av) {
         IEntityAvatar av2 = null;
         try {
