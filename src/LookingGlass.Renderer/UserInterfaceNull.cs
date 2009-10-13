@@ -27,6 +27,11 @@ using System.Windows.Forms;
 
 namespace LookingGlass.Renderer {
 
+    /// <summary>
+    /// This provides the necessary callbacks to keep the renderer and viewer
+    /// happy while not really doing any user IO. Used when in Radegast mode
+    /// when all the UI is provided by Radegast.
+    /// </summary>
 public class UserInterfaceNull : IUserInterfaceProvider {
 
 # pragma warning disable 0067   // disable unused event warning
