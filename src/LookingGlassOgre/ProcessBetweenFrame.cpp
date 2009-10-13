@@ -79,6 +79,18 @@ struct CreateMeshSceneNodeQd {
 	float ow; float ox; float oy; float oz;
 };
 
+const int UpdateSceneNodeCode = 5;
+struct UpdateSceneNodeQd {
+	int type;
+	Ogre::String entName;
+	bool setPosition;
+	bool setScale;
+	bool setRotation;
+	float px; float py; float pz;
+	float sx; float sy; float sz;
+	float ow; float ox; float oy; float oz;
+};
+
 ProcessBetweenFrame::ProcessBetweenFrame(RendererOgre::RendererOgre* ro, int workItems) {
 	m_singleton = this;
 	m_ro = ro;
@@ -141,6 +153,22 @@ void ProcessBetweenFrame::CreateMeshSceneNode(Ogre::SceneManager* sceneMgr, char
 	m_betweenFrameWork.push((GenericQd*)csnq);
 }
 
+void ProcessBetweenFrame::UpdateSceneNode(char* entName,
+					bool setPosition, float px, float py, float pz,
+					bool setScale, float sx, float sy, float sz,
+					bool setRotation, float ow, float ox, float oy, float oz) {
+	UpdateSceneNodeQd* usnq = OGRE_NEW_T(UpdateSceneNodeQd, Ogre::MEMCATEGORY_GENERAL);
+	usnq->type = UpdateSceneNodeCode;
+	usnq->entName = Ogre::String(entName);
+	usnq->setPosition = setPosition;
+	usnq->setScale = setScale;
+	usnq->setRotation = setRotation;
+	usnq->px = px; usnq->py = py; usnq->pz = pz;
+	usnq->sx = sx; usnq->sy = sy; usnq->sz = sz;
+	usnq->ow = ow; usnq->ox = ox; usnq->oy = oy; usnq->oz = oz;
+	m_betweenFrameWork.push((GenericQd*)usnq);
+}
+
 // we're between frames, on our own thread so we can do the work without locking
 bool ProcessBetweenFrame::frameEnded(const Ogre::FrameEvent& evt) {
 	int loopCount = m_numWorkItemsToDoBetweenFrames;
@@ -189,6 +217,15 @@ bool ProcessBetweenFrame::frameEnded(const Ogre::FrameEvent& evt) {
 				csnq->meshName.clear();
 				OGRE_FREE(csnq, Ogre::MEMCATEGORY_GENERAL);
 				break;
+			}
+			case UpdateSceneNodeCode: {
+				UpdateSceneNodeQd* usnq = (UpdateSceneNodeQd*)workGeneric;
+				m_ro->UpdateSceneNode( usnq->entName.c_str(),
+					usnq->setPosition, usnq->px, usnq->py, usnq->pz,
+					usnq->setScale, usnq->sx, usnq->sy, usnq->sz,
+					usnq->setRotation, usnq->ow, usnq->ox, usnq->oy, usnq->oz);
+				usnq->entName.clear();
+				OGRE_FREE(usnq, Ogre::MEMCATEGORY_GENERAL);
 			}
 		}
 	}

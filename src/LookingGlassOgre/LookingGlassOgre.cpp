@@ -195,6 +195,17 @@ extern "C" DLLExport Ogre::SceneNode* CreateSceneNode(
 	return m_ro->CreateSceneNode(sceneMgr, nodeName, parentNode,
 		inheritScale, inheritOrientation, px, py, pz, sx, sy, sz, ow, ox, oy, oz);
 }
+extern "C" DLLExport void UpdateSceneNodeBF(
+					char* nodeName,
+					bool setPosition, float px, float py, float pz,
+					bool setScale, float sx, float sy, float sz,
+					bool setRotation, float ow, float ox, float oy, float oz) {
+	m_ro->ProcessBetweenFrame()->UpdateSceneNode(nodeName,
+					setPosition, px, py, pz,
+					setScale, sx, sy, sz,
+					setRotation, ow, ox, oy, oz);
+	return;
+}
 extern "C" DLLExport Ogre::SceneNode* CreateChildSceneNode(Ogre::SceneNode* node) {
 	return node->createChildSceneNode();
 }

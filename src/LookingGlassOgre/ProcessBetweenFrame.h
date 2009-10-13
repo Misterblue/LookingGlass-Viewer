@@ -50,6 +50,10 @@ public:
 					float px, float py, float pz,
 					float sx, float sy, float sz,
 					float ow, float ox, float oy, float oz);
+	void UpdateSceneNode(char* nodeName,
+					bool setPosition, float px, float py, float pz,
+					bool setScale, float sx, float sy, float sz,
+					bool setRotation, float ow, float ox, float oy, float oz);
 
 private:
 	int m_numWorkItemsToDoBetweenFrames;

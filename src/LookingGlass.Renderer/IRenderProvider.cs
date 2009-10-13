@@ -91,6 +91,7 @@ public struct FaceData {
         //=================================================================
         // Set the entity to be rendered
         void Render(IEntity ent);
+        void RenderUpdate(IEntity ent, UpdateCodes what);
         void UnRender(IEntity ent);
 
         // tell the renderer about the camera position

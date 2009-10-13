@@ -434,6 +434,13 @@ namespace RendererOgre {
 		return node;
 	}
 
+	void RendererOgre::UpdateSceneNode(const char* entName,
+					bool updatePosition, float px, float py, float pz, 
+					bool updateScale, float sx, float sy, float sz,
+					bool updateRotation, float ow, float ox, float oy, float oz) {
+		return;
+	}
+
 	// Passed a bunch of vertices and index information, create the mesh that goes with it.
 	// The mesh is created and serialized to a .mesh file which just happens to be in the 
 	// same spot as the resource looker-upper will look to find it when the mesh is reloaded.

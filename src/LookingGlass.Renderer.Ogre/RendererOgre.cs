@@ -525,6 +525,44 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     }
 
     // ==========================================================================
+    public void RenderUpdate(IEntity ent, UpdateCodes what) {
+        if ((what & UpdateCodes.Material) != 0) {
+            // the materials have changed on this entity. Cause materials to be recalcuated
+        }
+        if ((what & (UpdateCodes.Scale | UpdateCodes.Position | UpdateCodes.Rotation)) != 0) {
+            // world position has changed. Tell Ogre they have changed
+            lock (RendererOgre.BetweenFrameLock) {
+                string entitySceneNodeName = EntityNameOgre.ConvertToOgreSceneNodeName(ent.Name);
+            }
+        }
+        if ((what & UpdateCodes.ParentID) != 0) {
+            // prim was detached or attached
+            DoLaterBase laterWork = new DoRender(m_sceneMgr, ent, m_log);
+            laterWork.order = CalculateInterestOrder(ent);
+            m_workQueue.DoLater(laterWork);
+        }
+        if ((what & (UpdateCodes.PrimFlags | UpdateCodes.PrimData)) != 0) {
+            // the prim parameters were changed. Re-render.
+            DoLaterBase laterWork = new DoRender(m_sceneMgr, ent, m_log);
+            laterWork.order = CalculateInterestOrder(ent);
+            m_workQueue.DoLater(laterWork);
+        }
+        if ((what & UpdateCodes.Textures) != 0) {
+            // texure on the prim were updated. Refresh them.
+            DoLaterBase laterWork = new DoRender(m_sceneMgr, ent, m_log);
+            laterWork.order = CalculateInterestOrder(ent);
+            m_workQueue.DoLater(laterWork);
+        }
+        if ((what & UpdateCodes.Text) != 0) {
+            // text associated with the prim changed
+        }
+        if ((what & UpdateCodes.Particles) != 0) {
+            // particles associated with the prim changed
+        }
+        return;
+    }
+
+    // ==========================================================================
     public void UnRender(IEntity ent) {
         return;
     }
