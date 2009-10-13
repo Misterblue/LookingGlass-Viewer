@@ -384,7 +384,6 @@ public class ParameterSet : IParameters, IDisplayable {
             OMVSD.OSDMap built = new OMVSD.OSDMap();
             this.ForEach(delegate(string k, OMVSD.OSD v) {
                 OMVSD.OSDMap valueMap = new OMVSD.OSDMap();
-                valueMap.Add("parameter", new OMVSD.OSDString(k));
                 valueMap.Add("value", v);
                 if (m_paramDescription.ContainsKey(k)) {
                     valueMap.Add("description", m_paramDescription[k.ToLower()]);
