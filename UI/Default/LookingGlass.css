@@ -44,10 +44,17 @@ pre {
     background: #5A6F7D;
     font-size: 12px;
 }
+
 table.LGStatsTable {
 }
 table.LGStatsTable td {
     border: 1px solid;
     width: 15px;
     text-align: right;
+}
+
+table.LGDefaultParametersTable {
+}
+table.LGDefaultParametersTable td {
+    border: 1px solid;
 }

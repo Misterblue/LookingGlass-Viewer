@@ -45,8 +45,8 @@ function TimerLoginStuff(firstTime) {
         },
         error: function(xmlHTTPRequest, errorType) {
             UpdateLoginArea( {
-                msg: "Lost connection to viewer",
-                loginstate: "logout"
+                msg: {"value": "Lost connection to viewer"},
+                loginstate: {"value": "logout"}
             });
         }
     });
@@ -57,18 +57,20 @@ function TimerLoginStuff(firstTime) {
 // given a set of login status parameters, update login status area
 function UpdateLoginArea(data) {
     $('#LGCurrentLogin td').empty();
-    $('#LGCurrentLogin td:nth-child(1)').append(data.first);
-    $('#LGCurrentLogin td:nth-child(2)').append(data.last);
-    $('#LGCurrentLogin td:nth-child(3)').append(data.currentgrid);
-    $('#LGCurrentLogin td:nth-child(4)').append(data.currentsim);
-    $('#LGCurrentLogin td:nth-child(5)').append(data.positionx);
-    $('#LGCurrentLogin td:nth-child(6)').append(data.positiony);
-    $('#LGCurrentLogin td:nth-child(7)').append(data.positionz);
+    if (data['first'] != undefined) {
+        $('#LGCurrentLogin td:nth-child(1)').append(data.first.value);
+        $('#LGCurrentLogin td:nth-child(2)').append(data.last.value);
+        $('#LGCurrentLogin td:nth-child(3)').append(data.currentgrid.value);
+        $('#LGCurrentLogin td:nth-child(4)').append(data.currentsim.value);
+        $('#LGCurrentLogin td:nth-child(5)').append(data.positionx.value);
+        $('#LGCurrentLogin td:nth-child(6)').append(data.positiony.value);
+        $('#LGCurrentLogin td:nth-child(7)').append(data.positionz.value);
+    }
 
     $('#LGLoginMessage').empty();
-    $('#LGLoginMessage').append(data.msg);
+    $('#LGLoginMessage').append(data.msg.value);
 
-    if(data.loginstate == 'logout') {
+    if(data.loginstate.value == 'logout') {
         $("#LGLoginForm").show();
     }
     else {
@@ -78,13 +80,13 @@ function UpdateLoginArea(data) {
 
 // Called the first time so we can pre-populate the form
 function InitializeLoginForm(data) {
-    $('#LGLoginForm input[name="LOGINFIRST"]').attr('value', data.first);
-    $('#LGLoginForm input[name="LOGINLAST"]').attr('value', data.last);
-    $('#LGLoginForm input[name="LOGINSIM"]').attr('value', data.sim);
+    $('#LGLoginForm input[name="LOGINFIRST"]').attr('value', data.first.value);
+    $('#LGLoginForm input[name="LOGINLAST"]').attr('value', data.last.value);
+    $('#LGLoginForm input[name="LOGINSIM"]').attr('value', data.sim.value);
     var selector = $('#LGLoginForm select[name="LOGINGRID"]');
     selector.empty();
-    for (grid in data.possiblegrids) {
-        var valu = data.possiblegrids[grid];
+    for (grid in data.possiblegrids.value) {
+        var valu = data.possiblegrids.value[grid];
         selector.append('<option value="' + valu + '">' + valu + '</option>');
     }
 
@@ -147,7 +149,7 @@ function BuildBasicTable(sect, data, addRowName) {
         for (col in columns) {
             buff.append('<th>' + columns[col] + '</th>');
         }
-        $(sect).append('</tr>');
+        buff.append('</tr>');
         for (row in data) {
             buff.append('<tr>');
             if (addRowName) {
