@@ -171,7 +171,17 @@ void ProcessBetweenFrame::UpdateSceneNode(char* entName,
 
 // we're between frames, on our own thread so we can do the work without locking
 bool ProcessBetweenFrame::frameEnded(const Ogre::FrameEvent& evt) {
-	int loopCount = m_numWorkItemsToDoBetweenFrames;
+	ProcessWorkItems(m_numWorkItemsToDoBetweenFrames);
+	return true;
+}
+
+// return true if there is still work to do
+bool ProcessBetweenFrame::HasWorkItems() {
+	return !m_betweenFrameWork.empty();
+}
+
+void ProcessBetweenFrame::ProcessWorkItems(int numToProcess) {
+	int loopCount = numToProcess;
 	while (!m_betweenFrameWork.empty()) {
 		// only do so much work each frame
 		if (loopCount-- < 0) break;
@@ -229,7 +239,7 @@ bool ProcessBetweenFrame::frameEnded(const Ogre::FrameEvent& evt) {
 			}
 		}
 	}
-	return true;
+	return;
 }
 
 }

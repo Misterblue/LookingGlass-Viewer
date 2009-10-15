@@ -75,7 +75,16 @@ namespace RendererOgre {
 			Ogre::WindowEventUtilities::messagePump();
 			now = timeKeeper->getMilliseconds();
 			int remaining = msPerFrame - ((int)(now - timeStartedLastFrame));
-			if (remaining > 10) Sleep(remaining);
+			while (remaining > 10) {
+				if (m_processBetweenFrame->HasWorkItems()) {
+					m_processBetweenFrame->ProcessWorkItems(30);
+				}
+				else {
+					Sleep(remaining);
+				}
+				now = timeKeeper->getMilliseconds();
+				remaining = msPerFrame - ((int)(now - timeStartedLastFrame));
+			}
 			timeStartedLastFrame = timeKeeper->getMilliseconds();
 		}
 		Log("DEBUG: LookingGlassOrge: Completed rendering");
@@ -222,7 +231,7 @@ namespace RendererOgre {
 		// routines for managing and loading materials
 		m_materialTracker = new OLMaterialTracker::OLMaterialTracker(this);
 		int betweenWork = LookingGlassOgr::GetParameterInt("Renderer.Ogre.BetweenFrame.WorkItems");
-		if (betweenWork ==0) betweenWork = 200;
+		if (betweenWork == 0) betweenWork = 200;
 		m_processBetweenFrame = new ProcessBetweenFrame::ProcessBetweenFrame(this, betweenWork);
 
 		// listener to catch references to materials in meshes when they are read in
@@ -391,6 +400,7 @@ namespace RendererOgre {
 	// ========== end of Ogre::FrameListener
 
 	// ============= REQUESTS TO DO WORK
+	// BETWEEN FRAME OPERATION
 	void RendererOgre::AddEntity(Ogre::SceneManager* sceneMgr, Ogre::SceneNode* sceneNode,
 							const char* entName, const char* meshName) {
 		// Log("RendererOgre::AddEntity: declare %s, t=%s, g=%s", meshName,
@@ -409,6 +419,7 @@ namespace RendererOgre {
 		return;
 	}
 
+	// BETWEEN FRAME OPERATION
 	Ogre::SceneNode* RendererOgre::CreateSceneNode( Ogre::SceneManager* sceneMgr, const char* nodeName,
 					Ogre::SceneNode* parentNode,
 					bool inheritScale, bool inheritOrientation,
@@ -434,16 +445,33 @@ namespace RendererOgre {
 		return node;
 	}
 
+	// BETWEEN FRAME OPERATION
 	void RendererOgre::UpdateSceneNode(const char* entName,
 					bool updatePosition, float px, float py, float pz, 
 					bool updateScale, float sx, float sy, float sz,
 					bool updateRotation, float ow, float ox, float oy, float oz) {
+		if (m_sceneMgr->hasSceneNode(entName)) {
+			Ogre::SceneNode* sceneNode = m_sceneMgr->getSceneNode(entName);
+			if (updatePosition) {
+				sceneNode->setPosition(px, py, pz);
+			}
+			if (updateScale) {
+				sceneNode->setScale(sx, sy, sz);
+			}
+			if (updateRotation) {
+				sceneNode->setOrientation(ow, ox, oy, oz);
+			}
+		}
+		else {
+			LookingGlassOgr::Log("UpdateSceneNode: entity not found. Did not update entity %s", entName);
+		}
 		return;
 	}
 
 	// Passed a bunch of vertices and index information, create the mesh that goes with it.
 	// The mesh is created and serialized to a .mesh file which just happens to be in the 
 	// same spot as the resource looker-upper will look to find it when the mesh is reloaded.
+	// BETWEEN FRAME OPERATION
 	void RendererOgre::CreateMeshResource(const char* eName, const int faceCounts[], const float faceVertices[]) {
 		Ogre::String entName = eName;
 		Ogre::String manualObjectName = "MO/" + entName;
@@ -600,6 +628,7 @@ namespace RendererOgre {
 	// The mesh is created and serialized to a .mesh file which just happens to be in the 
 	// same spot as the resource looker-upper will look to find it when the mesh is reloaded.
 	// NOTE: IN PROGRESS: an attempt to build the mesh directly rather than using ManualObject.
+	// BETWEEN FRAME OPERATION
 	void RendererOgre::CreateMeshResource2(const char* eName, const int faceCounts[], const float faceVertices[]) {
 		Ogre::String entName = eName;
 		Ogre::String manualObjectName = "MO/" + entName;
@@ -658,6 +687,7 @@ namespace RendererOgre {
 		return;
 	}
 
+	// BETWEEN FRAME OPERATION
 void RendererOgre::meshToResource(Ogre::MeshPtr mesh, const Ogre::String entName) {
 	Log("OLMeshManager::meshToResource: creating mesh for %s", entName.c_str());
 	Ogre::String targetFilename = EntityNameToFilename(entName, "");
@@ -714,6 +744,7 @@ void RendererOgre::MakeParentDir(const Ogre::String filename) {
 // the scene node, remove all it's attachments and add the manual object.
 // The heightmap is passed in a 1D array ordered by width rows (for(width) {for(length) {hm[w,l]}})
 // This must be called between frames since it touches the scene graph
+// BETWEEN FRAME OPERATION
 void RendererOgre::GenTerrainMesh(Ogre::SceneManager* sceneMgr, Ogre::SceneNode* node, 
 								  const int hmWidth, const int hmLength, const float* hm) {
 
@@ -777,6 +808,7 @@ void RendererOgre::GenTerrainMesh(Ogre::SceneManager* sceneMgr, Ogre::SceneNode*
 	return;
 }
 
+// BETWEEN FRAME OPERATION
 void RendererOgre::AddOceanToRegion(Ogre::SceneManager* sceneMgr, Ogre::SceneNode* regionNode,
 									const float width, const float length, const float waterHeight, const char* wName) {
 	if (sceneMgr == 0) {
@@ -809,6 +841,7 @@ void RendererOgre::AddOceanToRegion(Ogre::SceneManager* sceneMgr, Ogre::SceneNod
 // Once a frame, go though all the meshes and figure out which ones are visible.
 // we unload the non-visible ones and make sure the visible ones are loaded.
 // This keeps the number of in memory vertexes low
+// BETWEEN FRAME OPERATION
 int visSlowdown;
 int visRegions;
 int visChildren;
@@ -842,6 +875,7 @@ void RendererOgre::calculateEntityVisibility() {
 	}
 }
 
+// BETWEEN FRAME OPERATION
 void RendererOgre::calculateEntityVisibility(Ogre::Node* node) {
 	if (node->numChildren() > 0) {
 		// if node has more children nodes, visit them recursivily
@@ -910,6 +944,7 @@ void RendererOgre::calculateEntityVisibility(Ogre::Node* node) {
 
 // NOTE that all this queuing and visibility checking relies on the since
 //    between frame thread.
+// BETWEEN FRAME OPERATION
 stdext::hash_map<Ogre::String, Ogre::Entity*> meshesToLoad;
 stdext::hash_map<Ogre::String, Ogre::Entity*> meshesToUnload;
 void RendererOgre::processEntityVisibility() {
@@ -947,6 +982,7 @@ void RendererOgre::queueMeshLoad(Ogre::Entity* parentEntity, Ogre::MeshPtr meshP
 	meshesToLoad.insert(std::pair<Ogre::String, Ogre::Entity*>(meshName, parentEntity));
 }
 
+// BETWEEN FRAME OPERATION
 void RendererOgre::queueMeshUnload(Ogre::MeshPtr meshP) {
 	Ogre::String meshName = meshP->getName();
 	if (meshesToLoad.find(meshName) != meshesToLoad.end()) {
@@ -957,6 +993,7 @@ void RendererOgre::queueMeshUnload(Ogre::MeshPtr meshP) {
 }
 
 // unload all about this mesh. The mesh itself and the textures.
+// BETWEEN FRAME OPERATION
 void RendererOgre::unloadTheMesh(Ogre::MeshPtr meshP) {
 	if (m_shouldCullTextures) {
 		Ogre::Mesh::SubMeshIterator smi = meshP->getSubMeshIterator();

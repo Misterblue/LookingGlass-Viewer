@@ -35,12 +35,15 @@ namespace LookingGlass.World {
  
 
 public delegate void RegionRegionStateChangeCallback(RegionContextBase rcontext, RegionStateCode code);
-
 public delegate void RegionRegionUpdatedCallback(RegionContextBase rcontext, UpdateCodes what);
 
 public delegate void RegionEntityNewCallback(IEntity ent);
 public delegate void RegionEntityUpdateCallback(IEntity ent, UpdateCodes what);
 public delegate void RegionEntityRemovedCallback(IEntity ent);
+
+public delegate void RegionAvatarNewCallback(IEntityAvatar ent);
+public delegate void RegionAvatarUpdateCallback(IEntityAvatar ent, UpdateCodes what);
+public delegate void RegionAvatarRemovedCallback(IEntityAvatar ent);
 
 // used in TryGetCreateentity calls to create the entity if needed
 public delegate IEntity RegionCreateEntityCallback();
@@ -56,10 +59,12 @@ public interface IRegionContext {
 
     // when new items are added to the world
     event RegionEntityNewCallback OnEntityNew;
-    // when a prim is updated
     event RegionEntityUpdateCallback OnEntityUpdate;
-    // when an object is killed
     event RegionEntityRemovedCallback OnEntityRemoved;
+
+    event RegionAvatarNewCallback OnAvatarNew;
+    event RegionAvatarUpdateCallback OnAvatarUpdate;
+    event RegionAvatarRemovedCallback OnAvatarRemoved;
     #endregion Events
 
     // get the name of the region

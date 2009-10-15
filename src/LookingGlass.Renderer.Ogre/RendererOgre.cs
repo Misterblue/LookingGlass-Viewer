@@ -531,8 +531,15 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         }
         if ((what & (UpdateCodes.Scale | UpdateCodes.Position | UpdateCodes.Rotation)) != 0) {
             // world position has changed. Tell Ogre they have changed
+            string entitySceneNodeName = EntityNameOgre.ConvertToOgreSceneNodeName(ent.Name);
+            m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: Updating position/rotation for {0}", entitySceneNodeName);
             lock (RendererOgre.BetweenFrameLock) {
-                string entitySceneNodeName = EntityNameOgre.ConvertToOgreSceneNodeName(ent.Name);
+                Ogr.UpdateSceneNodeBF(entitySceneNodeName,
+                    ((what & UpdateCodes.Position) != 0),
+                    ent.RelativePosition.X, ent.RelativePosition.Y, ent.RelativePosition.Z,
+                    false, 1f, 1f, 1f,  // don't pass scale yet
+                    ((what & UpdateCodes.Rotation) != 0),
+                    ent.Heading.W, ent.Heading.X, ent.Heading.Y, ent.Heading.Z);
             }
         }
         if ((what & UpdateCodes.ParentID) != 0) {

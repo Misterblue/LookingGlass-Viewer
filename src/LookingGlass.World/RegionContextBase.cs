@@ -34,17 +34,10 @@ public abstract class RegionContextBase : EntityBase, IRegionContext, IDisposabl
     # pragma warning disable 0067   // disable unused event warning
     // when the underlying simulator is changing.
     public event RegionRegionStateChangeCallback OnRegionStateChange;
-
-    // when some state of  the region has changed
     public event RegionRegionUpdatedCallback OnRegionUpdated;
 
-    // when new items are added to the world
     public event RegionEntityNewCallback OnEntityNew;
-
-    // when an entity is updated
     public event RegionEntityUpdateCallback OnEntityUpdate;
-
-    // when an object is killed
     public event RegionEntityRemovedCallback OnEntityRemoved;
 
     # pragma warning restore 0067
@@ -93,7 +86,7 @@ public abstract class RegionContextBase : EntityBase, IRegionContext, IDisposabl
 
     #region ENTITY MANAGEMENT
     public void AddEntity(IEntity entity) {
-        m_log.Log(LogLevel.DWORLDDETAIL, "AddEntity: " + entity.Name);
+        m_log.Log(LogLevel.DWORLDDETAIL, "AddEntity: n={0}, lid={1}", entity.Name, entity.LGID);
         if (TrackEntity(entity)) {
             // tell the viewer about this prim and let the renderer convert it
             //    into the format needed for display

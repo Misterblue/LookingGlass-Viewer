@@ -126,6 +126,11 @@ public sealed class World : ModuleBase, IWorld, IProvider {
                 }
                 rcontext.OnEntityNew += Region_OnNewEntityCallback;
 
+                if (Region_OnUpdateEntityCallback == null) {
+                    Region_OnUpdateEntityCallback = new RegionEntityUpdateCallback(Region_OnUpdateEntity);
+                }
+                rcontext.OnEntityUpdate += Region_OnUpdateEntityCallback;
+
                 if (Region_OnRemovedEntityCallback == null) {
                     Region_OnRemovedEntityCallback = new RegionEntityRemovedCallback(Region_OnNewEntity);
                 }
@@ -147,6 +152,12 @@ public sealed class World : ModuleBase, IWorld, IProvider {
     private RegionEntityNewCallback Region_OnNewEntityCallback = null;
     private void Region_OnNewEntity(IEntity ent) {
         if (OnWorldEntityNew != null) OnWorldEntityNew(ent);
+        return;
+    }
+
+    private RegionEntityUpdateCallback Region_OnUpdateEntityCallback = null;
+    private void Region_OnUpdateEntity(IEntity ent, UpdateCodes what) {
+        if (OnWorldEntityUpdate != null) OnWorldEntityUpdate(ent, what);
         return;
     }
 

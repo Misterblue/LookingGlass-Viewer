@@ -51,7 +51,7 @@ namespace LookingGlass.World.LL {
         }
 
         public static EntityName AvatarEntityNameFromID(AssetContextBase acontext, OMV.UUID ID) {
-            return new EntityNameLL(acontext, ID.ToString());
+            return new EntityNameLL(acontext, "Avatar/" + ID.ToString());
         }
 
         override public OMV.Quaternion Heading {

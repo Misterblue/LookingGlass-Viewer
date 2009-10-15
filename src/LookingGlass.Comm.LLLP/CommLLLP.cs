@@ -487,6 +487,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         gc.Network.OnSimConnected += new OMV.NetworkManager.SimConnectedCallback(Network_OnSimConnected);
         gc.Network.OnCurrentSimChanged += new OMV.NetworkManager.CurrentSimChangedCallback(Network_OnCurrentSimChanged);
         gc.Objects.OnNewPrim += new OMV.ObjectManager.NewPrimCallback(Objects_OnNewPrim);
+        gc.Objects.OnNewAttachment += new OMV.ObjectManager.NewAttachmentCallback(Objects_OnNewAttachment);
         gc.Objects.OnObjectUpdated += new OMV.ObjectManager.ObjectUpdatedCallback(Objects_OnObjectUpdated);
         // NewAttachmentCallback
         gc.Objects.OnNewAvatar += new OMV.ObjectManager.NewAvatarCallback(Objects_OnNewAvatar);
@@ -575,6 +576,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         if (rcontext.State.IfNotOnline(delegate() {
                 QueueTilOnline(rcontext, CommActionCode.OnNewPrim, sim, prim, regionHandle, timeDilation);
             }) ) return;
+        m_log.Log(LogLevel.DCOMMDETAIL, "OnNewPrim: id={0}, lid={1}", prim.ID.ToString(), prim.LocalID);
         try {
             IEntity ent;
             if (rcontext.TryGetCreateEntityLocalID(prim.LocalID, out ent, delegate() {
@@ -591,6 +593,34 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         }
         catch (Exception e) {
             m_log.Log(LogLevel.DBADERROR, "FAILED CREATION OF NEW PRIM: " + e.ToString());
+        }
+        return;
+    }
+
+    // ===============================================================
+    public virtual void Objects_OnNewAttachment(OMV.Simulator sim, OMV.Primitive prim, ulong regionHandle, ushort timeDilation) {
+        LLRegionContext rcontext = FindRegion(sim);
+        if (rcontext == null) return;
+        if (rcontext.State.IfNotOnline(delegate() {
+                QueueTilOnline(rcontext, CommActionCode.OnNewPrim, sim, prim, regionHandle, timeDilation);
+            }) ) return;
+        m_log.Log(LogLevel.DCOMMDETAIL, "OnNewAttachment: id={0}, lid={1}", prim.ID.ToString(), prim.LocalID);
+        try {
+            IEntity ent;
+            if (rcontext.TryGetCreateEntityLocalID(prim.LocalID, out ent, delegate() {
+                        IEntity newEnt = new LLEntityPhysical(rcontext.AssetContext,
+                                        rcontext, regionHandle, prim.LocalID, prim);
+                        return newEnt;
+                    }) ) {
+                // if new or not, assume everything about this entity has changed
+                rcontext.UpdateEntity(ent, UpdateCodes.FullUpdate | UpdateCodes.New);
+            }
+            else {
+                m_log.Log(LogLevel.DBADERROR, "FAILED CREATION OF NEW ATTACHMENT");
+            }
+        }
+        catch (Exception e) {
+            m_log.Log(LogLevel.DBADERROR, "FAILED CREATION OF NEW ATTACHMENT: " + e.ToString());
         }
         return;
     }

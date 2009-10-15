@@ -35,6 +35,9 @@ public:
 	ProcessBetweenFrame(RendererOgre::RendererOgre*, int workItems);
 	~ProcessBetweenFrame();
 
+	bool HasWorkItems();
+	void ProcessWorkItems(int);
+
 	// Ogre::FrameListener
 	bool frameEnded(const Ogre::FrameEvent&);
 
