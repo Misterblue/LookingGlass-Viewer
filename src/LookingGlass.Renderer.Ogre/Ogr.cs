@@ -88,7 +88,7 @@ static class Ogr {
     public static extern bool RenderingThread();
 
     [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
-    public static extern bool RenderOneFrame(bool pump);
+    public static extern bool RenderOneFrame(bool pump, int len);
 
     // =============================================================================
     [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]

@@ -40,6 +40,10 @@ public abstract class RegionContextBase : EntityBase, IRegionContext, IDisposabl
     public event RegionEntityUpdateCallback OnEntityUpdate;
     public event RegionEntityRemovedCallback OnEntityRemoved;
 
+    public event RegionAvatarNewCallback OnAvatarNew;
+    public event RegionAvatarUpdateCallback OnAvatarUpdate;
+    public event RegionAvatarRemovedCallback OnAvatarRemoved;
+
     # pragma warning restore 0067
     #endregion
 
@@ -198,6 +202,7 @@ public abstract class RegionContextBase : EntityBase, IRegionContext, IDisposabl
                 }
                 ent = av;
             }
+            if (av != null) if (OnAvatarNew != null) OnAvatarNew(av);
             return true;
         }
         catch (Exception e) {
@@ -224,6 +229,7 @@ public abstract class RegionContextBase : EntityBase, IRegionContext, IDisposabl
         catch (Exception e) {
             m_log.Log(LogLevel.DBADERROR, "RemoveAvatar: Failed removing avatar: {0}", e.ToString());
         }
+        if (av2 != null) if (OnAvatarRemoved != null) OnAvatarRemoved(av2);
         return (av2 != null);
     }
 

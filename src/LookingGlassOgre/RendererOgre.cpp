@@ -100,7 +100,9 @@ namespace RendererOgre {
 	// Note that his also called the message pump to make screen resizing and
 	// movement happen on the Ogre frame.
 	// If the passed parameter is 'true' we call the windows message pump
-	bool RendererOgre::renderOneFrame(bool pump) {
+	// and the number of ms this frame should take. We do between frame work
+	// with any extra time.
+	bool RendererOgre::renderOneFrame(bool pump, int len) {
 		bool ret = false;
 		if (m_root != NULL) {
 			ret = m_root->renderOneFrame();

@@ -378,7 +378,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         int frameStart, frameEnd, frameDuration, frameLeft;
         while (LGB.KeepRunning) {
             frameStart = System.Environment.TickCount;
-            if (!Ogr.RenderOneFrame(true)) {
+            if (!Ogr.RenderOneFrame(true, 100)) {
                 LGB.KeepRunning = false;
             }
             while (true) {
@@ -398,8 +398,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         return false;
     }
 
-    public bool RenderOneFrame(bool pump) {
-        return Ogr.RenderOneFrame(pump);
+    public bool RenderOneFrame(bool pump, int len) {
+        return Ogr.RenderOneFrame(pump, len);
     }
 
     // pass the thread into the renderer
