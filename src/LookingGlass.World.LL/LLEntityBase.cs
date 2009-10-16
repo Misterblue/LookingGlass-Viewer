@@ -19,14 +19,15 @@ namespace LookingGlass.World.LL {
 
         public const uint NOLOCALID = 0xffffffff;
         protected uint m_localID;
-        public uint LocalID { get { return m_localID; } set { m_localID = value; } }
+        // an LL localID is a per sim unique handle for the item
+        public uint LocalID { get { return m_localID; } set { m_localID = value; m_LGID = m_localID;  } }
 
         public LLEntityBase(RegionContextBase rcontext, AssetContextBase acontext) 
                     : base(rcontext, acontext) {
-            m_prim = null;
-            m_simulator = null;
-            m_regionHandle = LLEntityBase.NOREGION;
-            m_localID = LLEntityBase.NOLOCALID;
+            this.Prim = null;
+            this.Sim = null;
+            this.RegionHandle = LLEntityBase.NOREGION;
+            this.LocalID = LLEntityBase.NOLOCALID;
         }
 
     }

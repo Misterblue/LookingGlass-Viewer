@@ -144,7 +144,7 @@ public class LLAgent : IAgent {
         OMV.Vector3 pos = new OMV.Vector3((float)position.X, (float)position.Y, (float)position.Z);
         m_client.Self.Movement.Camera.SetPositionOrientation(pos, roll, pitch, yaw);
         m_client.Self.Movement.Camera.Far = 200f;
-        // m_log.Log(LogLevel.DVIEWDETAIL, "UpdateCamera: {0}, {1}, {2}, {3}", pos.X, pos.Y, pos.Z, direction.ToString());
+        m_log.Log(LogLevel.DVIEWDETAIL, "UpdateCamera: {0}, {1}, {2}, {3}", pos.X, pos.Y, pos.Z, direction.ToString());
         return;
     }
 

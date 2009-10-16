@@ -30,12 +30,11 @@ namespace LookingGlass.World.LL {
 
         public LLEntityPhysical(AssetContextBase acontext, LLRegionContext rcontext, 
                 ulong regionHandle, uint localID, OMV.Primitive prim) : base(rcontext, acontext) {
-            m_simulator= rcontext.Simulator;
-            m_regionHandle = regionHandle;
-            m_localID = localID;
-            m_LGID = localID;   // this is not right.. what if there are duplicates?
-            m_prim = prim;
-            m_name = new EntityNameLL(acontext, m_prim.ID.ToString());
+            this.Sim = rcontext.Simulator;
+            this.RegionHandle = regionHandle;
+            this.LocalID = localID;
+            this.Prim = prim;
+            this.Name = new EntityNameLL(acontext, m_prim.ID.ToString());
         }
 
         public override void Dispose() {

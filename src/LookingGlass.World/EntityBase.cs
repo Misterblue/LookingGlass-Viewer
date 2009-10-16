@@ -39,12 +39,12 @@ public abstract class EntityBase : IEntity {
     protected ulong m_LGID = 0;
     public ulong LGID { 
         get {
-            if (m_LGID == 0) m_LGID = NextLocalID();
+            if (m_LGID == 0) m_LGID = NextLGID();
             return m_LGID; 
         } 
     }
-    private static ulong m_localID = 0x10000000;
-    public static ulong NextLocalID() { return m_localID++; }
+    private static ulong m_LGIDIndex = 0x10000000;
+    public static ulong NextLGID() { return m_LGIDIndex++; }
 
     // Every entity has a name
     protected EntityName m_name = null;
@@ -65,7 +65,7 @@ public abstract class EntityBase : IEntity {
         for (int ii = 0; ii < EntityBase.ADDITIONCLASSES; ii++) {
             Additions[ii] = null;
         }
-        m_LGID = NextLocalID();
+        m_LGID = NextLGID();
         m_worldContext = (World)LookingGlassBase.Instance.ModManager.Module("World");
         m_regionContext = rcontext;
         m_assetContext = acontext;

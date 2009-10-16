@@ -24,6 +24,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using LookingGlass;
+using LookingGlass.Framework.Logging;
 using LookingGlass.World;
 using OMV = OpenMetaverse;
 
@@ -46,10 +47,13 @@ namespace LookingGlass.World.LL {
                 ulong regionHandle, OMV.Avatar av) : base(rcontext, acontext) {
             // let people looking at IEntity's get at my avatarness
             RegisterInterface<IEntityAvatar>(this);
-            m_simulator= rcontext.Simulator;
-            m_regionHandle = regionHandle;
-            m_avatar = av;
-            m_name = AvatarEntityNameFromID(acontext, m_avatar.ID);
+            this.Sim = rcontext.Simulator;
+            this.RegionHandle = regionHandle;
+            this.Avatar = av;
+            this.LocalID = av.LocalID;
+            this.Name = AvatarEntityNameFromID(acontext, m_avatar.ID);
+            LogManager.Log.Log(LogLevel.DCOMMDETAIL, "LLEntityAvatar: create id={0}, lid={1}",
+                            av.ID.ToString(), this.LocalID);
         }
 
         public static EntityName AvatarEntityNameFromID(AssetContextBase acontext, OMV.UUID ID) {
