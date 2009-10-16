@@ -41,6 +41,16 @@ public class LLAgent : IAgent {
     //   back to the real controller
     private OMV.GridClient m_client = null;
 
+    private IEntityAvatar m_myAvatar = null;
+    public IEntityAvatar AssociatedAvatar {
+        get {
+            return m_myAvatar;
+        }
+        set {
+            m_myAvatar = value;
+        }
+    }
+
     public LLAgent(OMV.GridClient theClient) {
         m_client = theClient;
     }

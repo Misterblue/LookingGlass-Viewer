@@ -142,11 +142,8 @@ public interface IWorld {
 
     // AGENT MANAGEMENT
     void AddAgent(IAgent agnt);
-    void UpdateAgent(IAgent agnt, UpdateCodes changed);
-    void RemoveAgent(IAgent agnt);
-    void ForEachAgent(Action<IAgent> action);
-    IAgent FindAgent(Predicate<IAgent> pred);
-
+    void RemoveAgent();
+    IAgent Agent { get; }
 }
 
 }

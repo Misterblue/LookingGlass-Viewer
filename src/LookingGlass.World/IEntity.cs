@@ -23,12 +23,12 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using LookingGlass.World;
+using LookingGlass.Framework;
 using OMV = OpenMetaverse;
 
 namespace LookingGlass.World {
 
-public interface IEntity : IDisposable {
+public interface IEntity : IRegistryCore, IDisposable {
     ulong LGID { get; }
     EntityName Name { get; set; }
     World WorldContext { get; }
@@ -39,13 +39,8 @@ public interface IEntity : IDisposable {
     OMV.Vector3 RelativePosition { get; set; }   // position relative to RegionContext
     OMV.Vector3d GlobalPosition { get; set;  }
 
-    // cause the variables and state of the entity to be updated locally.
-    // This is a quick function and causes internal tables to be made
-    // consistant in a pull fashion. No network activity allowed.
-    void Update();
-
     // Notify the object that some of it state changed
-    void Changed(UpdateCodes what);
+    void Update(UpdateCodes what);
 
     /// <summary>
     /// An entity is decorated with additional Objects by other subsystems

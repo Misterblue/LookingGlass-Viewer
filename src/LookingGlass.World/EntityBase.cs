@@ -71,6 +71,44 @@ public abstract class EntityBase : IEntity {
         m_assetContext = acontext;
     }
 
+
+    #region IRegistryCore
+    protected Dictionary<Type, object> m_moduleInterfaces = new Dictionary<Type, object>();
+
+    /// <summary>
+    /// Register an Module interface.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="iface"></param>
+    public void RegisterInterface<T>(T iface) {
+        lock (m_moduleInterfaces) {
+            if (!m_moduleInterfaces.ContainsKey(typeof(T))) {
+                m_moduleInterfaces.Add(typeof(T), iface);
+            }
+        }
+    }
+
+    public bool TryGet<T>(out T iface) {
+        if (m_moduleInterfaces.ContainsKey(typeof(T))) {
+            iface = (T)m_moduleInterfaces[typeof(T)];
+            return true;
+        }
+        iface = default(T);
+        return false;
+    }
+
+    public T Get<T>() {
+        return (T)m_moduleInterfaces[typeof(T)];
+    }
+
+    public void StackModuleInterface<M>(M mod) {
+    }
+
+    public T[] RequestModuleInterfaces<T>() {
+        return new T[] { default(T) };
+    }
+#endregion IRegistryCore
+
     public abstract void Dispose();
 
 
@@ -195,12 +233,10 @@ public abstract class EntityBase : IEntity {
     #endregion ADDITIONS
 
     // Tell the entity that something about it changed
-    virtual public void Changed(UpdateCodes what) {
-        return;
-    }
-
-    // cause the entity to update state. No networking
-    virtual public void Update() {
+    virtual public void Update(UpdateCodes what) {
+        if (this.RegionContext != null) {
+            this.RegionContext.UpdateEntity(this, what);
+        }
         return;
     }
 }

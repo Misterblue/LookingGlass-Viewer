@@ -56,6 +56,9 @@ public interface IAgent {
     OMV.Vector3d GlobalPosition { get; }
     #endregion POSITION
 
+    // there is a binding between the agent in the world and their representation
+    IEntityAvatar AssociatedAvatar { get; set; }
+
     // This is a call from the viewer telling the agent the camera has moved. The
     // agent can use this for anything it wishes but it's mostly used by data sources
     // to generate culling or update ordering.

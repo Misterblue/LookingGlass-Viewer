@@ -42,8 +42,7 @@ public sealed class World : ModuleBase, IWorld, IProvider {
     get { return m_instance; }
     }
 
-
-    private List<IAgent> m_agentList;
+    private IAgent m_agent = null;
 
     // list of the region information build for the simulator
     List<RegionContextBase> m_regionList;
@@ -85,7 +84,6 @@ public sealed class World : ModuleBase, IWorld, IProvider {
         base.OnLoad(name, lgbase);
         m_instance = this;      // there is only one world
         m_regionList = new List<RegionContextBase>();
-        m_agentList = new List<IAgent>();
         ModuleParams.AddDefaultParameter(m_moduleName + ".Communication", "Comm", "Communication to connect to");
     }
 
@@ -247,50 +245,32 @@ public sealed class World : ModuleBase, IWorld, IProvider {
         return (ret != null);
     }
 
-    #region Agent Management
+    #region AGENT MANAGEMENT
+    public IAgent Agent { get { return m_agent; } }
+
     public void AddAgent(IAgent agnt) {
         m_log.Log(LogLevel.DWORLDDETAIL, "AddAgent: ");
-        lock (m_agentList) m_agentList.Add(agnt);
+        m_agent = agnt;
         if (OnAgentNew != null) OnAgentNew(agnt);
     }
 
-    public void UpdateAgent(IAgent agnt, UpdateCodes what) {
+    public void UpdateAgent(UpdateCodes what) {
         // m_log.Log(LogLevel.DWORLDDETAIL, "UpdateAgent: ");
-        if (OnAgentUpdate != null) OnAgentUpdate(agnt, what);
+        if (OnAgentUpdate != null) OnAgentUpdate(m_agent, what);
     }
 
-    public void RemoveAgent(IAgent agnt) {
+    public void RemoveAgent() {
         m_log.Log(LogLevel.DWORLDDETAIL, "RemoveAgent: ");
-        if (OnAgentRemoved != null) OnAgentRemoved(agnt);
-        lock (m_agentList) {
-            if (m_agentList.Contains(agnt)) {
-                m_agentList.Remove(agnt);
-            }
+        if (m_agent != null) {
+            if (OnAgentRemoved != null) OnAgentRemoved(m_agent);
+            m_agent = null;
         }
-    }
-
-    public void ForEachAgent(Action<IAgent> action) {
-        lock (m_agentList) {
-            foreach (IAgent aa in m_agentList) {
-                action(aa);
-            }
-        }
-    }
-
-    public IAgent FindAgent(Predicate<IAgent> pred) {
-        lock (m_agentList) {
-            foreach (IAgent aa in m_agentList) {
-                if (pred(aa)) return aa;
-            }
-        }
-        return null;
     }
 
     void UpdateAgentCamera(IAgent agnt, OMV.Vector3 position, OMV.Quaternion direction) {
         return;
     }
-
-    #endregion Agent Management
+    #endregion AGENT MANAGEMENT
     #endregion IWorld methods
 
 

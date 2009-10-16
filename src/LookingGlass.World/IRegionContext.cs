@@ -41,10 +41,6 @@ public delegate void RegionEntityNewCallback(IEntity ent);
 public delegate void RegionEntityUpdateCallback(IEntity ent, UpdateCodes what);
 public delegate void RegionEntityRemovedCallback(IEntity ent);
 
-public delegate void RegionAvatarNewCallback(IEntityAvatar ent);
-public delegate void RegionAvatarUpdateCallback(IEntityAvatar ent, UpdateCodes what);
-public delegate void RegionAvatarRemovedCallback(IEntityAvatar ent);
-
 // used in TryGetCreateentity calls to create the entity if needed
 public delegate IEntity RegionCreateEntityCallback();
 
@@ -62,9 +58,6 @@ public interface IRegionContext {
     event RegionEntityUpdateCallback OnEntityUpdate;
     event RegionEntityRemovedCallback OnEntityRemoved;
 
-    event RegionAvatarNewCallback OnAvatarNew;
-    event RegionAvatarUpdateCallback OnAvatarUpdate;
-    event RegionAvatarRemovedCallback OnAvatarRemoved;
     #endregion Events
 
     // get the name of the region
@@ -94,16 +87,13 @@ public interface IRegionContext {
     bool TryGetEntity(string entName, out IEntity ent);
     bool TryGetEntity(EntityName entName, out IEntity ent);
     IEntity FindEntity(Predicate<IEntity> pred);
+    bool TryGetCreateEntity(EntityName name, out IEntity ent, RegionCreateEntityCallback creater);
 
     // In  transition requests for getting region entities based on implementation
     // specific info. In this case the LLLP localID. This is part of the conversion
     // of entites being in the world to the entities being in regions.
     bool TryGetEntityLocalID(uint entName, out IEntity ent);
     bool TryGetCreateEntityLocalID(uint localID, out IEntity ent, RegionCreateEntityCallback creater);
-
-    // AVATAR MANAGEMENT
-    bool TryGetCreateAvatar(EntityName ename, out IEntityAvatar ent, WorldCreateAvatarCallback creater);
-    bool RemoveAvatar(IEntityAvatar av);
 
 }
 }

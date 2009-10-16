@@ -566,7 +566,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         if (regionContext.State.IfNotOnline(delegate() {
                 QueueTilOnline(regionContext, CommActionCode.RegionStateChange, regionContext, World.UpdateCodes.Terrain);
             }) ) return;
-        regionContext.Changed(World.UpdateCodes.Terrain);
+        regionContext.Update(World.UpdateCodes.Terrain);
     }
 
     // ===============================================================
@@ -578,18 +578,18 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
             }) ) return;
         m_log.Log(LogLevel.DCOMMDETAIL, "OnNewPrim: id={0}, lid={1}", prim.ID.ToString(), prim.LocalID);
         try {
-            IEntity ent;
+            IEntity ent = null; ;
             if (rcontext.TryGetCreateEntityLocalID(prim.LocalID, out ent, delegate() {
                         IEntity newEnt = new LLEntityPhysical(rcontext.AssetContext,
                                         rcontext, regionHandle, prim.LocalID, prim);
                         return newEnt;
                     }) ) {
-                // if new or not, assume everything about this entity has changed
-                rcontext.UpdateEntity(ent, UpdateCodes.FullUpdate | UpdateCodes.New);
             }
             else {
                 m_log.Log(LogLevel.DBADERROR, "FAILED CREATION OF NEW PRIM");
             }
+            // if new or not, assume everything about this entity has changed
+            if (ent != null) ent.Update(UpdateCodes.FullUpdate | UpdateCodes.New);
         }
         catch (Exception e) {
             m_log.Log(LogLevel.DBADERROR, "FAILED CREATION OF NEW PRIM: " + e.ToString());
@@ -648,11 +648,14 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
             if ((updateFlags & UpdateCodes.Rotation) != 0) {
                 updatedEntity.Heading = update.Rotation;
             }
-            rcontext.UpdateEntity(updatedEntity, updateFlags);
         }
         else {
             m_log.Log(LogLevel.DCOMM, "OnObjectUpdated: can't find local ID {0}. NOT UPDATING", update.LocalID);
         }
+        if (updatedEntity != null) updatedEntity.Update(updateFlags);
+
+        /*
+        // updating now happens in the innards of LLEntityAvatar
         if (update.Avatar) {
             // this is an update to an avatar. See if it's an update to our agent.
             if (update.LocalID == m_client.Self.LocalID) {
@@ -670,6 +673,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
                 World.World.Instance.UpdateAgent(m_myAgent, agentUpdated);
             }
         }
+         */
         return;
     }
 
@@ -714,29 +718,36 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
                 av.ControlFlags.ToString("x"), av.ParentID, av.Position.ToString(), av.Rotation.ToString());
 
 
-        IEntityAvatar updatedEntity;
+        IEntity updatedEntity = null;
         // assume somethings changed no matter what
         UpdateCodes updateFlags = UpdateCodes.Acceleration | UpdateCodes.AngularVelocity
                 | UpdateCodes.Position | UpdateCodes.Rotation | UpdateCodes.Velocity;
         updateFlags |= UpdateCodes.CollisionPlane;
 
         EntityName avatarEntityName = LLEntityAvatar.AvatarEntityNameFromID(rcontext.AssetContext, av.ID);
-        if (rcontext.TryGetCreateAvatar(avatarEntityName, out updatedEntity, delegate() {
+        if (rcontext.TryGetCreateEntity(avatarEntityName, out updatedEntity, delegate() {
                         m_log.Log(LogLevel.DCOMMDETAIL, "OnNewAvatar: creating avatar {0} {1} ({2})",
                             av.FirstName, av.LastName, av.ID.ToString());
                         IEntityAvatar newEnt = new LLEntityAvatar(rcontext.AssetContext,
                                         rcontext, regionHandle, av);
-                        return newEnt;
+                        return (IEntity)newEnt;
                     }) ) {
             updatedEntity.RelativePosition = av.Position;
             updatedEntity.Heading = av.Rotation;
             updateFlags |= UpdateCodes.New;     // a new avatar
-            rcontext.UpdateEntity(updatedEntity, updateFlags);
         }
+
+        // we can check here if this avatar goes with the agent in the world
+        // If this av is with the agent, make the connection
         if (av.LocalID == m_client.Self.LocalID) {
-            m_log.Log(LogLevel.DCOMMDETAIL, "OnNewAvatar: avatar update also updating agent");
-            World.World.Instance.UpdateAgent(m_myAgent, updateFlags);
+            m_log.Log(LogLevel.DCOMMDETAIL, "OnNewAvatar: associating agent with new avatar");
+            m_myAgent.AssociatedAvatar = (IEntityAvatar)updatedEntity;
+            // the updating happens inside the LLEntityAvatar.Update which happens at the end of this method
+            // World.World.Instance.UpdateAgent(m_myAgent, updateFlags);
         }
+
+        // tell the entity it changed. Since this is an avatar entity it will update the agent if necessary.
+        if (updatedEntity != null) updatedEntity.Update(updateFlags);
         return;
     }
 
@@ -749,7 +760,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         if (m_myAgent != null) {
             m_log.Log(LogLevel.DWORLDDETAIL, "Comm_OnLoggedIn: Removing agent that is already here");
             // there shouldn't be on already there... odd but remove it
-            World.World.Instance.RemoveAgent(m_myAgent);
+            World.World.Instance.RemoveAgent();
             m_myAgent = null;
         }
         m_myAgent = new LLAgent(m_client);
@@ -884,7 +895,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         switch (cac) {
             case CommActionCode.RegionStateChange:
                 m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: RegionStateChange");
-                ((RegionContextBase)p1).Changed((World.UpdateCodes)p2);
+                ((RegionContextBase)p1).Update((World.UpdateCodes)p2);
                 break;
             case CommActionCode.OnNewPrim:
                 m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: OnNewPrim");

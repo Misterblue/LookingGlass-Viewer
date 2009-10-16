@@ -44,6 +44,8 @@ namespace LookingGlass.World.LL {
 
         public LLEntityAvatar(AssetContextBase acontext, LLRegionContext rcontext, 
                 ulong regionHandle, OMV.Avatar av) : base(rcontext, acontext) {
+            // let people looking at IEntity's get at my avatarness
+            RegisterInterface<IEntityAvatar>(this);
             m_simulator= rcontext.Simulator;
             m_regionHandle = regionHandle;
             m_avatar = av;
@@ -54,6 +56,7 @@ namespace LookingGlass.World.LL {
             return new EntityNameLL(acontext, "Avatar/" + ID.ToString());
         }
 
+        #region POSITION
         override public OMV.Quaternion Heading {
             get {
                 return m_avatar.Rotation;
@@ -76,7 +79,15 @@ namespace LookingGlass.World.LL {
             set {
             }
         }
+        #endregion POSITION
 
+        public override void Update(UpdateCodes what) {
+            base.Update(what);
+            // if we are the agent in the world, also update the agent
+            if (this == World.Instance.Agent.AssociatedAvatar) {
+                World.Instance.UpdateAgent(what);
+            }
+        }
         public override void Dispose() {
             throw new NotImplementedException();
         }
