@@ -52,6 +52,18 @@ table.LGStatsTable td {
     width: 15px;
     text-align: right;
 }
+table.LGOgreStatsTable {
+    text-align: right;
+}
+th.LGOgreStats-description-header {
+    width: 50%;
+}
+th.LGOgreStats-value-header {
+    width: 10%;
+}
+table.LGStatsTable td.LGOgreStats-description-class {
+    text-align: left;
+}
 
 table.LGDefaultParametersTable {
 }

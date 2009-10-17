@@ -159,6 +159,17 @@ public class ParameterSet : IParameters, IDisplayable {
         m_runtimeValues.Add(lkey, runtimeVal);
     }
 
+    public void Add(string key, ParameterSetRuntimeValue runtimeVal, string desc) {
+        string lkey = key.ToLower();
+        lock (m_paramDescription) {
+            if (m_paramDescription.ContainsKey(lkey)) {
+                m_paramDescription.Remove(lkey);
+            }
+            m_paramDescription.Add(lkey, new OMVSD.OSDString(desc));
+            Add(key, runtimeVal);
+        }
+    }
+
     public OMVSD.OSD ParamValue(string key) {
         OMVSD.OSD ret = null;
         string lkey = key.ToLower();

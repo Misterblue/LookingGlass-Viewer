@@ -137,8 +137,8 @@ function DebugLog(msg) {
 // We presume the data is in the form:
 //   {rowname: { col1: val, col2, val; ...}, ...)
 function BuildBasicTable(sect, data, addRowName) {
-    var sectID = sect.substr(1);
-    var tableID = sectID + "-table";
+    var sectID = MakeID(sect.substr(1))
+    var tableID = MakeID(sectID + "-table")
     if ($('#' + tableID).length == 0) {
         // table does not exist. Build same
         // build an array of all the column names
@@ -155,9 +155,11 @@ function BuildBasicTable(sect, data, addRowName) {
         var buff = new StringBuffer();
         buff.append('<table id="' + tableID + '" class="LGStatsTable">');
         buff.append('<tr>');
-        if (addRowName) buff.append('<th></th>');
+        var headerClass = MakeID(sectID + '--header');
+        if (addRowName) buff.append('<th class="' + headerClass + '"></th>');
         for (col in columns) {
-            buff.append('<th>' + columns[col] + '</th>');
+            headerClass = MakeID(sectID + '-' + columns[col] + '-header');
+            buff.append('<th class="' + headerClass +'">' + columns[col] + '</th>');
         }
         buff.append('</tr>');
         for (row in data) {
@@ -166,8 +168,9 @@ function BuildBasicTable(sect, data, addRowName) {
                 buff.append('<td id="' + sectID + '-rowName-' + row + '">.</td>');
             }
             for (col in columns) {
-                var cellID = sectID + '-' + row + '-' + col;
-                buff.append('<td id="' + cellID + '">.</td>');
+                var cellID = MakeID(sectID + '-' + row + '-' + col);
+                var cellClass = MakeID(sectID + '-' + col + '-class');
+                buff.append('<td id="' + cellID + '" class="' + cellClass + '">.</td>');
             }
             buff.append('</tr>');
         }
@@ -178,10 +181,15 @@ function BuildBasicTable(sect, data, addRowName) {
     for (row in data) {
         $('#' + sectID + '-rowName-' + row).text(row);
         for (col in data[row]) {
-            var cellID = sectID + '-' + row + '-' + col;
+            var cellID = MakeID(sectID + '-' + row + '-' + col);
             $('#' + cellID).text(data[row][col]);
         }
     }
+}
+
+// clean up ID so there are no dots
+function MakeID(inID) {
+    return inID.replace(/\./g, '-');
 }
 
 function StringBuffer() {

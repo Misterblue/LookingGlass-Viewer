@@ -53,7 +53,8 @@ function BuildBasicTable(sect, data, addRowName) {
         buff.append('<tr>');
         if (addRowName) buff.append('<th></th>');
         for (col in columns) {
-            buff.append('<th>' + columns[col] + '</th>');
+            var headerClass = MakeID(sectID + '-' + columns[col] + '-header');
+            buff.append('<th class="' + headerClass +'">' + columns[col] + '</th>');
         }
         buff.append('</tr>');
         for (row in data) {
@@ -63,7 +64,8 @@ function BuildBasicTable(sect, data, addRowName) {
             }
             for (col in columns) {
                 var cellID = MakeID(sectID + '-' + row + '-' + col);
-                buff.append('<td id="' + cellID + '">.</td>');
+                var cellClass = MakeID(sectID + '-' + col + '-class');
+                buff.append('<td id="' + cellID + '" class="' + cellClass + '">.</td>');
             }
             buff.append('</tr>');
         }
@@ -80,6 +82,7 @@ function BuildBasicTable(sect, data, addRowName) {
     }
 }
 
+// clean up ID so there are no dots
 function MakeID(inID) {
     return inID.replace(/\./g, '-');
 }

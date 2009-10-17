@@ -33,8 +33,11 @@ static class Ogr {
     public const int StatInvisibleToVisible = 3;
     public const int StatVisibleToInvisible = 4;
     public const int StatInvisibleToInvisible = 5;
-    public const int StatMeshesUnloaded = 6;
-    public const int StatTexturesUnloaded = 7;
+    public const int StatCullMeshesLoaded = 6;
+    public const int StatCullTexturesLoaded = 7;
+    public const int StatCullMeshesUnloaded = 13;
+    public const int StatCullTexturesUnloaded = 14;
+    public const int StatCullMeshesQueuedToLoad = 15;
     // between frame work
     public const int StatBetweenFrameWorkItems = 1;
     public const int StatBetweenFrameRefreshResource = 8;

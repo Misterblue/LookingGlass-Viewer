@@ -964,7 +964,7 @@ void RendererOgre::processEntityVisibility() {
 	while (meshesToUnload.size() > 0 && cnt-- > 0) {
 	}
 	*/
-	cnt = 200;
+	cnt = 100;
 	// if (!meshesToLoad.empty()) {
 	// 	LookingGlassOgr::Log("processEntityVisibility: cnt=%d", meshesToLoad.size());
 	// }
@@ -978,24 +978,29 @@ void RendererOgre::processEntityVisibility() {
 		if (!meshP.isNull()) {
 			if (m_shouldCullMeshes) meshP->load();
 			parentEntity->setVisible(true);
+			LookingGlassOgr::IncStat(LookingGlassOgr::StatCullMeshesLoaded);
 		}
 	}
+	LookingGlassOgr::SetStat(LookingGlassOgr::StatCullMeshesQueuedToLoad, meshesToLoad.size());
 	return;
 }
 
 void RendererOgre::queueMeshLoad(Ogre::Entity* parentEntity, Ogre::MeshPtr meshP) {
 	// remove from the unload list if scheduled to do that
 	Ogre::String meshName = meshP->getName();
+	// if it's in the list to unload and we're supposed to load it, remove from unload list
 	if (meshesToUnload.find(meshName) != meshesToUnload.end()) {
 		meshesToUnload.erase(meshName);
 	}
 	// add to the load list if not already there (that camera can move around)
 	meshesToLoad.insert(std::pair<Ogre::String, Ogre::Entity*>(meshName, parentEntity));
+	LookingGlassOgr::IncStat(LookingGlassOgr::StatCullMeshesQueuedToLoad);
 }
 
 // BETWEEN FRAME OPERATION
 void RendererOgre::queueMeshUnload(Ogre::MeshPtr meshP) {
 	Ogre::String meshName = meshP->getName();
+	// if it's in the list to be loaded but we're unloading it, remove from load list
 	if (meshesToLoad.find(meshName) != meshesToLoad.end()) {
 		meshesToLoad.erase(meshName);
 	}
@@ -1025,6 +1030,7 @@ void RendererOgre::unloadTheMesh(Ogre::MeshPtr meshP) {
 							Ogre::String texName = oneTus->getTextureName();
 							// TODO: the same texture gets unloaded multiple times. Is that a bad thing?
 							Ogre::TextureManager::getSingleton().unload(texName);
+							LookingGlassOgr::IncStat(LookingGlassOgr::StatCullTexturesUnloaded);
 							// LookingGlassOgr::Log("unloadTheMesh: unloading texture %s", texName.c_str());
 						}
 					}
@@ -1035,6 +1041,7 @@ void RendererOgre::unloadTheMesh(Ogre::MeshPtr meshP) {
 	if (m_shouldCullMeshes) {
 		Ogre::String mshName = meshP->getName();
 		Ogre::MeshManager::getSingleton().unload(mshName);
+		LookingGlassOgr::IncStat(LookingGlassOgr::StatCullMeshesUnloaded);
 		// LookingGlassOgr::Log("unloadTheMesh: unloading mesh %s", mshName.c_str());
 	}
 }
@@ -1042,12 +1049,17 @@ void RendererOgre::unloadTheMesh(Ogre::MeshPtr meshP) {
 // Return TRUE if an object of this size should be seen at this distance
 bool RendererOgre::calculateScaleVisibility(float dist, float siz) {
 	// LookingGlassOgr::Log("calculateScaleVisibility: dist=%f, siz=%f", dist, siz);
+	// if it's farther than max, don't display
 	if (dist >= m_visibilityScaleMaxDistance) return false;
+	// if it's closer than min, display it
 	if (dist <= m_visibilityScaleMinDistance) return true;
+	// if it is large enough for within large thing bound, display it
 	if (siz >= m_visibilityScaleLargeSize && dist > m_visibilityScaleOnlyLargeAfter) return true;
+	// if it's size scales to big enough within scalemin and scalemax, display it
 	if (siz > ((dist - m_visibilityScaleMinDistance)
 				/(m_visibilityScaleMaxDistance - m_visibilityScaleMinDistance) 
 				* m_visibilityScaleLargeSize)) return true;
+	// not reason found to display it so don't
 	return false;
 
 }

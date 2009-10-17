@@ -117,6 +117,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     private int[] m_ogreStatsPinned;
     private GCHandle m_ogreStatsHandle;
     private Dictionary<string, int> m_ogreStatsIndex;
+    private Dictionary<string, string> m_ogreStatsDesc;
 
     // ==========================================================================
     public RendererOgre() {
@@ -267,29 +268,51 @@ public class RendererOgre : ModuleBase, IRenderProvider {
 
         // Create a dictionary of the statistic names and offsets into the stats array
         m_ogreStatsIndex = new Dictionary<string,int>();
+        m_ogreStatsDesc = new Dictionary<string,string>();
         // culling and visibility
         m_ogreStatsIndex.Add("visibletovisible", Ogr.StatVisibleToVisible);
+        m_ogreStatsDesc.Add("visibletovisible", "Meshes at were visible that are still visible");
         m_ogreStatsIndex.Add("invisibletovisible", Ogr.StatInvisibleToVisible);
+        m_ogreStatsDesc.Add("invisibletovisible", "Meshes that were invisible that are now visible");
         m_ogreStatsIndex.Add("visibletoinvisible", Ogr.StatVisibleToInvisible);
+        m_ogreStatsDesc.Add("visibletoinvisible", "Meshes that were visible that are now invisible");
         m_ogreStatsIndex.Add("invisibletoinvisible", Ogr.StatInvisibleToInvisible);
-        m_ogreStatsIndex.Add("meshesunloaded", Ogr.StatMeshesUnloaded);
-        m_ogreStatsIndex.Add("texturesunloaded", Ogr.StatTexturesUnloaded);
+        m_ogreStatsDesc.Add("invisibletoinvisible", "Meshes that were invisible that are still invisible");
+        m_ogreStatsIndex.Add("cullmeshesloaded", Ogr.StatCullMeshesLoaded);
+        m_ogreStatsDesc.Add("cullmeshesloaded", "Meshes loaded due to unculling");
+        m_ogreStatsIndex.Add("culltexturesloaded", Ogr.StatCullTexturesLoaded);
+        m_ogreStatsDesc.Add("culltexturesloaded", "Textures loaded due to unculling");
+        m_ogreStatsIndex.Add("cullmeshesunloaded", Ogr.StatCullMeshesUnloaded);
+        m_ogreStatsDesc.Add("cullmeshesunloaded", "Meshes unloaded due to culling");
+        m_ogreStatsIndex.Add("culltexturesunloaded", Ogr.StatCullTexturesUnloaded);
+        m_ogreStatsDesc.Add("culltexturesunloaded", "Textures unloaded due to culling");
+        m_ogreStatsIndex.Add("cullmeshesqueuedtoload", Ogr.StatCullMeshesQueuedToLoad);
+        m_ogreStatsDesc.Add("cullmeshesqueuedtoload", "Meshes queue to load due to unculling");
         // between frame work
         m_ogreStatsIndex.Add("betweenframeworkitems", Ogr.StatBetweenFrameWorkItems);
+        m_ogreStatsDesc.Add("betweenframeworkitems", "Number of between frame work items waiting");
         m_ogreStatsIndex.Add("totalbetweenframerefreshresource", Ogr.StatBetweenFrameRefreshResource);
+        m_ogreStatsDesc.Add("totalbetweenframerefreshresource", "Number of 'refresh resource' work items performed");
         m_ogreStatsIndex.Add("totalbetweenframecreatematerialresource", Ogr.StatBetweenFrameCreateMaterialResource);
+        m_ogreStatsDesc.Add("totalbetweenframecreatematerialresource", "Number of 'create material resource' work items performed");
         m_ogreStatsIndex.Add("totalbetweenframecreatemeshresource", Ogr.StatBetweenFrameCreateMeshResource);
+        m_ogreStatsDesc.Add("totalbetweenframecreatemeshresource", "Number of 'create mesh resource' work items performed");
         m_ogreStatsIndex.Add("totalbetweenframecreatemeshscenenode", Ogr.StatBetweenFrameCreateMeshSceneNode);
+        m_ogreStatsDesc.Add("totalbetweenframecreatemeshscenenode", "Number of 'create mesh scene node' work items performed");
         m_ogreStatsIndex.Add("totalbetweenframeupdatescenenode", Ogr.StatBetweenFrameUpdateSceneNode);
+        m_ogreStatsDesc.Add("totalbetweenframeupdatescenenode", "Number of 'update scene node' work items performed");
         // material processing queues
         m_ogreStatsIndex.Add("MaterialUpdatesRemaining", Ogr.StatMaterialUpdatesRemaining);
+        m_ogreStatsDesc.Add("MaterialUpdatesRemaining", "Number of material updates waiting");
 
         // Create a ParameterSet that can be read externally via REST/JSON
         m_ogreStats = new ParameterSet();
         // Add parameters for each name with a delegate to get the value from the pinned data array
         // The c++ code updates the array and we pick up the values with the ParameterSet delegates
         foreach (string key in m_ogreStatsIndex.Keys) {
-            m_ogreStats.Add(key, delegate(string xx) { return new OMVSD.OSDString(m_ogreStatsPinned[m_ogreStatsIndex[xx]].ToString()); });
+            m_ogreStats.Add(key, 
+                delegate(string xx) { return new OMVSD.OSDString(m_ogreStatsPinned[m_ogreStatsIndex[xx]].ToString()); },
+                m_ogreStatsDesc[key]);
         }
         // make the values accessable from outside
         m_ogreStatsHandler = new RestHandler("/stats/" + m_moduleName + "/ogreStats", m_ogreStats);
