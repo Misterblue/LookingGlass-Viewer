@@ -63,7 +63,10 @@ public class LookingGlassBase : IInstance<LookingGlassBase> {
     /// down.
     /// </summary>
     private bool m_keepRunning = false;
-    public bool KeepRunning { get { return m_keepRunning; } set { m_keepRunning = value; } }
+    public bool KeepRunning { 
+        get { return m_keepRunning; } 
+        set { m_keepRunning = value; } 
+    }
 
     private ModuleManager m_moduleManager = null;
     public ModuleManager ModManager {
@@ -144,7 +147,10 @@ public class LookingGlassBase : IInstance<LookingGlassBase> {
         while (KeepRunning) {
             if (m_wantsMainThread != null) {
                 m_log.Log(LogLevel.DINIT, "Someone asking for main thread");
-                KeepRunning = m_wantsMainThread();
+                // The next call will only return after rendering is done if it
+                // uses the thread.
+                // If it returns 'true' it used the thread so now it's done and we turn off KeepRunning
+                KeepRunning = !m_wantsMainThread();
                 m_wantsMainThread = null;
             }
             Thread.Sleep(1 * 1000);

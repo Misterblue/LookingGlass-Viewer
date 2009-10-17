@@ -103,7 +103,7 @@ public class RendererOgreLL : IWorldRenderConv {
     /// this RenderingInfo has been asked for</param>
     /// <returns>rendering info or null if we cannot collect all data</returns>
     public RenderableInfo RenderingInfo(Object sceneMgr, IEntity ent, int callCount) {
-        LLEntityPhysical llent;
+        LLEntityBase llent;
         LLRegionContext rcontext;
         OMV.Primitive prim;
         string newMeshName = EntityNameOgre.ConvertToOgreNameX(ent.Name, ".mesh");
@@ -111,7 +111,7 @@ public class RendererOgreLL : IWorldRenderConv {
         bool shouldHaveRendererScale = m_useRendererMeshScaling;
 
         try {
-            llent = (LLEntityPhysical)ent;
+            llent = (LLEntityBase)ent;
             rcontext = (LLRegionContext)llent.RegionContext;
             prim = llent.Prim;
             if (prim == null) throw new LookingGlassException("ASSERT: RenderOgreLL: prim is null");

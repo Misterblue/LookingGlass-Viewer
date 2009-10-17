@@ -78,7 +78,7 @@ public abstract class RegionContextBase : EntityBase, IRegionContext, IDisposabl
     public TerrainInfoBase TerrainInfo { get { return m_terrainInfo; } }
 
     public override void Update(UpdateCodes what) {
-        base.Update(what);
+        base.Update(what);      // this sends an EntityUpdate for the region
         if (OnRegionUpdated != null) OnRegionUpdated(this, what);
     }
 

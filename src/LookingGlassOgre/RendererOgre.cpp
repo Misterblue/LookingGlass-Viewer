@@ -61,6 +61,7 @@ namespace RendererOgre {
 	// its creation happening on the same thread as rendering.
 	// The frame rate is capped and sleeps are inserted to return control to
 	// the windowing system when the max frame rate is reached.
+	// If we don't want the thread, return false.
 	bool RendererOgre::renderingThread() {
 		Log("DEBUG: LookingGlassOrge: Starting rendering");
 		int maxFPS = LookingGlassOgr::GetParameterInt("Renderer.Ogre.FramePerSecMax");

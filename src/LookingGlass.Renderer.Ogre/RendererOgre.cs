@@ -369,8 +369,9 @@ public class RendererOgre : ModuleBase, IRenderProvider {
          */
 
         // Let the Ogre code decide if it needs the main thread
-        // return Ogr.RenderingThread();
+        return Ogr.RenderingThread();
 
+        /*
         // code  to keep the rendering thread mostly in managed space
         // periodically call to draw a frame
         int maxFramePerSec = ModuleParams.ParamInt(m_moduleName + ".Ogre.FramePerSecMax");
@@ -396,6 +397,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             }
         }
         return false;
+         */
     }
 
     public bool RenderOneFrame(bool pump, int len) {

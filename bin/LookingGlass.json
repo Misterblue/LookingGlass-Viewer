@@ -1,6 +1,6 @@
 {
 // Uncomment this if you like lots of debug output
-// "Log.FilterLevel": "2147483647",	// log everything
+"Log.FilterLevel": "2147483647",	// log everything
 // "Log.FilterLevel": "1073744896",	// RENDER and RENDERDETAIL
 
 // ====================================================
@@ -46,8 +46,8 @@
 "Viewer.Camera.AboveAgent": "10",
 
 // ====================================================
-// "Renderer.Ogre.Renderer": "OpenGL Rendering Subsystem",
-"Renderer.Ogre.Renderer": "Direct3D9 Rendering Subsystem",
+"Renderer.Ogre.Renderer": "OpenGL Rendering Subsystem",
+// "Renderer.Ogre.Renderer": "Direct3D9 Rendering Subsystem",
 "Renderer.Ogre.VideoMode": "800 x 600@ 32-bit colour",
 // Shadow technique: none, texture-modulative, stencil-modulative, texture-additive, stencil-additive
 "Renderer.Ogre.ShadowTechnique": "none",
