@@ -22,6 +22,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Text.RegularExpressions;
@@ -36,6 +37,7 @@ using LookingGlass.Renderer;
 using LookingGlass.Rest;
 using LookingGlass.World;
 using OMV = OpenMetaverse;
+using OMVSD = OpenMetaverse.StructuredData;
 
 namespace LookingGlass.Renderer.Ogr {
 
@@ -109,6 +111,12 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     private ICounter m_statMaterialsRequested;
     private ICounter m_statMeshesRequested;
     private ICounter m_statTexturesRequested;
+
+    private RestHandler m_ogreStatsHandler;
+    private ParameterSet m_ogreStats;
+    private int[] m_ogreStatsPinned;
+    private GCHandle m_ogreStatsHandle;
+    private Dictionary<string, int> m_ogreStatsIndex;
 
     // ==========================================================================
     public RendererOgre() {
@@ -248,6 +256,21 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     override public bool AfterAllModulesLoaded() {
         // allow others to get our statistics
         m_restHandler = new RestHandler("/stats/" + m_moduleName + "/detailStats", m_stats);
+
+        // Setup the shared piece of memory that Ogre can place statistics in
+        // Also create a ParameterSet that can be read externally via REST/JSON
+        m_ogreStatsIndex = new Dictionary<string,int>();
+        m_ogreStatsIndex.Add("MaterialUpdatesRemaining", 0);
+        m_ogreStatsIndex.Add("BetweenFrameWorkItems", 1);
+        m_ogreStatsPinned = new int[m_ogreStatsIndex.Count];
+        m_ogreStatsHandle = GCHandle.Alloc(m_ogreStatsPinned);
+        m_ogreStats = new ParameterSet();
+        // Add parameters for each name with a delegate to get the value from the pinned data array
+        // The c++ code updates the array and we pick up the values with the ParameterSet delegates
+        foreach (string key in m_ogreStatsIndex.Keys) {
+            m_ogreStats.Add(key, delegate(string xx) { return new OMVSD.OSDString(m_ogreStatsPinned[m_ogreStatsIndex[xx]].ToString()); });
+        }
+        m_ogreStatsHandler = new RestHandler("/stats/" + m_moduleName + "/ogreStats", m_ogreStats);
 
         // load the input system we're supposed to be using
         String uiClass = ModuleParams.ParamString(m_moduleName + ".Ogre.InputSystem");
@@ -530,6 +553,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     public void RenderUpdate(IEntity ent, UpdateCodes what) {
         if ((what & UpdateCodes.Material) != 0) {
             // the materials have changed on this entity. Cause materials to be recalcuated
+            m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: Material changed");
         }
         if ((what & (UpdateCodes.Scale | UpdateCodes.Position | UpdateCodes.Rotation)) != 0) {
             // world position has changed. Tell Ogre they have changed
@@ -546,27 +570,32 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         }
         if ((what & UpdateCodes.ParentID) != 0) {
             // prim was detached or attached
+            m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: parentID changed");
             DoLaterBase laterWork = new DoRender(m_sceneMgr, ent, m_log);
             laterWork.order = CalculateInterestOrder(ent);
             m_workQueue.DoLater(laterWork);
         }
         if ((what & (UpdateCodes.PrimFlags | UpdateCodes.PrimData)) != 0) {
             // the prim parameters were changed. Re-render.
+            m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: prim data changed");
             DoLaterBase laterWork = new DoRender(m_sceneMgr, ent, m_log);
             laterWork.order = CalculateInterestOrder(ent);
             m_workQueue.DoLater(laterWork);
         }
         if ((what & UpdateCodes.Textures) != 0) {
             // texure on the prim were updated. Refresh them.
+            m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: textures changed");
             DoLaterBase laterWork = new DoRender(m_sceneMgr, ent, m_log);
             laterWork.order = CalculateInterestOrder(ent);
             m_workQueue.DoLater(laterWork);
         }
         if ((what & UpdateCodes.Text) != 0) {
             // text associated with the prim changed
+            m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: text changed");
         }
         if ((what & UpdateCodes.Particles) != 0) {
             // particles associated with the prim changed
+            m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: particles changed");
         }
         return;
     }

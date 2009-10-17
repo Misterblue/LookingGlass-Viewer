@@ -236,7 +236,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         ModuleParams.AddDefaultParameter(ModuleName + ".Assets.ConvertPNG", "true",
                     "whether to convert incoming JPEG2000 files to PNG files in the cache");
         ModuleParams.AddDefaultParameter(ModuleName + ".Texture.MaxRequests", 
-                    "20",
+                    "6",
                     "Maximum number of outstanding textures requests");
         ModuleParams.AddDefaultParameter(ModuleName + ".Settings.MultipleSims", 
                     "false",
@@ -590,17 +590,17 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
                                             rcontext, regionHandle, prim.LocalID, prim);
                             return newEnt;
                         }) ) {
+                    // new prim created
                 }
                 else {
-                    m_log.Log(LogLevel.DBADERROR, "FAILED CREATION OF NEW PRIM");
+                    // if not created, make an update happen
+                    if (ent != null) ent.Update(UpdateCodes.FullUpdate);
                 }
             }
             catch (Exception e) {
                 m_log.Log(LogLevel.DBADERROR, "FAILED CREATION OF NEW PRIM: " + e.ToString());
             }
         }
-        // if new or not, assume everything about this entity has changed
-        if (ent != null) ent.Update(UpdateCodes.FullUpdate | UpdateCodes.New);
         return;
     }
 
