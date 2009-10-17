@@ -39,7 +39,7 @@ public delegate OMVSD.OSD ProcessPostCallback(Uri uri, string after, OMVSD.OSD b
 
 namespace LookingGlass.Rest {
 
-public class RestHandler {
+public class RestHandler : IDisposable {
     private ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
 
     public const string APINAME = "api";
@@ -47,6 +47,8 @@ public class RestHandler {
     public const string RESTREQUESTERRORCODE = "RESTRequestError";
     public const string RESTREQUESTERRORMSG = "RESTRequestMsg";
 
+    HttpRequestHandler m_getHandler = null;
+    HttpRequestHandler m_postHandler = null;
     string m_baseUrl = null;
     ProcessGetCallback m_processGet = null;
     ProcessPostCallback m_processPost = null;
@@ -65,8 +67,8 @@ public class RestHandler {
         m_baseUrl = urlBase;
         m_processGet = pget;
         m_processPost = ppost;
-        RestManager.Instance.Server.AddHandler("GET", null, "^/" + APINAME + urlBase, APIGetHandler);
-        RestManager.Instance.Server.AddHandler("POST", null, "^/" + APINAME + urlBase, APIPostHandler);
+        /*m_getHandler =*/ RestManager.Instance.Server.AddHandler("GET", null, "^/" + APINAME + urlBase, APIGetHandler);
+        /*m_postHandler =*/ RestManager.Instance.Server.AddHandler("POST", null, "^/" + APINAME + urlBase, APIPostHandler);
     }
 
     /// <summary>
@@ -81,8 +83,8 @@ public class RestHandler {
         m_processPost = null;
         m_parameterSet = parms;
         m_parameterSetWritable = writable;
-        RestManager.Instance.Server.AddHandler("GET", null, "^/" + APINAME + urlBase, ParamGetHandler);
-        RestManager.Instance.Server.AddHandler("POST", null, "^/" + APINAME + urlBase, ParamPostHandler);
+        /*m_getHandler =*/ RestManager.Instance.Server.AddHandler("GET", null, "^/" + APINAME + urlBase, ParamGetHandler);
+        /*m_postHandler =*/ RestManager.Instance.Server.AddHandler("POST", null, "^/" + APINAME + urlBase, ParamPostHandler);
     }
 
     /// <summary>
@@ -96,7 +98,18 @@ public class RestHandler {
         m_processGet = null;
         m_processPost = null;
         m_displayable = displayable;
-        RestManager.Instance.Server.AddHandler("GET", null, "^/" + APINAME + urlBase, DisplayableGetHandler);
+        /*m_getHandler =*/ RestManager.Instance.Server.AddHandler("GET", null, "^/" + APINAME + urlBase, DisplayableGetHandler);
+    }
+    
+    public void Dispose() {
+        if (m_getHandler != null) {
+            RestManager.Instance.Server.RemoveHandler(m_getHandler);
+            m_getHandler = null;
+        }
+        if (m_postHandler != null) {
+            RestManager.Instance.Server.RemoveHandler(m_postHandler);
+            m_postHandler = null;
+        }
     }
 
     private void APIGetHandler(IHttpClientContext context, IHttpRequest reqContext, IHttpResponse respContext) {

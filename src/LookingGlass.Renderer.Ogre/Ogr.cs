@@ -27,6 +27,26 @@ static class Ogr {
     public const int ResourceTypeMaterial = 3;  // material
     public const int ResourceTypeTransparentTexture = 4;  // texture with some transparancy
 
+    // offsets into statistics block
+    // culling and visibility
+    public const int StatVisibleToVisible = 2;
+    public const int StatInvisibleToVisible = 3;
+    public const int StatVisibleToInvisible = 4;
+    public const int StatInvisibleToInvisible = 5;
+    public const int StatMeshesUnloaded = 6;
+    public const int StatTexturesUnloaded = 7;
+    // between frame work
+    public const int StatBetweenFrameWorkItems = 1;
+    public const int StatBetweenFrameRefreshResource = 8;
+    public const int StatBetweenFrameCreateMaterialResource = 9;
+    public const int StatBetweenFrameCreateMeshResource = 10;
+    public const int StatBetweenFrameCreateMeshSceneNode = 11;
+    public const int StatBetweenFrameUpdateSceneNode = 12;
+    // material processing queues
+    public const int StatMaterialUpdatesRemaining = 0;
+    // the number of stat values (oversized for fudge factors)
+    public const int StatSize = 20;
+
     // =============================================================================
     // Call from the Ogre C++ code back into  the managed code.
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -76,6 +96,10 @@ static class Ogr {
     // we're between frames. Is there C# stuff to do?
     [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
     public static extern void SetBetweenFramesCallback(BetweenFramesCallback callback);
+
+    // A pinned statistics block that is updated by Ogre and displayed by LG
+    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
+    public static extern void SetStatsBlock(IntPtr block);
 
     // =============================================================================
     [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]

@@ -64,21 +64,25 @@ namespace RendererOgre {
 	// If we don't want the thread, return false.
 	bool RendererOgre::renderingThread() {
 		Log("DEBUG: LookingGlassOrge: Starting rendering");
+		// m_root->startRendering();
+
+		// new way that tried to control the amount of work between frames to keep
+		//   frame rate up
 		int maxFPS = LookingGlassOgr::GetParameterInt("Renderer.Ogre.FramePerSecMax");
 		if (maxFPS < 2 || maxFPS > 100) maxFPS = 20;
 		int msPerFrame = 1000 / maxFPS;
 		Ogre::Timer* timeKeeper = new Ogre::Timer();
+
 		unsigned long now = timeKeeper->getMilliseconds();
 		unsigned long timeStartedLastFrame = timeKeeper->getMilliseconds();
 
-		// m_root->startRendering();
 		while (m_root->renderOneFrame()) {
 			Ogre::WindowEventUtilities::messagePump();
 			now = timeKeeper->getMilliseconds();
 			int remaining = msPerFrame - ((int)(now - timeStartedLastFrame));
 			while (remaining > 10) {
 				if (m_processBetweenFrame->HasWorkItems()) {
-					m_processBetweenFrame->ProcessWorkItems(30);
+					m_processBetweenFrame->ProcessWorkItems(3);
 				}
 				else {
 					Sleep(remaining);
@@ -876,6 +880,10 @@ void RendererOgre::calculateEntityVisibility() {
 		LookingGlassOgr::Log("calcVisibility: vv=%d, vi=%d, iv=%d, ii=%d",
 				visVisToVis, visVisToInvis, visInvisToVis, visInvisToInvis);
 	}
+	LookingGlassOgr::SetStat(LookingGlassOgr::StatVisibleToVisible, visVisToVis);
+	LookingGlassOgr::SetStat(LookingGlassOgr::StatVisibleToInvisible, visVisToInvis);
+	LookingGlassOgr::SetStat(LookingGlassOgr::StatInvisibleToVisible, visInvisToVis);
+	LookingGlassOgr::SetStat(LookingGlassOgr::StatInvisibleToInvisible, visInvisToInvis);
 }
 
 // BETWEEN FRAME OPERATION

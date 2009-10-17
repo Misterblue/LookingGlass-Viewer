@@ -43,6 +43,8 @@ UserIOCallback* userIOCallback;
 RequestResourceCallback* requestResourceCallback;
 BetweenFramesCallback* betweenFramesCallback;
 
+int* statsBlock;
+
 RendererOgre::RendererOgre* m_ro;
 
 // ==========================================================
@@ -82,6 +84,9 @@ extern "C" DLLExport void SetRequestResourceCallback(RequestResourceCallback* rr
 }
 extern "C" DLLExport void SetBetweenFramesCallback(BetweenFramesCallback* bf) {
 	betweenFramesCallback = bf;
+}
+extern "C" DLLExport void SetStatsBlock(int* sb) {
+	statsBlock = sb;
 }
 // ==========================================================
 // update the camera position with a position and a direction
@@ -232,6 +237,18 @@ Ogre::Root* GetOgreRoot() {
 
 // ================================================================
 // ================================================================
+void LookingGlassOgr::SetStat(int cod, int val) {
+	if (LookingGlassOgr::statsBlock != NULL) {
+		LookingGlassOgr::statsBlock[cod] = val;
+	}
+}
+
+void LookingGlassOgr::IncStat(int cod) {
+	if (LookingGlassOgr::statsBlock != NULL) {
+		LookingGlassOgr::statsBlock[cod]++;
+	}
+}
+
 // Routine which calls back into the managed world to fetch a string/value configuration
 // parameter.
 const char* LookingGlassOgr::GetParameter(const char* paramName) {

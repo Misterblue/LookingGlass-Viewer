@@ -31,7 +31,8 @@ namespace LookingGlass.Comm {
 public delegate void ConnectionFailureCallback(ICommProvider source, string reason);
 
 public interface ICommProvider : IProvider {
-
+    string Name { get; }
+    
     bool IsConnected { get; }
 
     bool IsLoggedIn { get; }
@@ -42,5 +43,11 @@ public interface ICommProvider : IProvider {
 
     // initiate a connection
     ParameterSet ConnectionParams { get; }
+
+    // kludge to get underlying LL Comm (circular ref Comm.LLLP <=> World.LL)
+    OMV.GridClient GridClient { get; }
+
+    // each comm provider has a block of statistics
+    ParameterSet CommStatistics();
 }
 }

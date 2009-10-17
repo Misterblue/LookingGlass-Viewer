@@ -108,6 +108,8 @@ void ProcessBetweenFrame::RefreshResource(char* resourceName, int rType) {
 	rrq->matName = Ogre::String(resourceName);
 	rrq->rType = rType;
 	m_betweenFrameWork.push((GenericQd*)rrq);
+	LookingGlassOgr::SetStat(LookingGlassOgr::StatBetweenFrameWorkItems, m_betweenFrameWork.size());
+	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameRefreshResource);
 }
 
 void ProcessBetweenFrame::CreateMaterialResource2(const char* matName, char* texName, const float* parms) {
@@ -117,6 +119,8 @@ void ProcessBetweenFrame::CreateMaterialResource2(const char* matName, char* tex
 	cmrq->texName = Ogre::String(texName);
 	memcpy(cmrq->parms, parms, OLMaterialTracker::OLMaterialTracker::CreateMaterialSize*sizeof(float));
 	m_betweenFrameWork.push((GenericQd*)cmrq);
+	LookingGlassOgr::SetStat(LookingGlassOgr::StatBetweenFrameWorkItems, m_betweenFrameWork.size());
+	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameCreateMaterialResource);
 }
 
 void ProcessBetweenFrame::CreateMeshResource(const char* meshName, const int* faceCounts, const float* faceVertices) {
@@ -128,6 +132,8 @@ void ProcessBetweenFrame::CreateMeshResource(const char* meshName, const int* fa
 	cmrq->faceVertices = (float*)OGRE_MALLOC((*faceVertices) * sizeof(float), Ogre::MEMCATEGORY_GENERAL);
 	memcpy(cmrq->faceVertices, faceVertices, (*faceVertices) * sizeof(float));
 	m_betweenFrameWork.push((GenericQd*)cmrq);
+	LookingGlassOgr::SetStat(LookingGlassOgr::StatBetweenFrameWorkItems, m_betweenFrameWork.size());
+	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameCreateMeshResource);
 }
 
 void ProcessBetweenFrame::CreateMeshSceneNode(Ogre::SceneManager* sceneMgr, char* sceneNodeName,
@@ -151,6 +157,8 @@ void ProcessBetweenFrame::CreateMeshSceneNode(Ogre::SceneManager* sceneMgr, char
 	csnq->sx = sx; csnq->sy = sy; csnq->sz = sz;
 	csnq->ow = ow; csnq->ox = ox; csnq->oy = oy; csnq->oz = oz;
 	m_betweenFrameWork.push((GenericQd*)csnq);
+	LookingGlassOgr::SetStat(LookingGlassOgr::StatBetweenFrameWorkItems, m_betweenFrameWork.size());
+	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameCreateMeshSceneNode);
 }
 
 void ProcessBetweenFrame::UpdateSceneNode(char* entName,
@@ -167,6 +175,8 @@ void ProcessBetweenFrame::UpdateSceneNode(char* entName,
 	usnq->sx = sx; usnq->sy = sy; usnq->sz = sz;
 	usnq->ow = ow; usnq->ox = ox; usnq->oy = oy; usnq->oz = oz;
 	m_betweenFrameWork.push((GenericQd*)usnq);
+	LookingGlassOgr::SetStat(LookingGlassOgr::StatBetweenFrameWorkItems, m_betweenFrameWork.size());
+	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameUpdateSceneNode);
 }
 
 // we're between frames, on our own thread so we can do the work without locking
@@ -187,6 +197,7 @@ void ProcessBetweenFrame::ProcessWorkItems(int numToProcess) {
 		if (loopCount-- < 0) break;
 		GenericQd* workGeneric = (GenericQd*)m_betweenFrameWork.front();
 		m_betweenFrameWork.pop();
+		LookingGlassOgr::SetStat(LookingGlassOgr::StatBetweenFrameWorkItems, m_betweenFrameWork.size());
 		switch (workGeneric->type) {
 			case RefreshResourceCode: {
 				RefreshResourceQd* rrq = (RefreshResourceQd*)workGeneric;

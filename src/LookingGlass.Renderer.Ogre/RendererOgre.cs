@@ -178,7 +178,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.LL.EarlyMaterialCreate", "false",
                     "Create materials while creating mesh rather than waiting");
 
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.BetweenFrame.WorkItems", "500",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.BetweenFrame.WorkItems", "30",
                     "Number of queued C++ work items to do between each frame");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.BetweenFrame.Costs.Total", "1000",
                     "The total cost of C# operations to do between each frame");
@@ -257,20 +257,43 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         // allow others to get our statistics
         m_restHandler = new RestHandler("/stats/" + m_moduleName + "/detailStats", m_stats);
 
+        #region OGRE STATS
         // Setup the shared piece of memory that Ogre can place statistics in
-        // Also create a ParameterSet that can be read externally via REST/JSON
+        m_ogreStatsPinned = new int[Ogr.StatSize];
+        m_ogreStatsHandle = GCHandle.Alloc(m_ogreStatsPinned, GCHandleType.Pinned);
+        Ogr.SetStatsBlock(m_ogreStatsHandle.AddrOfPinnedObject());
+        // m_ogreStatsPinned = (int[])Marshal.AllocHGlobal(Ogr.StatSize * 4);
+        // Ogr.SetStatsBlock(m_ogreStatsPinned);
+
+        // Create a dictionary of the statistic names and offsets into the stats array
         m_ogreStatsIndex = new Dictionary<string,int>();
-        m_ogreStatsIndex.Add("MaterialUpdatesRemaining", 0);
-        m_ogreStatsIndex.Add("BetweenFrameWorkItems", 1);
-        m_ogreStatsPinned = new int[m_ogreStatsIndex.Count];
-        m_ogreStatsHandle = GCHandle.Alloc(m_ogreStatsPinned);
+        // culling and visibility
+        m_ogreStatsIndex.Add("visibletovisible", Ogr.StatVisibleToVisible);
+        m_ogreStatsIndex.Add("invisibletovisible", Ogr.StatInvisibleToVisible);
+        m_ogreStatsIndex.Add("visibletoinvisible", Ogr.StatVisibleToInvisible);
+        m_ogreStatsIndex.Add("invisibletoinvisible", Ogr.StatInvisibleToInvisible);
+        m_ogreStatsIndex.Add("meshesunloaded", Ogr.StatMeshesUnloaded);
+        m_ogreStatsIndex.Add("texturesunloaded", Ogr.StatTexturesUnloaded);
+        // between frame work
+        m_ogreStatsIndex.Add("betweenframeworkitems", Ogr.StatBetweenFrameWorkItems);
+        m_ogreStatsIndex.Add("totalbetweenframerefreshresource", Ogr.StatBetweenFrameRefreshResource);
+        m_ogreStatsIndex.Add("totalbetweenframecreatematerialresource", Ogr.StatBetweenFrameCreateMaterialResource);
+        m_ogreStatsIndex.Add("totalbetweenframecreatemeshresource", Ogr.StatBetweenFrameCreateMeshResource);
+        m_ogreStatsIndex.Add("totalbetweenframecreatemeshscenenode", Ogr.StatBetweenFrameCreateMeshSceneNode);
+        m_ogreStatsIndex.Add("totalbetweenframeupdatescenenode", Ogr.StatBetweenFrameUpdateSceneNode);
+        // material processing queues
+        m_ogreStatsIndex.Add("MaterialUpdatesRemaining", Ogr.StatMaterialUpdatesRemaining);
+
+        // Create a ParameterSet that can be read externally via REST/JSON
         m_ogreStats = new ParameterSet();
         // Add parameters for each name with a delegate to get the value from the pinned data array
         // The c++ code updates the array and we pick up the values with the ParameterSet delegates
         foreach (string key in m_ogreStatsIndex.Keys) {
             m_ogreStats.Add(key, delegate(string xx) { return new OMVSD.OSDString(m_ogreStatsPinned[m_ogreStatsIndex[xx]].ToString()); });
         }
+        // make the values accessable from outside
         m_ogreStatsHandler = new RestHandler("/stats/" + m_moduleName + "/ogreStats", m_ogreStats);
+        #endregion OGRE STATS
 
         // load the input system we're supposed to be using
         String uiClass = ModuleParams.ParamString(m_moduleName + ".Ogre.InputSystem");
@@ -291,10 +314,12 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             m_userInterface = new UserInterfaceNull();
         }
 
+        // if we are doing detail logging, enable logging by  the LookingGlassOgre code
         if (m_log.WouldLog(LogLevel.DRENDERDETAIL)) {
             debugLogCallbackHandle = new Ogr.DebugLogCallback(OgrLogger);
             Ogr.SetDebugLogCallback(debugLogCallbackHandle);
         }
+        // push the callback pointers into the LookingGlassOgre code
         fetchParameterCallbackHandle = new Ogr.FetchParameterCallback(GetAParameter);
         Ogr.SetFetchParameterCallback(fetchParameterCallbackHandle);
         checkKeepRunningCallbackHandle = new Ogr.CheckKeepRunningCallback(CheckKeepRunning);
@@ -310,6 +335,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
 
         m_sceneMagnification = float.Parse(ModuleParams.ParamString("Renderer.Ogre.LL.SceneMagnification"));
 
+        // pick up a bunch of parameterized values
         m_betweenFrameTotalCost = ModuleParams.ParamInt("Renderer.Ogre.BetweenFrame.Costs.Total");
         m_betweenFrameCreateMaterialCost = ModuleParams.ParamInt("Renderer.Ogre.BetweenFrame.Costs.CreateMaterial");
         m_betweenFrameCreateSceneNodeCost = ModuleParams.ParamInt("Renderer.Ogre.BetweenFrame.Costs.CreateSceneNode");
@@ -319,6 +345,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         m_betweenFrameUpdateTerrainCost = ModuleParams.ParamInt("Renderer.Ogre.BetweenFrame.Costs.UpdateTerrain");
         m_betweenFrameMapTextureCost = ModuleParams.ParamInt("Renderer.Ogre.BetweenFrame.Costs.MapTexture");
 
+        // start up the Ogre renderer
         try {
             Ogr.InitializeOgre();
         }
@@ -326,20 +353,25 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             m_log.Log(LogLevel.DBADERROR, "EXCEPTION INITIALIZING OGRE: {0}", e.ToString());
             return false;
         }
-
         m_sceneMgr = new OgreSceneMgr(Ogr.GetSceneMgr());
 
+        // if we get here, rendering is set up and running
         return true;
     }
 
+    // routine called from unmanaged code to log a message
     private void OgrLogger(string msg) {
         m_logOgre.Log(LogLevel.DRENDERDETAIL, msg);
     }
     
+    // Called from unmanaged code to get the state of the KeepRunning flag
+    // Not used much since the between frame callback also returns the KeepRunning flag
     private bool CheckKeepRunning() {
         return LGB.KeepRunning;
     }
 
+    // Called from unmanaged code to get the value of a parameter
+    // Fixed so this doesn't throw but returns a null value. Calling code has to check return value.
     private string GetAParameter(string parm) {
         string ret = null;
         paramErrorType oldtype = ModuleParams.ParamErrorMethod;
@@ -356,6 +388,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     }
 
     // ==========================================================================
+    // IModule.Start()
     override public void Start() {
         m_log.Log(LogLevel.DRENDERDETAIL, "Start: requesting main thread");
         LGB.GetMainThread(RendererThread);
@@ -363,11 +396,13 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     }
 
     // ==========================================================================
+    // IModule.Stop()
     override public void Stop() {
         return;
     }
 
     // ==========================================================================
+    // IModule.PrepareForUnload()
     override public bool PrepareForUnload() {
         return false;
     }

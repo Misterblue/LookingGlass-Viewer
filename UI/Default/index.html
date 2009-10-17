@@ -113,6 +113,16 @@ function TimerDataStuff() {
                 BuildBasicTable('#LGRendererStats', data, true);
             }
         });
+        $.getJSON(BASEURL+'/api/stats/Renderer/ogreStats', function(data, status) {
+            if (status == 'success') {
+                BuildBasicTable('#LGOgreStats', data, true);
+            }
+        });
+        $.getJSON(BASEURL+'/api/stats/Comm/stats', function(data, status) {
+            if (status == 'success') {
+                BuildBasicTable('#LGCommStats', data, true);
+            }
+        });
     }
     statTimerHandle = setTimeout('TimerDataStuff()', 2000);
 };
@@ -285,6 +295,12 @@ StringBuffer.prototype.toString = function() {
 <div id="LGRendererStats">
 <h1>Renderer</h1>
 </div>  <!-- LGRendererStats -->
+<div id="LGCommStats">
+<h1>Communication Stats</h1>
+</div>  <!-- LGCommStats -->
+<div id="LGOgreStats">
+<h1>Ogre Stats</h1>
+</div>  <!-- LGOgreStats -->
 <div><a href="/static/DefaultParameters.html">Parameter Defaults</a></div>
 </div>  <!-- LGStatistics -->
 </div>  <!-- LGSectionContainer -->

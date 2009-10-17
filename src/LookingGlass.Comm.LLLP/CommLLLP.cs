@@ -31,6 +31,7 @@ using LookingGlass.Framework.Logging;
 using LookingGlass.Framework.Modules;
 using LookingGlass.Framework.Parameters;
 using LookingGlass.Framework.WorkQueue;
+using LookingGlass.Rest;
 using LookingGlass.World;
 using LookingGlass.World.LL;
 using OMV = OpenMetaverse;
@@ -43,7 +44,18 @@ namespace LookingGlass.Comm.LLLP {
 public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     protected ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
 
+    // ICommProvider.Name
+    public string Name { get { return this.ModuleName; } }
+
+    // ICommProvider.CommStatistics
+    protected ParameterSet m_commStatistics;
+    public ParameterSet CommStatistics() { return m_commStatistics; }
+    protected RestHandler m_commStatsHandler;
+
+    // ICommProvider.GridClient
     protected OMV.GridClient m_client;
+    public OMV.GridClient GridClient { get { return m_client;} }
+
     // list of the region information build for the simulator
     protected List<LLRegionContext> m_regionList;
 
@@ -59,7 +71,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
                 // this should happen after connected. reconnection is a problem.
                 m_log.Log(LogLevel.DBADERROR, "CommLLLP: creating default asset context for grid {0}", m_loginGrid);
                 m_defaultAssetContext = new LLAssetContext(LoggedInGridName);
-                m_defaultAssetContext.InitializeContext(Client, ModuleName,
+                m_defaultAssetContext.InitializeContext(this,
                     ModuleParams.ParamString(ModuleName + ".Assets.CacheDir"),
                     ModuleParams.ParamInt(ModuleName + ".Texture.MaxRequests"));
             }
@@ -67,8 +79,6 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         }
         set { m_defaultAssetContext = value; }
     }
-
-    public OMV.GridClient Client { get { return m_client;} }
 
     // There are some messages that come in that are rare but could use some locking.
     // The main paths of prims and updates is pretty solid and multi-threaded but
@@ -135,6 +145,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         m_connectionParams = new ParameterSet();
         m_regionList = new List<LLRegionContext>();
         m_waitTilOnline = new Dictionary<RegionContextBase,OnDemandWorkQueue>();
+        m_commStatistics = new ParameterSet();
 
         m_loginGrid = "Unknown";
         m_gridLists = new GridLists();
@@ -218,10 +229,12 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
 
     #region IModule methods
 
+    // IModule.OnLoad
     public override void OnLoad(string name, LookingGlassBase lgbase) {
         OnLoad2(name, lgbase, true);
     }
 
+    // Internal OnLoad that can be used by derived classes
     protected void OnLoad2(string name, LookingGlassBase lgbase, bool shouldInit) {
         base.OnLoad(name, lgbase);
         ModuleParams.AddDefaultParameter(ModuleName + ".Assets.CacheDir", 
@@ -289,10 +302,12 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         m_SwitchingSims = true;
     }
 
+    // IModule.Start()
     public override void Start() {
         Start2(true);
     }
 
+    // internal Start to be used by derived classes
     protected void Start2(bool shouldKeepLoggedin) {
         base.Start();
         m_loaded = true;
@@ -306,6 +321,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         }
     }
 
+    // IModule.Stop()
     // If the base system says to stop, we make sure we're disconnected
     public override void Stop() {
         base.Stop();
@@ -313,14 +329,19 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         Disconnect();
     }
 
+    // IModule.PrepareForUnload()
     public override bool PrepareForUnload() {
         base.PrepareForUnload();
         m_log.Log(LogLevel.DCOMMDETAIL, "communication unload. We'll never login again");
+        if (m_commStatsHandler != null) {
+            m_commStatsHandler.Dispose();   // get rid of the handlers we created
+            m_commStatsHandler = null;
+        }
         m_loaded = false; ;
         return true;
     }
 
-
+    // ICommProvider.Connect()
     public virtual bool Connect(ParameterSet parms) {
         // Are we already logged in?
         if (m_isLoggedIn || m_isLoggingIn) {
@@ -349,6 +370,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         return true;
     }
 
+    // ICommProvider.Disconnect()
     public virtual bool Disconnect() {
         m_shouldBeLoggedIn = false;
         m_log.Log(LogLevel.DCOMMDETAIL, "Should not be logged in");
@@ -386,7 +408,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     public void StartLogin() {
         m_log.Log(LogLevel.DCOMMDETAIL, "Starting login of {0} {1}", m_loginFirst, m_loginLast);
         m_isLoggingIn = true;
-        OMV.LoginParams loginParams = Client.Network.DefaultLoginParams(
+        OMV.LoginParams loginParams = this.GridClient.Network.DefaultLoginParams(
             m_loginFirst,
             m_loginLast,
             m_loginPassword,
@@ -437,7 +459,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         }
         else {
             try {
-                Client.Network.Login(loginParams);
+                this.GridClient.Network.Login(loginParams);
             }
             catch (Exception e) {
                 m_log.Log(LogLevel.DBADERROR, "BeginLogin exception: " + e.ToString());
@@ -502,6 +524,10 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         gc.Settings.STORE_LAND_PATCHES = true;
         gc.Terrain.OnLandPatch += new OMV.TerrainManager.LandPatchCallback(Terrain_OnLandPatch);
         gc.Parcels.OnSimParcelsDownloaded += new OMV.ParcelManager.SimParcelsDownloaded(Parcels_OnSimParcelsDownloaded);
+
+        m_commStatsHandler = new RestHandler("/stats/" + m_moduleName + "/stats", m_commStatistics);
+        m_commStatistics.Add("WaitingTilOnline", delegate(string xx) { 
+            return new OMVSD.OSDString(m_waitTilOnline.Count.ToString()); });
 
         return true;
     }

@@ -27,10 +27,12 @@ using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using LookingGlass.Comm;
 using LookingGlass.Framework.Logging;
 using LookingGlass.Framework.WorkQueue;
 using LookingGlass.World;
 using OMV = OpenMetaverse;
+using OMVSD = OpenMetaverse.StructuredData;
 using OMVI = OpenMetaverse.Imaging;
 
 namespace LookingGlass.World.LL {
@@ -46,14 +48,13 @@ public sealed class LLAssetContext : AssetContextBase {
     // used to lock access to the filesystem so the threads and instances of this don't get too tangled
     public static readonly object FileSystemAccessLock = new object();
 
-    private OMV.GridClient m_client;
     private int m_maxRequests;
     private BasicWorkQueue m_completionWork;
 
     // private const string WorldIDMatch = "^(...)(...)(..)-(.)(.*)$";
     // private const string WorldIDReplace = "Texture/$1/$2/$3$4/$1$2$3-$4$5";
 
-    private string m_commName;      // name of the communication module I'm associated with
+    private ICommProvider m_comm;       // handle to the underlying LL comm
 
     private class WaitingInfo : IComparable<WaitingInfo> {
         public OMV.UUID worldID;
@@ -91,16 +92,18 @@ public sealed class LLAssetContext : AssetContextBase {
     /// </summary>
     /// <param name="gclient"></param>
     /// <param name="maxrequests"></param>
-    public void InitializeContext(OMV.GridClient gclient, string commName, string cacheDir, int maxrequests) {
+    public void InitializeContext(ICommProvider comm, string cacheDir, int maxrequests) {
         m_waiting = new Dictionary<OMV.UUID, WaitingInfo>();
         m_completionWork = new BasicWorkQueue("LLAssetContextCompletion");
-        m_client = gclient;
-        m_commName = commName;
+        m_comm = comm;
         m_cacheDir = cacheDir;
         m_maxRequests = maxrequests;
-        m_client.Settings.MAX_CONCURRENT_TEXTURE_DOWNLOADS = m_maxRequests;
+        m_comm.GridClient.Settings.MAX_CONCURRENT_TEXTURE_DOWNLOADS = m_maxRequests;
         // m_client.Assets.OnImageReceived += new OMV.AssetManager.ImageReceivedCallback(OnImageReceived);
-        m_client.Assets.Cache.ComputeAssetCacheFilename = ComputeTextureFilename;
+        m_comm.GridClient.Assets.Cache.ComputeAssetCacheFilename = ComputeTextureFilename;
+
+        m_comm.CommStatistics().Add("TexturesWaitingFor",
+            delegate(string xx) { return new OMVSD.OSDString(m_waiting.Count.ToString()); });
     }
 
     public string ComputeTextureFilename(string cacheDir, OMV.UUID textureID) {
@@ -182,7 +185,7 @@ public sealed class LLAssetContext : AssetContextBase {
                     //   and we should be outside the lock
                     m_log.Log(LogLevel.DTEXTUREDETAIL, "DoTextureLoad: Requesting: " + textureEntityName);
                     // m_texturePipe.RequestTexture(binID, OMV.ImageType.Normal, 50f, 0, 0, OnACDownloadFinished, false);
-                    m_client.Assets.RequestImage(binID, OMV.ImageType.Normal, 50f, 0, 0, OnACDownloadFinished, false);
+                    m_comm.GridClient.Assets.RequestImage(binID, OMV.ImageType.Normal, 50f, 0, 0, OnACDownloadFinished, false);
                 }
             }
         }
@@ -266,7 +269,7 @@ public sealed class LLAssetContext : AssetContextBase {
                 MakeParentDirectoriesExist(tempTextureFilename);
 
                 lock (FileSystemAccessLock) {
-                    string noTextureFilename = LookingGlassBase.Instance.AppParams.ParamString(m_commName + ".Assets.NoTextureFilename");
+                    string noTextureFilename = LookingGlassBase.Instance.AppParams.ParamString(m_comm.Name + ".Assets.NoTextureFilename");
                     // if we copy the no texture file into the filesystem, we will never retry to
                     // fetch the texture. This copy is not a good thing.
                     if (!File.Exists(tempTextureFilename)) {
@@ -298,7 +301,7 @@ public sealed class LLAssetContext : AssetContextBase {
                 }
             }
         }
-        m_completionWork.DoLater(new CompleteDownloadLater(this, assetTexture, toCall, m_commName, m_log));
+        m_completionWork.DoLater(new CompleteDownloadLater(this, assetTexture, toCall, m_comm.Name, m_log));
         return;
     }
 

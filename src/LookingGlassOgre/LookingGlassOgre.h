@@ -48,6 +48,21 @@ static const int ResourceTypeTexture = 2;	// Texture
 static const int ResourceTypeMaterial = 3;	// Material
 static const int ResourceTypeTransparentTexture = 4;	// A texture with some transparancy
 
+// offsets into statistics block
+static const int StatMaterialUpdatesRemaining = 0;
+static const int StatBetweenFrameWorkItems = 1;
+static const int StatVisibleToVisible = 2;
+static const int StatInvisibleToVisible = 3;
+static const int StatVisibleToInvisible = 4;
+static const int StatInvisibleToInvisible = 5;
+static const int StatMeshesUnloaded = 6;
+static const int StatTexturesUnloaded = 7;
+static const int StatBetweenFrameRefreshResource = 8;
+static const int StatBetweenFrameCreateMaterialResource = 9;
+static const int StatBetweenFrameCreateMeshResource = 10;
+static const int StatBetweenFrameCreateMeshSceneNode = 11;
+static const int StatBetweenFrameUpdateSceneNode = 12;
+
 #define OLArchiveTypeName "OLFileSystem"
 #define OLPreloadTypeName "OLPreloadFileSystem"
 #define OLResourceGroupName "OLResource"
@@ -58,6 +73,8 @@ static const int ResourceTypeTransparentTexture = 4;	// A texture with some tran
 // #define OLMaterialTypeName "Material"
 
 // Utility functions
+extern void SetStat(int, int);
+extern void IncStat(int);
 extern void AssertNonNull(void*, const char*);
 extern const bool isTrue(const char*);
 extern void Log(const char*, ...);
