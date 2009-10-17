@@ -1,0 +1,40 @@
+﻿Entity Naming Scheme
+
+Entities come in from the outside, appear in the world and are 
+then manipulated by various world watchers (viewer, most likely). 
+Each entity is given a string name for reference. Some of the 
+other systems extend the name in a mappable way. For instance, 
+a reference to an entity can be passed into one module by it's name and
+the name is later passed back to search for the particular entity.
+
+The general form of the entity name is:
+	Host/LocalName[/Additions[.Type]]
+
+where "LocalName" is the name the entity comes with from it's world. 
+The "Host" is the name of the originator of the "LocalName" and it 
+qualified the name to make it globally unique. "Additions" are added 
+by various systems and they are usually added in such a way that he 
+entity name can be reconstructed from the modified name (see below). 
+"Type" is added by systems and is like "Additions".
+
+For LLLP, "LocalName" is the UUID of the object and "Host" is the name of the
+simulator it is from. The hostname is qualified to be a domain name:
+	blueland.agni.secondlife.com/12345678-1234-1234-1234-123456789012
+
+The entity names are managed by LookingGlass.World.EntityName and
+any service specific conversion of the names (from basic entity name
+to filename and back) are done in service specific conversion
+classes (like "LookingGlass.Renderer.Ogre.EntityNameOgre"). This
+keeps the name specific conversion code in centralized places rather
+than letting it scatter around the application.
+
+There are several Additions that are created by the Ogre Renderer:
+	/MO
+		Moveable object that is used to create the mesh. Should never be stored
+	/Entity
+		The name of the Ogre::Entity that the prim mesh is attached to
+	-N.material
+		the name of the material on the face N of the entity
+	.mesh
+		the name of the mesh created from the entity. This is turned into the
+		filename where the mesh is stored/cached.

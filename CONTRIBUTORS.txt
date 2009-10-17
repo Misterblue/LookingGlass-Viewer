@@ -1,0 +1,13 @@
+﻿The initial and major contributor is Robert Adams
+
+Some portions of code have come from the following projects:
+* OpenSimulator (http://opensimulator.org/)
+* LibOpenMetaverse (http://openmetaverse.org/projects/libopenmetaverse/)
+* Primmesher (http://forge.opensimulator.org/gf/project/primmesher)
+* IdealistViewer (http://forge.opensimulator.org/gs.project/idealistviewer/)
+
+Individuals:
+Francis Chang (Quaternian wizardry)
+Douglas R Miles (file access locking)
+
+LookingGlass splash screen is "Looking Glass River" by Jessie Wilcox-Smith
