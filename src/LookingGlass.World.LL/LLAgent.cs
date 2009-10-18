@@ -82,6 +82,7 @@ public class LLAgent : IAgent {
 
     public void MoveForward(bool startstop) {
         m_client.Self.Movement.AtPos = startstop;
+        m_client.Self.Movement.SendUpdate();
         if (startstop && m_shouldPreMoveAvatar) {
             if (m_myAvatar != null) {
                 OMV.Vector3 newPos = m_myAvatar.RelativePosition +
@@ -98,6 +99,7 @@ public class LLAgent : IAgent {
 
     public void MoveBackward(bool startstop) {
         m_client.Self.Movement.AtNeg = startstop;
+        m_client.Self.Movement.SendUpdate();
         if (startstop && m_shouldPreMoveAvatar) {
             if (m_myAvatar != null) {
                 OMV.Vector3 newPos = m_myAvatar.RelativePosition +
@@ -113,6 +115,7 @@ public class LLAgent : IAgent {
 
     public void MoveUp(bool startstop) {
         m_client.Self.Movement.UpPos = startstop;
+        m_client.Self.Movement.SendUpdate();
         if (startstop && m_shouldPreMoveAvatar) {
             if (m_myAvatar != null) {
                 this.RelativePosition = m_myAvatar.RelativePosition + new OMV.Vector3(0f, 0f, m_moveFudge);
@@ -124,6 +127,7 @@ public class LLAgent : IAgent {
 
     public void MoveDown(bool startstop) {
         m_client.Self.Movement.UpNeg = startstop;
+        m_client.Self.Movement.SendUpdate();
         if (startstop && m_shouldPreMoveAvatar) {
             if (m_myAvatar != null) {
                 this.RelativePosition = m_myAvatar.RelativePosition + new OMV.Vector3(0f, 0f, -m_moveFudge);
@@ -137,6 +141,7 @@ public class LLAgent : IAgent {
         if (startstop) {
             // flying is modal. If we're flying, stop.
             m_client.Self.Movement.Fly = !m_client.Self.Movement.Fly;
+            m_client.Self.Movement.SendUpdate();
         }
     }
 
@@ -148,6 +153,7 @@ public class LLAgent : IAgent {
             m_client.Self.Movement.BodyRotation *= Zturn;
             m_client.Self.Movement.HeadRotation *= Zturn;
         }
+        m_client.Self.Movement.SendUpdate();
         if (startstop && m_shouldPreMoveAvatar) {
             if (m_myAvatar != null) {
                 this.Heading = m_client.Self.Movement.BodyRotation;
@@ -165,6 +171,7 @@ public class LLAgent : IAgent {
             m_client.Self.Movement.BodyRotation *= Zturn;
             m_client.Self.Movement.HeadRotation *= Zturn;
         }
+        m_client.Self.Movement.SendUpdate();
         if (startstop && m_shouldPreMoveAvatar) {
             if (m_myAvatar != null) {
                 this.Heading = m_client.Self.Movement.BodyRotation;
@@ -224,14 +231,14 @@ public class LLAgent : IAgent {
     #endregion POSITION
 
     #region INTEREST
-    public void UpdateCamera(OMV.Vector3d position, OMV.Quaternion direction) {
+    public void UpdateCamera(OMV.Vector3d position, OMV.Quaternion direction, float far) {
         float roll;
         float pitch;
         float yaw;
         direction.GetEulerAngles(out roll, out pitch, out yaw);
         OMV.Vector3 pos = new OMV.Vector3((float)position.X, (float)position.Y, (float)position.Z);
         m_client.Self.Movement.Camera.SetPositionOrientation(pos, roll, pitch, yaw);
-        m_client.Self.Movement.Camera.Far = 200f;
+        m_client.Self.Movement.Camera.Far = far;
         m_log.Log(LogLevel.DVIEWDETAIL, "UpdateCamera: {0}, {1}, {2}, {3}", pos.X, pos.Y, pos.Z, direction.ToString());
         return;
     }

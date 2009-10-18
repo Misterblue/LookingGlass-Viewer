@@ -70,6 +70,9 @@ namespace LookingGlass.Renderer {
         Keys LastKeyCode { get; set; }
         MouseButtons LastMouseButtons { get; set; }
 
+        // times per second to do key repeat
+        float KeyRepeatRate { get; set; }
+
         // process something from the input device
         void ReceiveUserIO(int type, int param1, float param2, float param3);
         // kludge that tells the renderer that this IO system needs low level interfaces

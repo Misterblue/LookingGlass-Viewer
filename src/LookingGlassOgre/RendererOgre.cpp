@@ -156,7 +156,7 @@ namespace RendererOgre {
 		m_visibilityScaleMaxDistance = LookingGlassOgr::GetParameterFloat("Renderer.Ogre.Visibility.MaxDistance");
 		m_visibilityScaleMinDistance = LookingGlassOgr::GetParameterFloat("Renderer.Ogre.Visibility.MinDistance");
 		m_visibilityScaleOnlyLargeAfter = LookingGlassOgr::GetParameterFloat("Renderer.Ogre.Visibility.OnlyLargeAfter");
-		m_visibilityScaleLargeSize = LookingGlassOgr::GetParameterInt("Renderer.Ogre.Visibility.Large");
+		m_visibilityScaleLargeSize = LookingGlassOgr::GetParameterFloat("Renderer.Ogre.Visibility.Large");
 		LookingGlassOgr::Log("initialize: visibility: min=%f, max=%f, large=%f, largeafter=%f",
 				(double)m_visibilityScaleMinDistance, (double)m_visibilityScaleMaxDistance, 
 				(double)m_visibilityScaleLargeSize, (double)m_visibilityScaleOnlyLargeAfter);

@@ -59,6 +59,12 @@ public class UserInterfaceNull : IUserInterfaceProvider {
         set { m_lastButtons = value; }
     }
 
+    private float m_repeatRate = 3f;
+    public float KeyRepeatRate {
+        get { return m_repeatRate; }
+        set { m_repeatRate = value; }
+    }
+
     // don't hook me up with the low level stuff
     public bool NeedsRendererLinkage() {
         return false;

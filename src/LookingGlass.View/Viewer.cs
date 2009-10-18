@@ -87,12 +87,12 @@ public class Viewer : ModuleBase, IViewProvider {
 
         ModuleParams.AddDefaultParameter(m_moduleName + ".Camera.Speed", "10", "Units per second to move camera");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Camera.RotationSpeed", "0.100", "Degrees to rotate camera");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Camera.ServerFar", "300.0", "Far distance sent to server");
 
         ModuleParams.AddDefaultParameter(m_moduleName + ".Camera.BehindAgent", "1.0", "Distance camera is behind agent");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Camera.AboveAgent", "0.75", "Distance camera is above agent (combined with behind)");
 
-
-        m_EntitySlot = EntityBase.AddAdditionSubsystem("VIEWER");
+        // m_EntitySlot = EntityBase.AddAdditionSubsystem("VIEWER");        // used by anyone?
     }
 
     override public bool AfterAllModulesLoaded() {
@@ -113,7 +113,7 @@ public class Viewer : ModuleBase, IViewProvider {
         // camera starts pointing down Y axis
         m_mainCamera.Heading = new OMV.Quaternion(OMV.Vector3.UnitZ, Constants.PI/2);
         m_mainCamera.Zoom = 1.0f;
-        m_mainCamera.Far = 300.0f;
+        m_mainCamera.Far = ModuleParams.ParamFloat(m_moduleName + ".Camera.ServerFar");
         m_cameraMode = CameraMode.TrackingAgent;
         m_cameraLookAt = new OMV.Vector3d(0d, 0d, 0d);
 
@@ -238,7 +238,7 @@ public class Viewer : ModuleBase, IViewProvider {
             // tell the agent the camera moved if it cares
             // This is an outgoing message that tells the world where the camera is
             //   pointing so the server can do interest management
-            m_trackedAgent.UpdateCamera(cam.GlobalPosition, cam.Heading);
+            m_trackedAgent.UpdateCamera(cam.GlobalPosition, cam.Heading, cam.Far);
         }
     }
 

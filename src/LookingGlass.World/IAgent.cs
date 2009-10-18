@@ -67,7 +67,7 @@ public interface IAgent {
     // This is a call from the viewer telling the agent the camera has moved. The
     // agent can use this for anything it wishes but it's mostly used by data sources
     // to generate culling or update ordering.
-    void UpdateCamera(OMV.Vector3d position, OMV.Quaternion direction);
+    void UpdateCamera(OMV.Vector3d position, OMV.Quaternion direction, float far);
 
     // A number between 0..10 which give hints as to the user's interaction with the viewer.
     // Can be used by the agent to control update frequency and LOD.

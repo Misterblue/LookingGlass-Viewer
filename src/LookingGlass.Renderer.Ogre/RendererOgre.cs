@@ -215,7 +215,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Moon.Color", "<0.5,0.5,0.6>",
                     "Color of light from the moon");
 
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.Cull.Frustrum", "false",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.Cull.Frustrum", "true",
                     "whether to cull (unload) objects if not visible in camera frustrum");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.Cull.Distance", "true",
                     "whether to cull (unload) objects depending on distance from camera");
@@ -227,9 +227,9 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "the maximum distance to see any entites (far clip)");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.MinDistance", "30",
                     "below this distance, everything is visible");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.OnlyLargeAfter", "90",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.OnlyLargeAfter", "120",
                     "After this distance, only large things are visible");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.Large", "7",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.Large", "8",
                     "How big is considered 'large' for 'OnlyLargeAfter' calculation");
 
         m_stats = new StatisticManager(m_moduleName);

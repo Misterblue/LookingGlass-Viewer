@@ -249,11 +249,22 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         ModuleParams.AddDefaultParameter(ModuleName + ".Assets.ConvertPNG", "true",
                     "whether to convert incoming JPEG2000 files to PNG files in the cache");
         ModuleParams.AddDefaultParameter(ModuleName + ".Texture.MaxRequests", 
-                    "6",
+                    "4",
                     "Maximum number of outstanding textures requests");
         ModuleParams.AddDefaultParameter(ModuleName + ".Settings.MultipleSims", 
                     "false",
                     "Whether to enable multiple sims");
+
+        // This is not the right place for this but there is no World.LL module
+        ModuleParams.AddDefaultParameter("World.LL.Agent.PreMoveAvatar", 
+                    "true",
+                    "Whether to move avatar when user types (otherwise wait for server round trip)");
+        ModuleParams.AddDefaultParameter("World.LL.Agent.PreMove.RotFudge", 
+                    "5",
+                    "Degrees to rotate avatar when user turns (float)");
+        ModuleParams.AddDefaultParameter("World.LL.Agent.PreMove.MoveFudge", 
+                    "0.25",
+                    "Meters to move avatar when moves forward (float)");
 
         if (shouldInit) InitConnectionFramework();
     }
@@ -276,7 +287,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
             m_client.Settings.ALWAYS_REQUEST_PARCEL_DWELL = false;
             m_client.Settings.USE_INTERPOLATION_TIMER = false;  // don't need the library helping
             m_client.Settings.SEND_AGENT_UPDATES = true;
-            m_client.Self.Movement.AutoResetControls = false;   // Do the key up and down to turn on and off
+            m_client.Self.Movement.AutoResetControls = true;   // I will do the key repeat operations
             m_client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = true;
             m_client.Settings.USE_ASSET_CACHE = false;
             m_client.Settings.PIPELINE_REQUEST_TIMEOUT = 120 * 1000;

@@ -64,6 +64,15 @@ public class UserInterfaceOgre : IUserInterfaceProvider {
         set { m_lastButtons = value; }
     }
 
+    /// <summary>
+    /// The rate to repeat the keys (repeats per second). Zero says no repeat
+    /// </summary>
+    private float m_keyRepeatRate = 3f;
+    public float KeyRepeatRate {
+        get { return m_keyRepeatRate; }
+        set { m_keyRepeatRate = value; }
+    }
+
     // the key codes as they come from OIS
     public enum OISKeyCode {
 		KC_UNASSIGNED  = 0x00,
