@@ -269,6 +269,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         // Create a dictionary of the statistic names and offsets into the stats array
         m_ogreStatsIndex = new Dictionary<string,int>();
         m_ogreStatsDesc = new Dictionary<string,string>();
+        // NOTE: PUTTING ANY UPPER CASE IN THE KEY STRINGS CAUSES FAILURES!!
         // culling and visibility
         m_ogreStatsIndex.Add("visibletovisible", Ogr.StatVisibleToVisible);
         m_ogreStatsDesc.Add("visibletovisible", "Meshes at were visible that are still visible");
@@ -302,8 +303,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         m_ogreStatsIndex.Add("totalbetweenframeupdatescenenode", Ogr.StatBetweenFrameUpdateSceneNode);
         m_ogreStatsDesc.Add("totalbetweenframeupdatescenenode", "Number of 'update scene node' work items performed");
         // material processing queues
-        m_ogreStatsIndex.Add("MaterialUpdatesRemaining", Ogr.StatMaterialUpdatesRemaining);
-        m_ogreStatsDesc.Add("MaterialUpdatesRemaining", "Number of material updates waiting");
+        m_ogreStatsIndex.Add("materialupdatesremaining", Ogr.StatMaterialUpdatesRemaining);
+        m_ogreStatsDesc.Add("materialupdatesremaining", "Number of material updates waiting");
 
         // Create a ParameterSet that can be read externally via REST/JSON
         m_ogreStats = new ParameterSet();

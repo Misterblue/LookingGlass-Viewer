@@ -37,6 +37,11 @@ public delegate void AgentUpdatedCallback(IAgent agnt, UpdateCodes what);
 public interface IAgent {
     event AgentUpdatedCallback OnAgentUpdated;
 
+    // Not your normal update. Called when there have been authoritative updates to the
+    //    information behind the agent. This feature is mosly used to do dead
+    //    reconning (local position is different than server position)
+    void DataUpdate(UpdateCodes what);
+
     #region MOVEMENT
     // This also updates the agent's representation in the world (usually an avatar)
     // TODO: this is just enough to get display working. Figure out better movement model

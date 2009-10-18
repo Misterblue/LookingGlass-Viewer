@@ -121,7 +121,7 @@ public class ParameterSet : IParameters, IDisplayable {
                 m_paramDescription.Remove(lkey);
             }
             m_paramDescription.Add(lkey, new OMVSD.OSDString(desc));
-            Add(key, value);
+            Add(lkey, value);
         }
     }
 
@@ -153,20 +153,22 @@ public class ParameterSet : IParameters, IDisplayable {
     /// <param name="runtimeVal"></param>
     public void Add(string key, ParameterSetRuntimeValue runtimeVal) {
         string lkey = key.ToLower();
-        if (m_runtimeValues.ContainsKey(lkey)) {
-            m_runtimeValues.Remove(lkey);
+        lock (m_params) {
+            if (m_runtimeValues.ContainsKey(lkey)) {
+                m_runtimeValues.Remove(lkey);
+            }
+            m_runtimeValues.Add(lkey, runtimeVal);
         }
-        m_runtimeValues.Add(lkey, runtimeVal);
     }
 
     public void Add(string key, ParameterSetRuntimeValue runtimeVal, string desc) {
         string lkey = key.ToLower();
-        lock (m_paramDescription) {
+        lock (m_params) {
             if (m_paramDescription.ContainsKey(lkey)) {
                 m_paramDescription.Remove(lkey);
             }
             m_paramDescription.Add(lkey, new OMVSD.OSDString(desc));
-            Add(key, runtimeVal);
+            Add(lkey, runtimeVal);
         }
     }
 
@@ -314,6 +316,42 @@ public class ParameterSet : IParameters, IDisplayable {
         return ret;
     }
 
+    public float ParamFloat(string key) {
+        float ret = 0f;
+        string lkey = key.ToLower();
+        bool success = false;
+        lock (m_params) {
+            try {
+                if (m_runtimeValues.ContainsKey(key)) {
+                    ret = (float)m_runtimeValues[lkey](lkey).AsReal();
+                    success = true;
+                }
+                else {
+                    if (m_params.ContainsKey(lkey)) {
+                        ret = (float)m_params[lkey].AsReal();
+                        success = true;
+                    }
+                }
+            }
+            catch {
+                success = false;
+            }
+        }
+        if (!success) {
+            switch (ParamErrorMethod) {
+                case paramErrorType.eDefaultValue:
+                    ret = 0f;
+                    break;
+                case paramErrorType.eException:
+                    throw new ParameterException("Float param '" + key + "' not found");
+                case paramErrorType.eNullValue:
+                    ret = 0f;
+                    break;
+            }
+        }
+        return ret;
+    }
+
     /// <summary>
     /// Return all of the values for the key. This finds multiple values in the
     /// ini array only.
@@ -370,18 +408,21 @@ public class ParameterSet : IParameters, IDisplayable {
     /// </summary>
     /// <param name="act"></param>
     public void ForEach(ParamAction act) {
+        string lastKey = "NOTSET";
         try {
             lock (m_params) {
                 foreach (KeyValuePair<string, OMVSD.OSD> kvp in m_params) {
+                    lastKey = kvp.Key;
                     act(kvp.Key, kvp.Value);
                 }
                 foreach (KeyValuePair<string, ParameterSetRuntimeValue> kvp in m_runtimeValues) {
+                    lastKey = kvp.Key;
                     act(kvp.Key, kvp.Value(kvp.Key));
                 }
             }
         }
         catch (Exception e) {
-            LogManager.Log.Log(LogLevel.DBADERROR, "ParameterSet.ForEach: exception: {0}", e.ToString());
+            LogManager.Log.Log(LogLevel.DBADERROR, "ParameterSet.ForEach: lastkey={0}, e={0}", lastKey, e.ToString());
         }
     }
 
@@ -393,18 +434,20 @@ public class ParameterSet : IParameters, IDisplayable {
     public OMVSD.OSDMap GetDisplayable() {
         try {
             OMVSD.OSDMap built = new OMVSD.OSDMap();
-            this.ForEach(delegate(string k, OMVSD.OSD v) {
-                OMVSD.OSDMap valueMap = new OMVSD.OSDMap();
-                valueMap.Add("value", v);
-                if (m_paramDescription.ContainsKey(k)) {
-                    valueMap.Add("description", m_paramDescription[k.ToLower()]);
-                }
-                built.Add(k, valueMap);
-            });
+            lock (m_params) {
+                this.ForEach(delegate(string k, OMVSD.OSD v) {
+                    OMVSD.OSDMap valueMap = new OMVSD.OSDMap();
+                    valueMap.Add("value", v);
+                    if (m_paramDescription.ContainsKey(k)) {
+                        valueMap.Add("description", m_paramDescription[k]);
+                    }
+                    built.Add(k, valueMap);
+                });
+            }
             return built;
         }
         catch (Exception e) {
-            LogManager.Log.Log(LogLevel.DBADERROR, "ParameterSet.ForEach: exception {0}", e.ToString());
+            LogManager.Log.Log(LogLevel.DBADERROR, "GetDisplayable: exception {0}", e.ToString());
         }
         return new OMVSD.OSDMap();
     }

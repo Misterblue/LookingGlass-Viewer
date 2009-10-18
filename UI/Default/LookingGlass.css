@@ -56,7 +56,7 @@ table.LGOgreStatsTable {
     text-align: right;
 }
 th.LGOgreStats-description-header {
-    width: 50%;
+    width: 60%;
 }
 th.LGOgreStats-value-header {
     width: 10%;

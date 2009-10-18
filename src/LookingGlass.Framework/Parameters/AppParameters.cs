@@ -312,6 +312,44 @@ public class AppParameters : IAppParameters, IParameterPersist {
         return ret;
     }
 
+    public float ParamFloat(string key) {
+        float ret = 0f;
+        bool set = false;
+        if (m_overrideParams.HasParameter(key)) {
+            ret = m_overrideParams.ParamFloat(key);
+            // LogManager.Log.Log(LogLevel.DALL, "AppParameters: OverrideFloat: {0}->{1}", key, ret.ToString());
+            set = true;
+        }
+        else if (m_userParams.HasParameter(key)) {
+            ret = m_userParams.ParamFloat(key);
+            // LogManager.Log.Log(LogLevel.DALL, "AppParameters: UserFloat: {0}->{1}", key, ret.ToString());
+            set = true;
+        }
+        else if (m_iniParams.HasParameter(key)) {
+            ret = m_iniParams.ParamFloat(key);
+            // LogManager.Log.Log(LogLevel.DALL, "AppParameters: INIFloat: {0}->{1}", key, ret.ToString());
+            set = true;
+        }
+        else if (m_defaultParams.HasParameter(key)) {
+            ret = m_defaultParams.ParamFloat(key);
+            // LogManager.Log.Log(LogLevel.DALL, "AppParameters: DefaultFloat: {0}->{1}", key, ret.ToString());
+            set = true;
+        }
+        if (!set) {
+            switch (ParamErrorMethod) {
+                case paramErrorType.eDefaultValue:
+                    ret = 0f;
+                    break;
+                case paramErrorType.eException:
+                    throw new ParameterException("float parameter '" + key + "' not found");
+                case paramErrorType.eNullValue:
+                    ret = 0f;
+                    break;
+            }
+        }
+        return ret;
+    }
+
     public List<string> ParamStringArray(string key) {
         List<string> ret = null;
         bool set = false;

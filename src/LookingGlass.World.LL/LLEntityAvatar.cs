@@ -63,24 +63,39 @@ namespace LookingGlass.World.LL {
         #region POSITION
         override public OMV.Quaternion Heading {
             get {
-                return m_avatar.Rotation;
+                if (m_avatar != null) {
+                    base.Heading = m_avatar.Rotation;
+                    return m_avatar.Rotation;
+                }
+                return base.Heading;
             }
             set {
+                base.Heading = value;
+                if (m_avatar != null) m_avatar.Rotation = base.Heading;
             }
         }
 
         override public OMV.Vector3 RelativePosition {
             get {
-                return m_avatar.Position;
+                if (m_avatar != null) {
+                    base.RelativePosition = m_avatar.Position;
+                    return m_avatar.Position;
+                }
+                return base.RelativePosition;
             }
             set {
+                base.RelativePosition = value;
+                if (m_avatar != null) m_avatar.Position = base.RelativePosition;
             }
         }
         override public OMV.Vector3d GlobalPosition {
             get {
-                return m_globalPosition;
+                if (m_avatar != null) base.RelativePosition = m_avatar.Position;
+                return base.GlobalPosition;
             }
             set {
+                base.GlobalPosition = value;
+                if (m_avatar != null) m_avatar.Position = base.RelativePosition;
             }
         }
         #endregion POSITION

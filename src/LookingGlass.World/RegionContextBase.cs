@@ -73,6 +73,14 @@ public abstract class RegionContextBase : EntityBase, IRegionContext, IDisposabl
     protected OMV.Vector3d m_worldBase = new OMV.Vector3d(0d, 0d, 0d);
     public OMV.Vector3d WorldBase { get { return m_worldBase; } }
 
+    // given an address relative to this region, return a global, world address
+    public OMV.Vector3d CalculateGlobalPosition(OMV.Vector3 pos) {
+        return m_worldBase + new OMV.Vector3d(pos.X, pos.Y, pos.Z);
+    }
+    public OMV.Vector3d CalculateGlobalPosition(float x, float y, float z) {
+        return m_worldBase + new OMV.Vector3d(x, y, z);
+    }
+
     // information on terrain for this region
     protected TerrainInfoBase m_terrainInfo = null;
     public TerrainInfoBase TerrainInfo { get { return m_terrainInfo; } }

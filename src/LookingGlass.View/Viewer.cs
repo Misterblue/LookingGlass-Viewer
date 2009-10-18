@@ -86,10 +86,10 @@ public class Viewer : ModuleBase, IViewProvider {
         // todo: make this variable so there can be multiple viewers
 
         ModuleParams.AddDefaultParameter(m_moduleName + ".Camera.Speed", "10", "Units per second to move camera");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Camera.RotationSpeed", "100", "Thousandth of degrees to rotate camera");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Camera.RotationSpeed", "0.100", "Degrees to rotate camera");
 
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Camera.BehindAgent", "5", "Distance camera is behind agent");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Camera.AboveAgent", "5", "Distance camera is above agent (combined with behind)");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Camera.BehindAgent", "1.0", "Distance camera is behind agent");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Camera.AboveAgent", "0.75", "Distance camera is above agent (combined with behind)");
 
 
         m_EntitySlot = EntityBase.AddAdditionSubsystem("VIEWER");
@@ -104,12 +104,12 @@ public class Viewer : ModuleBase, IViewProvider {
             return false;
         }
 
-        m_cameraSpeed = (float)ModuleParams.ParamInt(m_moduleName + ".Camera.Speed");
-        m_cameraRotationSpeed = (float)ModuleParams.ParamInt(m_moduleName + ".Camera.RotationSpeed")/1000;
-        m_agentCameraBehind = (float)ModuleParams.ParamInt(m_moduleName + ".Camera.BehindAgent");
-        m_agentCameraAbove = (float)ModuleParams.ParamInt(m_moduleName + ".Camera.AboveAgent");
+        m_cameraSpeed = ModuleParams.ParamFloat(m_moduleName + ".Camera.Speed");
+        m_cameraRotationSpeed = ModuleParams.ParamFloat(m_moduleName + ".Camera.RotationSpeed");
+        m_agentCameraBehind = ModuleParams.ParamFloat(m_moduleName + ".Camera.BehindAgent");
+        m_agentCameraAbove = ModuleParams.ParamFloat(m_moduleName + ".Camera.AboveAgent");
         m_mainCamera = new CameraControl();
-        m_mainCamera.GlobalPosition = new OMV.Vector3d(0d, 20d, 30d);   // World coordinates (Z up)
+        m_mainCamera.GlobalPosition = new OMV.Vector3d(1000d, 1000d, 40d);   // World coordinates (Z up)
         // camera starts pointing down Y axis
         m_mainCamera.Heading = new OMV.Quaternion(OMV.Vector3.UnitZ, Constants.PI/2);
         m_mainCamera.Zoom = 1.0f;
@@ -352,19 +352,21 @@ public class Viewer : ModuleBase, IViewProvider {
                 if ((agnt != null) && (m_mainCamera != null)) {
                     // vector for camera position behind the avatar
                     // note: coordinates are in LL form: Z up
-                    OMV.Quaternion cameraOffset = new OMV.Quaternion(0, -m_agentCameraBehind, m_agentCameraAbove, 0);
+                    OMV.Vector3 cameraOffset = new OMV.Vector3(-m_agentCameraBehind, 0, m_agentCameraAbove);
                     OMV.Quaternion invertHeading = OMV.Quaternion.Inverse(agnt.Heading);
                     // rotate the vector in the direction the agent is pointing
-                    OMV.Quaternion cameraBehind = agnt.Heading * cameraOffset * invertHeading;
-                    cameraBehind.Normalize();
+                    OMV.Vector3 cameraBehind = cameraOffset * invertHeading;
                     // create the global offset from the agent's position
                     OMV.Vector3d globalOffset = new OMV.Vector3d(cameraBehind.X, cameraBehind.Y, cameraBehind.Z);
-                    // m_log.Log(LogLevel.DVIEWDETAIL, "OnAgentUpdate: offset={0}, behind={1}, goffset={2}, gpos={3}",
-                    //     cameraOffset.ToString(), cameraBehind.ToString(), 
-                    //     globalOffset.ToString(), agnt.GlobalPosition.ToString());
+                    m_log.Log(LogLevel.DVIEWDETAIL, "OnAgentUpdate: offset={0}, behind={1}, goffset={2}, gpos={3}",
+                        cameraOffset.ToString(), cameraBehind.ToString(), 
+                        globalOffset.ToString(), agnt.GlobalPosition.ToString());
                     m_mainCamera.Update(agnt.GlobalPosition + globalOffset, agnt.Heading);
                 }
             }
+        }
+        else {
+            m_log.Log(LogLevel.DVIEWDETAIL, "OnAgentUpdate: update code not pos or rot: {0}", what);
         }
         return;
     }

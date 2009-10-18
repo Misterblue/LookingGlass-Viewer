@@ -75,6 +75,10 @@ public interface IRegionContext {
     // the world coordinate of the region's {0,0,0}
     OMV.Vector3d WorldBase { get; }
 
+    // given an address relative to this region, return a global, world address
+    OMV.Vector3d CalculateGlobalPosition(OMV.Vector3 pos);
+    OMV.Vector3d CalculateGlobalPosition(float x, float y, float z);
+
     // information on terrain for this region
     TerrainInfoBase TerrainInfo { get; }
 

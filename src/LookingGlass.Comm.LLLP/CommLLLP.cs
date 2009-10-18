@@ -687,28 +687,15 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
                 m_log.Log(LogLevel.DCOMM, "OnObjectUpdated: can't find local ID {0}. NOT UPDATING", update.LocalID);
             }
         }
-        if (updatedEntity != null) updatedEntity.Update(updateFlags);
-
-        /*
-        // updating now happens in the innards of LLEntityAvatar
-        if (update.Avatar) {
-            // this is an update to an avatar. See if it's an update to our agent.
-            if (update.LocalID == m_client.Self.LocalID) {
-                UpdateCodes agentUpdated = 0;
-                if ((updateFlags & UpdateCodes.Position) != 0) {
-                    agentUpdated |= UpdateCodes.Position;
-                    // the underlying libomv has already changed this value
-                    // m_myAgent.RelativePosition = update.Position;
-                }
-                if ((updateFlags & UpdateCodes.Rotation) != 0) {
-                    agentUpdated |= UpdateCodes.Rotation;
-                    // the underlying libomv has already changed this value
-                    // m_myAgent.Heading = update.Rotation;
-                }
-                World.World.Instance.UpdateAgent(m_myAgent, agentUpdated);
+        // special update for the agent so it knows there is new info from the network
+        // The real logic to push the update through happens in the IEntityAvatar.Update()
+        if (updatedEntity != null) {
+            if (m_myAgent != null && updatedEntity == m_myAgent.AssociatedAvatar) {
+                m_myAgent.DataUpdate(updateFlags);
             }
+            updatedEntity.Update(updateFlags);
         }
-         */
+
         return;
     }
 
@@ -779,8 +766,8 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         if (av.LocalID == m_client.Self.LocalID) {
             m_log.Log(LogLevel.DCOMMDETAIL, "OnNewAvatar: associating agent with new avatar");
             m_myAgent.AssociatedAvatar = (IEntityAvatar)updatedEntity;
-            // the updating happens inside the LLEntityAvatar.Update which happens at the end of this method
-            // World.World.Instance.UpdateAgent(m_myAgent, updateFlags);
+            // an extra update for the agent so it knows things have changed
+            m_myAgent.DataUpdate(updateFlags);
         }
 
         // tell the entity it changed. Since this is an avatar entity it will update the agent if necessary.
@@ -816,6 +803,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     // ===============================================================
     public virtual void Comm_OnAgentUpdated(IAgent agnt, UpdateCodes what) {
         m_log.Log(LogLevel.DWORLDDETAIL, "Comm_OnAgentUpdated:");
+
     }
 
     // ===============================================================

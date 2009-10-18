@@ -143,11 +143,19 @@ public interface IParameters {
 
     /// <summary>
     /// Return a boolean value for a parameter.
-    /// The underlying string must parse into an integer.
+    /// The underlying string must parse into an bool.
     /// </summary>
     /// <param name="key">parameter to get value</param>
-    /// <returns>integer representation of parmater value</returns>
+    /// <returns>bool representation of parmater value</returns>
     bool ParamBool(string key);
+
+    /// <summary>
+    /// Return a float value for a parameter.
+    /// The underlying string must parse into an float.
+    /// </summary>
+    /// <param name="key">parameter to get value</param>
+    /// <returns>float representation of parmater value</returns>
+    float ParamFloat(string key);
 
     /// <summary>
     /// Return a string value for a parameter
