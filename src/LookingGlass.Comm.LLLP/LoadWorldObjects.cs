@@ -56,6 +56,7 @@ public class LoadWorldObjects {
         }
         Object[] loadParams = { simsToLoad, netComm, worldComm };
         ThreadPool.QueueUserWorkItem(LoadSims, loadParams);
+        // ThreadPool.UnsafeQueueUserWorkItem(LoadSims, loadParams);
         LogManager.Log.Log(LogLevel.DCOMMDETAIL, "LoadWorldObjects: started thread to load sim objects");
     }
 

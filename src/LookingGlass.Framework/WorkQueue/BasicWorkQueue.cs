@@ -107,6 +107,7 @@ public class BasicWorkQueue : IWorkQueue {
             if (m_activeWorkProcessors < m_workProcessorsMax) {
                 m_activeWorkProcessors++;
                 ThreadPool.QueueUserWorkItem(new WaitCallback(this.DoWork), null);
+                // ThreadPool.UnsafeQueueUserWorkItem(new WaitCallback(this.DoWork), null);
             }
         }
     }

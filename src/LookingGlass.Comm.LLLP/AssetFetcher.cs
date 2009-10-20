@@ -92,8 +92,9 @@ public class AssetFetcher {
             m_requestsForExisting.Event();
             // doneCall.BeginInvoke(getID, filename, null, null);
             ThreadPool.QueueUserWorkItem((WaitCallback)delegate(Object x) {
+            // ThreadPool.UnsafeQueueUserWorkItem((WaitCallback)delegate(Object x) {
                 doneCall(getID, filename);
-            });
+            }, null);
 
 
         }
