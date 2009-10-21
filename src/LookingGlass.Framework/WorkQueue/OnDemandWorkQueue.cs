@@ -94,7 +94,7 @@ public class OnDemandWorkQueue : IWorkQueue {
             m_parameters = parms;
         }
         public override bool DoIt() {
-            return m_dlcb(m_parameters);
+            return m_dlcb(this, m_parameters);
         }
     }
 

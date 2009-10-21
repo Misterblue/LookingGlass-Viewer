@@ -893,7 +893,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         }
     }
 
-    private bool DoCommAction(Object oparms) {
+    private bool DoCommAction(DoLaterBase qInstance, Object oparms) {
         ParamBlock parms = (ParamBlock)oparms;
         m_log.Log(LogLevel.DCOMMDETAIL, "DoCommAction: executing queued action {0}", parms.cac);
         RegionAction(parms.cac, parms.p1, parms.p2, parms.p3, parms.p4);

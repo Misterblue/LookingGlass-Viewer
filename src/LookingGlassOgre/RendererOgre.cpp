@@ -385,22 +385,24 @@ namespace RendererOgre {
 		return true;
 	}
 
-	int betweenFrameCounter = 0;
 	bool RendererOgre::frameRenderingQueued(const Ogre::FrameEvent& evt) {
-		if (m_window->isClosed()) return false;	// if you close the window we leave
-		betweenFrameCounter++;
-		if (LookingGlassOgr::betweenFramesCallback != NULL) {
-			// the C# code uses this for terrain and regions so don't do it often
-			if ((betweenFrameCounter % 5) == 0) {
-				return (*LookingGlassOgr::betweenFramesCallback)();
-			}
-		}
 		return true;
 	}
 
+	int betweenFrameCounter = 0;
 	bool RendererOgre::frameEnded(const Ogre::FrameEvent& evt) {
+		if (m_window->isClosed()) return false;	// if you close the window we leave
+		betweenFrameCounter++;
+		// see if things are still visible
 		calculateEntityVisibility();
 		processEntityVisibility();
+		// every now and then, call to the managed code to handle terrain
+		if (LookingGlassOgr::betweenFramesCallback != NULL) {
+			// the C# code uses this for terrain and regions so don't do it often
+			if ((betweenFrameCounter % 10) == 0) {
+				return (*LookingGlassOgr::betweenFramesCallback)();
+			}
+		}
 		return true;
 	}
 

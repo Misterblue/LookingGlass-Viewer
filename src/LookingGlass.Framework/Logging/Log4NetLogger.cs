@@ -55,7 +55,7 @@ namespace LookingGlass.Framework.Logging {
                     // and initialize a default ConsoleAppender
                     if (!logger.IsErrorEnabled) {
                         log4net.Appender.ConsoleAppender appender = new log4net.Appender.ConsoleAppender();
-                        appender.Layout = new log4net.Layout.PatternLayout("%timestamp[%thread]%-5level: %message%newline");
+                        appender.Layout = new log4net.Layout.PatternLayout("%timestamp[%thread]: %message%newline");
                         BasicConfigurator.Configure(appender);
                     }
                 }
@@ -128,6 +128,9 @@ namespace LookingGlass.Framework.Logging {
             }
             buf.Append(": ");
             buf.Append(msg);
+            // The end of line is added in the .log4net file so it's also on all
+            //    the log lines from other modules (libomv, ...)
+            // buf.Append("\r\n");
             if ((logLevel & LogLevel.DDETAIL) != 0) {
                 logger.Debug(buf.ToString());
             }

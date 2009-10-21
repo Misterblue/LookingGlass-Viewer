@@ -272,23 +272,23 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         // NOTE: PUTTING ANY UPPER CASE IN THE KEY STRINGS CAUSES FAILURES!!
         // culling and visibility
         m_ogreStatsIndex.Add("visibletovisible", Ogr.StatVisibleToVisible);
-        m_ogreStatsDesc.Add("visibletovisible", "Meshes at were visible that are still visible");
+        m_ogreStatsDesc.Add("visibletovisible", "Meshes at were visible that are still visible in last frame");
         m_ogreStatsIndex.Add("invisibletovisible", Ogr.StatInvisibleToVisible);
-        m_ogreStatsDesc.Add("invisibletovisible", "Meshes that were invisible that are now visible");
+        m_ogreStatsDesc.Add("invisibletovisible", "Meshes that were invisible that are now visible in last frame");
         m_ogreStatsIndex.Add("visibletoinvisible", Ogr.StatVisibleToInvisible);
-        m_ogreStatsDesc.Add("visibletoinvisible", "Meshes that were visible that are now invisible");
+        m_ogreStatsDesc.Add("visibletoinvisible", "Meshes that were visible that are now invisible in last frame");
         m_ogreStatsIndex.Add("invisibletoinvisible", Ogr.StatInvisibleToInvisible);
-        m_ogreStatsDesc.Add("invisibletoinvisible", "Meshes that were invisible that are still invisible");
+        m_ogreStatsDesc.Add("invisibletoinvisible", "Meshes that were invisible that are still invisible in last frame");
         m_ogreStatsIndex.Add("cullmeshesloaded", Ogr.StatCullMeshesLoaded);
-        m_ogreStatsDesc.Add("cullmeshesloaded", "Meshes loaded due to unculling");
+        m_ogreStatsDesc.Add("cullmeshesloaded", "Total meshes loaded due to unculling");
         m_ogreStatsIndex.Add("culltexturesloaded", Ogr.StatCullTexturesLoaded);
-        m_ogreStatsDesc.Add("culltexturesloaded", "Textures loaded due to unculling");
+        m_ogreStatsDesc.Add("culltexturesloaded", "Total textures loaded due to unculling");
         m_ogreStatsIndex.Add("cullmeshesunloaded", Ogr.StatCullMeshesUnloaded);
-        m_ogreStatsDesc.Add("cullmeshesunloaded", "Meshes unloaded due to culling");
+        m_ogreStatsDesc.Add("cullmeshesunloaded", "Total meshes unloaded due to culling");
         m_ogreStatsIndex.Add("culltexturesunloaded", Ogr.StatCullTexturesUnloaded);
-        m_ogreStatsDesc.Add("culltexturesunloaded", "Textures unloaded due to culling");
+        m_ogreStatsDesc.Add("culltexturesunloaded", "Total textures unloaded due to culling");
         m_ogreStatsIndex.Add("cullmeshesqueuedtoload", Ogr.StatCullMeshesQueuedToLoad);
-        m_ogreStatsDesc.Add("cullmeshesqueuedtoload", "Meshes queue to load due to unculling");
+        m_ogreStatsDesc.Add("cullmeshesqueuedtoload", "Meshes currently queued to load due to unculling");
         // between frame work
         m_ogreStatsIndex.Add("betweenframeworkitems", Ogr.StatBetweenFrameWorkItems);
         m_ogreStatsDesc.Add("betweenframeworkitems", "Number of between frame work items waiting");
@@ -454,6 +454,9 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         return Ogr.RenderingThread();
 
         /*
+        // HISTORICAL NOTE: origionally this was done here in managed space
+        //  but all the between frame work (except terrain) was moved into unmanaged code
+        //  This code should be deleted someday.
         // code  to keep the rendering thread mostly in managed space
         // periodically call to draw a frame
         int maxFramePerSec = ModuleParams.ParamInt(m_moduleName + ".Ogre.FramePerSecMax");
@@ -493,6 +496,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     }
 
     // ==========================================================================
+    // IRenderProvider.Render()
     public void Render(IEntity ent) {
         // do we have a format converted for this entity?
         if (RendererOgre.GetWorldRenderConv(ent) == null) {
@@ -500,48 +504,43 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             // TODO: Figure out how to make this dynamic, extendable and runtime
             ent.SetAddition(RendererOgre.AddWorldRenderConv, RendererOgreLL.Instance);
         }
-        // does the entity have a scene node assocated with it already?
-        if (RendererOgre.GetSceneNodeName(ent) == null) {
-            // race condition: two Render()s for the same entity. This check is performed
-            // again in the processing routine with some locking. The check here is
-            // an optimization
-            DoLaterBase laterWork = new DoRender(m_sceneMgr, ent, m_log);
-            laterWork.order = CalculateInterestOrder(ent);
-            m_workQueue.DoLater(laterWork);
-        }
+        // jDoLaterBase laterWork = new DoRender(m_sceneMgr, ent, m_log);
+        // jlaterWork.order = CalculateInterestOrder(ent);
+        // jm_workQueue.DoLater(laterWork);
+        DoRenderQueued(ent);
         return;
     }
 
-    private sealed class DoRender : DoLaterBase {
-        IEntity m_ent = null;
-        OgreSceneMgr m_sceneMgr = null;
-        ILog m_log = null;
-        RenderableInfo m_ri = null;
-        public DoRender(OgreSceneMgr sMgr, IEntity ent, ILog logr) : base() {
-            m_ent = ent;
-            m_sceneMgr = sMgr;
-            m_log = logr;
-            this.cost = m_betweenFrameCreateSceneNodeCost;
-        }
+    // wrapper routine for the queuing if rendering work for this entity
+    private void DoRenderQueued(IEntity ent) {
+        Object[] renderParameters = { ent, null };
+        m_workQueue.DoLater(CalculateInterestOrder(ent), DoRenderLater, renderParameters);
+    }
 
-        override public bool DoIt() {
-            string entitySceneNodeName = EntityNameOgre.ConvertToOgreSceneNodeName(m_ent.Name);
-            lock (m_ent) {
-                if (RendererOgre.GetSceneNodeName(m_ent) != null) {
-                    // if this has already been processed, just return success
-                    return true;
-                }
+    private bool DoRenderLater(DoLaterBase qInstance, Object parms) {
+        Object[] loadParams = (Object[])parms;
+        IEntity m_ent = (IEntity)loadParams[0];
+        RenderableInfo m_ri = (RenderableInfo)loadParams[1];
+        string entitySceneNodeName = EntityNameOgre.ConvertToOgreSceneNodeName(m_ent.Name);
+
+        lock (m_ent) {
+            if (RendererOgre.GetSceneNodeName(m_ent) == null) {
                 try {
                     // m_log.Log(LogLevel.DRENDERDETAIL, "Adding SceneNode to new entity " + m_ent.Name);
-
                     if (m_ri == null) {
-                        m_ri = RendererOgre.GetWorldRenderConv(m_ent).RenderingInfo(m_sceneMgr, m_ent, this.timesRequeued);
+                        m_ri = RendererOgre.GetWorldRenderConv(m_ent).RenderingInfo(m_sceneMgr, m_ent, 
+                                    qInstance.timesRequeued);
                         if (m_ri == null) {
                             // The rendering info couldn't be built now. This is usually because
                             // the parent of this object is not available so we don't know where to put it
-                            m_log.Log(LogLevel.DRENDERDETAIL, "Delaying rendering {0}/{1}. RenderingInfo not built for {2}",
-                                this.sequence, this.timesRequeued, m_ent.Name.Name);
+                            m_log.Log(LogLevel.DRENDERDETAIL,
+                                "Delaying rendering {0}/{1}. RenderingInfo not built for {2}",
+                                qInstance.sequence, qInstance.timesRequeued, m_ent.Name.Name);
                             return false;
+                        }
+                        else {
+                            // save the value in the parameter block if we get called again ('return false' below)
+                            loadParams[1] = (Object)m_ri;
                         }
                     }
 
@@ -570,7 +569,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                                         m_ri.scale.X, m_ri.scale.Y, m_ri.scale.Z,
                                         m_ri.rotation.W, m_ri.rotation.X, m_ri.rotation.Y, m_ri.rotation.Z)) {
                             m_log.Log(LogLevel.DRENDERDETAIL, "Delaying rendering {0}/{1}. {2} waiting for parent {3}",
-                                this.sequence, this.timesRequeued, m_ent.Name.Name,
+                                qInstance.sequence, qInstance.timesRequeued, m_ent.Name.Name,
                                 (parentSceneNodeName == null ? "NULL" : parentSceneNodeName));
                             return false;   // if I must have parent, requeue if no parent
                         }
@@ -584,10 +583,13 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     m_log.Log(LogLevel.DBADERROR, "Render: Failed conversion: " + e.ToString());
                 }
             }
-
-            return true;
+            else {
+                // if this has already been processed, just return success
+                return true;
+            }
         }
 
+        return true;
     }
 
     /// <summary>
@@ -630,23 +632,17 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         if ((what & UpdateCodes.ParentID) != 0) {
             // prim was detached or attached
             m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: parentID changed");
-            DoLaterBase laterWork = new DoRender(m_sceneMgr, ent, m_log);
-            laterWork.order = CalculateInterestOrder(ent);
-            m_workQueue.DoLater(laterWork);
+            DoRenderQueued(ent);
         }
         if ((what & (UpdateCodes.PrimFlags | UpdateCodes.PrimData)) != 0) {
             // the prim parameters were changed. Re-render.
             m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: prim data changed");
-            DoLaterBase laterWork = new DoRender(m_sceneMgr, ent, m_log);
-            laterWork.order = CalculateInterestOrder(ent);
-            m_workQueue.DoLater(laterWork);
+            DoRenderQueued(ent);
         }
         if ((what & UpdateCodes.Textures) != 0) {
             // texure on the prim were updated. Refresh them.
             m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: textures changed");
-            DoLaterBase laterWork = new DoRender(m_sceneMgr, ent, m_log);
-            laterWork.order = CalculateInterestOrder(ent);
-            m_workQueue.DoLater(laterWork);
+            DoRenderQueued(ent);
         }
         if ((what & UpdateCodes.Text) != 0) {
             // text associated with the prim changed
@@ -829,52 +825,55 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         return;
     }
 
+    public Dictionary<string, string> MeshesWaiting = new Dictionary<string, string>();
     private void RequestMesh(string contextEntity, string meshName) {
         m_log.Log(LogLevel.DRENDERDETAIL, "Request for mesh " + meshName);
-        m_workQueue.DoLater(new RequestMeshLater(this, m_sceneMgr, meshName));
+        lock (MeshesWaiting) {
+            // if already working on this mesh, don't do it again
+            if (MeshesWaiting.ContainsKey(meshName)) return;
+            MeshesWaiting.Add(meshName, contextEntity);
+        }
+        m_workQueue.DoLater(RequestMeshLater, (object)meshName);
         return;
     }
 
-    private sealed class RequestMeshLater : DoLaterBase {
-        RendererOgre m_renderer;
-        string m_meshName;
-        OgreSceneMgr m_sceneMgr;
-        public RequestMeshLater(RendererOgre renderer, OgreSceneMgr sMgr, string meshName) : base() {
-            m_renderer = renderer;
-            m_sceneMgr = sMgr;
-            m_meshName = meshName;
-        }
-        
-        override public bool DoIt() {
-            try {
-                // type information is at the end of the name. remove if there
-                EntityName eName = EntityNameOgre.ConvertOgreResourceToEntityName(m_meshName);
-                // the terrible kludge here is that the name of the mesh is the name of
-                //   the entity. We reach back into the worlds and find the underlying
-                //   entity then we can construct the mesh.
-                IEntity ent;
-                if (!World.World.Instance.TryGetEntity(eName, out ent)) {
-                    LogManager.Log.Log(LogLevel.DBADERROR, "RendererOgre.RequestMeshLater: could not find entity " + eName);
-                    return true;
-                }
-                // Create mesh resource. In this case its most likely a .mesh file in the cache
-                // The actual mesh creation is queued and done later between frames
-                if (!RendererOgre.GetWorldRenderConv(ent).CreateMeshResource(m_sceneMgr, ent, m_meshName)) {
-                    // we need to wait until some resource exists before we can complete this creation
-                    return false;
-                }
+    // Called on workQueue to call into gather parameters and create the mesh resource
+    private bool RequestMeshLater(DoLaterBase qInstance, Object parm) {
+        string m_meshName = (string)parm;
+        try {
+            // type information is at the end of the name. remove if there
+            EntityName eName = EntityNameOgre.ConvertOgreResourceToEntityName(m_meshName);
+            // the terrible kludge here is that the name of the mesh is the name of
+            //   the entity. We reach back into the worlds and find the underlying
+            //   entity then we can construct the mesh.
+            IEntity ent;
+            if (!World.World.Instance.TryGetEntity(eName, out ent)) {
+                m_log.Log(LogLevel.DBADERROR, "RendererOgre.RequestMeshLater: could not find entity " + eName);
+                return true;
+            }
+            // Create mesh resource. In this case its most likely a .mesh file in the cache
+            // The actual mesh creation is queued and done later between frames
+            if (!RendererOgre.GetWorldRenderConv(ent).CreateMeshResource(ent, m_meshName)) {
+                // we need to wait until some resource exists before we can complete this creation
+                return false;
+            }
 
-                // tell Ogre to refresh (reload) the resource
-                LogManager.Log.Log(LogLevel.DRENDERDETAIL, "RendererOgre.RequestMeshLater: refresh for {0}", m_meshName);
-                lock (RendererOgre.BetweenFrameLock) Ogr.RefreshResourceBF(Ogr.ResourceTypeMesh, m_meshName);
+            // tell Ogre to refresh (reload) the resource
+            m_log.Log(LogLevel.DRENDERDETAIL, "RendererOgre.RequestMeshLater: refresh for {0}", m_meshName);
+            lock (RendererOgre.BetweenFrameLock) Ogr.RefreshResourceBF(Ogr.ResourceTypeMesh, m_meshName);
+            lock (this.MeshesWaiting) {
+                // no longer waiting for this mesh to get created
+                if (this.MeshesWaiting.ContainsKey(m_meshName)) {
+                    this.MeshesWaiting.Remove(m_meshName);
+                }
             }
-            catch {
-                // an oddity but not fatal
-            }
-            return true;
         }
+        catch {
+            // an oddity but not fatal
+        }
+        return true;
     }
-
+    
     /// <summary>
     /// Request from the C++ world to create a specific material resource. We queue
     /// the request on a work queue so the renderer can get back to work.
@@ -885,48 +884,43 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     private void RequestMaterial(string contextEntity, string matName) {
         m_log.Log(LogLevel.DRENDERDETAIL, "Request for material " + matName);
         EntityNameOgre entName = EntityNameOgre.ConvertOgreResourceToEntityName(contextEntity);
-        m_workQueue.DoLater(new RequestMaterialDoLater(m_sceneMgr, entName, matName));
+        // m_workQueue.DoLater(new RequestMaterialDoLater(m_sceneMgr, entName, matName));
+        Object[] materialParameters = { entName, matName };
+        m_workQueue.DoLater(RequestMaterialLater, materialParameters);
+
         return;
     }
 
-    private class RequestMaterialDoLater : DoLaterBase {
-        OgreSceneMgr m_sceneMgr;
-        EntityNameOgre m_entName;
-        string m_matName;
-        public RequestMaterialDoLater(OgreSceneMgr smgr, EntityNameOgre entName, string matName) {
-            m_sceneMgr = smgr;
-            m_entName = entName;
-            m_matName = matName;
-        }
-        public override bool DoIt() {
-            try {
-                IEntity ent;
-                if (World.World.Instance.TryGetEntity(m_entName, out ent)) {
-                    // LogManager.Log.Log(LogLevel.DRENDERDETAIL, "RequestMaterialLater.DoIt(): converting {0}", entName);
-                    if (RendererOgre.GetWorldRenderConv(ent) == null) {
-                        // the rendering context is not set up. Odd but not fatal
-                        // try again later
-                        return false;
-                    }
-                    else {
-                        // Create the material resource and then make the rendering redisplay
-                        RendererOgre.GetWorldRenderConv(ent).CreateMaterialResource(m_sceneMgr, ent, m_matName);
-
-                        lock (RendererOgre.BetweenFrameLock) Ogr.RefreshResourceBF(Ogr.ResourceTypeMaterial, m_matName);
-                    }
+    // Called on workqueue thread to create material in Ogre
+    private bool RequestMaterialLater(DoLaterBase qInstance, Object parms) {
+        Object[] loadParams = (Object[])parms;
+        EntityNameOgre m_entName = (EntityNameOgre)loadParams[0];
+        string m_matName = (string)loadParams[1];
+        try {
+            IEntity ent;
+            if (World.World.Instance.TryGetEntity(m_entName, out ent)) {
+                // LogManager.Log.Log(LogLevel.DRENDERDETAIL, "RequestMaterialLater.DoIt(): converting {0}", entName);
+                if (RendererOgre.GetWorldRenderConv(ent) == null) {
+                    // the rendering context is not set up. Odd but not fatal
+                    // try again later
+                    return false;
                 }
                 else {
-                    // we couldn't find the entity for the material. not good
-                    LogManager.Log.Log(LogLevel.DBADERROR, 
-                        "ProcessWaitingMaterials: could not find entity for material {0}", m_matName);
+                    // Create the material resource and then make the rendering redisplay
+                    RendererOgre.GetWorldRenderConv(ent).CreateMaterialResource(m_sceneMgr, ent, m_matName);
+
+                    lock (RendererOgre.BetweenFrameLock) Ogr.RefreshResourceBF(Ogr.ResourceTypeMaterial, m_matName);
                 }
             }
-            catch (Exception e) {
-                LogManager.Log.Log(LogLevel.DBADERROR, 
-                    "ProcessWaitingMaterials: exception realizing material: {0}", e.ToString());
+            else {
+                // we couldn't find the entity for the material. not good
+                m_log.Log(LogLevel.DBADERROR, "ProcessWaitingMaterials: could not find entity for material {0}", m_matName);
             }
-            return true;
         }
+        catch (Exception e) {
+            m_log.Log(LogLevel.DBADERROR, "ProcessWaitingMaterials: exception realizing material: {0}", e.ToString());
+        }
+        return true;
     }
 
     // ==========================================================================

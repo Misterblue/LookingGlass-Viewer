@@ -171,8 +171,7 @@ public class RendererOgreLL : IWorldRenderConv {
     /// <param name="sMgr">the scene manager receiving  the mesh</param>
     /// <param name="ent">The entity the mesh is coming from</param>
     /// <param name="meshName">The name the mesh should take</param>
-    public bool CreateMeshResource(Object sMgr, IEntity ent, string meshName) {
-        OgreSceneMgr m_sceneMgr = (OgreSceneMgr)sMgr;
+    public bool CreateMeshResource(IEntity ent, string meshName) {
         LLEntityPhysical llent;
         OMV.Primitive prim;
 
