@@ -68,6 +68,7 @@ namespace LookingGlass.Renderer {
 
         InputModeCode InputMode { get; set; }
         Keys LastKeyCode { get; set; }
+        bool KeyPressed { get; set; }
         MouseButtons LastMouseButtons { get; set; }
 
         // times per second to do key repeat

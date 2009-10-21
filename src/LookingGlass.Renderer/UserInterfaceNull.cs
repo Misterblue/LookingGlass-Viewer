@@ -53,6 +53,12 @@ public class UserInterfaceNull : IUserInterfaceProvider {
         set { m_lastKeycode = value; }
     }
 
+    private bool m_keyPressed = false;
+    public bool KeyPressed {
+        get { return m_keyPressed; }
+        set { m_keyPressed = value; }
+    }
+
     private MouseButtons m_lastButtons = 0;
     public MouseButtons LastMouseButtons {
         get { return m_lastButtons; }

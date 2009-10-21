@@ -23,6 +23,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 using LookingGlass.Framework.Logging;
 using LookingGlass.Renderer;
@@ -56,6 +57,15 @@ public class UserInterfaceOgre : IUserInterfaceProvider {
     }
 
     /// <summary>
+    ///  Whether a key is up or pressed at the moment.
+    /// </summary>
+    private bool m_keyPressed = false;
+    public bool KeyPressed {
+        get { return m_keyPressed; }
+        set { m_keyPressed = value; }
+    }
+
+    /// <summary>
     /// Remember the last (current) mouse button positions for easy checking
     /// </summary>
     private MouseButtons m_lastButtons = 0;
@@ -70,8 +80,15 @@ public class UserInterfaceOgre : IUserInterfaceProvider {
     private float m_keyRepeatRate = 3f;
     public float KeyRepeatRate {
         get { return m_keyRepeatRate; }
-        set { m_keyRepeatRate = value; }
+        set { 
+            m_keyRepeatRate = value;
+            m_keyRepeatMs = (int)(1000f / m_keyRepeatRate);
+        }
     }
+    private int m_keyRepeatMs = 333;
+    public int KeyRepeatMs { get { return m_keyRepeatMs; } }
+    public System.Threading.Timer m_repeatTimer;
+    public int m_repeatKey;    // the raw key code that is being repeated
 
     // the key codes as they come from OIS
     public enum OISKeyCode {
@@ -308,11 +325,26 @@ public class UserInterfaceOgre : IUserInterfaceProvider {
 
     public UserInterfaceOgre() {
         m_workQueue = new BasicWorkQueue("UIOgreWork");
+        m_repeatTimer = new System.Threading.Timer(OnRepeatTimer); 
     }
 
     // I need the hooks to the lowest levels
     public bool NeedsRendererLinkage() {
         return true;
+    }
+
+    // If the key is still held down, fake a key press
+    private void OnRepeatTimer(Object xx) {
+        if (this.KeyPressed) {
+            // fake receiving another key press
+            ReceiveUserIO(Ogr.IOTypeKeyPressed, m_repeatKey, 0f, 0f);
+            // m_log.Log(LogLevel.DBADERROR, "OnRepeatTimer: Faking key {0}", m_repeatKey);
+        }
+        else { 
+            // key not pressed so don't repeat any more
+            m_repeatTimer.Change(Timeout.Infinite, Timeout.Infinite);
+            // m_log.Log(LogLevel.DBADERROR, "OnRepeatTimer: Disabling timer");
+        }
     }
 
     /// <summary>
@@ -346,17 +378,23 @@ public class UserInterfaceOgre : IUserInterfaceProvider {
             m_param3 = p3;
         }
         override public bool DoIt() {
-            // LogManager.Log.Log(LogLevel.DRENDERDETAIL, "DoLaterProcessUserIO: type=" + m_type.ToString());
             switch (m_type) {
                 case Ogr.IOTypeKeyPressed:
+                    // m_log.Log(LogLevel.DRENDERDETAIL, "DoLaterProcessUserIO: Key pressed: {0}", m_param1);
                     m_uinterface.UpdateModifier(m_param1, true);
                     m_uinterface.LastKeyCode = m_uinterface.ConvertScanCodeModifiers(m_param1);
+                    m_uinterface.m_repeatKey = m_param1;
+                    m_uinterface.KeyPressed = true;
+                    m_uinterface.m_repeatTimer.Change(m_uinterface.KeyRepeatMs, m_uinterface.KeyRepeatMs);
                     if (m_uinterface.OnUserInterfaceKeypress != null)
                         m_uinterface.OnUserInterfaceKeypress(m_uinterface.LastKeyCode, true);
                     break;
                 case Ogr.IOTypeKeyReleased:
+                    // m_log.Log(LogLevel.DRENDERDETAIL, "DoLaterProcessUserIO: Key released: {0}", m_param1);
                     m_uinterface.UpdateModifier(m_param1, false);
                     m_uinterface.LastKeyCode = m_uinterface.ConvertScanCodeModifiers(m_param1);
+                    m_uinterface.KeyPressed = false;
+                    m_uinterface.m_repeatTimer.Change(Timeout.Infinite, Timeout.Infinite);
                     if (m_uinterface.OnUserInterfaceKeypress != null)
                         m_uinterface.OnUserInterfaceKeypress(m_uinterface.LastKeyCode, false);
                     break;

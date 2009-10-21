@@ -82,13 +82,13 @@ bool UserIO::mouseReleased(const OIS::MouseEvent &e, OIS::MouseButtonID id) {
 
 // KeyListener
 bool UserIO::keyPressed(const OIS::KeyEvent &e) {
-	m_ro->Log("UserIO: key pressed: %d", (int)e.key);
+	// m_ro->Log("UserIO: key pressed: %d", (int)e.key);
 	callUserIOCallback(IOTypeKeyPressed, e.key, 0.0, 0.0);
 	return true;
 }
 
 bool UserIO::keyReleased(const OIS::KeyEvent &e) {
-	m_ro->Log("UserIO: key released: %d", (int)e.key);
+	// m_ro->Log("UserIO: key released: %d", (int)e.key);
 	callUserIOCallback(IOTypeKeyReleased, e.key, 0.0, 0.0);
 	return true;
 }
