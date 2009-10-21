@@ -534,7 +534,6 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         gc.Objects.OnObjectKilled += new OMV.ObjectManager.KillObjectCallback(Objects_OnObjectKilled);
         gc.Settings.STORE_LAND_PATCHES = true;
         gc.Terrain.OnLandPatch += new OMV.TerrainManager.LandPatchCallback(Terrain_OnLandPatch);
-        gc.Parcels.OnSimParcelsDownloaded += new OMV.ParcelManager.SimParcelsDownloaded(Parcels_OnSimParcelsDownloaded);
 
         m_commStatsHandler = new RestHandler("/stats/" + m_moduleName + "/stats", m_commStatistics);
         m_commStatistics.Add("WaitingTilOnline", delegate(string xx) { 
@@ -584,16 +583,6 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
             if (regionContext == null) return;
             // TODO: what to do with this operation?
         }
-    }
-
-    // ===============================================================
-    public virtual void Parcels_OnSimParcelsDownloaded(OMV.Simulator simulator, OMV.InternalDictionary<int, OMV.Parcel> simParcels, int[,] parcelMap) {
-        m_log.Log(LogLevel.DWORLDDETAIL, "Sim parcels downloaded");
-        //x TotalPrims = 0;
-        //x simParcels.ForEach(
-        //x     delegate(Parcel parcel) {
-        //x         TotalPrims += parcel.TotalPrims;
-        //x     });
     }
 
     // ===============================================================
