@@ -504,9 +504,6 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             // TODO: Figure out how to make this dynamic, extendable and runtime
             ent.SetAddition(RendererOgre.AddWorldRenderConv, RendererOgreLL.Instance);
         }
-        // jDoLaterBase laterWork = new DoRender(m_sceneMgr, ent, m_log);
-        // jlaterWork.order = CalculateInterestOrder(ent);
-        // jm_workQueue.DoLater(laterWork);
         DoRenderQueued(ent);
         return;
     }
@@ -578,6 +575,9 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     // Add the name of the created scene node name so we know it's created and
                     // we can find it later.
                     m_ent.SetAddition(RendererOgre.AddSceneNodeName, entitySceneNodeName);
+
+                    // Experiemental: force the creation of the mesh
+                    RequestMesh(m_ent.Name.Name, entMeshName);
                 }
                 catch (Exception e) {
                     m_log.Log(LogLevel.DBADERROR, "Render: Failed conversion: " + e.ToString());
@@ -937,9 +937,20 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         m_log.Log(LogLevel.DRENDERDETAIL, "Request for texture " + txtName);
         EntityNameOgre entName = EntityNameOgre.ConvertOgreResourceToEntityName(txtName);
         // get this work off the thread from the renderer
-        m_workQueue.DoLater(new RequestTextureLater(this, entName));
+        // m_workQueue.DoLater(new RequestTextureLater(this, entName));
+        m_workQueue.DoLater(RequestTextureLater, entName);
     }
 
+    private bool RequestTextureLater(DoLaterBase qInstance, Object parm) {
+        EntityNameOgre m_entName = (EntityNameOgre)parm;
+        // note the super kludge since we don't know the real asset context
+        // This information is hopefully coded into the entity name
+        // The callback can (and will) be called multiple times as the texture gets better resolution
+        AssetContextBase.RequestTextureLoad(m_entName, AssetContextBase.AssetType.Texture, TextureLoadedCallback);
+        return true;
+    }
+
+    /*
     private sealed class RequestTextureLater: DoLaterBase {
         RendererOgre m_renderer;
         EntityNameOgre m_entName;
@@ -954,38 +965,39 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             AssetContextBase.RequestTextureLoad(m_entName, AssetContextBase.AssetType.Texture, TextureLoadedCallback);
             return true;
         }
-
-        // the texture is loaded so get to the right time to tell the renderer
-        private void TextureLoadedCallback(string textureEntityName, bool hasTransparancy) {
-            LogManager.Log.Log(LogLevel.DRENDERDETAIL, 
-                    "TextureLoadedCallback {0}: Load complete. Name: {1}", this.sequence, textureEntityName);
-            EntityNameOgre entName = new EntityNameOgre(textureEntityName);
-            m_renderer.m_workQueue.DoLater(new RequestTextureCompletionLater(entName, hasTransparancy));
-            return;
+*/
+    // the texture is loaded so get to the right time to tell the renderer
+    private void TextureLoadedCallback(string textureEntityName, bool hasTransparancy) {
+        LogManager.Log.Log(LogLevel.DRENDERDETAIL, "TextureLoadedCallback: Load complete. Name: {0}", textureEntityName);
+        EntityNameOgre entName = new EntityNameOgre(textureEntityName);
+        Object[] textureCompleteParameters = { entName, hasTransparancy };
+        // m_workQueue.DoLater(RequestTextureCompletionLater, textureCompletionParameters);
+        // Experimental: the new BF functions just queue and come back. Might not need the work queue here.
+        string ogreResourceName = entName.OgreResourceName;
+        if (hasTransparancy) {
+            lock (RendererOgre.BetweenFrameLock) Ogr.RefreshResourceBF(Ogr.ResourceTypeTransparentTexture, ogreResourceName);
         }
-
-        private sealed class RequestTextureCompletionLater : DoLaterBase {
-            EntityNameOgre m_entName;
-            bool m_hasTransparancy;
-            public RequestTextureCompletionLater(EntityNameOgre entName, bool hasTransparancy) : base() {
-                m_entName = entName;
-                m_hasTransparancy = hasTransparancy;
-                this.cost = m_betweenFrameMapTextureCost;
-            }
-            override public bool DoIt() {
-                string ogreResourceName = m_entName.OgreResourceName;
-                LogManager.Log.Log(LogLevel.DRENDERDETAIL, 
-                    "RequestTextureCompleteLater {0}: Load complete. Refreshing texture {1}, t={2}", 
-                            this.sequence, ogreResourceName, m_hasTransparancy);
-                if (m_hasTransparancy) {
-                    lock (RendererOgre.BetweenFrameLock) Ogr.RefreshResourceBF(Ogr.ResourceTypeTransparentTexture, ogreResourceName);
-                }
-                else {
-                    lock (RendererOgre.BetweenFrameLock) Ogr.RefreshResourceBF(Ogr.ResourceTypeTexture, ogreResourceName);
-                }
-                return true;
-            }
+        else {
+            lock (RendererOgre.BetweenFrameLock) Ogr.RefreshResourceBF(Ogr.ResourceTypeTexture, ogreResourceName);
         }
+        return;
+    }
+
+    private bool RequestTextureCompletionLater(DoLaterBase qInstance, Object parms) {
+        Object[] loadParams = (Object[])parms;
+        EntityNameOgre m_entName = (EntityNameOgre)loadParams[0];
+        bool m_hasTransparancy = (bool)loadParams[1];
+
+        string ogreResourceName = m_entName.OgreResourceName;
+        m_log.Log(LogLevel.DRENDERDETAIL, "RequestTextureCompleteLater: Load complete. Refreshing texture {0}, t={1}", 
+                    ogreResourceName, m_hasTransparancy);
+        if (m_hasTransparancy) {
+            lock (RendererOgre.BetweenFrameLock) Ogr.RefreshResourceBF(Ogr.ResourceTypeTransparentTexture, ogreResourceName);
+        }
+        else {
+            lock (RendererOgre.BetweenFrameLock) Ogr.RefreshResourceBF(Ogr.ResourceTypeTexture, ogreResourceName);
+        }
+        return true;
     }
 
     // ==========================================================================
