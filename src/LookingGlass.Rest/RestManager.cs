@@ -117,7 +117,7 @@ public class RestManager : ModuleBase, HttpServer.ILogWriter {
         ModuleParams.AddDefaultParameter("Rest.Manager.Browser", @"""\Program Files\Mozilla Firefox\firefox.exe""",
                     "The browser to run");
         ModuleParams.AddDefaultParameter("Rest.Manager.UIContentDir", 
-                    Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "../UI"),
+                    Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "./LookingGlassUI"),
                     "Directory for static HTML content");
         ModuleParams.AddDefaultParameter("Rest.Manager.Skin", "Default",
                     "If specified, the subdirectory under StaticContentDir to take files from");

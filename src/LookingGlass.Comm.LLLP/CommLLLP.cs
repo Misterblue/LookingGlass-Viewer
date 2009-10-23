@@ -241,11 +241,11 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
                     Utilities.GetDefaultApplicationStorageDir(null),
                     "Filesystem location to build the texture cache");
         ModuleParams.AddDefaultParameter(ModuleName + ".Assets.OMVResources",
-                    "../LookingGlassResources/openmetaverse_data",
+                    "./LookingGlassResources/openmetaverse_data",
                     "Directory for resources used by libopenmetaverse (mostly for appearance)");
         ModuleParams.AddDefaultParameter(ModuleName + ".Assets.NoTextureFilename", 
-                    Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "../LookingGlassResources/NoTexture.png"),
-                    "Filesystem location to build the texture cache");
+                    Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "./LookingGlassResources/NoTexture.png"),
+                    "Filename of texture to display when we can't get the real texture");
         ModuleParams.AddDefaultParameter(ModuleName + ".Assets.ConvertPNG", "true",
                     "whether to convert incoming JPEG2000 files to PNG files in the cache");
         ModuleParams.AddDefaultParameter(ModuleName + ".Texture.MaxRequests", 

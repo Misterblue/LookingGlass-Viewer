@@ -154,7 +154,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.CacheDir", Utilities.GetDefaultApplicationStorageDir(null),
                     "Directory to store cached meshs, textures, etc");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.PreLoadedDir", 
-                    System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "../LookingGlassResources/Preloaded/"),
+                    System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "./LookingGlassResources/Preloaded/"),
                     "Directory to for preloaded textures, etc");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.DefaultTerrainMaterial",
                     "LookingGlass/DefaultTerrainMaterial",
@@ -163,10 +163,10 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "LookingGlass/Ocean",
                     "The ogre name of the ocean texture");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.DefaultMeshFilename", 
-                    System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "../LookingGlassResources/LoadingShape.mesh"),
+                    System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "./LookingGlassResources/LoadingShape.mesh"),
                     "Filename of the default shape found in the cache dir");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.DefaultTextureFilename", 
-                    System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "../LookingGlassResources/LoadingTexture.png"),
+                    System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "./LookingGlassResources/LoadingTexture.png"),
                     "Filename of the default texture found in the cache dir");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.DefaultTextureResourceName", 
                     "LoadingTexture.png",
