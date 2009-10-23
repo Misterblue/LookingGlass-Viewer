@@ -23,6 +23,7 @@
 #include "StdAfx.h"
 #include "VisCalcFrustDist.h"
 #include "LookingGlassOgre.h"
+#include "RendererOgre.h"
 
 namespace VisCalc { 
 	
@@ -36,6 +37,24 @@ VisCalcFrustDist::~VisCalcFrustDist() {
 }
 
 void VisCalcFrustDist::Initialize() {
+	// visibility culling parameters
+	m_shouldCullMeshes = LookingGlassOgr::GetParameterBool("Renderer.Ogre.Visibility.Cull.Meshes");
+	m_shouldCullTextures = LookingGlassOgr::GetParameterBool("Renderer.Ogre.Visibility.Cull.Textures");
+	m_shouldCullByFrustrum = LookingGlassOgr::GetParameterBool("Renderer.Ogre.Visibility.Cull.Frustrum");
+	m_shouldCullByDistance = LookingGlassOgr::GetParameterBool("Renderer.Ogre.Visibility.Cull.Distance");
+	m_visibilityScaleMaxDistance = LookingGlassOgr::GetParameterFloat("Renderer.Ogre.Visibility.MaxDistance");
+	m_visibilityScaleMinDistance = LookingGlassOgr::GetParameterFloat("Renderer.Ogre.Visibility.MinDistance");
+	m_visibilityScaleOnlyLargeAfter = LookingGlassOgr::GetParameterFloat("Renderer.Ogre.Visibility.OnlyLargeAfter");
+	m_visibilityScaleLargeSize = LookingGlassOgr::GetParameterFloat("Renderer.Ogre.Visibility.Large");
+	LookingGlassOgr::Log("initialize: visibility: min=%f, max=%f, large=%f, largeafter=%f",
+			(double)m_visibilityScaleMinDistance, (double)m_visibilityScaleMaxDistance, 
+			(double)m_visibilityScaleLargeSize, (double)m_visibilityScaleOnlyLargeAfter);
+	LookingGlassOgr::Log("initialize: visibility: cull meshes/textures/frustrum/distance = %s/%s/%s/%s",
+					m_shouldCullMeshes ? "true" : "false",
+					m_shouldCullTextures ? "true" : "false",
+					m_shouldCullByFrustrum ? "true" : "false",
+					m_shouldCullByDistance ? "true" : "false"
+	);
 	return;
 }
 
@@ -47,9 +66,233 @@ void VisCalcFrustDist::Stop() {
 	return;
 }
 
+void VisCalcFrustDist::RecalculateVisibility() {
+	m_recalculateVisibility = true;
+}
+
 // we're between frames, on our own thread so we can do the work without locking
 bool VisCalcFrustDist::frameEnded(const Ogre::FrameEvent& evt) {
+	if (m_recalculateVisibility) calculateEntityVisibility();
 	return true;
+}
+
+// Once a frame, go though all the meshes and figure out which ones are visible.
+// we unload the non-visible ones and make sure the visible ones are loaded.
+// This keeps the number of in memory vertexes low
+// BETWEEN FRAME OPERATION
+int visSlowdown;
+int visRegions;
+int visChildren;
+int visEntities;
+int visNodes;
+int visVisToInvis;
+int visVisToVis;
+int visInvisToVis;
+int visInvisToInvis;
+void VisCalcFrustDist::calculateEntityVisibility() {
+	if ((!m_recalculateVisibility) || ((!m_shouldCullByDistance) && (!m_shouldCullByFrustrum))) return;
+	visRegions = visChildren = visEntities = visNodes = 0;
+	visVisToVis = visVisToInvis = visInvisToVis = visInvisToInvis = 0;
+	m_recalculateVisibility = false;
+	Ogre::SceneNode* nodeRoot = m_ro->m_sceneMgr->getRootSceneNode();
+	// Hanging off the root node will be a node for each 'region'. A region has
+	// terrain and then content nodes
+	Ogre::SceneNode::ChildNodeIterator rootChildIterator = nodeRoot->getChildIterator();
+	while (rootChildIterator.hasMoreElements()) {
+		visRegions++;
+		Ogre::Node* nodeRegion = rootChildIterator.getNext();
+		// a region node has the nodes of its contents.
+		calculateEntityVisibility(nodeRegion);
+	}
+	if ((visSlowdown-- < 0) || (visVisToInvis != 0) || (visInvisToVis != 0)) {
+		visSlowdown = 30;
+		LookingGlassOgr::Log("calcVisibility: regions=%d, nodes=%d, entities=%d, children=%d",
+				visRegions, visNodes, visEntities, visChildren);
+		LookingGlassOgr::Log("calcVisibility: vv=%d, vi=%d, iv=%d, ii=%d",
+				visVisToVis, visVisToInvis, visInvisToVis, visInvisToInvis);
+	}
+	LookingGlassOgr::SetStat(LookingGlassOgr::StatVisibleToVisible, visVisToVis);
+	LookingGlassOgr::SetStat(LookingGlassOgr::StatVisibleToInvisible, visVisToInvis);
+	LookingGlassOgr::SetStat(LookingGlassOgr::StatInvisibleToVisible, visInvisToVis);
+	LookingGlassOgr::SetStat(LookingGlassOgr::StatInvisibleToInvisible, visInvisToInvis);
+}
+
+// BETWEEN FRAME OPERATION
+void VisCalcFrustDist::calculateEntityVisibility(Ogre::Node* node) {
+	if (node->numChildren() > 0) {
+		// if node has more children nodes, visit them recursivily
+		Ogre::SceneNode::ChildNodeIterator nodeChildIterator = node->getChildIterator();
+		while (nodeChildIterator.hasMoreElements()) {
+			Ogre::Node* nodeChild = nodeChildIterator.getNext();
+			calculateEntityVisibility(nodeChild);
+			visChildren++;
+		}
+	}
+	visNodes++;
+	// children taken care of... check fo attached objects to this node
+	Ogre::SceneNode* snode = (Ogre::SceneNode*)node;
+	float snodeDistance = m_ro->m_camera->getPosition().distance(snode->_getWorldAABB().getCenter());
+	float snodeEntitySize;
+	Ogre::SceneNode::ObjectIterator snodeObjectIterator = snode->getAttachedObjectIterator();
+	while (snodeObjectIterator.hasMoreElements()) {
+		Ogre::MovableObject* snodeObject = snodeObjectIterator.getNext();
+		if (snodeObject->getMovableType() == "Entity") {
+			visEntities++;
+			Ogre::Entity* snodeEntity = (Ogre::Entity*)snodeObject;
+			// check it's visibility if it's not world geometry (terrain and ocean)
+			if ((snodeEntity->getQueryFlags() & Ogre::SceneManager::WORLD_GEOMETRY_TYPE_MASK) == 0) {
+				snodeEntitySize = snodeEntity->getBoundingRadius() * 2;
+				// computation if it should be visible
+				bool frust = m_shouldCullByFrustrum && m_ro->m_camera->isVisible(snodeEntity->getWorldBoundingBox());
+				bool dist = m_shouldCullByDistance && calculateScaleVisibility(snodeDistance, snodeEntitySize);
+				bool viz = (!m_shouldCullByFrustrum && !m_shouldCullByDistance)	// don't cull
+					|| (!m_shouldCullByDistance && frust)	// if frust cull only, it must be true
+					|| (!m_shouldCullByFrustrum && dist)	// if dist cull only, it must be true
+					|| (dist && frust);						// if cull both ways, both must be true
+				if (snodeEntity->isVisible()) {
+					// we currently think this object is visible. make sure it should stay that way
+					if (viz) {
+						// it should stay visible
+						visVisToVis++;
+					}
+					else {
+						// not visible any more... make invisible nad unload it
+						snodeEntity->setVisible(false);
+						visVisToInvis++;
+						if (!snodeEntity->getMesh().isNull()) {
+							queueMeshUnload(snodeEntity->getMesh());
+						}
+					}
+				}
+				else {
+					// the entity currently thinks it's not visible.
+					// check to see if it should be visible by checking a fake bounding box
+					if (viz) {
+						// it should become visible again
+						if (!snodeEntity->getMesh().isNull()) {
+							queueMeshLoad(snodeEntity, snodeEntity->getMesh());
+						}
+						// snodeEntity->setVisible(true);	// must happen after mesh loaded
+						visInvisToVis++;
+					}
+					else {
+						visInvisToInvis++;
+					}
+				}
+			}
+		}
+	}
+}
+
+// NOTE that all this queuing and visibility checking relies on the since
+//    between frame thread.
+// BETWEEN FRAME OPERATION
+stdext::hash_map<Ogre::String, Ogre::Entity*> meshesToLoad;
+stdext::hash_map<Ogre::String, Ogre::Entity*> meshesToUnload;
+void VisCalcFrustDist::processEntityVisibility() {
+	int cnt = 10;
+	/*
+	while (meshesToUnload.size() > 0 && cnt-- > 0) {
+	}
+	*/
+	cnt = 100;
+	// if (!meshesToLoad.empty()) {
+	// 	LookingGlassOgr::Log("processEntityVisibility: cnt=%d", meshesToLoad.size());
+	// }
+	stdext::hash_map<Ogre::String, Ogre::Entity*>::iterator intr;
+	while ((!meshesToLoad.empty()) && (cnt-- > 0)) {
+		intr = meshesToLoad.begin();
+		Ogre::String meshName = intr->first;
+		Ogre::Entity* parentEntity = intr->second;
+		meshesToLoad.erase(intr);
+		Ogre::MeshPtr meshP = Ogre::MeshManager::getSingleton().getByName(meshName);
+		if (!meshP.isNull()) {
+			if (m_shouldCullMeshes) meshP->load();
+			parentEntity->setVisible(true);
+			LookingGlassOgr::IncStat(LookingGlassOgr::StatCullMeshesLoaded);
+		}
+	}
+	LookingGlassOgr::SetStat(LookingGlassOgr::StatCullMeshesQueuedToLoad, meshesToLoad.size());
+	return;
+}
+
+void VisCalcFrustDist::queueMeshLoad(Ogre::Entity* parentEntity, Ogre::MeshPtr meshP) {
+	// remove from the unload list if scheduled to do that
+	Ogre::String meshName = meshP->getName();
+	// if it's in the list to unload and we're supposed to load it, remove from unload list
+	if (meshesToUnload.find(meshName) != meshesToUnload.end()) {
+		meshesToUnload.erase(meshName);
+	}
+	// add to the load list if not already there (that camera can move around)
+	meshesToLoad.insert(std::pair<Ogre::String, Ogre::Entity*>(meshName, parentEntity));
+	LookingGlassOgr::IncStat(LookingGlassOgr::StatCullMeshesQueuedToLoad);
+}
+
+// BETWEEN FRAME OPERATION
+void VisCalcFrustDist::queueMeshUnload(Ogre::MeshPtr meshP) {
+	Ogre::String meshName = meshP->getName();
+	// if it's in the list to be loaded but we're unloading it, remove from load list
+	if (meshesToLoad.find(meshName) != meshesToLoad.end()) {
+		meshesToLoad.erase(meshName);
+	}
+	// for the moment, just unload it and don't queue
+	unloadTheMesh(meshP);
+}
+
+// unload all about this mesh. The mesh itself and the textures.
+// BETWEEN FRAME OPERATION
+void VisCalcFrustDist::unloadTheMesh(Ogre::MeshPtr meshP) {
+	if (m_shouldCullTextures) {
+		Ogre::Mesh::SubMeshIterator smi = meshP->getSubMeshIterator();
+		while (smi.hasMoreElements()) {
+			Ogre::SubMesh* oneSubMesh = smi.getNext();
+			Ogre::String subMeshMaterialName = oneSubMesh->getMaterialName();
+			Ogre::MaterialPtr subMeshMaterial = (Ogre::MaterialPtr)Ogre::MaterialManager::getSingleton().getByName(subMeshMaterialName);
+			if (!subMeshMaterial.isNull()) {
+				Ogre::Material::TechniqueIterator techIter = subMeshMaterial->getTechniqueIterator();
+				while (techIter.hasMoreElements()) {
+					Ogre::Technique* oneTech = techIter.getNext();
+					Ogre::Technique::PassIterator passIter = oneTech->getPassIterator();
+					while (passIter.hasMoreElements()) {
+						Ogre::Pass* onePass = passIter.getNext();
+						Ogre::Pass::TextureUnitStateIterator tusIter = onePass->getTextureUnitStateIterator();
+						while (tusIter.hasMoreElements()) {
+							Ogre::TextureUnitState* oneTus = tusIter.getNext();
+							Ogre::String texName = oneTus->getTextureName();
+							// TODO: the same texture gets unloaded multiple times. Is that a bad thing?
+							Ogre::TextureManager::getSingleton().unload(texName);
+							LookingGlassOgr::IncStat(LookingGlassOgr::StatCullTexturesUnloaded);
+							// LookingGlassOgr::Log("unloadTheMesh: unloading texture %s", texName.c_str());
+						}
+					}
+				}
+			}
+		}
+	}
+	if (m_shouldCullMeshes) {
+		Ogre::String mshName = meshP->getName();
+		Ogre::MeshManager::getSingleton().unload(mshName);
+		LookingGlassOgr::IncStat(LookingGlassOgr::StatCullMeshesUnloaded);
+		// LookingGlassOgr::Log("unloadTheMesh: unloading mesh %s", mshName.c_str());
+	}
+}
+
+// Return TRUE if an object of this size should be seen at this distance
+bool VisCalcFrustDist::calculateScaleVisibility(float dist, float siz) {
+	// LookingGlassOgr::Log("calculateScaleVisibility: dist=%f, siz=%f", dist, siz);
+	// if it's farther than max, don't display
+	if (dist >= m_visibilityScaleMaxDistance) return false;
+	// if it's closer than min, display it
+	if (dist <= m_visibilityScaleMinDistance) return true;
+	// if it is large enough for within large thing bound, display it
+	if (siz >= m_visibilityScaleLargeSize && dist > m_visibilityScaleOnlyLargeAfter) return true;
+	// if it's size scales to big enough within scalemin and scalemax, display it
+	if (siz > ((dist - m_visibilityScaleMinDistance)
+				/(m_visibilityScaleMaxDistance - m_visibilityScaleMinDistance) 
+				* m_visibilityScaleLargeSize)) return true;
+	// not reason found to display it so don't
+	return false;
+
 }
 
 }

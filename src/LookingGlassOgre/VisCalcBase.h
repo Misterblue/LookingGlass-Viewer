@@ -41,6 +41,9 @@ public:
 	// called when we're shutting down rendering
 	virtual void Stop() {};
 
+	// called to signify that something changed so visibility should be recalcuated
+	virtual void RecalculateVisibility() {};
+
 };
 
 }
