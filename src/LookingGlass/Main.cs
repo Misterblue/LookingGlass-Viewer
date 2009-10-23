@@ -67,14 +67,14 @@ class Program {
                 case "--loginuri":
                     LGB.AppParams.AddOverrideParameter("User.LoginURI", kvp.Value);
                     break;
-                case "--iniFile":
-                    LGB.AppParams.AddOverrideParameter("Settings.INIFile", kvp.Value);
+                case "--configFile":
+                    LGB.AppParams.AddOverrideParameter("Settings.File", kvp.Value);
                     break;
                 case "--modulesFile":
                     LGB.AppParams.AddOverrideParameter("Settings.Modules", kvp.Value);
                     break;
                 case "--cache":
-                    LGB.AppParams.AddOverrideParameter("Texture.CacheDir", kvp.Value);
+                    LGB.AppParams.AddOverrideParameter("Comm.Assets.CacheDir", kvp.Value);
                     break;
                 case "--param":
                     int splitPlace = kvp.Value.IndexOf(':');

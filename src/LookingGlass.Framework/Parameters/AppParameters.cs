@@ -67,19 +67,19 @@ public class AppParameters : IAppParameters, IParameterPersist {
     #region IParameterPersist
 
     public void ReadParameterPersist() {
-        string iniFile = ParamString("Settings.File");
-        try {
-            ParameterSet.ReadParameterSet(iniFile, m_iniParams.Add);
-        }
-        catch (Exception e) {
-            LogManager.Log.Log(LogLevel.DBADERROR, "AppParameters: COULD NOT READ CONFIGURATION FILE '" + iniFile + "': " + e.ToString());
-        }
         string moduleFile = ParamString("Settings.Modules");
         try {
             ParameterSet.ReadParameterSet(moduleFile, m_iniParams.Add);
         }
         catch (Exception e) {
             LogManager.Log.Log(LogLevel.DBADERROR, "AppParameters: COULD NOT READ MODULES FILE: " + e.ToString());
+        }
+        string iniFile = ParamString("Settings.File");
+        try {
+            ParameterSet.ReadParameterSet(iniFile, m_iniParams.Add);
+        }
+        catch (Exception e) {
+            LogManager.Log.Log(LogLevel.DBADERROR, "AppParameters: COULD NOT READ CONFIGURATION FILE '" + iniFile + "': " + e.ToString());
         }
     }
 

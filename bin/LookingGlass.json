@@ -1,7 +1,8 @@
 {
 // Uncomment this if you like lots of debug output
-// "Log.FilterLevel": "2147483647",	// log everything
-// "Log.FilterLevel": "1073744896",	// RENDER and RENDERDETAIL
+// "Log.FilterLevel": "2147483647",	// 0x7fffffff: log everything
+"Log.FilterLevel": "5592405",	// 0x555555: log info messages
+// "Log.FilterLevel": "1073744896",	// 0x40000c00: RENDER and RENDERDETAIL
 
 // ====================================================
 "Modules": [
