@@ -266,6 +266,10 @@
 				RelativePath=".\UserIO.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\VisCalcFrustDist.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -313,15 +317,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SkyBoxBase.h"
+				>
+			</File>
+			<File
 				RelativePath=".\SkyBoxSimple.h"
 				>
 			</File>
 			<File
 				RelativePath=".\SkyBoxSkyX.h"
-				>
-			</File>
-			<File
-				RelativePath=".\SkyManager.h"
 				>
 			</File>
 			<File
@@ -334,6 +338,10 @@
 			</File>
 			<File
 				RelativePath=".\UserIO.h"
+				>
+			</File>
+			<File
+				RelativePath=".\VisCalcFrustDist.h"
 				>
 			</File>
 		</Filter>

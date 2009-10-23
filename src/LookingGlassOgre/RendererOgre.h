@@ -26,7 +26,7 @@
 #include "UserIO.h"
 #include "OLMaterialTracker.h"
 #include "ProcessBetweenFrame.h"
-#include "SkyManager.h"
+#include "SkyBoxBase.h"
 
 namespace RendererOgre {
 
@@ -86,7 +86,7 @@ public:
 	void formatIt(Ogre::String&, const char*, ...);
 	const bool checkKeepRunning();
 
-	LGSky::SkyManager* m_sky;
+	LGSky::SkyBoxBase* m_sky;
 
 private:
 	// OGRE INITIALIZATION ROUTINES

@@ -29,10 +29,10 @@ namespace RendererOgre { class RendererOgre; }
 
 namespace LGSky {
 
-class SkyManager {
+class SkyBoxBase {
 public:
-	// SkyManager(RendererOgre::RendererOgre*);
-	// virtual ~SkyManager();
+	// SkyBoxBase(RendererOgre::RendererOgre*);
+	// virtual ~SkyBoxBase();
 
 	// called when intializing Ogre
 	virtual void Initialize() {};

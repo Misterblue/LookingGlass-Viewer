@@ -8,7 +8,7 @@ material LookingGlass/DefaultTerrainMaterial
 			ambient 0.8 0.8 0.8
 			texture_unit 
             {
-				texture DefaultTextures/grass_1024.jpg
+				texture grass_1024.jpg
 			}
 		}
 	}

@@ -51,23 +51,23 @@ EOLIST
 
 mkdir -p "$TEMPDIR"
 
-rsync -r --exclude .svn --exclude openmetaverse_data ../LookingGlassResources "$TEMPDIR"
-rsync -r --exclude .svn ../UI "$TEMPDIR"
-mkdir "$TEMPDIR/bin"
+rsync -r --exclude .svn --exclude openmetaverse_data ../bin/LookingGlassResources "$TEMPDIR"
+rsync -r --exclude .svn ../bin/LookingGlassUI "$TEMPDIR"
 cat "$FILELIST" | while read filename ; do
-    cp "../bin/$filename" "$TEMPDIR/bin"
+    cp "../bin/$filename" "$TEMPDIR"
 done
-find "$TEMPDIR" -type f | xargs chmod 764
-find "$TEMPDIR" -type d | xargs chmod 755
-find "$TEMPDIR" -type f -name \*.dll | xargs chmod +x
-find "$TEMPDIR" -type f -name \*.exe | xargs chmod +x
-find "$TEMPDIR" -type f -name \*.sh | xargs chmod +x
+find "$TEMPDIR" -type f | xargs chmod --quiet 764
+find "$TEMPDIR" -type d | xargs chmod --quiet 755
+find "$TEMPDIR" -type f -name \*.dll | xargs chmod --quiet +x
+find "$TEMPDIR" -type f -name \*.exe | xargs chmod --quiet +x
+find "$TEMPDIR" -type f -name \*.sh | xargs chmod --quiet +x
 
 cd "$TEMPDIR"
 zip -qr "../RadegastLookingGlass-$DATE.zip" *
-find . -type f | bzip2 -c - > "../RadegastLookingGlass-$DATE.bz2"
+#find . -type f | bzip2 -c - > "../RadegastLookingGlass-$DATE.bz2"
 
 cd ..
 rm -rf "$TEMPDIR"
 rm -f "$FILELIST"
+
 

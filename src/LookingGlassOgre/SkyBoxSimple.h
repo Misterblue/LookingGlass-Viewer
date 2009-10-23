@@ -23,11 +23,11 @@
 #pragma once
 
 #include "LGOCommon.h"
-#include "SkyManager.h"
+#include "SkyBoxBase.h"
 
 namespace LGSky {
 
-class SkyBoxSimple : public SkyManager {
+class SkyBoxSimple : public SkyBoxBase {
 public:
 	SkyBoxSimple(RendererOgre::RendererOgre*);
 	~SkyBoxSimple();
