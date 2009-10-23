@@ -341,6 +341,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\VisCalcBase.h"
+				>
+			</File>
+			<File
 				RelativePath=".\VisCalcFrustDist.h"
 				>
 			</File>

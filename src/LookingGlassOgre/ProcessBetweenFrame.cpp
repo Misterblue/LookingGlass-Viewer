@@ -94,7 +94,9 @@ struct UpdateSceneNodeQd {
 ProcessBetweenFrame::ProcessBetweenFrame(RendererOgre::RendererOgre* ro, int workItems) {
 	m_singleton = this;
 	m_ro = ro;
+	// this is the number of work items to do when between two frames
 	m_numWorkItemsToDoBetweenFrames = workItems;
+	// link into the renderer.
 	LookingGlassOgr::GetOgreRoot()->addFrameListener(this);
 }
 
