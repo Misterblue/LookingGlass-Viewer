@@ -52,7 +52,7 @@ public interface IWorldRenderConv {
     /// <param name="callCount">zero if do nothing, otherwise the number of times that
     /// this RenderingInfo has been asked for</param>
     /// <returns>rendering info or null if we cannot collect all data</returns>
-    RenderableInfo RenderingInfo(Object sceneMgr, IEntity ent, int callCount);
+    RenderableInfo RenderingInfo(int priority, Object sceneMgr, IEntity ent, int callCount);
 
     /// <summary>
     /// If doing mesh creation post processing, this causes the mesh resource to
@@ -60,14 +60,14 @@ public interface IWorldRenderConv {
     /// </summary>
     /// <param name="ent"></param>
     /// <returns>false if we need to wait for resources before completing mesh creation</returns>
-    bool CreateMeshResource(IEntity ent, string meshName);
+    bool CreateMeshResource(int priority, IEntity ent, string meshName);
 
     /// <summary>
     /// If doing material creation post processing, this causes the mesh resource to
     /// be created from the passed, world specific entity information.
     /// </summary>
     /// <param name="ent"></param>
-    void CreateMaterialResource(Object sceneMgr, IEntity ent, string materialName);
+    void CreateMaterialResource(int priority, Object sceneMgr, IEntity ent, string materialName);
 
     /// <summary>
     /// Given a new region context and a scene, convert the world specific region
@@ -75,6 +75,6 @@ public interface IWorldRenderConv {
     /// </summary>
     /// <param name="sceneMgr"></param>
     /// <param name="rcontext"></param>
-    void MapRegionIntoView(Object sceneMgr, IRegionContext rcontext);
+    void MapRegionIntoView(int priority, Object sceneMgr, IRegionContext rcontext);
 }
 }

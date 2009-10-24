@@ -81,7 +81,7 @@ public class BasicWorkQueue : IWorkQueue {
         this.DoLater(new DoLaterDelegateCaller(dlcb, parms));
     }
 
-    public void DoLater(float priority, DoLaterCallback dlcb, Object parms) {
+    public void DoLater(int priority, DoLaterCallback dlcb, Object parms) {
         DoLaterBase newDoer = new DoLaterDelegateCaller(dlcb, parms);
         newDoer.priority = priority;
         this.DoLater(newDoer);

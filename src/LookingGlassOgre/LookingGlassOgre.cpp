@@ -99,14 +99,14 @@ extern "C" DLLExport void RefreshResource(int rType, char* resourceName) {
 	Ogre::String resName = resourceName;
 	m_ro->MaterialTracker()->RefreshResource(resName, rType);
 }
-extern "C" DLLExport void RefreshResourceBF(int rType, char* resourceName) {
-	m_ro->ProcessBetweenFrame()->RefreshResource(resourceName, rType);
+extern "C" DLLExport void RefreshResourceBF(int pri, int rType, char* resourceName) {
+	m_ro->ProcessBetweenFrame()->RefreshResource(pri, resourceName, rType);
 }
 extern "C" DLLExport void CreateMeshResource(const char* meshName, const int* faceCounts, const float* faceVertices) {
 	m_ro->CreateMeshResource(meshName, faceCounts, faceVertices);
 }
-extern "C" DLLExport void CreateMeshResourceBF(const char* meshName, const int* faceCounts, const float* faceVertices) {
-	m_ro->ProcessBetweenFrame()->CreateMeshResource(meshName, faceCounts, faceVertices);
+extern "C" DLLExport void CreateMeshResourceBF(int pri, const char* meshName, const int* faceCounts, const float* faceVertices) {
+	m_ro->ProcessBetweenFrame()->CreateMeshResource(pri, meshName, faceCounts, faceVertices);
 }
 extern "C" DLLExport void CreateMaterialResource(const char* matName, char* textureName,
 		 const float colorR, const float colorG, const float colorB, const float colorA,
@@ -118,9 +118,9 @@ extern "C" DLLExport void CreateMaterialResource2(const char* matName, char* tex
 												  const float* parms) {
 	m_ro->MaterialTracker()->CreateMaterialResource2(matName, textureName, parms);
 }
-extern "C" DLLExport void CreateMaterialResource2BF(const char* matName, char* textureName, 
+extern "C" DLLExport void CreateMaterialResource2BF(int pri, const char* matName, char* textureName, 
 												  const float* parms) {
-	  m_ro->ProcessBetweenFrame()->CreateMaterialResource2(matName, textureName, parms);
+	  m_ro->ProcessBetweenFrame()->CreateMaterialResource2(pri, matName, textureName, parms);
 }
 
 extern "C" DLLExport void CreateMaterialResource6(
@@ -161,7 +161,7 @@ extern "C" DLLExport Ogre::SceneManager* GetSceneMgr() {
 extern "C" DLLExport Ogre::SceneNode* RootNode(Ogre::SceneManager* sceneMgr) {
 	return sceneMgr->getRootSceneNode();
 }
-extern "C" DLLExport bool CreateMeshSceneNodeBF(
+extern "C" DLLExport bool CreateMeshSceneNodeBF(int pri,
 					Ogre::SceneManager* sceneMgr, 
 					char* sceneNodeName,
 					char* parentNodeName,
@@ -181,7 +181,7 @@ extern "C" DLLExport bool CreateMeshSceneNodeBF(
 			return false;	// cannot create it now
 		}
 	}
-	m_ro->ProcessBetweenFrame()->CreateMeshSceneNode(sceneMgr, 
+	m_ro->ProcessBetweenFrame()->CreateMeshSceneNode(pri, sceneMgr, 
 			sceneNodeName, parentNode, entityName, meshName,
 			inheritScale, inheritOrientation,
 			px, py, pz, sx, sy, sz,
@@ -200,12 +200,12 @@ extern "C" DLLExport Ogre::SceneNode* CreateSceneNode(
 	return m_ro->CreateSceneNode(sceneMgr, nodeName, parentNode,
 		inheritScale, inheritOrientation, px, py, pz, sx, sy, sz, ow, ox, oy, oz);
 }
-extern "C" DLLExport void UpdateSceneNodeBF(
+extern "C" DLLExport void UpdateSceneNodeBF(int pri,
 					char* nodeName,
 					bool setPosition, float px, float py, float pz,
 					bool setScale, float sx, float sy, float sz,
 					bool setRotation, float ow, float ox, float oy, float oz) {
-	m_ro->ProcessBetweenFrame()->UpdateSceneNode(nodeName,
+	m_ro->ProcessBetweenFrame()->UpdateSceneNode(pri, nodeName,
 					setPosition, px, py, pz,
 					setScale, sx, sy, sz,
 					setRotation, ow, ox, oy, oz);

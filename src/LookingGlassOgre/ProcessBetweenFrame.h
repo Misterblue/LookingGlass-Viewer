@@ -41,10 +41,10 @@ public:
 	// Ogre::FrameListener
 	bool frameEnded(const Ogre::FrameEvent&);
 
-	void RefreshResource(char*, int);
-	void CreateMaterialResource2(const char*, char*, const float*);
-	void CreateMeshResource(const char*, const int*, const float*);
-	void CreateMeshSceneNode( Ogre::SceneManager* sceneMgr, 
+	void RefreshResource(int, char*, int);
+	void CreateMaterialResource2(int, const char*, char*, const float*);
+	void CreateMeshResource(int, const char*, const int*, const float*);
+	void CreateMeshSceneNode(int,  Ogre::SceneManager* sceneMgr, 
 					char* sceneNodeName, 
 					Ogre::SceneNode* parentNode,
 					char* entityName,
@@ -53,7 +53,7 @@ public:
 					float px, float py, float pz,
 					float sx, float sy, float sz,
 					float ow, float ox, float oy, float oz);
-	void UpdateSceneNode(char* nodeName,
+	void UpdateSceneNode(int, char* nodeName,
 					bool setPosition, float px, float py, float pz,
 					bool setScale, float sx, float sy, float sz,
 					bool setRotation, float ow, float ox, float oy, float oz);

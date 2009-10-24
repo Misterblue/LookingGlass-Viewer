@@ -262,9 +262,15 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         ModuleParams.AddDefaultParameter("World.LL.Agent.PreMove.RotFudge", 
                     "5",
                     "Degrees to rotate avatar when user turns (float)");
+        ModuleParams.AddDefaultParameter("World.LL.Agent.PreMove.FlyFudge", 
+                    "2.5",
+                    "Meters to move avatar when moves forward when flying (float)");
+        ModuleParams.AddDefaultParameter("World.LL.Agent.PreMove.RunFudge", 
+                    "2.5",
+                    "Meters to move avatar when moves forward when running (float)");
         ModuleParams.AddDefaultParameter("World.LL.Agent.PreMove.MoveFudge", 
                     "0.5",
-                    "Meters to move avatar when moves forward (float)");
+                    "Meters to move avatar when moves forward when walking (float)");
 
         if (shouldInit) InitConnectionFramework();
     }

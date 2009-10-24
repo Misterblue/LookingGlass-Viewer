@@ -45,6 +45,8 @@ public class LLAgent : IAgent {
     private bool m_shouldPreMoveAvatar = false;
     private float m_rotFudge = 5f;      // degrees moved per rotation
     private float m_moveFudge = 0.5f;      // meters moved per movement
+    private float m_flyFudge = 2.5f;      // meters moved per movement
+    private float m_runFudge = 1.0f;      // meters moved per movement
 
     private IEntityAvatar m_myAvatar = null;
     public IEntityAvatar AssociatedAvatar {
@@ -67,6 +69,12 @@ public class LLAgent : IAgent {
         if (LookingGlassBase.Instance.AppParams.HasParameter("World.LL.Agent.PreMove.MoveFudge")) {
             m_moveFudge = LookingGlassBase.Instance.AppParams.ParamFloat("World.LL.Agent.PreMove.MoveFudge");
         }
+        if (LookingGlassBase.Instance.AppParams.HasParameter("World.LL.Agent.PreMove.FlyFudge")) {
+            m_flyFudge = LookingGlassBase.Instance.AppParams.ParamFloat("World.LL.Agent.PreMove.FlyFudge");
+        }
+        if (LookingGlassBase.Instance.AppParams.HasParameter("World.LL.Agent.PreMove.RunFudge")) {
+            m_runFudge = LookingGlassBase.Instance.AppParams.ParamFloat("World.LL.Agent.PreMove.RunFudge");
+        }
     }
 
     // The underlying data has been updated. Forget local things.
@@ -83,10 +91,11 @@ public class LLAgent : IAgent {
     public void MoveForward(bool startstop) {
         m_client.Self.Movement.AtPos = startstop;
         m_client.Self.Movement.SendUpdate();
+        // TODO: test if running or flying and use other fudges
         if (startstop && m_shouldPreMoveAvatar) {
             if (m_myAvatar != null) {
                 OMV.Vector3 newPos = m_myAvatar.RelativePosition +
-                            new OMV.Vector3(m_moveFudge, 0f, 0f) * m_myAvatar.Heading;
+                            new OMV.Vector3(CalcMoveFudge(), 0f, 0f) * m_myAvatar.Heading;
                 m_log.Log(LogLevel.DWORLDDETAIL, "MoveForward: premove from {0} to {1}", 
                         m_myAvatar.RelativePosition.ToString(), newPos);
                 this.RelativePosition = newPos;
@@ -103,7 +112,7 @@ public class LLAgent : IAgent {
         if (startstop && m_shouldPreMoveAvatar) {
             if (m_myAvatar != null) {
                 OMV.Vector3 newPos = m_myAvatar.RelativePosition +
-                            new OMV.Vector3(-m_moveFudge, 0f, 0f) * m_myAvatar.Heading;
+                            new OMV.Vector3(-CalcMoveFudge(), 0f, 0f) * m_myAvatar.Heading;
                 m_log.Log(LogLevel.DWORLDDETAIL, "MoveBackward: premove from {0} to {1}", 
                         m_myAvatar.RelativePosition.ToString(), newPos);
                 this.RelativePosition = newPos;
@@ -118,7 +127,7 @@ public class LLAgent : IAgent {
         m_client.Self.Movement.SendUpdate();
         if (startstop && m_shouldPreMoveAvatar) {
             if (m_myAvatar != null) {
-                this.RelativePosition = m_myAvatar.RelativePosition + new OMV.Vector3(0f, 0f, m_moveFudge);
+                this.RelativePosition = m_myAvatar.RelativePosition + new OMV.Vector3(0f, 0f, CalcMoveFudge());
                 m_myAvatar.RelativePosition = this.RelativePosition;
                 m_myAvatar.Update(UpdateCodes.Position);
             }
@@ -130,7 +139,7 @@ public class LLAgent : IAgent {
         m_client.Self.Movement.SendUpdate();
         if (startstop && m_shouldPreMoveAvatar) {
             if (m_myAvatar != null) {
-                this.RelativePosition = m_myAvatar.RelativePosition + new OMV.Vector3(0f, 0f, -m_moveFudge);
+                this.RelativePosition = m_myAvatar.RelativePosition + new OMV.Vector3(0f, 0f, -CalcMoveFudge());
                 m_myAvatar.RelativePosition = this.RelativePosition;
                 m_myAvatar.Update(UpdateCodes.Position);
             }
@@ -179,6 +188,11 @@ public class LLAgent : IAgent {
                 m_myAvatar.Update(UpdateCodes.Rotation);
             }
         }
+    }
+
+    private float CalcMoveFudge() {
+        // TODO: test if client is running or flying and return the correct fudge
+        return m_moveFudge;
     }
 
     #endregion MOVEMENT

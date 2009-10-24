@@ -102,7 +102,7 @@ public class RendererOgreLL : IWorldRenderConv {
     /// <param name="callCount">zero if do nothing, otherwise the number of times that
     /// this RenderingInfo has been asked for</param>
     /// <returns>rendering info or null if we cannot collect all data</returns>
-    public RenderableInfo RenderingInfo(Object sceneMgr, IEntity ent, int callCount) {
+    public RenderableInfo RenderingInfo(int priority, Object sceneMgr, IEntity ent, int callCount) {
         LLEntityBase llent;
         LLRegionContext rcontext;
         OMV.Primitive prim;
@@ -159,7 +159,7 @@ public class RendererOgreLL : IWorldRenderConv {
 
         // while we're in the neighborhood, we can create the materials
         if (m_buildMaterialsAtRenderInfoTime) {
-            CreateMaterialResource6(ent, prim);
+            CreateMaterialResource6(priority, ent, prim);
         }
 
         return ri;
@@ -171,7 +171,7 @@ public class RendererOgreLL : IWorldRenderConv {
     /// <param name="sMgr">the scene manager receiving  the mesh</param>
     /// <param name="ent">The entity the mesh is coming from</param>
     /// <param name="meshName">The name the mesh should take</param>
-    public bool CreateMeshResource(IEntity ent, string meshName) {
+    public bool CreateMeshResource(int priority, IEntity ent, string meshName) {
         LLEntityPhysical llent;
         OMV.Primitive prim;
 
@@ -343,7 +343,7 @@ public class RendererOgreLL : IWorldRenderConv {
             // while we're in the neighborhood, we can create the materials
             if (m_buildMaterialsAtMeshCreationTime) {
                 for (int j = 0; j < mesh.Faces.Count; j++) {
-                    CreateMaterialResource2(ent, prim, EntityNameOgre.ConvertToOgreMaterialNameX(ent.Name, j), j);
+                    CreateMaterialResource2(priority, ent, prim, EntityNameOgre.ConvertToOgreMaterialNameX(ent.Name, j), j);
                 }
             }
 
@@ -355,7 +355,9 @@ public class RendererOgreLL : IWorldRenderConv {
                 + " vi=" + vertI
                 );
             // Now create the mesh
-            lock (RendererOgre.BetweenFrameLock) Ogr.CreateMeshResourceBF(meshName, faceCounts, faceVertices);
+            lock (RendererOgre.BetweenFrameLock) {
+                Ogr.CreateMeshResourceBF(priority, meshName, faceCounts, faceVertices);
+            }
         }
         return true;
     }
@@ -369,7 +371,7 @@ public class RendererOgreLL : IWorldRenderConv {
         return false;
     }
 
-    public void CreateMaterialResource(Object sMgr, IEntity ent, string materialName) {
+    public void CreateMaterialResource(int priority, Object sMgr, IEntity ent, string materialName) {
         OgreSceneMgr m_sceneMgr = (OgreSceneMgr)sMgr;
         LLEntityPhysical llent;
         OMV.Primitive prim;
@@ -389,7 +391,7 @@ public class RendererOgreLL : IWorldRenderConv {
             m_log.Log(LogLevel.DRENDERDETAIL, "CreateMaterialResource: no face number for " + materialName);
             return;
         }
-        CreateMaterialResource2(ent, prim, materialName, faceNum);
+        CreateMaterialResource2(priority, ent, prim, materialName, faceNum);
     }
 
     /// <summary>
@@ -402,12 +404,13 @@ public class RendererOgreLL : IWorldRenderConv {
     /// <param name="prim">the OMV.Primitive that is getting the material</param>
     /// <param name="materialName">the name to give the new material</param>
     /// <param name="faceNum">the index of the primitive face getting the material</param>
-    private void CreateMaterialResource2(IEntity ent, OMV.Primitive prim, string materialName, int faceNum) {
+    private void CreateMaterialResource2(int priority, IEntity ent, OMV.Primitive prim, 
+                            string materialName, int faceNum) {
         float[] textureParams = new float[(int)Ogr.CreateMaterialParam.maxParam];
         string textureOgreResourceName = "";
         CreateMaterialParameters(ent, prim, 0, ref textureParams, faceNum, out textureOgreResourceName);
         m_log.Log(LogLevel.DRENDERDETAIL, "CreateMaterialResource2: m=" + materialName + ",o=" + textureOgreResourceName);
-        lock (RendererOgre.BetweenFrameLock) Ogr.CreateMaterialResource2BF(materialName, textureOgreResourceName, textureParams);
+        lock (RendererOgre.BetweenFrameLock) Ogr.CreateMaterialResource2BF(priority, materialName, textureOgreResourceName, textureParams);
     }
 
     private void CreateMaterialParameters(IEntity ent, OMV.Primitive prim, int pBase, ref float[] textureParams, 
@@ -478,10 +481,10 @@ public class RendererOgreLL : IWorldRenderConv {
     /// </summary>
     /// <param name="ent"></param>
     /// <param name="prim"></param>
-    private void CreateMaterialResource6(IEntity ent, OMV.Primitive prim) {
+    private void CreateMaterialResource6(int priority, IEntity ent, OMV.Primitive prim) {
         // we create the usual ones. extra faces will be asked for on demand
         for (int j = 0; j <= 6; j++) {
-            CreateMaterialResource2(ent, prim, EntityNameOgre.ConvertToOgreMaterialNameX(ent.Name, j), j);
+            CreateMaterialResource2(priority, ent, prim, EntityNameOgre.ConvertToOgreMaterialNameX(ent.Name, j), j);
         }
     }
 
@@ -522,7 +525,7 @@ public class RendererOgreLL : IWorldRenderConv {
     /// </summary>
     /// <param name="sMgr"></param>
     /// <param name="rcontext"></param>
-    public void MapRegionIntoView(Object sMgr, IRegionContext rcontext) {
+    public void MapRegionIntoView(int priority, Object sMgr, IRegionContext rcontext) {
         OgreSceneMgr m_sceneMgr = (OgreSceneMgr)sMgr;
         if (rcontext is LLRegionContext) {
             // a SL compatible region

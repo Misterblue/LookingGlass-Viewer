@@ -46,7 +46,7 @@ namespace LookingGlass.Framework.WorkQueue {
             sequence = ++baseSequence;
         }
 
-        public float priority;
+        public int priority;
         public int requeueWait;
         public int remainingWait;
         public int timesRequeued;

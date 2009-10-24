@@ -73,7 +73,8 @@ public class LLTerrainInfo : TerrainInfoBase {
                     if (!llreg.Comm.Terrain.SimPatches.ContainsKey(sim.Handle)) {
                         return;
                     }
-                    OMV.TerrainPatch[] patch = llreg.Comm.Terrain.SimPatches[sim.Handle];
+                    // make a copy. Poor man's locking
+                    OMV.TerrainPatch[] patch = (OMV.TerrainPatch[])llreg.Comm.Terrain.SimPatches[sim.Handle].Clone();
 
                     int nullPatchCount = 0;
                     for (int px = 0; px < stride; px++) {
@@ -114,7 +115,6 @@ public class LLTerrainInfo : TerrainInfoBase {
                     CreateZeroHeight(ref newHM);
                     minHeight = maxHeight = 0f;
                 }
-
             }
             m_heightMap = newHM;
             m_heightMapWidth = TerrainPatchWidth;   // X
