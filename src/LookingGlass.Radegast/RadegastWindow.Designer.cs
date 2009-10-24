@@ -42,8 +42,7 @@
         /// the contents of this method with the code editor.
         /// </summary>
         private void InitializeComponent() {
-            // this.LGWindow = new System.Windows.Forms.Panel();
-            this.LGWindow = new DBPanel();
+            this.LGWindow = new LookingGlass.Radegast.RadegastWindow.DBPanel();
             this.SuspendLayout();
             // 
             // LGWindow
@@ -53,6 +52,12 @@
             this.LGWindow.Name = "LGWindow";
             this.LGWindow.Size = new System.Drawing.Size(802, 582);
             this.LGWindow.TabIndex = 0;
+            this.LGWindow.MouseLeave += new System.EventHandler(this.LGWindow_MouseLeave);
+            this.LGWindow.MouseMove += new System.Windows.Forms.MouseEventHandler(this.LGWindow_MouseMove);
+            this.LGWindow.MouseClick += new System.Windows.Forms.MouseEventHandler(this.LGWindow_MouseClick);
+            this.LGWindow.MouseDown += new System.Windows.Forms.MouseEventHandler(this.LGWindow_MouseDown);
+            this.LGWindow.MouseUp += new System.Windows.Forms.MouseEventHandler(this.LGWindow_MouseUp);
+            this.LGWindow.MouseEnter += new System.EventHandler(this.LGWindow_MouseEnter);
             // 
             // RadegastWindow
             // 
@@ -62,12 +67,15 @@
             this.Controls.Add(this.LGWindow);
             this.Name = "RadegastWindow";
             this.Text = "LookingGlass View";
+            this.KeyUp += new System.Windows.Forms.KeyEventHandler(this.RadegastWindow_KeyUp);
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.RadegastWindow_KeyDown);
             this.ResumeLayout(false);
 
         }
 
         #endregion
 
-        private System.Windows.Forms.Panel LGWindow;
+        private RadegastWindow.DBPanel LGWindow;
+
     }
 }

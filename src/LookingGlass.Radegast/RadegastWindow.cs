@@ -64,9 +64,9 @@ public partial class RadegastWindow : Form {
         if (subControls.Length == 1) {
             m_renderPanel = (Panel)subControls[0];
         }
-        m_paintEventHandler = new System.Windows.Forms.PaintEventHandler(radControl_Paint);
+        m_paintEventHandler = new System.Windows.Forms.PaintEventHandler(LGWindow_Paint);
         m_renderPanel.Paint += m_paintEventHandler;
-        m_resizeEventHandler = new System.EventHandler(radControl_Resize);
+        m_resizeEventHandler = new System.EventHandler(LGWindow_Resize);
         m_renderPanel.Resize += m_resizeEventHandler;
 
         m_refreshTimer = new System.Threading.Timer(delegate(Object param) {
@@ -88,7 +88,7 @@ public partial class RadegastWindow : Form {
         if (m_resizeEventHandler != null) m_renderPanel.Resize -= m_resizeEventHandler;
     }
 
-    public void radControl_Paint(object sender, PaintEventArgs e) {
+    private void LGWindow_Paint(object sender, PaintEventArgs e) {
         if (this.InvokeRequired) {
             BeginInvoke((MethodInvoker)delegate() { m_renderer.RenderOneFrame(false, 100); });
         }
@@ -98,8 +98,41 @@ public partial class RadegastWindow : Form {
         return;
     }
 
-    public void radControl_Resize(object sender, EventArgs e) {
+    private void LGWindow_Resize(object sender, EventArgs e) {
         return;
     }
+
+    private void LGWindow_MouseDown(object sender, MouseEventArgs e) {
+
+    }
+
+    private void LGWindow_MouseMove(object sender, MouseEventArgs e) {
+
+    }
+
+    private void LGWindow_MouseLeave(object sender, EventArgs e) {
+
+    }
+
+    private void LGWindow_MouseEnter(object sender, EventArgs e) {
+
+    }
+
+    private void LGWindow_MouseUp(object sender, MouseEventArgs e) {
+
+    }
+
+    private void LGWindow_MouseClick(object sender, MouseEventArgs e) {
+
+    }
+
+    private void RadegastWindow_KeyDown(object sender, KeyEventArgs e) {
+
+    }
+
+    private void RadegastWindow_KeyUp(object sender, KeyEventArgs e) {
+
+    }
+
 }
 }

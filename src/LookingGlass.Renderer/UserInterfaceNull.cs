@@ -41,43 +41,50 @@ public class UserInterfaceNull : IUserInterfaceProvider {
     public event UserInterfaceEntitySelectedCallback OnUserInterfaceEntitySelected;
 # pragma warning restore 0067
 
+    // IUserInterfaceProvider.InputModeCode
     private InputModeCode m_inputMode;
     public InputModeCode InputMode { 
         get { return m_inputMode; }
         set { m_inputMode = value; }
     }
 
+    // IUserInterfaceProvider.LastKeyCode
     private Keys m_lastKeycode = 0;
     public Keys LastKeyCode {
         get { return m_lastKeycode; }
         set { m_lastKeycode = value; }
     }
 
+    // IUserInterfaceProvider.KeyPressed
     private bool m_keyPressed = false;
     public bool KeyPressed {
         get { return m_keyPressed; }
         set { m_keyPressed = value; }
     }
 
+    // IUserInterfaceProvider.LastMouseButtons
     private MouseButtons m_lastButtons = 0;
     public MouseButtons LastMouseButtons {
         get { return m_lastButtons; }
         set { m_lastButtons = value; }
     }
 
+    // IUserInterfaceProvider.KeyRepeatRate
     private float m_repeatRate = 3f;
     public float KeyRepeatRate {
         get { return m_repeatRate; }
         set { m_repeatRate = value; }
     }
 
-    // don't hook me up with the low level stuff
-    public bool NeedsRendererLinkage() {
-        return false;
-    }
-
+    // IUserInterfaceProvider.ReceiveUserIO
     public void ReceiveUserIO(int type, int param1, float param2, float param3) {
         return;
+    }
+
+    // IUserInterfaceProvider.NeedsRendererLinkage
+    public bool NeedsRendererLinkage() {
+        // don't hook me up with the low level stuff
+        return false;
     }
 }
 }
