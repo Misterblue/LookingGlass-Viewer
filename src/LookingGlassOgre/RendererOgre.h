@@ -27,6 +27,7 @@
 #include "OLMaterialTracker.h"
 #include "ProcessBetweenFrame.h"
 #include "SkyBoxBase.h"
+#include "VisCalcBase.h"
 
 namespace RendererOgre {
 
@@ -87,6 +88,7 @@ public:
 	const bool checkKeepRunning();
 
 	LGSky::SkyBoxBase* m_sky;
+	VisCalc::VisCalcBase* m_visCalc;	// an routine for calculating visibility
 
 private:
 	// OGRE INITIALIZATION ROUTINES
@@ -96,6 +98,7 @@ private:
     void initOgreResources();
     void createScene();
     void createSky();
+	void createVisibilityProcessor();
     void createCamera();
     void createLight();
     // void createDefaultTerrain();
@@ -103,23 +106,6 @@ private:
     void createFrameListener();
     void createInput();
 	void destroyScene();
-
-	void calculateEntityVisibility();
-	void calculateEntityVisibility(Ogre::Node*);
-	bool calculateScaleVisibility(float, float);
-	void processEntityVisibility();
-	void queueMeshLoad(Ogre::Entity*, Ogre::MeshPtr);
-	void queueMeshUnload(Ogre::MeshPtr);
-	void unloadTheMesh(Ogre::MeshPtr);
-	bool m_shouldCullByFrustrum;			// true if should cull visible objects by the camera frustrum
-	bool m_shouldCullByDistance;			// true if should cull visible objects by distance from camera
-	bool m_shouldCullMeshes;				// true if should cull meshes
-	bool m_shouldCullTextures;				// true if should cull textures
-	float m_visibilityScaleMaxDistance;		// not visible after this far
-	float m_visibilityScaleOnlyLargeAfter;	// after this distance, only large things visible
-	float m_visibilityScaleMinDistance;		// always visible is this close
-	float m_visibilityScaleLargeSize;		// what is large enough to see at a distance
-	bool m_recalculateVisibility;			// set to TRUE if visibility should be recalcuated
 
 	// UTILITY ROUTINES
 	void AssertNonNull(void*, const char*);

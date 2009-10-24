@@ -29,8 +29,6 @@ namespace VisCalc {
 	
 VisCalcFrustDist::VisCalcFrustDist(RendererOgre::RendererOgre* ro) {
 	m_singleton = this;
-	
-	LookingGlassOgr::GetOgreRoot()->addFrameListener(this);
 }
 
 VisCalcFrustDist::~VisCalcFrustDist() {
@@ -59,6 +57,7 @@ void VisCalcFrustDist::Initialize() {
 }
 
 void VisCalcFrustDist::Start() {
+	LookingGlassOgr::GetOgreRoot()->addFrameListener(this);
 	return;
 }
 
@@ -72,7 +71,10 @@ void VisCalcFrustDist::RecalculateVisibility() {
 
 // we're between frames, on our own thread so we can do the work without locking
 bool VisCalcFrustDist::frameEnded(const Ogre::FrameEvent& evt) {
-	if (m_recalculateVisibility) calculateEntityVisibility();
+	if (m_recalculateVisibility) {
+		calculateEntityVisibility();
+		processEntityVisibility();
+	}
 	return true;
 }
 

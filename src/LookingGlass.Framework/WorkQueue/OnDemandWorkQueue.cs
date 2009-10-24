@@ -82,7 +82,7 @@ public class OnDemandWorkQueue : IWorkQueue {
 
     public void DoLater(int priority, DoLaterCallback dlcb, Object parms) {
         DoLaterBase newDoer = new DoLaterDelegateCaller(dlcb, parms);
-        newDoer.order = priority;
+        newDoer.priority = priority;
         this.DoLater(newDoer);
     }
 

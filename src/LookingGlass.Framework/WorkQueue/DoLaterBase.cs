@@ -42,11 +42,11 @@ namespace LookingGlass.Framework.WorkQueue {
         public DoLaterBase() {
             requeueWait = 500;
             cost = 10;
-            order = 100;
+            priority = 100;
             sequence = ++baseSequence;
         }
 
-        public float order;
+        public float priority;
         public int requeueWait;
         public int remainingWait;
         public int timesRequeued;

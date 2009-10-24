@@ -348,6 +348,10 @@
 				RelativePath=".\VisCalcFrustDist.h"
 				>
 			</File>
+			<File
+				RelativePath=".\VisCalcNull.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"

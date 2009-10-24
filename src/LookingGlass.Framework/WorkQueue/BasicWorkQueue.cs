@@ -32,16 +32,19 @@ namespace LookingGlass.Framework.WorkQueue {
     // queues can be build (priorities, ...). For the moment, they are all
     // here using several static methods that implement the redo and scheduling.
 public class BasicWorkQueue : IWorkQueue {
+    // IWorkQueue.TotalQueued()
     private long m_totalRequests = 0;
     public long TotalQueued { get { return m_totalRequests; } }
 
+    // IWorkQueue.Name()
     private string m_queueName = "";
     public string Name { get { return m_queueName; } }
 
     private Queue<DoLaterBase> m_workItems;
     private int m_activeWorkProcessors;
-    private int m_workProcessorsMax = 10;
+    private int m_workProcessorsMax = 4;
 
+    // IWorkQueue.CurrentQueued()
     public long CurrentQueued { get { return (long)m_workItems.Count; } }
 
     public BasicWorkQueue(string nam) {
@@ -51,7 +54,7 @@ public class BasicWorkQueue : IWorkQueue {
         WorkQueueManager.Instance.Register(this);
     }
 
-    // Do some work later
+    // IWorkQueue.DoLater()
     public void DoLater(DoLaterBase w){
         w.containingClass = this;
         w.remainingWait = 0;    // the first time through, do it now
@@ -65,12 +68,13 @@ public class BasicWorkQueue : IWorkQueue {
     }
 
     /// <summary>
-    /// Experimental, untested entry which doesn't force the caller to create an
-    /// instance of a DoLaterBase class but to use s delegate. The calling sequence
+    /// Entry which doesn't force the caller to create an
+    /// instance of a DoLaterBase class but to use a delegate. The calling sequence
     /// would be something like:
-    /// m_workQueue.DoLater((DoLaterCallback)delegate() { 
-    ///     return LocalMethod(localParam1, localParam2, ...); 
-    /// });
+    /// <pre>
+    ///     Object[] parms = { localParam1, localParam2, ...};
+    ///     m_workQueue.DoLater(CallbackRoutine, parms);
+    /// </pre>
     /// </summary>
     /// <param name="dlcb"></param>
     public void DoLater(DoLaterCallback dlcb, Object parms) {
@@ -79,7 +83,7 @@ public class BasicWorkQueue : IWorkQueue {
 
     public void DoLater(float priority, DoLaterCallback dlcb, Object parms) {
         DoLaterBase newDoer = new DoLaterDelegateCaller(dlcb, parms);
-        newDoer.order = priority;
+        newDoer.priority = priority;
         this.DoLater(newDoer);
     }
 
