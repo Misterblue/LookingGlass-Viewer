@@ -560,9 +560,12 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     // ===============================================================
     public virtual void Network_OnSimConnected(OMV.Simulator sim) {
         m_isConnected = true;   // good enough reason to think we're connected
-        m_log.Log(LogLevel.DWORLD, "Simulator connected {0}", sim.Name);
+        m_log.Log(LogLevel.DWORLD, "Network_OnSimConnected: Simulator connected {0}", sim.Name);
         LLRegionContext regionContext = FindRegion(sim);
-        if (regionContext == null) return;
+        if (regionContext == null) {
+            m_log.Log(LogLevel.DWORLD, "Network_OnSimConnected: NO REGION CONTEXT FOR {0}", sim.Name);
+            return;
+        }
         World.World.Instance.AddRegion(regionContext);
 
         // this region is online and here. This can start a lot of IO
