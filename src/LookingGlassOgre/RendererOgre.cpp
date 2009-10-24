@@ -60,6 +60,7 @@ namespace RendererOgre {
 	// The frame rate is capped and sleeps are inserted to return control to
 	// the windowing system when the max frame rate is reached.
 	// If we don't want the thread, return false.
+	Ogre::Timer* timeKeeper = new Ogre::Timer();
 	bool RendererOgre::renderingThread() {
 		Log("DEBUG: LookingGlassOrge: Starting rendering");
 		// m_root->startRendering();
@@ -69,7 +70,6 @@ namespace RendererOgre {
 		int maxFPS = LookingGlassOgr::GetParameterInt("Renderer.Ogre.FramePerSecMax");
 		if (maxFPS < 2 || maxFPS > 100) maxFPS = 20;
 		int msPerFrame = 1000 / maxFPS;
-		Ogre::Timer* timeKeeper = new Ogre::Timer();
 
 		unsigned long now = timeKeeper->getMilliseconds();
 		unsigned long timeStartedLastFrame = timeKeeper->getMilliseconds();
@@ -107,10 +107,27 @@ namespace RendererOgre {
 	// with any extra time.
 	bool RendererOgre::renderOneFrame(bool pump, int len) {
 		bool ret = false;
+		unsigned long now = timeKeeper->getMilliseconds();
+		unsigned long timeStartedLastFrame = timeKeeper->getMilliseconds();
 		if (m_root != NULL) {
 			ret = m_root->renderOneFrame();
 			if (pump) Ogre::WindowEventUtilities::messagePump();
 		}
+
+		// The amount of time a frame takes to render is passed to us
+		// If we have time left over and there is between frame processing, do them
+		int remaining = len - ((int)(now - timeStartedLastFrame));
+		while (remaining > 10) {
+			if (m_processBetweenFrame->HasWorkItems()) {
+				m_processBetweenFrame->ProcessWorkItems(20);
+			}
+			else {
+				break;
+			}
+			now = timeKeeper->getMilliseconds();
+			remaining = len - ((int)(now - timeStartedLastFrame));
+		}
+
 		return ret;
 	}
 

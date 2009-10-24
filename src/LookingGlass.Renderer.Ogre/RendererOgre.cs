@@ -449,6 +449,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         /*
         // Try creating a thread just for the renderer
         // create a thread for the renderer
+        // NOTE: this does not work as the display thread needs to be the main window thread
         m_rendererThread = new Thread(RunRenderer);
         m_rendererThread.Name = "Renderer";
         m_rendererThread.Start();

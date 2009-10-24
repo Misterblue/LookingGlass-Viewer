@@ -50,7 +50,7 @@ static class Ogr {
     // material processing queues
     public const int StatMaterialUpdatesRemaining = 0;
     // the number of stat values (oversized for fudge factors)
-    public const int StatSize = 20;
+    public const int StatSize = 30;
 
     // =============================================================================
     // Call from the Ogre C++ code back into  the managed code.
