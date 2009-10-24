@@ -332,7 +332,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
             if (m_LoginThread == null) {
                 m_LoginThread = new Thread(KeepLoggedIn);
                 m_LoginThread.Name = "Communication Login";
-                m_log.Log(LogLevel.DCOMMDETAIL, "Starting keep logged in thread");
+                m_log.Log(LogLevel.DCOMM, "Starting keep logged in thread");
                 m_LoginThread.Start();
             }
         }
@@ -342,14 +342,14 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     // If the base system says to stop, we make sure we're disconnected
     public override void Stop() {
         base.Stop();
-        m_log.Log(LogLevel.DCOMMDETAIL, "Stopping. Attempting to disconnect");
+        m_log.Log(LogLevel.DCOMM, "Stopping. Attempting to disconnect");
         Disconnect();
     }
 
     // IModule.PrepareForUnload()
     public override bool PrepareForUnload() {
         base.PrepareForUnload();
-        m_log.Log(LogLevel.DCOMMDETAIL, "communication unload. We'll never login again");
+        m_log.Log(LogLevel.DCOMM, "communication unload. We'll never login again");
         if (m_commStatsHandler != null) {
             m_commStatsHandler.Dispose();   // get rid of the handlers we created
             m_commStatsHandler = null;
@@ -410,7 +410,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
                 // we shouldn't be logged in but it looks like we are
                 if (!m_isLoggingIn && !m_isLoggingOut) {
                     // not in logging transistion. start the logout process
-                    m_log.Log(LogLevel.DCOMMDETAIL, "KeepLoggedIn: Starting logout process");
+                    m_log.Log(LogLevel.DCOMM, "KeepLoggedIn: Starting logout process");
                     m_client.Network.Logout();
                     m_isLoggingIn = false;
                     m_isLoggingOut = true;
@@ -423,7 +423,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     }
 
     public void StartLogin() {
-        m_log.Log(LogLevel.DCOMMDETAIL, "Starting login of {0} {1}", m_loginFirst, m_loginLast);
+        m_log.Log(LogLevel.DCOMM, "Starting login of {0} {1}", m_loginFirst, m_loginLast);
         m_isLoggingIn = true;
         OMV.LoginParams loginParams = this.GridClient.Network.DefaultLoginParams(
             m_loginFirst,
@@ -443,12 +443,12 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
                 if (parts.Length == 1) {
                     // just specifying last or home or just a simulator
                     if (parts[0] == "last" || parts[0] == "home") {
-                        m_log.Log(LogLevel.DCOMMDETAIL, "StartLogin: prev location of {0}", parts[0]);
+                        m_log.Log(LogLevel.DCOMM, "StartLogin: prev location of {0}", parts[0]);
                         loginSetting = parts[0];
                     }
                     else {
                         // put the user in the center of teh specified sim
-                        m_log.Log(LogLevel.DCOMMDETAIL, "StartLogin: user spec middle of {0}", parts[0]);
+                        m_log.Log(LogLevel.DCOMM, "StartLogin: user spec middle of {0}", parts[0]);
                         loginSetting = OMV.NetworkManager.StartLocation(parts[0], 128, 128, 40);
                     }
                 }
@@ -456,7 +456,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
                     int posX = int.Parse(parts[1]);
                     int posY = int.Parse(parts[2]);
                     int posZ = int.Parse(parts[3]);
-                    m_log.Log(LogLevel.DCOMMDETAIL, "StartLogin: user spec start at {0}/{1}/{2}/{3}",
+                    m_log.Log(LogLevel.DCOMM, "StartLogin: user spec start at {0}/{1}/{2}/{3}",
                         parts[0], posX, posY, posZ);
                     loginSetting = OMV.NetworkManager.StartLocation(parts[0], posX, posY, posZ);
                 }
@@ -506,7 +506,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     }
 
     public virtual void Network_OnDisconnected(OMV.NetworkManager.DisconnectType reason, string message) {
-        m_log.Log(LogLevel.DCOMMDETAIL, "Disconnected");
+        m_log.Log(LogLevel.DCOMM, "Disconnected");
         m_isConnected = false;
         //x BeginInvoke(
         //x     (MethodInvoker)delegate() {
@@ -516,7 +516,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     }
 
     public virtual void Network_OnEventQueueRunning(OMV.Simulator simulator) {
-        m_log.Log(LogLevel.DCOMMDETAIL, "Event queue running on {0}", simulator.Name);
+        m_log.Log(LogLevel.DCOMM, "Event queue running on {0}", simulator.Name);
         if (simulator == m_client.Network.CurrentSim) {
             m_SwitchingSims = false;
         }
@@ -560,7 +560,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     // ===============================================================
     public virtual void Network_OnSimConnected(OMV.Simulator sim) {
         m_isConnected = true;   // good enough reason to think we're connected
-        m_log.Log(LogLevel.DWORLDDETAIL, "Simulator connected {0}", sim.Name);
+        m_log.Log(LogLevel.DWORLD, "Simulator connected {0}", sim.Name);
         LLRegionContext regionContext = FindRegion(sim);
         if (regionContext == null) return;
         World.World.Instance.AddRegion(regionContext);
@@ -584,7 +584,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
             m_SwitchingSims = true;
         }
         if (prevSim != null) {      // there is no prev sim the first time
-            m_log.Log(LogLevel.DWORLDDETAIL, "Simulator changed from {0}", prevSim.Name);
+            m_log.Log(LogLevel.DWORLD, "Simulator changed from {0}", prevSim.Name);
             LLRegionContext regionContext = FindRegion(prevSim);
             if (regionContext == null) return;
             // TODO: what to do with this operation?
@@ -786,9 +786,9 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     /// Called when we just log in. We create our agent and put it into the world
     /// </summary>
     public virtual void Comm_OnLoggedIn() {
-        m_log.Log(LogLevel.DWORLDDETAIL, "Comm_OnLoggedIn:");
+        m_log.Log(LogLevel.DWORLD, "Comm_OnLoggedIn:");
         if (m_myAgent != null) {
-            m_log.Log(LogLevel.DWORLDDETAIL, "Comm_OnLoggedIn: Removing agent that is already here");
+            m_log.Log(LogLevel.DWORLD, "Comm_OnLoggedIn: Removing agent that is already here");
             // there shouldn't be on already there... odd but remove it
             World.World.Instance.RemoveAgent();
             m_myAgent = null;
@@ -803,7 +803,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
 
     // ===============================================================
     public virtual void Comm_OnLoggedOut() {
-        m_log.Log(LogLevel.DWORLDDETAIL, "Comm_OnLoggedOut:");
+        m_log.Log(LogLevel.DWORLD, "Comm_OnLoggedOut:");
     }
 
     // ===============================================================
@@ -836,7 +836,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
                     ret.Comm = m_client;
                     ret.TerrainInfo.RegionContext = ret;
                     m_regionList.Add(ret);
-                    m_log.Log(LogLevel.DWORLDDETAIL, "Creating region context for " + ret.Name);
+                    m_log.Log(LogLevel.DWORLD, "Creating region context for " + ret.Name);
                 }
             }
         }
@@ -909,7 +909,8 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     private void DoAnyWaitingEvents(RegionContextBase rcontext) {
         OnDemandWorkQueue q = null;
         lock (m_waitTilOnline) {
-            m_log.Log(LogLevel.DCOMMDETAIL, "DoAnyWaitingEvents: unqueuing waiting events for {0}", rcontext.Name);
+            m_log.Log(LogLevel.DCOMM, "DoAnyWaitingEvents: unqueuing {0} waiting events for {1}", 
+                        m_waitTilOnline.Count, rcontext.Name);
             if (m_waitTilOnline.ContainsKey(rcontext)) {
                 q = m_waitTilOnline[rcontext];
                 m_waitTilOnline.Remove(rcontext);

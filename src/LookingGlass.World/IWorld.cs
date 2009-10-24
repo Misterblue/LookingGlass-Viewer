@@ -121,24 +121,6 @@ public interface IWorld {
     // A global request for an entity. Used by renderer because it looses context
     // when called back from the depths of rendering.
     bool TryGetEntity(EntityName entName, out IEntity ent);
-    /*
-    void AddEntity(IEntity entity);
-    void UpdateEntity(IEntity entity, UpdateCodes detail);
-    void RemoveEntity(IEntity entity);
-
-    bool TryGetEntity(ulong lgid, out IEntity ent);
-    bool TryGetEntity(string entName, out IEntity ent);
-    bool TryGetEntity(EntityName entName, out IEntity ent);
-    IEntity FindEntity(Predicate<IEntity> pred);
-
-    // These three are deprecated and will be replaced by accessing entities through
-    // the region context. Look for similar requests on the region contexts
-    bool TryGetEntityLocalID(RegionContextBase rcontext, uint entName, out IEntity ent);
-    bool TryGetCreateEntityLocalID(RegionContextBase rcontext, uint localID, 
-                out IEntity ent, WorldCreateEntityCallback creater);
-    bool TryGetCreateAvatar(RegionContextBase rcontext, EntityName ename,
-                out IEntityAvatar ent, WorldCreateAvatarCallback creater);
-    */
 
     // AGENT MANAGEMENT
     void AddAgent(IAgent agnt);

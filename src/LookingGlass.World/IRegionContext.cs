@@ -93,11 +93,13 @@ public interface IRegionContext {
     IEntity FindEntity(Predicate<IEntity> pred);
     bool TryGetCreateEntity(EntityName name, out IEntity ent, RegionCreateEntityCallback creater);
 
+    /*
     // In  transition requests for getting region entities based on implementation
     // specific info. In this case the LLLP localID. This is part of the conversion
     // of entites being in the world to the entities being in regions.
     bool TryGetEntityLocalID(uint entName, out IEntity ent);
     bool TryGetCreateEntityLocalID(uint localID, out IEntity ent, RegionCreateEntityCallback creater);
+     */
 
 }
 }

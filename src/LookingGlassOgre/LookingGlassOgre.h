@@ -65,6 +65,8 @@ static const int StatBetweenFrameCreateMaterialResource = 9;
 static const int StatBetweenFrameCreateMeshResource = 10;
 static const int StatBetweenFrameCreateMeshSceneNode = 11;
 static const int StatBetweenFrameUpdateSceneNode = 12;
+static const int StatBetweenFrameTotalProcessed = 16;
+static const int StatBetweenFrameUnknownProcess = 17;
 
 #define OLArchiveTypeName "OLFileSystem"
 #define OLPreloadTypeName "OLPreloadFileSystem"

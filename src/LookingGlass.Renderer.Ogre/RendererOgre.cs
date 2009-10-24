@@ -215,6 +215,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Moon.Color", "<0.5,0.5,0.6>",
                     "Color of light from the moon");
 
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.Processor", "FrustrumDistance",
+                    "Name of the culling plugin to run ('FrustrumDistance' is only one)");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.Cull.Frustrum", "true",
                     "whether to cull (unload) objects if not visible in camera frustrum");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.Cull.Distance", "true",
@@ -302,6 +304,10 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         m_ogreStatsDesc.Add("totalbetweenframecreatemeshscenenode", "Number of 'create mesh scene node' work items performed");
         m_ogreStatsIndex.Add("totalbetweenframeupdatescenenode", Ogr.StatBetweenFrameUpdateSceneNode);
         m_ogreStatsDesc.Add("totalbetweenframeupdatescenenode", "Number of 'update scene node' work items performed");
+        m_ogreStatsIndex.Add("totalbetweenframeunknownprocess", Ogr.StatBetweenFrameUnknownProcess);
+        m_ogreStatsDesc.Add("totalbetweenframeunknownprocess", "Number of work items with unknow process codes");
+        m_ogreStatsIndex.Add("totalbetweenframetotalprocessed", Ogr.StatBetweenFrameTotalProcessed);
+        m_ogreStatsDesc.Add("totalbetweenframetotalprocessed", "Total number of work items actually processed");
         // material processing queues
         m_ogreStatsIndex.Add("materialupdatesremaining", Ogr.StatMaterialUpdatesRemaining);
         m_ogreStatsDesc.Add("materialupdatesremaining", "Number of material updates waiting");

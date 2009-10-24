@@ -42,7 +42,7 @@ public class LoadWorldObjects {
     }
 
     public static void Load(OMV.GridClient netComm, CommLLLP worldComm) {
-        LogManager.Log.Log(LogLevel.DCOMMDETAIL, "LoadWorldObjects: loading existing context");
+        LogManager.Log.Log(LogLevel.DCOMM, "LoadWorldObjects: loading existing context");
         List<OMV.Simulator> simsToLoad = new List<OMV.Simulator>();
         lock (netComm.Network.Simulators) {
             foreach (OMV.Simulator sim in netComm.Network.Simulators) {
@@ -57,7 +57,7 @@ public class LoadWorldObjects {
         Object[] loadParams = { simsToLoad, netComm, worldComm };
         ThreadPool.QueueUserWorkItem(LoadSims, loadParams);
         // ThreadPool.UnsafeQueueUserWorkItem(LoadSims, loadParams);
-        LogManager.Log.Log(LogLevel.DCOMMDETAIL, "LoadWorldObjects: started thread to load sim objects");
+        LogManager.Log.Log(LogLevel.DCOMM, "LoadWorldObjects: started thread to load sim objects");
     }
 
     /// <summary>
@@ -66,7 +66,7 @@ public class LoadWorldObjects {
     /// </summary>
     /// <param name="loadParam"></param>
     private static void LoadSims(Object loadParam) {
-        LogManager.Log.Log(LogLevel.DCOMMDETAIL, "LoadWorldObjects: starting to load sim objects");
+        LogManager.Log.Log(LogLevel.DCOMM, "LoadWorldObjects: starting to load sim objects");
         try {
             Object[] loadParams = (Object[])loadParam;
             List<OMV.Simulator> simsToLoad = (List<OMV.Simulator>)loadParams[0];
@@ -77,20 +77,20 @@ public class LoadWorldObjects {
             try {
                 foreach (OMV.Simulator sim in simsToLoad) {
                     simm = sim;
-                    LogManager.Log.Log(LogLevel.DCOMMDETAIL, "LoadWorldObjects: loading avatars and objects for sim {0}", sim.Name);
+                    LogManager.Log.Log(LogLevel.DCOMM, "LoadWorldObjects: loading avatars and objects for sim {0}", sim.Name);
                     AddAvatars(sim, netComm, worldComm);
                     AddObjects(sim, netComm, worldComm);
                 }
             }
             catch (Exception e) {
-                LogManager.Log.Log(LogLevel.DCOMMDETAIL, "LoadWorldObjects: exception loading {0}: {1}",
+                LogManager.Log.Log(LogLevel.DBADERROR, "LoadWorldObjects: exception loading {0}: {1}",
                     (simm == null ? "NULL" : simm.Name), e.ToString());
             }
         }
         catch (Exception e) {
-            LogManager.Log.Log(LogLevel.DCOMMDETAIL, "LoadWorldObjects: exception: {0}", e.ToString());
+            LogManager.Log.Log(LogLevel.DBADERROR, "LoadWorldObjects: exception: {0}", e.ToString());
         }
-        LogManager.Log.Log(LogLevel.DCOMMDETAIL, "LoadWorldObjects: completed loading sim objects");
+        LogManager.Log.Log(LogLevel.DCOMM, "LoadWorldObjects: completed loading sim objects");
     }
 
     // Return 'true' if we don't have this region in our world yet
@@ -102,7 +102,7 @@ public class LoadWorldObjects {
     }
 
     private static void AddAvatars(OMV.Simulator sim, OMV.GridClient netComm, CommLLLP worldComm) {
-        LogManager.Log.Log(LogLevel.DCOMMDETAIL, "LoadWorldObjects: loading {0} avatars", sim.ObjectsAvatars.Count);
+        LogManager.Log.Log(LogLevel.DCOMM, "LoadWorldObjects: loading {0} avatars", sim.ObjectsAvatars.Count);
         List<OMV.Avatar> avatarsToNew = new List<OpenMetaverse.Avatar>();
         sim.ObjectsAvatars.ForEach(delegate(OMV.Avatar av) {
             avatarsToNew.Add(av);
@@ -114,7 +114,7 @@ public class LoadWorldObjects {
     }
 
     private static void AddObjects(OMV.Simulator sim, OMV.GridClient netComm, CommLLLP worldComm) {
-        LogManager.Log.Log(LogLevel.DCOMMDETAIL, "LoadWorldObjects: loading {0} primitives", sim.ObjectsPrimitives.Count);
+        LogManager.Log.Log(LogLevel.DCOMM, "LoadWorldObjects: loading {0} primitives", sim.ObjectsPrimitives.Count);
         List<OMV.Primitive> primsToNew = new List<OpenMetaverse.Primitive>();
         sim.ObjectsPrimitives.ForEach(delegate(OMV.Primitive prim) {
             primsToNew.Add(prim);

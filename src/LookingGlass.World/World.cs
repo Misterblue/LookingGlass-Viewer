@@ -111,7 +111,7 @@ public sealed class World : ModuleBase, IWorld, IProvider {
     #region IWorld methods
     #region Region Management
     public void AddRegion(RegionContextBase rcontext) {
-        m_log.Log(LogLevel.DWORLDDETAIL, "Simulator connected " + rcontext.Name);
+        m_log.Log(LogLevel.DWORLD, "Simulator connected " + rcontext.Name);
         RegionContextBase foundRegion = null;
         lock (m_regionList) {
             foundRegion = GetRegion(rcontext.Name);
@@ -205,6 +205,7 @@ public sealed class World : ModuleBase, IWorld, IProvider {
             if (foundRegion != null) {
                 // we know about this region so remove it and disconnect from events
                 m_regionList.Remove(foundRegion);
+                m_log.Log(LogLevel.DWORLD, "Removing region " + foundRegion.Name);
                 if (Region_OnNewEntityCallback != null) {
                     rcontext.OnEntityNew -= Region_OnNewEntityCallback;
                 }
@@ -249,7 +250,7 @@ public sealed class World : ModuleBase, IWorld, IProvider {
     public IAgent Agent { get { return m_agent; } }
 
     public void AddAgent(IAgent agnt) {
-        m_log.Log(LogLevel.DWORLDDETAIL, "AddAgent: ");
+        m_log.Log(LogLevel.DWORLD, "AddAgent: ");
         m_agent = agnt;
         if (OnAgentNew != null) OnAgentNew(agnt);
     }
@@ -260,7 +261,7 @@ public sealed class World : ModuleBase, IWorld, IProvider {
     }
 
     public void RemoveAgent() {
-        m_log.Log(LogLevel.DWORLDDETAIL, "RemoveAgent: ");
+        m_log.Log(LogLevel.DWORLD, "RemoveAgent: ");
         if (m_agent != null) {
             if (OnAgentRemoved != null) OnAgentRemoved(m_agent);
             m_agent = null;

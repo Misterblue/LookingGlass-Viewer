@@ -214,6 +214,7 @@ void ProcessBetweenFrame::ProcessWorkItems(int numToProcess) {
 		GenericQd* workGeneric = (GenericQd*)m_betweenFrameWork.front();
 		m_betweenFrameWork.pop();
 		LookingGlassOgr::SetStat(LookingGlassOgr::StatBetweenFrameWorkItems, m_betweenFrameWork.size());
+		LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameTotalProcessed);
 		switch (workGeneric->type) {
 			case RefreshResourceCode: {
 				RefreshResourceQd* rrq = (RefreshResourceQd*)workGeneric;
@@ -263,6 +264,11 @@ void ProcessBetweenFrame::ProcessWorkItems(int numToProcess) {
 					usnq->setRotation, usnq->ow, usnq->ox, usnq->oy, usnq->oz);
 				usnq->entName.clear();
 				OGRE_FREE(usnq, Ogre::MEMCATEGORY_GENERAL);
+				break;
+			}
+			default: {
+				LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameUnknownProcess);
+				break;
 			}
 		}
 	}

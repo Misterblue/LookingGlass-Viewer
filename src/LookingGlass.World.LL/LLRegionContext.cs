@@ -86,6 +86,39 @@ public sealed class LLRegionContext : RegionContextBase {
         }
     }
 
+    public bool TryGetEntityLocalID(uint localID, out IEntity ent) {
+        // it's a kludge, but localID is the same as global ID
+        // TODO: add some checking for rcontext since the localIDs are scoped by 'simulator'
+        // we are relying on a low collision rate for localIDs
+        // A linear search of the list takes way too long for the number of objects arriving
+        return TryGetEntity((ulong)localID, out ent);
+    }
+
+    /// <summary>
+    /// </summary>
+    /// <param name="localID"></param>
+    /// <param name="ent"></param>
+    /// <param name="createIt"></param>
+    /// <returns>true if we created a new entry</returns>
+    public bool TryGetCreateEntityLocalID(uint localID, out IEntity ent, RegionCreateEntityCallback createIt) {
+        try {
+            lock (m_entityDictionary) {
+                if (!TryGetEntityLocalID(localID, out ent)) {
+                    IEntity newEntity = createIt();
+                    AddEntity(newEntity);
+                    ent = newEntity;
+                }
+            }
+            return true;
+        }
+        catch (Exception e) {
+            m_log.Log(LogLevel.DBADERROR, "TryGetCreateEntityLocalID: Failed to create entity: {0}", e.ToString());
+        }
+        ent = null;
+        return false;
+    }
+
+
     public override void Dispose() {
         base.Dispose();
         m_simulator = null;

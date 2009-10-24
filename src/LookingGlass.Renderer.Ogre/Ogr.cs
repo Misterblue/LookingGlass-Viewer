@@ -45,6 +45,8 @@ static class Ogr {
     public const int StatBetweenFrameCreateMeshResource = 10;
     public const int StatBetweenFrameCreateMeshSceneNode = 11;
     public const int StatBetweenFrameUpdateSceneNode = 12;
+    public const int StatBetweenFrameTotalProcessed = 16;
+    public const int StatBetweenFrameUnknownProcess = 17;
     // material processing queues
     public const int StatMaterialUpdatesRemaining = 0;
     // the number of stat values (oversized for fudge factors)

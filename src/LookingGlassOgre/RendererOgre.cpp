@@ -353,7 +353,7 @@ namespace RendererOgre {
 
 	void RendererOgre::createVisibilityProcessor() {
 		Log("DEBUG: RendererOgre: create visibility processor");
-		const char* visName = LookingGlassOgr::GetParameter("Renderer.Ogre.VisibilityProcessor");
+		const char* visName = LookingGlassOgr::GetParameter("Renderer.Ogre.Visibility.Processor");
 		if (stricmp(visName, "FrustrumDistance") == 0) {
 			LookingGlassOgr::Log("RendererOgre::createVisibilityProcessor: using VisCalcFrustDist");
 			m_visCalc = new VisCalc::VisCalcFrustDist(this);
