@@ -42,7 +42,7 @@ public:
 	bool frameEnded(const Ogre::FrameEvent&);
 
 	void RefreshResource(int, char*, int);
-	void CreateMaterialResource2(int, const char*, char*, const float*);
+	void CreateMaterialResource2(int, const char*, const char*, const float*);
 	void CreateMeshResource(int, const char*, const int*, const float*);
 	void CreateMeshSceneNode(int,  Ogre::SceneManager* sceneMgr, 
 					char* sceneNodeName, 

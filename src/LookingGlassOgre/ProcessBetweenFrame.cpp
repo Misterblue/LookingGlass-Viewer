@@ -35,45 +35,94 @@ namespace ProcessBetweenFrame {
 ProcessBetweenFrame* m_singleton;
 RendererOgre::RendererOgre* m_ro;
 
-const int GenericCode = 0;
-struct GenericQd {
-	int type;
+// the generic base class that goes in the list
+class GenericQc {
+public:
 	int priority;
-	int data;
+	int cost;
+	Ogre::String uniq;
+	virtual void Process() {};
 };
 
-std::list<GenericQd*> m_betweenFrameWork;
-
-const int RefreshResourceCode = 1;
-struct RefreshResourceQd {
-	int type;
-	int priority;
+// ====================================================================
+// RefreshResource
+// Given a resource name and a resource type, cause Ogre to reload the resource
+class RefreshResourceQc : public GenericQc {
+public:
 	Ogre::String matName;
 	int rType;
+	RefreshResourceQc(int prio, Ogre::String uni, char* resourceName, int rTyp) {
+		this->priority = prio;
+		this->cost = 20;
+		this->uniq = uni;
+		this->matName = Ogre::String(resourceName);
+		this->rType = rTyp;
+	}
+	~RefreshResourceQc(void) {
+		this->uniq.clear();
+		this->matName.clear();
+	}
+	void Process() {
+		m_ro->MaterialTracker()->RefreshResource(this->matName.c_str(), this->rType);
+	}
 };
 
-const int CreateMaterialResourceCode = 2;
-struct CreateMaterialResourceQd {
-	int type;
-	int priority;
+// ====================================================================
+class CreateMaterialResourceQc : public GenericQc {
+public:
 	Ogre::String matName;
 	Ogre::String texName;
 	float parms[OLMaterialTracker::OLMaterialTracker::CreateMaterialSize];
+	CreateMaterialResourceQc(int prio, Ogre::String uni, 
+					const char* mName, const char* tName, const float* inParms) {
+		this->priority = prio;
+		this->cost = 10;
+		this->uniq = uni;
+		this->matName = Ogre::String(mName);
+		this->texName = Ogre::String(tName);
+		memcpy(this->parms, inParms, OLMaterialTracker::OLMaterialTracker::CreateMaterialSize*sizeof(float));
+	}
+	~CreateMaterialResourceQc(void) {
+		this->uniq.clear();
+		this->matName.clear();
+		this->texName.clear();
+	}
+	void Process() {
+		m_ro->MaterialTracker()->CreateMaterialResource2(this->matName.c_str(), this->texName.c_str(), this->parms);
+	}
 };
 
-const int CreateMeshResourceCode = 3;
-struct CreateMeshResourceQd {
-	int type;
-	int priority;
+// ====================================================================
+class CreateMeshResourceQc : public GenericQc {
+public:
 	Ogre::String meshName;
 	int* faceCounts;
 	float* faceVertices;
+	CreateMeshResourceQc(int prio, Ogre::String uni, 
+					const char* mName, const int* faceC, const float* faceV) {
+		this->priority = prio;
+		this->cost = 100;
+		this->uniq = uni;
+		this->meshName = Ogre::String(mName);
+		this->faceCounts = (int*)malloc((*faceC) * sizeof(int));
+		memcpy(this->faceCounts, faceC, (*faceC) * sizeof(int));
+		this->faceVertices = (float*)malloc((*faceV) * sizeof(float));
+		memcpy(this->faceVertices, faceV, (*faceV) * sizeof(float));
+	}
+	~CreateMeshResourceQc(void) {
+		this->uniq.clear();
+		this->meshName.clear();
+		free(this->faceCounts);
+		free(this->faceVertices);
+	}
+	void Process() {
+		m_ro->CreateMeshResource(this->meshName.c_str(), this->faceCounts, this->faceVertices);
+	}
 };
 
-const int CreateMeshSceneNodeCode = 4;
-struct CreateMeshSceneNodeQd {
-	int type;
-	int priority;
+// ====================================================================
+class CreateMeshSceneNodeQc : public GenericQc {
+public:
 	Ogre::SceneManager* sceneMgr; 
 	Ogre::String sceneNodeName;
 	Ogre::SceneNode* parentNode;
@@ -83,12 +132,50 @@ struct CreateMeshSceneNodeQd {
 	float px; float py; float pz;
 	float sx; float sy; float sz;
 	float ow; float ox; float oy; float oz;
+	CreateMeshSceneNodeQc(int prio, Ogre::String uni,
+					Ogre::SceneManager* sceneMgr, 
+					char* sceneNodeName,
+					Ogre::SceneNode* parentNode,
+					char* entityName,
+					char* meshName,
+					bool inheritScale, bool inheritOrientation,
+					float px, float py, float pz,
+					float sx, float sy, float sz,
+					float ow, float ox, float oy, float oz) {
+		this->priority = prio;
+		this->cost = 10;
+		this->uniq = uni;
+		this->sceneMgr = sceneMgr;
+		this->sceneNodeName = Ogre::String(sceneNodeName);
+		this->parentNode = parentNode;
+		this->entityName = Ogre::String(entityName);
+		this->meshName = Ogre::String(meshName);
+		this->inheritScale = inheritScale;
+		this->inheritOrientation = inheritOrientation;
+		this->px = px; this->py = py; this->pz = pz;
+		this->sx = sx; this->sy = sy; this->sz = sz;
+		this->ow = ow; this->ox = ox; this->oy = oy; this->oz = oz;
+	}
+	~CreateMeshSceneNodeQc(void) {
+		this->uniq.clear();
+		this->sceneNodeName.clear();
+		this->entityName.clear();
+		this->meshName.clear();
+	}
+	void Process() {
+		Ogre::SceneNode* node = m_ro->CreateSceneNode(
+					this->sceneMgr, this->sceneNodeName.c_str(), this->parentNode,
+					this->inheritScale, this->inheritOrientation,
+					this->px, this->py, this->pz,
+					this->sx, this->sy, this->sz,
+					this->ow, this->ox, this->oy, this->oz);
+		m_ro->AddEntity(this->sceneMgr, node, this->entityName.c_str(), this->meshName.c_str());
+	}
 };
 
-const int UpdateSceneNodeCode = 5;
-struct UpdateSceneNodeQd {
-	int type;
-	int priority;
+// ====================================================================
+class UpdateSceneNodeQc : public GenericQc {
+public:
 	Ogre::String entName;
 	bool setPosition;
 	bool setScale;
@@ -96,8 +183,43 @@ struct UpdateSceneNodeQd {
 	float px; float py; float pz;
 	float sx; float sy; float sz;
 	float ow; float ox; float oy; float oz;
+	UpdateSceneNodeQc(int prio, Ogre::String uni,
+					char* entName,
+					bool setPosition, float px, float py, float pz,
+					bool setScale, float sx, float sy, float sz,
+					bool setRotation, float ow, float ox, float oy, float oz) {
+		this->priority = prio;
+		this->cost = 10;
+		this->uniq = uni;
+		this->entName = Ogre::String(entName);
+		this->setPosition = setPosition;
+		this->setScale = setScale;
+		this->setRotation = setRotation;
+		this->px = px; this->py = py; this->pz = pz;
+		this->sx = sx; this->sy = sy; this->sz = sz;
+		this->ow = ow; this->ox = ox; this->oy = oy; this->oz = oz;
+	}
+	~UpdateSceneNodeQc(void) {
+		this->uniq.clear();
+		this->entName.clear();
+	}
+	void Process() {
+		m_ro->UpdateSceneNode(this->entName.c_str(),
+					this->setPosition, this->px, this->py, this->pz,
+					this->setScale, this->sx, this->sy, this->sz,
+					this->setRotation, this->ow, this->ox, this->oy, this->oz);
+	}
 };
 
+std::list<GenericQc*> m_betweenFrameWork;
+
+// ====================================================================
+// Queue of work to do between frames.
+// To add a between frame operation, you write a subclass of GenericQc like those
+// above, write a routine to create and instance of the class and put it in the
+// queue and later, between frames, the Process() routine will be called.
+// The constructors and destructors of the *Qc class handles all the allocation
+// and deallocation of memory needed to pass the parameters.
 ProcessBetweenFrame::ProcessBetweenFrame(RendererOgre::RendererOgre* ro, int workItems) {
 	m_singleton = this;
 	m_ro = ro;
@@ -111,42 +233,28 @@ ProcessBetweenFrame::~ProcessBetweenFrame() {
 	LookingGlassOgr::GetOgreRoot()->removeFrameListener(this);
 }
 
+// ====================================================================
+// refresh a resource
 void ProcessBetweenFrame::RefreshResource(int priority, char* resourceName, int rType) {
-	RefreshResourceQd* rrq = OGRE_NEW_T(RefreshResourceQd, Ogre::MEMCATEGORY_GENERAL);
-	rrq->type = RefreshResourceCode;
-	rrq->matName = Ogre::String(resourceName);
-	rrq->rType = rType;
-	rrq->priority = priority;
-	m_betweenFrameWork.push_back((GenericQd*)rrq);
-	LookingGlassOgr::SetStat(LookingGlassOgr::StatBetweenFrameWorkItems, m_betweenFrameWork.size());
+	RefreshResourceQc* rrq = new RefreshResourceQc(priority, Ogre::String(), resourceName, rType);
+	m_betweenFrameWork.push_back((GenericQc*)rrq);
+	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameWorkItems);
 	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameRefreshResource);
 }
 
 void ProcessBetweenFrame::CreateMaterialResource2(int priority, 
-			  const char* matName, char* texName, const float* parms) {
-	CreateMaterialResourceQd* cmrq = OGRE_NEW_T(CreateMaterialResourceQd, Ogre::MEMCATEGORY_GENERAL);
-	cmrq->type = CreateMaterialResourceCode;
-	cmrq->priority = priority;
-	cmrq->matName = Ogre::String(matName);
-	cmrq->texName = Ogre::String(texName);
-	memcpy(cmrq->parms, parms, OLMaterialTracker::OLMaterialTracker::CreateMaterialSize*sizeof(float));
-	m_betweenFrameWork.push_back((GenericQd*)cmrq);
-	LookingGlassOgr::SetStat(LookingGlassOgr::StatBetweenFrameWorkItems, m_betweenFrameWork.size());
+			  const char* matName, const char* texName, const float* parms) {
+	CreateMaterialResourceQc* cmrq = new CreateMaterialResourceQc(priority, Ogre::String(), matName, texName, parms);
+	m_betweenFrameWork.push_back((GenericQc*)cmrq);
+	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameWorkItems);
 	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameCreateMaterialResource);
 }
 
 void ProcessBetweenFrame::CreateMeshResource(int priority, 
 				 const char* meshName, const int* faceCounts, const float* faceVertices) {
-	CreateMeshResourceQd* cmrq = OGRE_NEW_T(CreateMeshResourceQd, Ogre::MEMCATEGORY_GENERAL);
-	cmrq->type = CreateMeshResourceCode;
-	cmrq->priority = priority;
-	cmrq->meshName = Ogre::String(meshName);
-	cmrq->faceCounts = (int*)OGRE_MALLOC((*faceCounts) * sizeof(int), Ogre::MEMCATEGORY_GENERAL);
-	memcpy(cmrq->faceCounts, faceCounts, (*faceCounts) * sizeof(int));
-	cmrq->faceVertices = (float*)OGRE_MALLOC((*faceVertices) * sizeof(float), Ogre::MEMCATEGORY_GENERAL);
-	memcpy(cmrq->faceVertices, faceVertices, (*faceVertices) * sizeof(float));
-	m_betweenFrameWork.push_back((GenericQd*)cmrq);
-	LookingGlassOgr::SetStat(LookingGlassOgr::StatBetweenFrameWorkItems, m_betweenFrameWork.size());
+	CreateMeshResourceQc* cmrq = new CreateMeshResourceQc(priority, Ogre::String(), meshName, faceCounts, faceVertices);
+	m_betweenFrameWork.push_back((GenericQc*)cmrq);
+	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameWorkItems);
 	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameCreateMeshResource);
 }
 
@@ -160,21 +268,18 @@ void ProcessBetweenFrame::CreateMeshSceneNode(int priority,
 					float px, float py, float pz,
 					float sx, float sy, float sz,
 					float ow, float ox, float oy, float oz) {
-	CreateMeshSceneNodeQd* csnq = OGRE_NEW_T(CreateMeshSceneNodeQd, Ogre::MEMCATEGORY_GENERAL);
-	csnq->type = CreateMeshSceneNodeCode;
-	csnq->priority = priority;
-	csnq->sceneMgr = sceneMgr;
-	csnq->sceneNodeName = Ogre::String(sceneNodeName);
-	csnq->parentNode = parentNode;
-	csnq->entityName = Ogre::String(entityName);
-	csnq->meshName = Ogre::String(meshName);
-	csnq->inheritScale = inheritScale;
-	csnq->inheritOrientation = inheritOrientation;
-	csnq->px = px; csnq->py = py; csnq->pz = pz;
-	csnq->sx = sx; csnq->sy = sy; csnq->sz = sz;
-	csnq->ow = ow; csnq->ox = ox; csnq->oy = oy; csnq->oz = oz;
-	m_betweenFrameWork.push_back((GenericQd*)csnq);
-	LookingGlassOgr::SetStat(LookingGlassOgr::StatBetweenFrameWorkItems, m_betweenFrameWork.size());
+	CreateMeshSceneNodeQc* csnq = new CreateMeshSceneNodeQc(priority, Ogre::String(), 
+					sceneMgr, 
+					sceneNodeName,
+					parentNode,
+					entityName,
+					meshName,
+					inheritScale, inheritOrientation,
+					px, py, pz,
+					sx, sy, sz,
+					ow, ox, oy, oz);
+	m_betweenFrameWork.push_back((GenericQc*)csnq);
+	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameWorkItems);
 	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameCreateMeshSceneNode);
 }
 
@@ -182,21 +287,17 @@ void ProcessBetweenFrame::UpdateSceneNode(int priority, char* entName,
 					bool setPosition, float px, float py, float pz,
 					bool setScale, float sx, float sy, float sz,
 					bool setRotation, float ow, float ox, float oy, float oz) {
-	UpdateSceneNodeQd* usnq = OGRE_NEW_T(UpdateSceneNodeQd, Ogre::MEMCATEGORY_GENERAL);
-	usnq->type = UpdateSceneNodeCode;
-	usnq->priority = priority;
-	usnq->entName = Ogre::String(entName);
-	usnq->setPosition = setPosition;
-	usnq->setScale = setScale;
-	usnq->setRotation = setRotation;
-	usnq->px = px; usnq->py = py; usnq->pz = pz;
-	usnq->sx = sx; usnq->sy = sy; usnq->sz = sz;
-	usnq->ow = ow; usnq->ox = ox; usnq->oy = oy; usnq->oz = oz;
-	m_betweenFrameWork.push_back((GenericQd*)usnq);
-	LookingGlassOgr::SetStat(LookingGlassOgr::StatBetweenFrameWorkItems, m_betweenFrameWork.size());
+	UpdateSceneNodeQc* usnq = new UpdateSceneNodeQc(priority, Ogre::String(),
+					entName,
+					setPosition, px, py, pz,
+					setScale, sx, sy, sz,
+					setRotation, ow, ox, oy, oz);
+	m_betweenFrameWork.push_back((GenericQc*)usnq);
+	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameWorkItems);
 	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameUpdateSceneNode);
 }
 
+// ====================================================================
 // we're between frames, on our own thread so we can do the work without locking
 bool ProcessBetweenFrame::frameEnded(const Ogre::FrameEvent& evt) {
 	ProcessWorkItems(m_numWorkItemsToDoBetweenFrames);
@@ -209,76 +310,24 @@ bool ProcessBetweenFrame::HasWorkItems() {
 }
 
 
-bool XXCompareElements(const GenericQd* e1, const GenericQd* e2) {
-	return (e1->priority <= e2->priority);
+bool XXCompareElements(const GenericQc* e1, const GenericQc* e2) {
+	return (e1->priority < e2->priority);
 }
 
 void ProcessBetweenFrame::ProcessWorkItems(int numToProcess) {
+	// This sort is intended to put the highest priority (ones with lowest numbers) at
+	//   the front of the list for processing first.
+	// TODO: figure out why uncommenting this line causes exceptions
 	// m_betweenFrameWork.sort(XXCompareElements);
-	int loopCount = numToProcess;
-	while (!m_betweenFrameWork.empty()) {
-		// only do so much work each frame
-		if (loopCount-- < 0) break;
-		GenericQd* workGeneric = (GenericQd*)m_betweenFrameWork.front();
+	int loopCost = numToProcess;
+	while (!m_betweenFrameWork.empty() && (loopCost > 0) ) {
+		GenericQc* workGeneric = (GenericQc*)m_betweenFrameWork.front();
 		m_betweenFrameWork.pop_front();
 		LookingGlassOgr::SetStat(LookingGlassOgr::StatBetweenFrameWorkItems, m_betweenFrameWork.size());
 		LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameTotalProcessed);
-		switch (workGeneric->type) {
-			case RefreshResourceCode: {
-				RefreshResourceQd* rrq = (RefreshResourceQd*)workGeneric;
-				m_ro->MaterialTracker()->RefreshResource(rrq->matName.c_str(), rrq->rType);
-				rrq->matName.clear();
-				OGRE_FREE(rrq, Ogre::MEMCATEGORY_GENERAL);
-				break;
-			}
-			case CreateMaterialResourceCode: {
-				CreateMaterialResourceQd* cmrq = (CreateMaterialResourceQd*)workGeneric;
-				m_ro->MaterialTracker()->CreateMaterialResource2(
-						cmrq->matName.c_str(), cmrq->texName.c_str(), cmrq->parms);
-				cmrq->matName.clear();
-				cmrq->texName.clear();
-				OGRE_FREE(cmrq, Ogre::MEMCATEGORY_GENERAL);
-				break;
-			}
-			case CreateMeshResourceCode: {
-				CreateMeshResourceQd* cmrq = (CreateMeshResourceQd*)workGeneric;
-				m_ro->CreateMeshResource(cmrq->meshName.c_str(), cmrq->faceCounts, cmrq->faceVertices);
-				cmrq->meshName.clear();
-				OGRE_FREE(cmrq->faceCounts, Ogre::MEMCATEGORY_GENERAL);
-				OGRE_FREE(cmrq->faceVertices, Ogre::MEMCATEGORY_GENERAL);
-				OGRE_FREE(cmrq, Ogre::MEMCATEGORY_GENERAL);
-				break;
-			}
-			case CreateMeshSceneNodeCode: {
-				CreateMeshSceneNodeQd* csnq = (CreateMeshSceneNodeQd*)workGeneric;
-				Ogre::SceneNode* node = m_ro->CreateSceneNode(
-					csnq->sceneMgr, csnq->sceneNodeName.c_str(), csnq->parentNode,
-					csnq->inheritScale, csnq->inheritOrientation,
-					csnq->px, csnq->py, csnq->pz,
-					csnq->sx, csnq->sy, csnq->sz,
-					csnq->ow, csnq->ox, csnq->oy, csnq->oz);
-				m_ro->AddEntity(csnq->sceneMgr, node, csnq->entityName.c_str(), csnq->meshName.c_str());
-				csnq->sceneNodeName.clear();
-				csnq->entityName.clear();
-				csnq->meshName.clear();
-				OGRE_FREE(csnq, Ogre::MEMCATEGORY_GENERAL);
-				break;
-			}
-			case UpdateSceneNodeCode: {
-				UpdateSceneNodeQd* usnq = (UpdateSceneNodeQd*)workGeneric;
-				m_ro->UpdateSceneNode( usnq->entName.c_str(),
-					usnq->setPosition, usnq->px, usnq->py, usnq->pz,
-					usnq->setScale, usnq->sx, usnq->sy, usnq->sz,
-					usnq->setRotation, usnq->ow, usnq->ox, usnq->oy, usnq->oz);
-				usnq->entName.clear();
-				OGRE_FREE(usnq, Ogre::MEMCATEGORY_GENERAL);
-				break;
-			}
-			default: {
-				LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameUnknownProcess);
-				break;
-			}
-		}
+		workGeneric->Process();
+		loopCost -= workGeneric->cost;
+		free(workGeneric);
 	}
 	return;
 }

@@ -52,6 +52,9 @@ public class BasicWorkQueue : IWorkQueue {
         m_queueName = nam;
         m_totalRequests = 0;
         WorkQueueManager.Instance.Register(this);
+        if (LookingGlassBase.Instance.AppParams.HasParameter("Framework.WorkQueue.MaxThreads")) {
+            m_workProcessorsMax = LookingGlassBase.Instance.AppParams.ParamInt("Framework.WorkQueue.MaxThreads");
+        }
     }
 
     // IWorkQueue.DoLater()

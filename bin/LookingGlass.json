@@ -5,45 +5,10 @@
 // "Log.FilterLevel": "1073744896",	// 0x40000c00: RENDER and RENDERDETAIL
 
 // ====================================================
-"Modules": [
-    {   "Assembly": "LookingGlass.Rest.dll",
-        "Interface": "LookingGlass.Framework.Modules.IModule",
-        "Name": "RestManager",
-        "Order": 10
-    },
-    {   "Assembly": "LookingGlass.Comm.LLLP.dll",
-        "Interface": "LookingGlass.Comm.ICommProvider",
-        "Name": "Comm",
-        "Order": 20
-    },
-    {   "Assembly": "LookingGlass.World.dll",
-        "Interface": "LookingGlass.World.IWorld",
-        "Name": "World",
-        "Order": 30
-    },
-    {   "Assembly": "LookingGlass.View.dll",
-        "Interface": "LookingGlass.View.IViewProvider",
-        "Name": "Viewer",
-        "Order": 40
-    },
-    {   "Assembly": "LookingGlass.Renderer.Ogre.dll",
-        "Interface": "LookingGlass.Renderer.IRenderProvider",
-        "Name": "Renderer",
-        "Order": 50
-    },
-    {   "Assembly": "LookingGlass.Comm.LLLP.dll",
-        "Interface": "LookingGlass.Rest.IRestUser",
-        "Name": "CommLLLPRest",
-        "Order": 70
-    }
-],
+// "World.Parameters": "xx",
 
 // ====================================================
-"World.Parameters": "xx",
-
-// ====================================================
-"Viewer.World.Name": "World",
-"Viewer.Renderer.Name": "Renderer",
+// "Viewer.Parameters": "xx",
 
 // ====================================================
 "Renderer.Ogre.Renderer": "OpenGL Rendering Subsystem",
@@ -52,19 +17,19 @@
 // Shadow technique: none, texture-modulative, stencil-modulative, texture-additive, stencil-additive
 "Renderer.Ogre.ShadowTechnique": "none",
 // "Renderer.Ogre.ShadowTechnique": "texture-additive",
-"Renderer.Ogre.Visibility.MaxDistance": "200",
+"Renderer.Ogre.Visibility.MaxDistance": "100",
 "Renderer.Ogre.Visibility.MinDistance": "30",
-"Renderer.Ogre.Visibility.OnlyLargeAfter": "120",
+"Renderer.Ogre.Visibility.OnlyLargeAfter": "80",
 "Renderer.Ogre.Visibility.Large": "8",
 // currently only works with Direct3D9
 // "Renderer.Ogre.Sky": "SkyX",
+// "Renderer.Ogre.Ambient": "<0.2,0.2,0.2>",
 
 // ====================================================
 "Comm.Texture.MaxRequests": "4",
 "Comm.Settings.MultipleSims": "false",
 
 // ====================================================
-"CommLLLPRest.Comm": "Comm",
 "CommLLLPRest.APIName": "LLLP",
 
 // ====================================================

@@ -237,7 +237,7 @@ namespace RendererOgre {
 		// routines for managing and loading materials
 		m_materialTracker = new OLMaterialTracker::OLMaterialTracker(this);
 		int betweenWork = LookingGlassOgr::GetParameterInt("Renderer.Ogre.BetweenFrame.WorkItems");
-		if (betweenWork == 0) betweenWork = 200;
+		if (betweenWork == 0) betweenWork = 5000;
 		m_processBetweenFrame = new ProcessBetweenFrame::ProcessBetweenFrame(this, betweenWork);
 
 		// listener to catch references to materials in meshes when they are read in
