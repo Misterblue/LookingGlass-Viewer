@@ -256,6 +256,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     private Ogr.RequestResourceCallback requestResourceCallbackHandle;
     private Ogr.BetweenFramesCallback betweenFramesCallbackHandle;
     // ==========================================================================
+    private int m_framesPerSecondLastTime = 10; // used to calclate frames per sec
+    private int m_framesPerSecondLastFrames = 1;
     override public bool AfterAllModulesLoaded() {
         // allow others to get our statistics
         m_restHandler = new RestHandler("/stats/" + m_moduleName + "/detailStats", m_stats);
@@ -316,6 +318,18 @@ public class RendererOgre : ModuleBase, IRenderProvider {
 
         // Create a ParameterSet that can be read externally via REST/JSON
         m_ogreStats = new ParameterSet();
+        // add an initial parameter that calculates frames per sec
+        m_ogreStats.Add("framespersecond",
+            delegate(string xx) {
+                int intrvl = Environment.TickCount - m_framesPerSecondLastTime;
+                if (intrvl < 0) intrvl += Int32.MaxValue;   // TickCount wraps
+                float fps = ((float)(m_ogreStatsPinned[Ogr.StatTotalFrames] - m_framesPerSecondLastFrames));
+                fps /= (float)intrvl / 1000f;
+                m_framesPerSecondLastTime = Environment.TickCount;
+                m_framesPerSecondLastFrames = m_ogreStatsPinned[Ogr.StatTotalFrames];
+                return new OMVSD.OSDString(fps.ToString());
+            }, "Frames per second"
+        );
         // Add parameters for each name with a delegate to get the value from the pinned data array
         // The c++ code updates the array and we pick up the values with the ParameterSet delegates
         foreach (string key in m_ogreStatsIndex.Keys) {
