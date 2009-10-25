@@ -81,6 +81,10 @@ public class RendererOgre : ModuleBase, IRenderProvider {
 
     protected Thread m_rendererThread = null;
 
+    // If true, requesting a mesh causes the mesh to be rebuilt and written out
+    // This makes sure cached copy is the same as server but is also slow
+    protected bool m_shouldForceMeshRebuild = false;
+
     // this shouldn't be here... this is a feature of the LL renderer
     protected float m_sceneMagnification;
     public float SceneMagnification { get { return m_sceneMagnification; } }
@@ -159,6 +163,9 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.DefaultTerrainMaterial",
                     "LookingGlass/DefaultTerrainMaterial",
                     "Material applied to terrain");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Ocean.Processor",
+                    "none",
+                    "The processing routine to create the ocean. Either 'none' or 'hydrax'");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.OceanMaterialName",
                     "LookingGlass/Ocean",
                     "The ogre name of the ocean texture");
@@ -202,6 +209,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "Write out materials to files (replace with DB someday)");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.SerializeMeshes", "true",
                     "Write out meshes to files");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.ForceMeshRebuild", "false",
+                    "True if to force the generation a mesh when first rendered (don't rely on cache)");
 
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Sky", "Default",
                     "Name of the key system to use");
@@ -234,6 +243,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.Large", "8",
                     "How big is considered 'large' for 'OnlyLargeAfter' calculation");
 
+        // some counters and intervals to see how long things take
         m_stats = new StatisticManager(m_moduleName);
         m_statRefreshMaterialInterval = m_stats.GetIntervalCounter("UpdateTexture");
         m_statCreateMaterialInterval = m_stats.GetIntervalCounter("CreateMaterial");
@@ -379,17 +389,19 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         betweenFramesCallbackHandle = new Ogr.BetweenFramesCallback(ProcessBetweenFrames);
         Ogr.SetBetweenFramesCallback(betweenFramesCallbackHandle);
 
-        m_sceneMagnification = float.Parse(ModuleParams.ParamString("Renderer.Ogre.LL.SceneMagnification"));
+        m_sceneMagnification = float.Parse(ModuleParams.ParamString(m_moduleName + ".Ogre.LL.SceneMagnification"));
+
+        m_shouldForceMeshRebuild = ModuleParams.ParamBool(m_moduleName + ".Ogre.ForceMeshRebuild");
 
         // pick up a bunch of parameterized values
-        m_betweenFrameTotalCost = ModuleParams.ParamInt("Renderer.Ogre.BetweenFrame.Costs.Total");
-        m_betweenFrameCreateMaterialCost = ModuleParams.ParamInt("Renderer.Ogre.BetweenFrame.Costs.CreateMaterial");
-        m_betweenFrameCreateSceneNodeCost = ModuleParams.ParamInt("Renderer.Ogre.BetweenFrame.Costs.CreateSceneNode");
-        m_betweenFrameCreateMeshCost = ModuleParams.ParamInt("Renderer.Ogre.BetweenFrame.Costs.CreateMesh");
-        m_betweenFrameRefreshMeshCost = ModuleParams.ParamInt("Renderer.Ogre.BetweenFrame.Costs.RefreshMesh");
-        m_betweenFrameMapRegionCost = ModuleParams.ParamInt("Renderer.Ogre.BetweenFrame.Costs.MapRegion");
-        m_betweenFrameUpdateTerrainCost = ModuleParams.ParamInt("Renderer.Ogre.BetweenFrame.Costs.UpdateTerrain");
-        m_betweenFrameMapTextureCost = ModuleParams.ParamInt("Renderer.Ogre.BetweenFrame.Costs.MapTexture");
+        m_betweenFrameTotalCost = ModuleParams.ParamInt(m_moduleName + ".Ogre.BetweenFrame.Costs.Total");
+        m_betweenFrameCreateMaterialCost = ModuleParams.ParamInt(m_moduleName + ".Ogre.BetweenFrame.Costs.CreateMaterial");
+        m_betweenFrameCreateSceneNodeCost = ModuleParams.ParamInt(m_moduleName + ".Ogre.BetweenFrame.Costs.CreateSceneNode");
+        m_betweenFrameCreateMeshCost = ModuleParams.ParamInt(m_moduleName + ".Ogre.BetweenFrame.Costs.CreateMesh");
+        m_betweenFrameRefreshMeshCost = ModuleParams.ParamInt(m_moduleName + ".Ogre.BetweenFrame.Costs.RefreshMesh");
+        m_betweenFrameMapRegionCost = ModuleParams.ParamInt(m_moduleName + ".Ogre.BetweenFrame.Costs.MapRegion");
+        m_betweenFrameUpdateTerrainCost = ModuleParams.ParamInt(m_moduleName + ".Ogre.BetweenFrame.Costs.UpdateTerrain");
+        m_betweenFrameMapTextureCost = ModuleParams.ParamInt(m_moduleName + ".Ogre.BetweenFrame.Costs.MapTexture");
 
         // start up the Ogre renderer
         try {
@@ -601,7 +613,9 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     m_ent.SetAddition(RendererOgre.AddSceneNodeName, entitySceneNodeName);
 
                     // Experiemental: force the creation of the mesh
-                    RequestMesh(m_ent.Name.Name, entMeshName);
+                    if (m_shouldForceMeshRebuild) {
+                        RequestMesh(m_ent.Name.Name, entMeshName);
+                    }
                 }
                 catch (Exception e) {
                     m_log.Log(LogLevel.DBADERROR, "Render: Failed conversion: " + e.ToString());
