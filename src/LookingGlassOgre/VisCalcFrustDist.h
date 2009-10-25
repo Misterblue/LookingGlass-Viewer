@@ -64,5 +64,7 @@ private:
 	float m_visibilityScaleMinDistance;		// always visible is this close
 	float m_visibilityScaleLargeSize;		// what is large enough to see at a distance
 	bool m_recalculateVisibility;			// set to TRUE if visibility should be recalcuated
+
+	int m_meshesReloadedPerFrame;			// number of meshes to reload per frame
 };
 }

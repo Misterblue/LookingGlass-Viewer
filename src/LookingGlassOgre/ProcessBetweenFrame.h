@@ -58,6 +58,7 @@ public:
 					bool setScale, float sx, float sy, float sz,
 					bool setRotation, float ow, float ox, float oy, float oz);
 
+
 private:
 	int m_numWorkItemsToDoBetweenFrames;
 };

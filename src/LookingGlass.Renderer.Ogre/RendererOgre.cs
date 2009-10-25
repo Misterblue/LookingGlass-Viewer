@@ -186,7 +186,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.LL.EarlyMaterialCreate", "false",
                     "Create materials while creating mesh rather than waiting");
 
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.BetweenFrame.WorkItems", "30",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.BetweenFrame.WorkItems", "50",
                     "Number of queued C++ work items to do between each frame");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.BetweenFrame.Costs.Total", "1000",
                     "The total cost of C# operations to do between each frame");
@@ -242,6 +242,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "After this distance, only large things are visible");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.Large", "8",
                     "How big is considered 'large' for 'OnlyLargeAfter' calculation");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.MeshesReloadedPerFrame", "20",
+                    "When reloading newly visible meshes, how many to load per frame");
 
         // some counters and intervals to see how long things take
         m_stats = new StatisticManager(m_moduleName);

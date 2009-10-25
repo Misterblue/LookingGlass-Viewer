@@ -54,6 +54,7 @@ void VisCalcFrustDist::Initialize() {
 					m_shouldCullByFrustrum ? "true" : "false",
 					m_shouldCullByDistance ? "true" : "false"
 	);
+	m_meshesReloadedPerFrame = LookingGlassOgr::GetParameterInt("Renderer.Ogre.Visibility.MeshesReloadedPerFrame");
 	return;
 }
 
@@ -74,8 +75,8 @@ void VisCalcFrustDist::RecalculateVisibility() {
 bool VisCalcFrustDist::frameEnded(const Ogre::FrameEvent& evt) {
 	if (m_recalculateVisibility) {
 		calculateEntityVisibility();
-		processEntityVisibility();
 	}
+	processEntityVisibility();
 	return true;
 }
 
@@ -192,7 +193,7 @@ void VisCalcFrustDist::calculateEntityVisibility(Ogre::Node* node) {
 stdext::hash_map<Ogre::String, Ogre::Entity*> meshesToLoad;
 stdext::hash_map<Ogre::String, Ogre::Entity*> meshesToUnload;
 void VisCalcFrustDist::processEntityVisibility() {
-	int cnt = 10;
+	int cnt = m_meshesReloadedPerFrame;
 	stdext::hash_map<Ogre::String, Ogre::Entity*>::iterator intr;
 	while ((!meshesToLoad.empty()) && (cnt-- > 0)) {
 		intr = meshesToLoad.begin();

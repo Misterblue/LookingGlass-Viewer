@@ -32,15 +32,17 @@
 
 namespace ProcessBetweenFrame {
 
-std::queue<void*> m_betweenFrameWork;
 ProcessBetweenFrame* m_singleton;
 RendererOgre::RendererOgre* m_ro;
 
 const int GenericCode = 0;
 struct GenericQd {
 	int type;
+	int priority;
 	int data;
 };
+
+std::list<GenericQd*> m_betweenFrameWork;
 
 const int RefreshResourceCode = 1;
 struct RefreshResourceQd {
@@ -115,7 +117,7 @@ void ProcessBetweenFrame::RefreshResource(int priority, char* resourceName, int 
 	rrq->matName = Ogre::String(resourceName);
 	rrq->rType = rType;
 	rrq->priority = priority;
-	m_betweenFrameWork.push((GenericQd*)rrq);
+	m_betweenFrameWork.push_back((GenericQd*)rrq);
 	LookingGlassOgr::SetStat(LookingGlassOgr::StatBetweenFrameWorkItems, m_betweenFrameWork.size());
 	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameRefreshResource);
 }
@@ -128,7 +130,7 @@ void ProcessBetweenFrame::CreateMaterialResource2(int priority,
 	cmrq->matName = Ogre::String(matName);
 	cmrq->texName = Ogre::String(texName);
 	memcpy(cmrq->parms, parms, OLMaterialTracker::OLMaterialTracker::CreateMaterialSize*sizeof(float));
-	m_betweenFrameWork.push((GenericQd*)cmrq);
+	m_betweenFrameWork.push_back((GenericQd*)cmrq);
 	LookingGlassOgr::SetStat(LookingGlassOgr::StatBetweenFrameWorkItems, m_betweenFrameWork.size());
 	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameCreateMaterialResource);
 }
@@ -143,7 +145,7 @@ void ProcessBetweenFrame::CreateMeshResource(int priority,
 	memcpy(cmrq->faceCounts, faceCounts, (*faceCounts) * sizeof(int));
 	cmrq->faceVertices = (float*)OGRE_MALLOC((*faceVertices) * sizeof(float), Ogre::MEMCATEGORY_GENERAL);
 	memcpy(cmrq->faceVertices, faceVertices, (*faceVertices) * sizeof(float));
-	m_betweenFrameWork.push((GenericQd*)cmrq);
+	m_betweenFrameWork.push_back((GenericQd*)cmrq);
 	LookingGlassOgr::SetStat(LookingGlassOgr::StatBetweenFrameWorkItems, m_betweenFrameWork.size());
 	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameCreateMeshResource);
 }
@@ -171,7 +173,7 @@ void ProcessBetweenFrame::CreateMeshSceneNode(int priority,
 	csnq->px = px; csnq->py = py; csnq->pz = pz;
 	csnq->sx = sx; csnq->sy = sy; csnq->sz = sz;
 	csnq->ow = ow; csnq->ox = ox; csnq->oy = oy; csnq->oz = oz;
-	m_betweenFrameWork.push((GenericQd*)csnq);
+	m_betweenFrameWork.push_back((GenericQd*)csnq);
 	LookingGlassOgr::SetStat(LookingGlassOgr::StatBetweenFrameWorkItems, m_betweenFrameWork.size());
 	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameCreateMeshSceneNode);
 }
@@ -190,7 +192,7 @@ void ProcessBetweenFrame::UpdateSceneNode(int priority, char* entName,
 	usnq->px = px; usnq->py = py; usnq->pz = pz;
 	usnq->sx = sx; usnq->sy = sy; usnq->sz = sz;
 	usnq->ow = ow; usnq->ox = ox; usnq->oy = oy; usnq->oz = oz;
-	m_betweenFrameWork.push((GenericQd*)usnq);
+	m_betweenFrameWork.push_back((GenericQd*)usnq);
 	LookingGlassOgr::SetStat(LookingGlassOgr::StatBetweenFrameWorkItems, m_betweenFrameWork.size());
 	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameUpdateSceneNode);
 }
@@ -206,13 +208,19 @@ bool ProcessBetweenFrame::HasWorkItems() {
 	return !m_betweenFrameWork.empty();
 }
 
+
+bool XXCompareElements(const GenericQd* e1, const GenericQd* e2) {
+	return (e1->priority <= e2->priority);
+}
+
 void ProcessBetweenFrame::ProcessWorkItems(int numToProcess) {
+	// m_betweenFrameWork.sort(XXCompareElements);
 	int loopCount = numToProcess;
 	while (!m_betweenFrameWork.empty()) {
 		// only do so much work each frame
 		if (loopCount-- < 0) break;
 		GenericQd* workGeneric = (GenericQd*)m_betweenFrameWork.front();
-		m_betweenFrameWork.pop();
+		m_betweenFrameWork.pop_front();
 		LookingGlassOgr::SetStat(LookingGlassOgr::StatBetweenFrameWorkItems, m_betweenFrameWork.size());
 		LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameTotalProcessed);
 		switch (workGeneric->type) {
