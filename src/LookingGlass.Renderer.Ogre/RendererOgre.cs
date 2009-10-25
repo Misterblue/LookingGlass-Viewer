@@ -273,6 +273,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         m_ogreStatsDesc = new Dictionary<string,string>();
         // NOTE: PUTTING ANY UPPER CASE IN THE KEY STRINGS CAUSES FAILURES!!
         // culling and visibility
+        m_ogreStatsIndex.Add("totalframes", Ogr.StatTotalFrames);
+        m_ogreStatsDesc.Add("totalframes", "Number of frames rendered");
         m_ogreStatsIndex.Add("visibletovisible", Ogr.StatVisibleToVisible);
         m_ogreStatsDesc.Add("visibletovisible", "Meshes at were visible that are still visible in last frame");
         m_ogreStatsIndex.Add("invisibletovisible", Ogr.StatInvisibleToVisible);

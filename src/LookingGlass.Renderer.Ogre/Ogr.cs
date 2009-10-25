@@ -49,6 +49,8 @@ static class Ogr {
     public const int StatBetweenFrameUnknownProcess = 17;
     // material processing queues
     public const int StatMaterialUpdatesRemaining = 0;
+    // misc info
+    public const int StatTotalFrames = 18;
     // the number of stat values (oversized for fudge factors)
     public const int StatSize = 30;
 

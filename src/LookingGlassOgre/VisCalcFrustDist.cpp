@@ -29,6 +29,7 @@ namespace VisCalc {
 	
 VisCalcFrustDist::VisCalcFrustDist(RendererOgre::RendererOgre* ro) {
 	m_singleton = this;
+	m_ro = ro;
 }
 
 VisCalcFrustDist::~VisCalcFrustDist() {
@@ -47,7 +48,7 @@ void VisCalcFrustDist::Initialize() {
 	LookingGlassOgr::Log("initialize: visibility: min=%f, max=%f, large=%f, largeafter=%f",
 			(double)m_visibilityScaleMinDistance, (double)m_visibilityScaleMaxDistance, 
 			(double)m_visibilityScaleLargeSize, (double)m_visibilityScaleOnlyLargeAfter);
-	LookingGlassOgr::Log("initialize: visibility: cull meshes/textures/frustrum/distance = %s/%s/%s/%s",
+	LookingGlassOgr::Log("VisCalcFrustDist::Initialize: visibility: cull meshes/textures/frustrum/distance = %s/%s/%s/%s",
 					m_shouldCullMeshes ? "true" : "false",
 					m_shouldCullTextures ? "true" : "false",
 					m_shouldCullByFrustrum ? "true" : "false",
@@ -93,10 +94,11 @@ int visInvisToVis;
 int visInvisToInvis;
 void VisCalcFrustDist::calculateEntityVisibility() {
 	if ((!m_recalculateVisibility) || ((!m_shouldCullByDistance) && (!m_shouldCullByFrustrum))) return;
+	m_recalculateVisibility = false;
 	visRegions = visChildren = visEntities = visNodes = 0;
 	visVisToVis = visVisToInvis = visInvisToVis = visInvisToInvis = 0;
-	m_recalculateVisibility = false;
 	Ogre::SceneNode* nodeRoot = m_ro->m_sceneMgr->getRootSceneNode();
+	if (nodeRoot == NULL) return;
 	// Hanging off the root node will be a node for each 'region'. A region has
 	// terrain and then content nodes
 	Ogre::SceneNode::ChildNodeIterator rootChildIterator = nodeRoot->getChildIterator();
@@ -186,21 +188,11 @@ void VisCalcFrustDist::calculateEntityVisibility(Ogre::Node* node) {
 	}
 }
 
-// NOTE that all this queuing and visibility checking relies on the since
-//    between frame thread.
 // BETWEEN FRAME OPERATION
 stdext::hash_map<Ogre::String, Ogre::Entity*> meshesToLoad;
 stdext::hash_map<Ogre::String, Ogre::Entity*> meshesToUnload;
 void VisCalcFrustDist::processEntityVisibility() {
 	int cnt = 10;
-	/*
-	while (meshesToUnload.size() > 0 && cnt-- > 0) {
-	}
-	*/
-	cnt = 100;
-	// if (!meshesToLoad.empty()) {
-	// 	LookingGlassOgr::Log("processEntityVisibility: cnt=%d", meshesToLoad.size());
-	// }
 	stdext::hash_map<Ogre::String, Ogre::Entity*>::iterator intr;
 	while ((!meshesToLoad.empty()) && (cnt-- > 0)) {
 		intr = meshesToLoad.begin();

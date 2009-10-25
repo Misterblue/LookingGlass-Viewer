@@ -62,7 +62,7 @@ namespace RendererOgre {
 	// If we don't want the thread, return false.
 	Ogre::Timer* timeKeeper = new Ogre::Timer();
 	bool RendererOgre::renderingThread() {
-		Log("DEBUG: LookingGlassOrge: Starting rendering");
+		Log("RendererOgre::renderingThread: LookingGlassOrge: Starting rendering");
 		// m_root->startRendering();
 
 		// new way that tried to control the amount of work between frames to keep
@@ -90,7 +90,7 @@ namespace RendererOgre {
 			}
 			timeStartedLastFrame = timeKeeper->getMilliseconds();
 		}
-		Log("DEBUG: LookingGlassOrge: Completed rendering");
+		Log("RendererOgre::renderingThread: Completed rendering");
 		destroyScene();
 		// for some reason, often after the exit, m_root is not usable
 		// m_root->shutdown();
@@ -136,7 +136,7 @@ namespace RendererOgre {
 				float dw, float dx, float dy, float dz,
 				float nearClip, float farClip, float aspect) {
 		if (m_camera) {
-			LookingGlassOgr::Log("UpdateCamera: pos=<%f, %f, %f>", (double)px, (double)py, (double)pz);
+			LookingGlassOgr::Log("RendererOgre::UpdateCamera: pos=<%f, %f, %f>", (double)px, (double)py, (double)pz);
 			m_camera->setPosition(px, py, pz);
 			m_camera->setOrientation(Ogre::Quaternion(dw, dx, dy, dz));
 			if (nearClip != m_camera->getNearClipDistance()) {
@@ -156,7 +156,7 @@ namespace RendererOgre {
 	// Do all the setup needed in the Ogre environment: all the basic entities
 	// (camera, lights, ...), all the resource managers and the user input system.
 	void RendererOgre::initialize() {
-		Log("DEBUG: LookingGlassOrge: Initialize");
+		Log("RendererOgre::initialize: ");
 		m_cacheDir = LookingGlassOgr::GetParameter("Renderer.Ogre.CacheDir");
 		m_preloadedDir = LookingGlassOgr::GetParameter("Renderer.Ogre.PreLoadedDir");
 
@@ -164,7 +164,7 @@ namespace RendererOgre {
 		m_serializeMeshes = LookingGlassOgr::GetParameterBool("Renderer.Ogre.SerializeMeshes");
 
 		m_root = new Ogre::Root(GetParameter("Renderer.Ogre.PluginFilename"));
-		Log("DEBUG: LookingGlassOrge: after new Ogre::Root()");
+		Log("RendererOgre::initialize: after new Ogre::Root()");
 		// if detail logging is turned off, I don't want Ogre yakking up a storm either
 		if (LookingGlassOgr::debugLogCallback == NULL) {
 			Ogre::LogManager::getSingleton().setLogDetail(Ogre::LL_LOW);
@@ -182,7 +182,7 @@ namespace RendererOgre {
 	        initOgreResources();
 		}
 		catch (char* str) {
-			Log("DEBUG: LookingGlassOrge: exception initializing: {0}", str);
+			Log("RendererOgre::initialize: LookingGlassOrge: exception initializing: {0}", str);
 			return;
 		}
 
@@ -212,7 +212,7 @@ namespace RendererOgre {
 
 	// Load all the resource locations from the resource configuration file
 	void RendererOgre::loadOgreResources(const char* resourceFile) {
-		Log("DEBUG: LookingGlassOrge: LoadOgreResources");
+		Log("RendererOgre::loadOgreResources: ");
 		Ogre::String secName, typeName, archName;
 		Ogre::ConfigFile cf;
 		cf.load(resourceFile);
@@ -231,7 +231,7 @@ namespace RendererOgre {
 
 	// Create the resource group and group managers for the LookingGlass Ogre extensions
 	void RendererOgre::createLookingGlassResourceGroups() {
-		Log("createLookingGlassResourceGroups:");
+		Log("RendererOgre::createLookingGlassResourceGroups:");
 		Ogre::ResourceGroupManager::getSingleton().createResourceGroup(OLResourceGroupName);
 
 		// routines for managing and loading materials
@@ -246,24 +246,24 @@ namespace RendererOgre {
 
 		// Create the archive system that will find the predefined meshes/textures
 		Ogre::ArchiveManager::getSingleton().addArchiveFactory(new OLPreloadArchiveFactory() );
-		Log("createLookingGlassResourceGroups: addResourceLocation %s", m_preloadedDir.c_str());
+		Log("RendererOgre::createLookingGlassResourceGroups: addResourceLocation %s", m_preloadedDir.c_str());
 		Ogre::ResourceGroupManager::getSingleton().addResourceLocation(m_preloadedDir,
 						OLPreloadTypeName, OLResourceGroupName, true);
 
 		// Create the archive system that will find our meshes
 		Ogre::ArchiveManager::getSingleton().addArchiveFactory(new OLArchiveFactory() );
-		Log("createLookingGlassResourceGroups: addResourceLocation %s", m_cacheDir.c_str());
+		Log("RendererOgre::createLookingGlassResourceGroups: addResourceLocation %s", m_cacheDir.c_str());
 		Ogre::ResourceGroupManager::getSingleton().addResourceLocation(m_cacheDir,
 						OLArchiveTypeName, OLResourceGroupName, true);
 		return;
 	}
 
 	void RendererOgre::configureOgreRenderSystem() {
-		Log("DEBUG: LookingGlassOrge: ConfigureOgreRenderSystem");
+		Log("RendererOgre::configureOgreRenderSystem:");
 		Ogre::String rsystem = GetParameter("Renderer.Ogre.Renderer");
 		Ogre::RenderSystem* rs = m_root->getRenderSystemByName(rsystem);
 		if (rs == NULL) {
-			Log("Cannot initialize rendering system '%s'", rsystem);
+			Log("RendererOgre::configureOgreRenderingSystem: CANNOT INITIALIZE RENDERING SYSTEM '%s'", rsystem);
 			return;
 		}
 		m_root->setRenderSystem(rs);
@@ -292,14 +292,14 @@ namespace RendererOgre {
 	}
 
 	void RendererOgre::initOgreResources() {
-		Log("DEBUG: LookingGlassOrge: InitOgreResources");
+		Log("RendererOgre::initOgreResources");
 		Ogre::TextureManager::getSingleton().setDefaultNumMipmaps(
 			LookingGlassOgr::GetParameterInt("Renderer.Ogre.DefaultNumMipmaps"));
 		Ogre::ResourceGroupManager::getSingleton().initialiseAllResourceGroups();
 	}
 
 	void RendererOgre::createScene() {
-		Log("DEBUG: LookingGlassOrge: createScene");
+		Log("RendererOgre::createScene");
 		try {
 			const char* sceneName = GetParameter("Renderer.Ogre.Name");
 			m_sceneMgr = m_root->createSceneManager(Ogre::ST_EXTERIOR_CLOSE, sceneName);
@@ -310,32 +310,32 @@ namespace RendererOgre {
 			const char* shadowName = LookingGlassOgr::GetParameter("Renderer.Ogre.ShadowTechnique");
 			if (stricmp(shadowName, "texture-modulative") == 0) {
 				m_sceneMgr->setShadowTechnique(Ogre::SHADOWTYPE_TEXTURE_MODULATIVE);	// hardest
-				LookingGlassOgr::Log("createScene: setting shadow to 'texture-modulative'");
+				LookingGlassOgr::Log("RendererOgre::createScene: setting shadow to 'texture-modulative'");
 			}
 			if (stricmp(shadowName, "stencil-modulative") == 0) {
 				m_sceneMgr->setShadowTechnique(Ogre::SHADOWTYPE_STENCIL_MODULATIVE);
-				LookingGlassOgr::Log("createScene: setting shadow to 'stencil-modulative'");
+				LookingGlassOgr::Log("RendererOgre::createScene: setting shadow to 'stencil-modulative'");
 			}
 			if (stricmp(shadowName, "texture-additive") == 0) {
 				m_sceneMgr->setShadowTechnique(Ogre::SHADOWTYPE_TEXTURE_ADDITIVE);	// easiest
-				LookingGlassOgr::Log("createScene: setting shadow to 'texture-additive'");
+				LookingGlassOgr::Log("RendererOgre::createScene: setting shadow to 'texture-additive'");
 			}
 			if (stricmp(shadowName, "stencil-additive") == 0) {
 				m_sceneMgr->setShadowTechnique(Ogre::SHADOWTYPE_STENCIL_ADDITIVE);
-				LookingGlassOgr::Log("createScene: setting shadow to 'stencil-additive'");
+				LookingGlassOgr::Log("RendererOgre::createScene: setting shadow to 'stencil-additive'");
 			}
 			int shadowFarDistance = LookingGlassOgr::GetParameterInt("Renderer.Ogre.ShadowFarDistance");
 			m_sceneMgr->setShadowFarDistance((float)shadowFarDistance);
 			m_sceneMgr->setShadowColour(Ogre::ColourValue(0.2, 0.2, 0.2));
 		}
 		catch (std::exception e) {
-			Log("Exception in createScene: %s", e.what());
+			Log("RendererOgre::createScene: Exception %s", e.what());
 			return;
 		}
 	}
 
 	void RendererOgre::createCamera() {
-		Log("DEBUG: RendererOgre: createCamera");
+		Log("RendererOgre::createCamera");
 		m_camera = m_sceneMgr->createCamera("MainCamera");
 		m_camera->setPosition(0.0, 0.0, 0.0);
 		m_camera->setDirection(0.0, 0.0, -1.0);
@@ -347,14 +347,14 @@ namespace RendererOgre {
 	}
 
 	void RendererOgre::createViewport() {
-		Log("DEBUG: RendererOgre: createViewport");
+		Log("RendererOgre::createViewport");
 		m_viewport = m_window->addViewport(m_camera);
 		m_viewport->setBackgroundColour(Ogre::ColourValue(0.0f, 0.0f, 0.25f));
 		m_camera->setAspectRatio((float)m_viewport->getActualWidth() / (float)m_viewport->getActualHeight());
 	}
 
 	void RendererOgre::createSky() {
-		Log("DEBUG: RendererOgre: createsky");
+		Log("RendererOgre::createsky");
 		const char* skyName = LookingGlassOgr::GetParameter("Renderer.Ogre.Sky");
 		if (stricmp(skyName, "SkyX") == 0) {
 			LookingGlassOgr::Log("RendererOgre::createSky: using SkyBoxSkyX");
@@ -369,7 +369,7 @@ namespace RendererOgre {
 	}
 
 	void RendererOgre::createVisibilityProcessor() {
-		Log("DEBUG: RendererOgre: create visibility processor");
+		Log("RendererOgre::createVisibilityProcessor");
 		const char* visName = LookingGlassOgr::GetParameter("Renderer.Ogre.Visibility.Processor");
 		if (stricmp(visName, "FrustrumDistance") == 0) {
 			LookingGlassOgr::Log("RendererOgre::createVisibilityProcessor: using VisCalcFrustDist");
@@ -384,7 +384,7 @@ namespace RendererOgre {
 	}
 
 	void RendererOgre::createFrameListener() {
-		Log("DEBUG: LookingGlassOrge: createFrameListener");
+		Log("RendererOgre::createFrameListener");
 		// this creates two pointers to our base object. 
 		// Might need to manage if we ever get dynamic.
 		m_root->addFrameListener(this);
@@ -406,11 +406,8 @@ namespace RendererOgre {
 	int betweenFrameCounter = 0;
 	bool RendererOgre::frameEnded(const Ogre::FrameEvent& evt) {
 		if (m_window->isClosed()) return false;	// if you close the window we leave
+		LookingGlassOgr::IncStat(LookingGlassOgr::StatTotalFrames);
 		betweenFrameCounter++;
-		// see if things are still visible
-		// calculateEntityVisibility();
-		// processEntityVisibility();
-		// every now and then, call to the managed code to handle terrain
 		if (LookingGlassOgr::betweenFramesCallback != NULL) {
 			// the C# code uses this for terrain and regions so don't do it often
 			if ((betweenFrameCounter % 10) == 0) {
@@ -486,7 +483,7 @@ namespace RendererOgre {
 			}
 		}
 		else {
-			LookingGlassOgr::Log("UpdateSceneNode: entity not found. Did not update entity %s", entName);
+			LookingGlassOgr::Log("RendererOgre::UpdateSceneNode: entity not found. Did not update entity %s", entName);
 		}
 		return;
 	}
@@ -876,7 +873,7 @@ const char* RendererOgre::GetParameter(const char* paramName) {
 		return (*LookingGlassOgr::fetchParameterCallback)(paramName);
 	}
 	else {
-		Log("DEBUG: LookingGlassOrge: could not get parameter %s", paramName);
+		Log("RendererOgre::GetParameter: could not get parameter %s", paramName);
 	}
 	return NULL;
 }

@@ -37,12 +37,12 @@ public:
 	void Start();
 	void Stop();
 
+	void RecalculateVisibility();
+
 	// Ogre::FrameListener
 	// bool frameStarted(const Ogre::FrameEvent &e);
 	// bool frameRenderingQueued(const Ogre::FrameEvent &e);
 	bool frameEnded(const Ogre::FrameEvent &e);
-
-	void RecalculateVisibility();
 
 private:
 	RendererOgre::RendererOgre* m_ro;
