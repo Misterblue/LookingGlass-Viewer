@@ -30,11 +30,5 @@
 "Comm.Settings.MultipleSims": "false",
 
 // ====================================================
-"CommLLLPRest.APIName": "LLLP",
-
-// ====================================================
-"Rest.Manager.Skin": "Default",
-
-// ====================================================
 "ParameterWithoutAComma": "Last"
 }

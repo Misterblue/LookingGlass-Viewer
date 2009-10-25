@@ -25,11 +25,12 @@ using System.Collections.Generic;
 using System.Text;
 using System.Windows.Forms;
 using LookingGlass.Framework;
+using LookingGlass.Framework.Modules;
 using LookingGlass.Renderer;
 
 namespace LookingGlass.Radegast {
 
-public class UserInterfaceRadegast : IUserInterfaceProvider {
+public class UserInterfaceRadegast : ModuleBase, IUserInterfaceProvider  {
 
 # pragma warning disable 0067   // disable unused event warning
     public event UserInterfaceKeypressCallback OnUserInterfaceKeypress;
@@ -41,6 +42,25 @@ public class UserInterfaceRadegast : IUserInterfaceProvider {
     public UserInterfaceRadegast() {
     }
 
+    #region ModuleBase
+    // IModule.OnLoad
+    public override void OnLoad(string name, LookingGlassBase lgbase) {
+        base.OnLoad(name, lgbase);
+    }
+
+    // IModule.AfterAllModulesLoaded
+    public override bool AfterAllModulesLoaded() {
+        return true;
+    }
+
+    // IModule.Start
+    public override void Start() { }
+
+    // IModule.Stop
+    public override void Stop() { }
+    #endregion IModule
+
+    #region IUserInterfaceProvider
     // IUserInterfaceProvider.InputModeCode
     private InputModeCode m_inputMode;
     public InputModeCode InputMode { 
@@ -86,5 +106,6 @@ public class UserInterfaceRadegast : IUserInterfaceProvider {
         // don't hook me up with the low level stuff
         return false;
     }
+    #endregion IUserInterfaceProvider
 }
 }

@@ -144,8 +144,9 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "Name of the rendering subsystem to use");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.VideoMode", "800 x 600@ 32-bit colour",
                     "Initial window size");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.InputSystem", "LookingGlass.Renderer.Ogr.UserInterfaceOgre",
-                    "Selection of user interface system.");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.InputSystem", 
+                    "Ogre",
+                    "Module to handle user IO on the rendering screen");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.FramePerSecMax", "30",
                     "Maximum number of frames to display per second");
 
@@ -353,17 +354,16 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         m_ogreStatsHandler = new RestHandler("/stats/" + m_moduleName + "/ogreStats", m_ogreStats);
         #endregion OGRE STATS
 
-        // load the input system we're supposed to be using
-        String uiClass = ModuleParams.ParamString(m_moduleName + ".Ogre.InputSystem");
-        if (uiClass != null && uiClass.Length > 0) {
+        // Load the input system we're supposed to be using
+        // The input system is a module tha we get given the name of. Go find it and link it in.
+        String uiModule = ModuleParams.ParamString(m_moduleName + ".Ogre.InputSystem.Name");
+        if (uiModule != null && uiModule.Length > 0) {
             try {
-                m_log.Log(LogLevel.DRENDERDETAIL, "Loading UI processor {0}", uiClass);
-                System.Reflection.Assembly thisAssembly = System.Reflection.Assembly.GetExecutingAssembly();
-                m_userInterface = (UserInterfaceOgre)thisAssembly.CreateInstance(uiClass, true);
-                // m_userInterface = new UserInterfaceOgre();
+                m_log.Log(LogLevel.DRENDER, "Loading UI processor '{0}'", uiModule);
+                m_userInterface = (IUserInterfaceProvider)LGB.ModManager.Module(uiModule);
             }
             catch (Exception e) {
-                m_log.Log(LogLevel.DBADERROR, "FATAL: Could not load user interface class {0}: {1}", uiClass, e.ToString());
+                m_log.Log(LogLevel.DBADERROR, "FATAL: Could not load user interface class {0}: {1}", uiModule, e.ToString());
                 return false;
             }
         }
@@ -374,6 +374,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
 
         // if we are doing detail logging, enable logging by  the LookingGlassOgre code
         if (m_log.WouldLog(LogLevel.DRENDERDETAIL)) {
+            m_log.Log(LogLevel.DRENDER, "Logging detail high enough to enable unmanaged code log messages");
             debugLogCallbackHandle = new Ogr.DebugLogCallback(OgrLogger);
             Ogr.SetDebugLogCallback(debugLogCallbackHandle);
         }
@@ -450,7 +451,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     // ==========================================================================
     // IModule.Start()
     override public void Start() {
-        m_log.Log(LogLevel.DRENDERDETAIL, "Start: requesting main thread");
+        m_log.Log(LogLevel.DRENDER, "Start: requesting main thread");
         LGB.GetMainThread(RendererThread);
         return;
     }
@@ -475,7 +476,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
 
     // Given the main thread. Run and then say we're all done.
     public bool RendererThread() {
-        m_log.Log(LogLevel.DRENDERDETAIL, "RendererThread: have main thread");
+        m_log.Log(LogLevel.DRENDER, "RendererThread: have main thread");
         /*
         // Try creating a thread just for the renderer
         // create a thread for the renderer

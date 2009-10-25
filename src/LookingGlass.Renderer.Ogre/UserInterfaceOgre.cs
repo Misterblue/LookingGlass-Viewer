@@ -26,11 +26,12 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using LookingGlass.Framework.Logging;
+using LookingGlass.Framework.Modules;
 using LookingGlass.Renderer;
 using LookingGlass.Framework.WorkQueue;
 
 namespace LookingGlass.Renderer.Ogr {
-public class UserInterfaceOgre : IUserInterfaceProvider {
+public class UserInterfaceOgre : ModuleBase, IUserInterfaceProvider {
     private ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
 
 # pragma warning disable 0067   // disable unused event warning
@@ -39,6 +40,24 @@ public class UserInterfaceOgre : IUserInterfaceProvider {
     public event UserInterfaceMouseButtonCallback OnUserInterfaceMouseButton;
     public event UserInterfaceEntitySelectedCallback OnUserInterfaceEntitySelected;
 # pragma warning restore 0067
+
+    #region ModuleBase
+    // IModule.OnLoad
+    public override void OnLoad(string name, LookingGlassBase lgbase) {
+        base.OnLoad(name, lgbase);
+    }
+
+    // IModule.AfterAllModulesLoaded
+    public override bool AfterAllModulesLoaded() {
+        return true;
+    }
+
+    // IModule.Start
+    public override void Start() { }
+
+    // IModule.Stop
+    public override void Stop() { }
+    #endregion IModule
 
     private InputModeCode m_inputMode;
     public InputModeCode InputMode {

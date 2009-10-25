@@ -59,12 +59,12 @@ public class CommLLLPRest : ModuleBase, IRestUser {
     public override void OnLoad(string name, LookingGlassBase lgbase) {
         base.OnLoad(name, lgbase);
         m_apiName = "LLLP";
-        ModuleParams.AddDefaultParameter(ModuleName + ".Comm", "Comm", "Name of comm module to connect to");
+        ModuleParams.AddDefaultParameter(ModuleName + ".Comm.Name", "Comm", "Name of comm module to connect to");
         ModuleParams.AddDefaultParameter(ModuleName + ".APIName", m_apiName, "Name of api for this comm control");
     }
 
     public override void Start() {
-        string commName = ModuleParams.ParamString(ModuleName + ".Comm");
+        string commName = ModuleParams.ParamString(ModuleName + ".Comm.Name");
         try {
             m_comm = (ICommProvider)LGB.ModManager.Module(commName);
         }
