@@ -311,6 +311,10 @@ bool ProcessBetweenFrame::HasWorkItems() {
 
 
 bool XXCompareElements(const GenericQc* e1, const GenericQc* e2) {
+	if (e1 == NULL || e2 == NULL) {
+		LookingGlassOgr::Log("ProcessBetweenFrames::XXCompareElements: found null. n1=%x, n2=%x", e1, e2);
+		return false;
+	}
 	return (e1->priority < e2->priority);
 }
 
@@ -327,7 +331,7 @@ void ProcessBetweenFrame::ProcessWorkItems(int numToProcess) {
 		LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameTotalProcessed);
 		workGeneric->Process();
 		loopCost -= workGeneric->cost;
-		free(workGeneric);
+		delete(workGeneric);
 	}
 	return;
 }
