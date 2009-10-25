@@ -41,7 +41,31 @@ void SkyBoxSkyX::Initialize() {
 
 void SkyBoxSkyX::Start() {
 	// Add a basic cloud layer
-	m_SkyX->getCloudsManager()->add(SkyX::CloudLayer::Options(/* Default options */));
+	// m_SkyX->getCloudsManager()->add(SkyX::CloudLayer::Options(/* Default options */));
+	// add cloud layer 1. These are the default values
+	m_SkyX->getCloudsManager()->add(SkyX::CloudLayer::Options(
+		100.0,		// height
+		0.001,		// Scale
+		Ogre::Vector2(1.0, 1.0),	// wind direction
+		0.125,		// Time mulitplier
+		0.05,		// distance attenuation
+		1.0,		// detail attenuation
+		2.0,		// normal multiplier
+		0.25,		// height volume
+		0.01		// volumetric displacement
+		));
+	// add another layer that is a little off
+	m_SkyX->getCloudsManager()->add(SkyX::CloudLayer::Options(
+		130.0,		// height
+		0.001,		// Scale
+		Ogre::Vector2(1.0, 0.8),	// wind direction
+		0.2,		// Time mulitplier
+		0.05,		// distance attenuation
+		1.0,		// detail attenuation
+		2.0,		// normal multiplier
+		0.25,		// height volume
+		0.01		// volumetric displacement
+		));
 
 	m_sun = m_ro->m_sceneMgr->createLight("sun");
 	m_sun->setType(Ogre::Light::LT_DIRECTIONAL);	// directional and sun-like
@@ -60,6 +84,12 @@ void SkyBoxSkyX::Start() {
 		m_SkyX->setLightingMode(m_SkyX->LM_LDR);
 	}
 
+	SkyX::AtmosphereManager::Options SkyXOptions = m_SkyX->getAtmosphereManager()->getOptions();
+
+	// make east the same direction as in SL
+	SkyXOptions.EastPosition = Ogre::Vector2(1.0,0.0);
+
+	m_SkyX->getAtmosphereManager()->setOptions(SkyXOptions);
 
 	// Add frame listener
 	m_ro->m_root->addFrameListener(this);
@@ -67,6 +97,7 @@ void SkyBoxSkyX::Start() {
 }
 
 void SkyBoxSkyX::Stop() {
+	m_ro->m_root->removeFrameListener(this);
 	if (m_SkyX != 0) {
 		delete m_SkyX;
 		m_SkyX = 0;
@@ -78,8 +109,7 @@ void SkyBoxSkyX::AddSkyPass(Ogre::MaterialPtr matP) {
 }
 
 
-// bool SkyBoxSkyX::frameStarted(const Ogre::FrameEvent &e) {
-bool SkyBoxSkyX::frameRenderingQueued(const Ogre::FrameEvent &e) {
+bool SkyBoxSkyX::frameEnded(const Ogre::FrameEvent &e) {
 /*
 		// Check camera height
 		Ogre::RaySceneQuery * raySceneQuery = 
