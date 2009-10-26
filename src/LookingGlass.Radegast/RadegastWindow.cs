@@ -46,6 +46,11 @@ public partial class RadegastWindow : Form {
     private PaintEventHandler m_paintEventHandler = null;
     private EventHandler m_resizeEventHandler = null;
 
+    private IUserInterfaceProvider m_UILink = null;
+    private bool m_MouseIn = false;     // true if mouse is over our window
+    private float m_MouseLastX = -3456f;
+    private float m_MouseLastY = -3456f;
+
     // Called before LookingGlass is initialized
     public RadegastWindow(RadegastInstance rinst, LookingGlassBase lgbase) {
         m_radInstance = rinst;
@@ -103,35 +108,56 @@ public partial class RadegastWindow : Form {
     }
 
     private void LGWindow_MouseDown(object sender, MouseEventArgs e) {
-
+        if (m_UILink != null && m_MouseIn) {
+            int butn = ConvertMouseButtonCode(e.Button);
+            m_UILink.ReceiveUserIO(ReceiveUserIOInputEventTypeCode.MouseButtonDown, butn, 0f, 0f);
+        }
     }
 
     private void LGWindow_MouseMove(object sender, MouseEventArgs e) {
-
+        if (m_UILink != null && m_MouseIn) {
+            int butn = ConvertMouseButtonCode(e.Button);
+            if (m_MouseLastX == -3456f) m_MouseLastX = e.X;
+            if (m_MouseLastY == -3456f) m_MouseLastY = e.Y;
+            m_UILink.ReceiveUserIO(ReceiveUserIOInputEventTypeCode.MouseMove, butn,
+                            e.X - m_MouseLastX, e.Y - m_MouseLastY);
+            m_MouseLastX = e.X;
+            m_MouseLastY = e.Y;
+        }
     }
 
     private void LGWindow_MouseLeave(object sender, EventArgs e) {
-
+        m_MouseIn = false;
     }
 
     private void LGWindow_MouseEnter(object sender, EventArgs e) {
-
+        m_MouseIn = true;
     }
 
     private void LGWindow_MouseUp(object sender, MouseEventArgs e) {
-
-    }
-
-    private void LGWindow_MouseClick(object sender, MouseEventArgs e) {
-
+        if (m_UILink != null) {
+            int butn = ConvertMouseButtonCode(e.Button);
+            m_UILink.ReceiveUserIO(ReceiveUserIOInputEventTypeCode.MouseButtonUp, butn, 0f, 0f);
+        }
     }
 
     private void RadegastWindow_KeyDown(object sender, KeyEventArgs e) {
-
+        if (m_UILink != null) {
+            m_UILink.ReceiveUserIO(ReceiveUserIOInputEventTypeCode.KeyPress, (int)e.KeyCode, 0f, 0f);
+        }
     }
 
     private void RadegastWindow_KeyUp(object sender, KeyEventArgs e) {
+        if (m_UILink != null) {
+            m_UILink.ReceiveUserIO(ReceiveUserIOInputEventTypeCode.KeyRelease, (int)e.KeyCode, 0f, 0f);
+        }
+    }
 
+    private int ConvertMouseButtonCode(MouseButtons inCode) {
+        if ((inCode & MouseButtons.Left) != 0) return (int)ReceiveUserIOMouseButtonCode.Left;
+        if ((inCode & MouseButtons.Right) != 0) return (int)ReceiveUserIOMouseButtonCode.Right;
+        if ((inCode & MouseButtons.Middle) != 0) return (int)ReceiveUserIOMouseButtonCode.Middle;
+        return 0;
     }
 
 }

@@ -63,6 +63,9 @@ class RadegastMain : IRadegastPlugin {
         RadInstance.Client.Settings.STORE_LAND_PATCHES = true;
     }
 
+    // This code follows the form of the Main.cs code in setting up parameters then
+    // initialzing and running.
+    // Change one, be sure to change the other.
     public void startLGView(Object parm, EventArgs args) {
         m_log.Log(LogLevel.DRADEGAST, "startLGView()");
         // force a new default parameter files to Radegast specific ones 

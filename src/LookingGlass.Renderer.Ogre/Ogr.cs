@@ -6,21 +6,6 @@ namespace LookingGlass.Renderer.Ogr {
 
 static class Ogr {
 
-    public const int IOTypeKeyPressed = 1;      // p1=keyboard keycode
-    public const int IOTypeKeyReleased = 2;     // p1=keyboard keycode
-    public const int IOTypeMouseMove = 3;       // p2=x move since last, p3=y move since last
-    public const int IOTypeMouseButtonDown = 4; // p1=button number
-    public const int IOTypeMouseButtonUp = 5;   // p1=button number
-
-    public const int IOMouseButtonLeft = 0;     // mouse button codes passed with mouse events
-    public const int IOMouseButtonRight = 1;    // corresponds to OIS::MouseButtonID
-    public const int IOMouseButtonMiddle = 2;
-    public const int IOMouseButton3 = 3;
-    public const int IOMouseButton4 = 4;
-    public const int IOMouseButton5 = 5;
-    public const int IOMouseButton6 = 6;
-    public const int IOMouseButton7 = 7;
-
     public const int ResourceTypeUnknown = 0;   // unknown
     public const int ResourceTypeMesh = 1;      // mesh resource
     public const int ResourceTypeTexture = 2;   // texture

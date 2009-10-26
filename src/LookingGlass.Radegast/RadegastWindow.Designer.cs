@@ -54,7 +54,6 @@
             this.LGWindow.TabIndex = 0;
             this.LGWindow.MouseLeave += new System.EventHandler(this.LGWindow_MouseLeave);
             this.LGWindow.MouseMove += new System.Windows.Forms.MouseEventHandler(this.LGWindow_MouseMove);
-            this.LGWindow.MouseClick += new System.Windows.Forms.MouseEventHandler(this.LGWindow_MouseClick);
             this.LGWindow.MouseDown += new System.Windows.Forms.MouseEventHandler(this.LGWindow_MouseDown);
             this.LGWindow.MouseUp += new System.Windows.Forms.MouseEventHandler(this.LGWindow_MouseUp);
             this.LGWindow.MouseEnter += new System.EventHandler(this.LGWindow_MouseEnter);

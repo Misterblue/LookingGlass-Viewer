@@ -130,6 +130,10 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     #region IModule
     public override void OnLoad(string name, LookingGlassBase lgbase) {
         base.OnLoad(name, lgbase);
+        ModuleParams.AddDefaultParameter(m_moduleName + ".InputSystem.Name", 
+                    "OgreUI",
+                    "Module to handle user IO on the rendering screen");
+
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Name", "LookingGlass",
                     "Name of the Ogre resources to load");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.SkyboxName", "LookingGlass/CloudyNoonSkyBox",
@@ -144,9 +148,6 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "Name of the rendering subsystem to use");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.VideoMode", "800 x 600@ 32-bit colour",
                     "Initial window size");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.InputSystem", 
-                    "Ogre",
-                    "Module to handle user IO on the rendering screen");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.FramePerSecMax", "30",
                     "Maximum number of frames to display per second");
 
@@ -356,11 +357,15 @@ public class RendererOgre : ModuleBase, IRenderProvider {
 
         // Load the input system we're supposed to be using
         // The input system is a module tha we get given the name of. Go find it and link it in.
-        String uiModule = ModuleParams.ParamString(m_moduleName + ".Ogre.InputSystem.Name");
+        String uiModule = ModuleParams.ParamString(m_moduleName + ".InputSystem.Name");
         if (uiModule != null && uiModule.Length > 0) {
             try {
                 m_log.Log(LogLevel.DRENDER, "Loading UI processor '{0}'", uiModule);
                 m_userInterface = (IUserInterfaceProvider)LGB.ModManager.Module(uiModule);
+                if (m_userInterface == null) {
+                    m_log.Log(LogLevel.DBADERROR, "FATAL: Could not find user interface class {0}", uiModule);
+                    return false;
+                }
             }
             catch (Exception e) {
                 m_log.Log(LogLevel.DBADERROR, "FATAL: Could not load user interface class {0}: {1}", uiModule, e.ToString());
@@ -383,10 +388,14 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         Ogr.SetFetchParameterCallback(fetchParameterCallbackHandle);
         checkKeepRunningCallbackHandle = new Ogr.CheckKeepRunningCallback(CheckKeepRunning);
         Ogr.SetCheckKeepRunningCallback(checkKeepRunningCallbackHandle);
+
+        // link the input devices to and turn on low level IO reception
         if (m_userInterface.NeedsRendererLinkage()) {
-            userIOCallbackHandle = new Ogr.UserIOCallback(m_userInterface.ReceiveUserIO);
+            userIOCallbackHandle = new Ogr.UserIOCallback(ReceiveUserIOConv);
             Ogr.SetUserIOCallback(userIOCallbackHandle);
         }
+
+        // handles so unmanaged code can call back to managed code
         requestResourceCallbackHandle = new Ogr.RequestResourceCallback(RequestResource);
         Ogr.SetRequestResourceCallback(requestResourceCallbackHandle);
         betweenFramesCallbackHandle = new Ogr.BetweenFramesCallback(ProcessBetweenFrames);
@@ -418,6 +427,12 @@ public class RendererOgre : ModuleBase, IRenderProvider {
 
         // if we get here, rendering is set up and running
         return true;
+    }
+
+    // do some type conversion of the stuff coming in from the unmanaged code
+    private void ReceiveUserIOConv(int type, int param1, float param2, float param3) {
+        m_userInterface.ReceiveUserIO((ReceiveUserIOInputEventTypeCode)type, param1, param2, param3);
+        return;
     }
 
     // routine called from unmanaged code to log a message

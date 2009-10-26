@@ -27,8 +27,9 @@ using System.Threading;
 using System.Windows.Forms;
 using LookingGlass.Framework.Logging;
 using LookingGlass.Framework.Modules;
-using LookingGlass.Renderer;
 using LookingGlass.Framework.WorkQueue;
+using LookingGlass.Renderer;
+using LookingGlass.World;
 
 namespace LookingGlass.Renderer.Ogr {
 public class UserInterfaceOgre : ModuleBase, IUserInterfaceProvider {
@@ -41,10 +42,33 @@ public class UserInterfaceOgre : ModuleBase, IUserInterfaceProvider {
     public event UserInterfaceEntitySelectedCallback OnUserInterfaceEntitySelected;
 # pragma warning restore 0067
 
+    public UserInterfaceOgre() {
+    }
+
+    IUserInterfaceProvider m_ui;
+
     #region ModuleBase
     // IModule.OnLoad
     public override void OnLoad(string name, LookingGlassBase lgbase) {
         base.OnLoad(name, lgbase);
+        m_ui = new UserInterfaceCommon();
+        m_ui.OnUserInterfaceKeypress += UI_OnUserInterfaceKeypress;
+        m_ui.OnUserInterfaceMouseMove += UI_OnUserInterfaceMouseMove;
+        m_ui.OnUserInterfaceMouseButton += UI_OnUserInterfaceMouseButton;
+        m_ui.OnUserInterfaceEntitySelected += UI_OnUserInterfaceEntitySelected;
+    }
+
+    private void UI_OnUserInterfaceKeypress(Keys key, bool updown) {
+        if (OnUserInterfaceKeypress != null) OnUserInterfaceKeypress(key, updown);
+    }
+    private void UI_OnUserInterfaceMouseMove(int parm, float x, float y) {
+        if (OnUserInterfaceMouseMove != null) OnUserInterfaceMouseMove(parm, x, y);
+    }
+    private void UI_OnUserInterfaceMouseButton(MouseButtons mbut, bool updown) {
+        if (OnUserInterfaceMouseButton != null) OnUserInterfaceMouseButton(mbut, updown);
+    }
+    private void UI_OnUserInterfaceEntitySelected(IEntity ent) {
+        if (OnUserInterfaceEntitySelected != null) OnUserInterfaceEntitySelected(ent);
     }
 
     // IModule.AfterAllModulesLoaded
@@ -59,55 +83,80 @@ public class UserInterfaceOgre : ModuleBase, IUserInterfaceProvider {
     public override void Stop() { }
     #endregion IModule
 
-    private InputModeCode m_inputMode;
-    public InputModeCode InputMode {
-        get { return m_inputMode; }
-        set { m_inputMode = value; }
-    }
+    #region IUserInterfaceProvider
+    // IUserInterfaceProvider.InputModeCode
+    public InputModeCode InputMode { get { return m_ui.InputMode; } set { m_ui.InputMode = value; } }
 
-    /// <summary>
-    ///  Remember the last key code we returned. Mostly to remember which modifier
-    ///  keys are on.
-    /// </summary>
-    private Keys m_lastKeycode = 0;
-    public Keys LastKeyCode {
-        get { return m_lastKeycode; }
-        set { m_lastKeycode = value; }
-    }
+    // IUserInterfaceProvider.LastKeyCode
+    public Keys LastKeyCode { get { return m_ui.LastKeyCode; } set { m_ui.LastKeyCode = value; } }
 
-    /// <summary>
-    ///  Whether a key is up or pressed at the moment.
-    /// </summary>
-    private bool m_keyPressed = false;
-    public bool KeyPressed {
-        get { return m_keyPressed; }
-        set { m_keyPressed = value; }
-    }
+    // IUserInterfaceProvider.KeyPressed
+    public bool KeyPressed { get { return m_ui.KeyPressed; } set { m_ui.KeyPressed = value; } }
 
-    /// <summary>
-    /// Remember the last (current) mouse button positions for easy checking
-    /// </summary>
-    private MouseButtons m_lastButtons = 0;
-    public MouseButtons LastMouseButtons {
-        get { return m_lastButtons; }
-        set { m_lastButtons = value; }
-    }
+    // IUserInterfaceProvider.LastMouseButtons
+    public MouseButtons LastMouseButtons { get { return m_ui.LastMouseButtons; } set { m_ui.LastMouseButtons = value; } }
 
-    /// <summary>
-    /// The rate to repeat the keys (repeats per second). Zero says no repeat
-    /// </summary>
-    private float m_keyRepeatRate = 3f;
-    public float KeyRepeatRate {
-        get { return m_keyRepeatRate; }
-        set { 
-            m_keyRepeatRate = value;
-            m_keyRepeatMs = (int)(1000f / m_keyRepeatRate);
+    // IUserInterfaceProvider.KeyRepeatRate
+    public float KeyRepeatRate { get { return m_ui.KeyRepeatRate; } set { m_ui.KeyRepeatRate = value; } }
+
+    // IUserInterfaceProvider.ReceiveUserIO
+    // The codes that come in from Ogre need to be converted into System.Windows.Forms coded
+    // Do this and then pass the codes to the common routine
+    public void ReceiveUserIO(ReceiveUserIOInputEventTypeCode typ, int param1, float param2, float param3) {
+        switch (typ) {
+            case ReceiveUserIOInputEventTypeCode.KeyPress:
+                // m_log.Log(LogLevel.DRENDERDETAIL, "DoLaterProcessUserIO: Key pressed: {0}", m_param1);
+                m_ui.ReceiveUserIO(typ, ConvertScanCodeModifiers(param1), param2, param3);
+                break;
+            case ReceiveUserIOInputEventTypeCode.KeyRelease:
+                // m_log.Log(LogLevel.DRENDERDETAIL, "DoLaterProcessUserIO: Key released: {0}", m_param1);
+                m_ui.ReceiveUserIO(typ, ConvertScanCodeModifiers(param1), param2, param3);
+                break;
+            case ReceiveUserIOInputEventTypeCode.MouseButtonDown:
+                m_ui.ReceiveUserIO(typ, ConvertMouseCode(param1), param2, param3);
+                break;
+            case ReceiveUserIOInputEventTypeCode.MouseButtonUp:
+                m_ui.ReceiveUserIO(typ, ConvertMouseCode(param1), param2, param3);
+                break;
+            case ReceiveUserIOInputEventTypeCode.MouseMove:
+                m_ui.ReceiveUserIO(typ, param1, param2, param3);
+                break;
         }
     }
-    private int m_keyRepeatMs = 333;
-    public int KeyRepeatMs { get { return m_keyRepeatMs; } }
-    public System.Threading.Timer m_repeatTimer;
-    public int m_repeatKey;    // the raw key code that is being repeated
+
+    private int ConvertMouseCode(int iosCode) {
+        MouseButtons ret = MouseButtons.None;
+        switch ((ReceiveUserIOMouseButtonCode)iosCode) {
+            case ReceiveUserIOMouseButtonCode.Left:
+                ret = MouseButtons.Left;
+                break;
+            case ReceiveUserIOMouseButtonCode.Right:
+                ret = MouseButtons.Right;
+                break;
+            case ReceiveUserIOMouseButtonCode.Middle:
+                ret = MouseButtons.Middle;
+                break;
+        }
+        return (int)ret;
+    }
+
+    public int ConvertScanCodeModifiers(int code) {
+        return ConvertScanCode(code) | ((int)(LastKeyCode & Keys.Modifiers));
+    }
+
+    public int ConvertScanCode(int code) {
+        if (code < 0 || code >= keyConversion.Length) {
+            return (int)Keys.NoName;
+        }
+        return (int)keyConversion[code];
+    }
+
+    // IUserInterfaceProvider.NeedsRendererLinkage
+    public bool NeedsRendererLinkage() {
+        // don't hook me up with the low level stuff
+        return true;
+    }
+    #endregion IUserInterfaceProvider
 
     // the key codes as they come from OIS
     public enum OISKeyCode {
@@ -339,184 +388,5 @@ public class UserInterfaceOgre : ModuleBase, IUserInterfaceProvider {
                    (Keys)0xF8, (Keys)0xF9, (Keys)0xFA, (Keys)0xFB,
                    (Keys)0xFC, (Keys)0xFD, (Keys)0xFE, (Keys)0xFF,
     };
-
-    BasicWorkQueue m_workQueue;
-
-    public UserInterfaceOgre() {
-        m_workQueue = new BasicWorkQueue("UIOgreWork");
-        m_repeatTimer = new System.Threading.Timer(OnRepeatTimer); 
-    }
-
-    // I need the hooks to the lowest levels
-    public bool NeedsRendererLinkage() {
-        return true;
-    }
-
-    // If the key is still held down, fake a key press
-    private void OnRepeatTimer(Object xx) {
-        if (this.KeyPressed) {
-            // fake receiving another key press
-            ReceiveUserIO(Ogr.IOTypeKeyPressed, m_repeatKey, 0f, 0f);
-            // m_log.Log(LogLevel.DBADERROR, "OnRepeatTimer: Faking key {0}", m_repeatKey);
-        }
-        else { 
-            // key not pressed so don't repeat any more
-            m_repeatTimer.Change(Timeout.Infinite, Timeout.Infinite);
-            // m_log.Log(LogLevel.DBADERROR, "OnRepeatTimer: Disabling timer");
-        }
-    }
-
-    /// <summary>
-    /// Called from Ogre with the ui operation. We pass the work to a thread in the pool so
-    /// we don't tie up the renderer.
-    /// </summary>
-    /// <param name="type">on of Ogr.IOType*</param>
-    /// <param name="param1"></param>
-    /// <param name="param2"></param>
-    /// <param name="param3"></param>
-    public void ReceiveUserIO(int type, int param1, float param2, float param3) {
-        // m_log.Log(LogLevel.DRENDERDETAIL, "User input:"
-        //     +  " " + type.ToString()
-        //     + ", " + param1.ToString()
-        //     + ", " + param2.ToString()
-        //     + ", " + param3.ToString() );
-        // put the work into another thread so the renderer can get back to business
-        m_workQueue.DoLater(new DoLaterProcessUserIO(this, type, param1, param2, param3));
-        return;
-    }
-
-    private sealed class DoLaterProcessUserIO : DoLaterBase {
-        UserInterfaceOgre m_uinterface;
-        int m_type, m_param1;
-        float m_param2, m_param3;
-        public DoLaterProcessUserIO(UserInterfaceOgre uinterface, int t, int p1, float p2, float p3) {
-            m_uinterface = uinterface;
-            m_type = t;
-            m_param1 = p1;
-            m_param2 = p2;
-            m_param3 = p3;
-        }
-        override public bool DoIt() {
-            switch (m_type) {
-                case Ogr.IOTypeKeyPressed:
-                    // m_log.Log(LogLevel.DRENDERDETAIL, "DoLaterProcessUserIO: Key pressed: {0}", m_param1);
-                    m_uinterface.UpdateModifier(m_param1, true);
-                    m_uinterface.LastKeyCode = m_uinterface.ConvertScanCodeModifiers(m_param1);
-                    m_uinterface.m_repeatKey = m_param1;
-                    m_uinterface.KeyPressed = true;
-                    m_uinterface.m_repeatTimer.Change(m_uinterface.KeyRepeatMs, m_uinterface.KeyRepeatMs);
-                    if (m_uinterface.OnUserInterfaceKeypress != null)
-                        m_uinterface.OnUserInterfaceKeypress(m_uinterface.LastKeyCode, true);
-                    break;
-                case Ogr.IOTypeKeyReleased:
-                    // m_log.Log(LogLevel.DRENDERDETAIL, "DoLaterProcessUserIO: Key released: {0}", m_param1);
-                    m_uinterface.UpdateModifier(m_param1, false);
-                    m_uinterface.LastKeyCode = m_uinterface.ConvertScanCodeModifiers(m_param1);
-                    m_uinterface.KeyPressed = false;
-                    m_uinterface.m_repeatTimer.Change(Timeout.Infinite, Timeout.Infinite);
-                    if (m_uinterface.OnUserInterfaceKeypress != null)
-                        m_uinterface.OnUserInterfaceKeypress(m_uinterface.LastKeyCode, false);
-                    break;
-                case Ogr.IOTypeMouseButtonDown:
-                    m_uinterface.UpdateMouseModifier(m_param1, true);
-                    if (m_uinterface.OnUserInterfaceMouseButton != null) m_uinterface.OnUserInterfaceMouseButton(
-                                    ThisMouseButtonCode(m_param1), false);
-                    break;
-                case Ogr.IOTypeMouseButtonUp:
-                    m_uinterface.UpdateMouseModifier(m_param1, true);
-                    if (m_uinterface.OnUserInterfaceMouseButton != null) m_uinterface.OnUserInterfaceMouseButton(
-                                    ThisMouseButtonCode(m_param1), true);
-                    break;
-                case Ogr.IOTypeMouseMove:
-                    // pass the routine tracking the raw position information
-                    // param1 is usually zero (actually mouse selector but we have only one at the moment)
-                    // param2 is the X movement
-                    // param3 is the Y movement
-                    if (m_uinterface.OnUserInterfaceMouseMove != null) m_uinterface.OnUserInterfaceMouseMove(
-                                    m_param1, m_param2, m_param3);
-                    break;
-            }
-            return true;
-        }
-    }
-
-    /// <summary>
-    /// Keep the modifier key information in a place that is easy to check later
-    /// </summary>
-    /// <param name="param1">OISKeyCode of the key pressed</param>
-    /// <param name="updown">true if the key is down, false otherwise</param>
-    public void UpdateModifier(int param1, bool updown) {
-        if (param1 == (int)OISKeyCode.KC_RMENU || param1 == (int)OISKeyCode.KC_LMENU) {
-            if (updown && ((LastKeyCode & Keys.Alt) == 0)) {
-                LastKeyCode |= Keys.Alt;
-            }
-            if (!updown && ((LastKeyCode & Keys.Alt) != 0)) {
-                LastKeyCode ^= Keys.Alt;
-            }
-        }
-        if (param1 == (int)OISKeyCode.KC_RSHIFT || param1 == (int)OISKeyCode.KC_LSHIFT) {
-            if (updown && ((LastKeyCode & Keys.Shift) == 0)) {
-                LastKeyCode |= Keys.Shift;
-            }
-            if (!updown && ((LastKeyCode & Keys.Shift) != 0)) {
-                LastKeyCode ^= Keys.Shift;
-            }
-        }
-        if (param1 == (int)OISKeyCode.KC_RCONTROL || param1 == (int)OISKeyCode.KC_LCONTROL) {
-            if (updown && ((LastKeyCode & Keys.Control) == 0)) {
-                LastKeyCode |= Keys.Control;
-            }
-            if (!updown && ((LastKeyCode & Keys.Control) != 0)) {
-                LastKeyCode ^= Keys.Control;
-            }
-        }
-    }
-
-    private static MouseButtons ThisMouseButtonCode(int iosCode) {
-        MouseButtons ret = MouseButtons.None;
-        switch (iosCode) {
-            case Ogr.IOMouseButtonLeft:
-                ret = MouseButtons.Left;
-                break;
-            case Ogr.IOMouseButtonRight:
-                ret = MouseButtons.Right;
-                break;
-            case Ogr.IOMouseButtonMiddle:
-                ret = MouseButtons.Middle;
-                break;
-        }
-        return ret;
-    }
-
-    /// <summary>
-    /// Keep the mouse button state in a varaible for easy reference
-    /// </summary>
-    /// <param name="param1">OISKeyCode of the key pressed</param>
-    /// <param name="updown">true if the key is down, false otherwise</param>
-    public void UpdateMouseModifier(int param1, bool updown) {
-        if (param1 == Ogr.IOMouseButtonLeft) {
-            if (updown) m_lastButtons |= MouseButtons.Left;
-            if (!updown && (m_lastButtons & MouseButtons.Left) != 0) m_lastButtons ^= MouseButtons.Left;
-        }
-        if (param1 == Ogr.IOMouseButtonRight) {
-            if (updown) m_lastButtons |= MouseButtons.Right;
-            if (!updown && (m_lastButtons & MouseButtons.Right) != 0) m_lastButtons ^= MouseButtons.Right;
-        }
-        if (param1 == Ogr.IOMouseButtonMiddle) {
-            if (updown) m_lastButtons |= MouseButtons.Middle;
-            if (!updown && (m_lastButtons & MouseButtons.Middle) != 0) m_lastButtons ^= MouseButtons.Middle;
-        }
-    }
-
-    public System.Windows.Forms.Keys ConvertScanCode(int code) {
-        if (code < 0 || code >= keyConversion.Length) {
-            return Keys.NoName;
-        }
-        return keyConversion[code];
-    }
-
-    public System.Windows.Forms.Keys ConvertScanCodeModifiers(int code) {
-        return ConvertScanCode(code) | (LastKeyCode & Keys.Modifiers);
-    }
 }
 }

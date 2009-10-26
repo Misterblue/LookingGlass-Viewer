@@ -27,6 +27,7 @@ using System.Windows.Forms;
 using LookingGlass.Framework;
 using LookingGlass.Framework.Modules;
 using LookingGlass.Renderer;
+using LookingGlass.World;
 
 namespace LookingGlass.Radegast {
 
@@ -42,10 +43,30 @@ public class UserInterfaceRadegast : ModuleBase, IUserInterfaceProvider  {
     public UserInterfaceRadegast() {
     }
 
+    IUserInterfaceProvider m_ui;
+
     #region ModuleBase
     // IModule.OnLoad
     public override void OnLoad(string name, LookingGlassBase lgbase) {
         base.OnLoad(name, lgbase);
+        m_ui = new UserInterfaceCommon();
+        m_ui.OnUserInterfaceKeypress += UI_OnUserInterfaceKeypress;
+        m_ui.OnUserInterfaceMouseMove += UI_OnUserInterfaceMouseMove;
+        m_ui.OnUserInterfaceMouseButton += UI_OnUserInterfaceMouseButton;
+        m_ui.OnUserInterfaceEntitySelected += UI_OnUserInterfaceEntitySelected;
+    }
+
+    private void UI_OnUserInterfaceKeypress(Keys key, bool updown) {
+        if (OnUserInterfaceKeypress != null) OnUserInterfaceKeypress(key, updown);
+    }
+    private void UI_OnUserInterfaceMouseMove(int parm, float x, float y) {
+        if (OnUserInterfaceMouseMove != null) OnUserInterfaceMouseMove(parm, x, y);
+    }
+    private void UI_OnUserInterfaceMouseButton(MouseButtons mbut, bool updown) {
+        if (OnUserInterfaceMouseButton != null) OnUserInterfaceMouseButton(mbut, updown);
+    }
+    private void UI_OnUserInterfaceEntitySelected(IEntity ent) {
+        if (OnUserInterfaceEntitySelected != null) OnUserInterfaceEntitySelected(ent);
     }
 
     // IModule.AfterAllModulesLoaded
@@ -62,43 +83,23 @@ public class UserInterfaceRadegast : ModuleBase, IUserInterfaceProvider  {
 
     #region IUserInterfaceProvider
     // IUserInterfaceProvider.InputModeCode
-    private InputModeCode m_inputMode;
-    public InputModeCode InputMode { 
-        get { return m_inputMode; }
-        set { m_inputMode = value; }
-    }
+    public InputModeCode InputMode { get { return m_ui.InputMode; } set { m_ui.InputMode = value; } }
 
     // IUserInterfaceProvider.LastKeyCode
-    private Keys m_lastKeycode = 0;
-    public Keys LastKeyCode {
-        get { return m_lastKeycode; }
-        set { m_lastKeycode = value; }
-    }
+    public Keys LastKeyCode { get { return m_ui.LastKeyCode; } set { m_ui.LastKeyCode = value; } }
 
     // IUserInterfaceProvider.KeyPressed
-    private bool m_keyPressed = false;
-    public bool KeyPressed {
-        get { return m_keyPressed; }
-        set { m_keyPressed = value; }
-    }
+    public bool KeyPressed { get { return m_ui.KeyPressed; } set { m_ui.KeyPressed = value; } }
 
     // IUserInterfaceProvider.LastMouseButtons
-    private MouseButtons m_lastButtons = 0;
-    public MouseButtons LastMouseButtons {
-        get { return m_lastButtons; }
-        set { m_lastButtons = value; }
-    }
+    public MouseButtons LastMouseButtons { get { return m_ui.LastMouseButtons; } set { m_ui.LastMouseButtons = value; } }
 
     // IUserInterfaceProvider.KeyRepeatRate
-    private float m_repeatRate = 3f;
-    public float KeyRepeatRate {
-        get { return m_repeatRate; }
-        set { m_repeatRate = value; }
-    }
+    public float KeyRepeatRate { get { return m_ui.KeyRepeatRate; } set { m_ui.KeyRepeatRate = value; } }
 
     // IUserInterfaceProvider.ReceiveUserIO
-    public void ReceiveUserIO(int type, int param1, float param2, float param3) {
-        return;
+    public void ReceiveUserIO(ReceiveUserIOInputEventTypeCode type, int param1, float param2, float param3) {
+        m_ui.ReceiveUserIO(type, param1, param2, param3);
     }
 
     // IUserInterfaceProvider.NeedsRendererLinkage

@@ -77,7 +77,7 @@ public class UserInterfaceNull : IUserInterfaceProvider {
     }
 
     // IUserInterfaceProvider.ReceiveUserIO
-    public void ReceiveUserIO(int type, int param1, float param2, float param3) {
+    public void ReceiveUserIO(ReceiveUserIOInputEventTypeCode type, int param1, float param2, float param3) {
         return;
     }
 

@@ -50,12 +50,25 @@ namespace LookingGlass.Renderer {
     public delegate void UserInterfaceMouseButtonCallback(System.Windows.Forms.MouseButtons param, bool updown);
     public delegate void UserInterfaceEntitySelectedCallback(IEntity ent);
 
-    public enum InputEventTypeCode {
-        KeyPress,
-        KeyRelease,
-        MouseMove,
+    public enum ReceiveUserIOInputEventTypeCode {
+        KeyPress=1,     // p1=keycode
+        KeyRelease,     // p1=keycode
+        MouseMove,      // p2=x move sin last, p3=y move since last
+        MouseButtonDown,// p1=button number
+        MouseButtonUp,  // p1=button number
         FocusToOverlay,
         SelectEntity,
+    };
+    // happens to be  the same as OIS::MouseButtonID
+    public enum ReceiveUserIOMouseButtonCode {
+        Left = 0,
+        Right,
+        Middle,
+        Button3,
+        Button4,
+        Button5,
+        Button6,
+        Button7
     };
 
     public interface IUserInterfaceProvider {
@@ -75,7 +88,7 @@ namespace LookingGlass.Renderer {
         float KeyRepeatRate { get; set; }
 
         // process something from the input device
-        void ReceiveUserIO(int type, int param1, float param2, float param3);
+        void ReceiveUserIO(ReceiveUserIOInputEventTypeCode type, int param1, float param2, float param3);
         // kludge that tells the renderer that this IO system needs low level interfaces
         bool NeedsRendererLinkage();
     }
