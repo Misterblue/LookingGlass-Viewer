@@ -207,6 +207,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\LGLocking.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\LookingGlassOgre.cpp"
 				>
 			</File>
@@ -278,6 +282,10 @@
 			>
 			<File
 				RelativePath=".\BadImageCodec.h"
+				>
+			</File>
+			<File
+				RelativePath=".\LGLocking.h"
 				>
 			</File>
 			<File

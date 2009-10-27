@@ -23,6 +23,7 @@
 #pragma once
 
 #include "LGOCommon.h"
+#include "LGLocking.h"
 
 // forward definition
 namespace RendererOgre { class RendererOgre; }
@@ -61,6 +62,7 @@ public:
 
 private:
 	int m_numWorkItemsToDoBetweenFrames;
+	LGLocking::LGLock* m_workItemMutex;
 };
 
 }

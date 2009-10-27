@@ -64,6 +64,16 @@ public partial class RadegastWindow : Form {
         // get a handle to the renderer module in LookingGlass
         string rendererName = m_lgb.AppParams.ParamString("Radegast.Renderer.Name");
         m_renderer = (IRenderProvider)m_lgb.ModManager.Module(rendererName);
+        if (m_renderer == null) {
+            LogManager.Log.Log(LogLevel.DBADERROR, "RadegastWindow.Initialize: COULD NOT ATTACH RENDERER '{0};", rendererName);
+            return;
+        }
+
+        string uiName = m_lgb.AppParams.ParamString("Radegast.UI.Name");
+        m_UILink = (IUserInterfaceProvider)m_lgb.ModManager.Module(uiName);
+        if (m_UILink == null) {
+            LogManager.Log.Log(LogLevel.DBADERROR, "RadegastWindow.Initialize: COULD NOT ATTACH UI INTERFACE '{0};", uiName);
+        }
 
         Control[] subControls = this.Controls.Find("LGWindow", true);
         if (subControls.Length == 1) {
@@ -95,10 +105,10 @@ public partial class RadegastWindow : Form {
 
     private void LGWindow_Paint(object sender, PaintEventArgs e) {
         if (this.InvokeRequired) {
-            BeginInvoke((MethodInvoker)delegate() { m_renderer.RenderOneFrame(false, 100); });
+            BeginInvoke((MethodInvoker)delegate() { m_renderer.RenderOneFrame(false, 80); });
         }
         else {
-            m_renderer.RenderOneFrame(false, 100);
+            m_renderer.RenderOneFrame(false, 80);
         }
         return;
     }

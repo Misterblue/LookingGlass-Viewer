@@ -143,6 +143,7 @@ public class EntityNameOgre : EntityName {
         if (oldName.EndsWith(".png")) oldName = oldName.Substring(0, oldName.Length - 4);
         if (oldName.EndsWith(".gif")) oldName = oldName.Substring(0, oldName.Length - 4);
         if (oldName.EndsWith(".bmp")) oldName = oldName.Substring(0, oldName.Length - 4);
+        if (oldName.EndsWith(".jpg")) oldName = oldName.Substring(0, oldName.Length - 4);
         string newName = Regex.Replace(oldName, OgreNameMatch, EntityNameReplace);
         // if the replacement does not happen, newName == oldName
         // LogManager.Log.Log(LogLevel.DRENDERDETAIL, "ConvertOgreResourceToEntity: " + resName.ToString() + " => " + newName);

@@ -561,18 +561,24 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     public virtual void Network_OnSimConnected(OMV.Simulator sim) {
         m_isConnected = true;   // good enough reason to think we're connected
         m_log.Log(LogLevel.DWORLD, "Network_OnSimConnected: Simulator connected {0}", sim.Name);
+
         LLRegionContext regionContext = FindRegion(sim);
         if (regionContext == null) {
             m_log.Log(LogLevel.DWORLD, "Network_OnSimConnected: NO REGION CONTEXT FOR {0}", sim.Name);
             return;
         }
-        World.World.Instance.AddRegion(regionContext);
 
-        // this region is online and here. This can start a lot of IO
+        // a kludge to handle race conditions. We lock the region state while we empty queues
         regionContext.State.State = RegionStateCode.Online;
+        // regionContext.State.IfOnline(delegate() {
+            // this region is online and here. This can start a lot of IO
 
-        // if we'd queued up actions, do them now that it's online
-        DoAnyWaitingEvents(regionContext);
+            // if we'd queued up actions, do them now that it's online
+            DoAnyWaitingEvents(regionContext);
+        // });
+
+        // tell the world there is a new region
+        World.World.Instance.AddRegion(regionContext);
 
         // this is needed to make the avatar appear
         // TODO: figure out if the linking between agent and appearance is right
@@ -834,7 +840,8 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
                     // TODO: copy terrain texture IDs
 
                     ret = new LLRegionContext(null, DefaultAssetContext, llterr, sim);
-                    ret.Name = new EntityNameLL(LoggedInGridName + "/Region/" + sim.ToString().Trim());
+                    // ret.Name = new EntityNameLL(LoggedInGridName + "/Region/" + sim.ToString().Trim());
+                    ret.Name = new EntityNameLL(LoggedInGridName + "/Region/" + sim.Name.Trim());
                     ret.RegionContext = ret;    // since we don't know ourself before
                     ret.Comm = m_client;
                     ret.TerrainInfo.RegionContext = ret;
