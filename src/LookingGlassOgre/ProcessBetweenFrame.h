@@ -30,6 +30,21 @@ namespace RendererOgre { class RendererOgre; }
 
 namespace ProcessBetweenFrame {
 
+// the generic base class that goes in the list
+class GenericQc {
+public:
+	int priority;
+	int cost;
+	Ogre::String uniq;
+	virtual void Process() {};
+	GenericQc() {
+		priority = 100;
+		cost = 50;
+		uniq.clear();
+	};
+	~GenericQc() {};
+};
+
 class ProcessBetweenFrame : public Ogre::FrameListener {
 
 public:
@@ -63,6 +78,9 @@ public:
 private:
 	int m_numWorkItemsToDoBetweenFrames;
 	LGLOCK_MUTEX m_workItemMutex;
+
+	// Forward definition
+	void QueueWork(GenericQc*);
 };
 
 }

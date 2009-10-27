@@ -35,14 +35,6 @@ namespace ProcessBetweenFrame {
 ProcessBetweenFrame* m_singleton;
 RendererOgre::RendererOgre* m_ro;
 
-// the generic base class that goes in the list
-class GenericQc {
-public:
-	int priority;
-	int cost;
-	Ogre::String uniq;
-	virtual void Process() {};
-};
 
 // ====================================================================
 // RefreshResource
@@ -239,9 +231,7 @@ ProcessBetweenFrame::~ProcessBetweenFrame() {
 // refresh a resource
 void ProcessBetweenFrame::RefreshResource(int priority, char* resourceName, int rType) {
 	RefreshResourceQc* rrq = new RefreshResourceQc(priority, Ogre::String(), resourceName, rType);
-	LGLOCK_LOCK(m_workItemMutex);
-	m_betweenFrameWork.push_back((GenericQc*)rrq);
-	LGLOCK_UNLOCK(m_workItemMutex);
+	QueueWork((GenericQc*)rrq);
 	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameWorkItems);
 	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameRefreshResource);
 }
@@ -249,9 +239,7 @@ void ProcessBetweenFrame::RefreshResource(int priority, char* resourceName, int 
 void ProcessBetweenFrame::CreateMaterialResource2(int priority, 
 			  const char* matName, const char* texName, const float* parms) {
 	CreateMaterialResourceQc* cmrq = new CreateMaterialResourceQc(priority, Ogre::String(), matName, texName, parms);
-	LGLOCK_LOCK(m_workItemMutex);
-	m_betweenFrameWork.push_back((GenericQc*)cmrq);
-	LGLOCK_UNLOCK(m_workItemMutex);
+	QueueWork((GenericQc*)cmrq);
 	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameWorkItems);
 	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameCreateMaterialResource);
 }
@@ -259,9 +247,7 @@ void ProcessBetweenFrame::CreateMaterialResource2(int priority,
 void ProcessBetweenFrame::CreateMeshResource(int priority, 
 				 const char* meshName, const int* faceCounts, const float* faceVertices) {
 	CreateMeshResourceQc* cmrq = new CreateMeshResourceQc(priority, Ogre::String(), meshName, faceCounts, faceVertices);
-	LGLOCK_LOCK(m_workItemMutex);
-	m_betweenFrameWork.push_back((GenericQc*)cmrq);
-	LGLOCK_UNLOCK(m_workItemMutex);
+	QueueWork((GenericQc*)cmrq);
 	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameWorkItems);
 	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameCreateMeshResource);
 }
@@ -286,9 +272,7 @@ void ProcessBetweenFrame::CreateMeshSceneNode(int priority,
 					px, py, pz,
 					sx, sy, sz,
 					ow, ox, oy, oz);
-	LGLOCK_LOCK(m_workItemMutex);
-	m_betweenFrameWork.push_back((GenericQc*)csnq);
-	LGLOCK_UNLOCK(m_workItemMutex);
+	QueueWork((GenericQc*)csnq);
 	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameWorkItems);
 	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameCreateMeshSceneNode);
 }
@@ -302,9 +286,7 @@ void ProcessBetweenFrame::UpdateSceneNode(int priority, char* entName,
 					setPosition, px, py, pz,
 					setScale, sx, sy, sz,
 					setRotation, ow, ox, oy, oz);
-	LGLOCK_LOCK(m_workItemMutex);
-	m_betweenFrameWork.push_back((GenericQc*)usnq);
-	LGLOCK_UNLOCK(m_workItemMutex);
+	QueueWork((GenericQc*)usnq);
 	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameWorkItems);
 	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameUpdateSceneNode);
 }
@@ -314,6 +296,17 @@ void ProcessBetweenFrame::UpdateSceneNode(int priority, char* entName,
 bool ProcessBetweenFrame::frameEnded(const Ogre::FrameEvent& evt) {
 	ProcessWorkItems(m_numWorkItemsToDoBetweenFrames);
 	return true;
+}
+
+// Add the work itemt to the work list
+void ProcessBetweenFrame::QueueWork(GenericQc* wi) {
+	LGLOCK_LOCK(m_workItemMutex);
+	// Check to see if uniq is specified and remove any duplicates
+	if (wi->uniq.length() == 0 ) {
+		// TODO:
+	}
+	m_betweenFrameWork.push_back(wi);
+	LGLOCK_UNLOCK(m_workItemMutex);
 }
 
 // return true if there is still work to do
@@ -334,7 +327,9 @@ void ProcessBetweenFrame::ProcessWorkItems(int numToProcess) {
 	// This sort is intended to put the highest priority (ones with lowest numbers) at
 	//   the front of the list for processing first.
 	// TODO: figure out why uncommenting this line causes exceptions
+	// LGLOCK_LOCK(m_workItemMutex);
 	// m_betweenFrameWork.sort(XXCompareElements);
+	// LGLOCK_UNLOCK(m_workItemMutex);
 	int loopCost = numToProcess;
 	while (!m_betweenFrameWork.empty() && (loopCost > 0) ) {
 		LGLOCK_LOCK(m_workItemMutex);
