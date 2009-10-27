@@ -63,4 +63,5 @@ LGLock* LGLock_Allocate_Mutex(Ogre::String name) {
 void LGLock_Release_Lock(LGLock* lock) {
 	if (lock != NULL) delete lock;
 }
+
 }

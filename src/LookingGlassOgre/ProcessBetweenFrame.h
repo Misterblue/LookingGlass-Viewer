@@ -62,7 +62,7 @@ public:
 
 private:
 	int m_numWorkItemsToDoBetweenFrames;
-	LGLocking::LGLock* m_workItemMutex;
+	LGLOCK_MUTEX m_workItemMutex;
 };
 
 }

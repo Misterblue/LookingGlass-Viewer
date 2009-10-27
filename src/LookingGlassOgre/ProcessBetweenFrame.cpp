@@ -223,7 +223,7 @@ std::list<GenericQc*> m_betweenFrameWork;
 ProcessBetweenFrame::ProcessBetweenFrame(RendererOgre::RendererOgre* ro, int workItems) {
 	m_singleton = this;
 	m_ro = ro;
-	m_workItemMutex = LGLocking::LGLock_Allocate_Mutex("ProcessBetweenFrames");
+	m_workItemMutex = LGLOCK_ALLOCATE_MUTEX("ProcessBetweenFrames");
 	// this is the number of work items to do when between two frames
 	m_numWorkItemsToDoBetweenFrames = workItems;
 	// link into the renderer.
@@ -231,7 +231,7 @@ ProcessBetweenFrame::ProcessBetweenFrame(RendererOgre::RendererOgre* ro, int wor
 }
 
 ProcessBetweenFrame::~ProcessBetweenFrame() {
-	LGLock_Release_Lock(m_workItemMutex);
+	LGLOCK_RELEASE_MUTEX(m_workItemMutex);
 	LookingGlassOgr::GetOgreRoot()->removeFrameListener(this);
 }
 
@@ -239,9 +239,9 @@ ProcessBetweenFrame::~ProcessBetweenFrame() {
 // refresh a resource
 void ProcessBetweenFrame::RefreshResource(int priority, char* resourceName, int rType) {
 	RefreshResourceQc* rrq = new RefreshResourceQc(priority, Ogre::String(), resourceName, rType);
-	m_workItemMutex->Lock();
+	LGLOCK_LOCK(m_workItemMutex);
 	m_betweenFrameWork.push_back((GenericQc*)rrq);
-	m_workItemMutex->Unlock();
+	LGLOCK_UNLOCK(m_workItemMutex);
 	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameWorkItems);
 	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameRefreshResource);
 }
@@ -249,9 +249,9 @@ void ProcessBetweenFrame::RefreshResource(int priority, char* resourceName, int 
 void ProcessBetweenFrame::CreateMaterialResource2(int priority, 
 			  const char* matName, const char* texName, const float* parms) {
 	CreateMaterialResourceQc* cmrq = new CreateMaterialResourceQc(priority, Ogre::String(), matName, texName, parms);
-	m_workItemMutex->Lock();
+	LGLOCK_LOCK(m_workItemMutex);
 	m_betweenFrameWork.push_back((GenericQc*)cmrq);
-	m_workItemMutex->Unlock();
+	LGLOCK_UNLOCK(m_workItemMutex);
 	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameWorkItems);
 	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameCreateMaterialResource);
 }
@@ -259,9 +259,9 @@ void ProcessBetweenFrame::CreateMaterialResource2(int priority,
 void ProcessBetweenFrame::CreateMeshResource(int priority, 
 				 const char* meshName, const int* faceCounts, const float* faceVertices) {
 	CreateMeshResourceQc* cmrq = new CreateMeshResourceQc(priority, Ogre::String(), meshName, faceCounts, faceVertices);
-	m_workItemMutex->Lock();
+	LGLOCK_LOCK(m_workItemMutex);
 	m_betweenFrameWork.push_back((GenericQc*)cmrq);
-	m_workItemMutex->Unlock();
+	LGLOCK_UNLOCK(m_workItemMutex);
 	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameWorkItems);
 	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameCreateMeshResource);
 }
@@ -286,9 +286,9 @@ void ProcessBetweenFrame::CreateMeshSceneNode(int priority,
 					px, py, pz,
 					sx, sy, sz,
 					ow, ox, oy, oz);
-	m_workItemMutex->Lock();
+	LGLOCK_LOCK(m_workItemMutex);
 	m_betweenFrameWork.push_back((GenericQc*)csnq);
-	m_workItemMutex->Unlock();
+	LGLOCK_UNLOCK(m_workItemMutex);
 	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameWorkItems);
 	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameCreateMeshSceneNode);
 }
@@ -302,9 +302,9 @@ void ProcessBetweenFrame::UpdateSceneNode(int priority, char* entName,
 					setPosition, px, py, pz,
 					setScale, sx, sy, sz,
 					setRotation, ow, ox, oy, oz);
-	m_workItemMutex->Lock();
+	LGLOCK_LOCK(m_workItemMutex);
 	m_betweenFrameWork.push_back((GenericQc*)usnq);
-	m_workItemMutex->Unlock();
+	LGLOCK_UNLOCK(m_workItemMutex);
 	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameWorkItems);
 	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameUpdateSceneNode);
 }
@@ -337,10 +337,10 @@ void ProcessBetweenFrame::ProcessWorkItems(int numToProcess) {
 	// m_betweenFrameWork.sort(XXCompareElements);
 	int loopCost = numToProcess;
 	while (!m_betweenFrameWork.empty() && (loopCost > 0) ) {
-		m_workItemMutex->Lock();
+		LGLOCK_LOCK(m_workItemMutex);
 		GenericQc* workGeneric = (GenericQc*)m_betweenFrameWork.front();
 		m_betweenFrameWork.pop_front();
-		m_workItemMutex->Unlock();
+		LGLOCK_UNLOCK(m_workItemMutex);
 		LookingGlassOgr::SetStat(LookingGlassOgr::StatBetweenFrameWorkItems, m_betweenFrameWork.size());
 		LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameTotalProcessed);
 		workGeneric->Process();

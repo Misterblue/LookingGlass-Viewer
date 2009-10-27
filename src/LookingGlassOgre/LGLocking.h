@@ -47,4 +47,13 @@ private:
 extern LGLock* LGLock_Allocate_Mutex(Ogre::String name);
 extern void LGLock_Release_Lock(LGLock* lock);
 
+// USE THESE DEFINES IN YOUR CODE
+// This will allow the underlying implementation to be changed easily
+#define LGLOCK_ALLOCATE_MUTEX(name) LGLocking::LGLock_Allocate_Mutex(name)
+#define LGLOCK_RELEASE_MUTEX(mutex) LGLocking::LGLock_Release_Lock(mutex)
+
+#define LGLOCK_MUTEX LGLocking::LGLock*
+#define LGLOCK_LOCK(mutex) (mutex)->Lock()
+#define LGLOCK_UNLOCK(mutex) (mutex)->Unlock()
+
 }
