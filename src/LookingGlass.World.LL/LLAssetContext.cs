@@ -163,7 +163,9 @@ public sealed class LLAssetContext : AssetContextBase {
                 m_log.Log(LogLevel.DTEXTUREDETAIL, "DoTextureLoad: Texture file alreayd exists for " + worldID);
                 bool hasTransparancy = CheckTextureFileForTransparancy(textureFilename);
                 // make the callback happen on a new thread so things don't get tangled (caller getting the callback)
-                m_completionWork.DoLater(new FinishCallDoLater(finishCall, textureEntityName.Name, hasTransparancy));
+                Object[] finishCallParams = { finishCall, textureEntityName.Name, hasTransparancy };
+                m_completionWork.DoLater(FinishCallDoLater, finishCallParams);
+                // m_completionWork.DoLater(new FinishCallDoLater(finishCall, textureEntityName.Name, hasTransparancy));
             }
             else {
                 bool sendRequest = false;
@@ -184,7 +186,7 @@ public sealed class LLAssetContext : AssetContextBase {
                     // this is here because RequestTexture might immediately call the callback
                     //   and we should be outside the lock
                     m_log.Log(LogLevel.DTEXTUREDETAIL, "DoTextureLoad: Requesting: " + textureEntityName);
-                    // m_texturePipe.RequestTexture(binID, OMV.ImageType.Normal, 101300, 0, 0, OnACDownloadFinished, false);
+                    // m_texturePipe.RequestTexture(binID, OMV.ImageType.Normal, 50f, 0, 0, OnACDownloadFinished, false);
                     m_comm.GridClient.Assets.RequestImage(binID, OMV.ImageType.Normal, 101300f, 0, 0, OnACDownloadFinished, false);
                 }
             }
@@ -192,22 +194,17 @@ public sealed class LLAssetContext : AssetContextBase {
         return;
     }
 
-    private class FinishCallDoLater : DoLaterBase {
-        DownloadFinishedCallback m_callback;
-        string m_textureEntityName;
-        bool m_hasTransparancy;
-        public FinishCallDoLater(DownloadFinishedCallback cb, string tName, bool hasT) {
-            m_callback = cb;
-            m_textureEntityName = tName;
-            m_hasTransparancy = hasT;
-        }
-        public override bool DoIt() {
-            m_callback(m_textureEntityName, m_hasTransparancy);
-            return true;
-        }
+    // Call the callback on a separate thread to keep from getting tangled
+    private bool FinishCallDoLater(DoLaterBase qInstance, Object parm) {
+        Object[] lParams = (Object[])parm;
+        DownloadFinishedCallback m_callback = (DownloadFinishedCallback)lParams[0];
+        string m_textureEntityName = (string)lParams[1];
+        bool m_hasTransparancy = (bool)lParams[2];
+
+        m_callback(m_textureEntityName, m_hasTransparancy);
+        return true;
     }
 
-    /// <summary>
     /// Check the file at the specified filename for transparancy. We presume the texture is
     /// a JPEG2000 image. If we can't figure it out, we presume it has transparancy.
     /// </summary>
@@ -366,6 +363,8 @@ public sealed class LLAssetContext : AssetContextBase {
                     }
                     m_log.Log(LogLevel.DTEXTUREDETAIL, "Download finished callback: " + wii.worldID.ToString());
                     wii.callback(textureEntityName.Name, hasTransparancy);
+                    Object[] finishCallParams = { wii.callback, textureEntityName.Name, hasTransparancy };
+                    m_completionWork.DoLater(FinishCallDoLater, finishCallParams);
                 }
                 catch (Exception e) {
                     m_log.Log(LogLevel.DBADERROR, "TEXTURE DOWNLOAD COMPLETE. FAILED FILE CREATION FOR {0}: {1}", 
@@ -410,7 +409,8 @@ public sealed class LLAssetContext : AssetContextBase {
                             }
                         }
                         m_log.Log(LogLevel.DTEXTUREDETAIL, "Download sculpty finished callback: " + wii.worldID.ToString());
-                        wii.callback(textureEntityName.Name, false);
+                        Object[] finishCallParams = { wii.callback, textureEntityName.Name, false };
+                        m_completionWork.DoLater(FinishCallDoLater, finishCallParams);
                     }
                     else {
                         m_log.Log(LogLevel.DBADERROR, "SCULPTIE TEXTURE DOWNLOAD COMPLETE. FAILED JPEG2 DECODE FOR {0}", textureEntityName.Name);
@@ -425,137 +425,6 @@ public sealed class LLAssetContext : AssetContextBase {
         m_completeWork.Clear();
         return true;
     }
-    /*
-    private sealed class CompleteDownloadLater : DoLaterBase {
-        private List<WaitingInfo> m_completeWork;
-        private AssetContextBase m_acontext;
-        private OMV.Assets.AssetTexture m_assetTexture;
-        private bool hasTransparancy;
-        private ILog m_logg;
-        private string m_commName;
-        public CompleteDownloadLater(AssetContextBase acontext, OMV.Assets.AssetTexture aTexture, 
-                        List<WaitingInfo> completeWork, string commName, ILog logg) {
-            m_acontext = acontext;
-            m_completeWork = completeWork;
-            m_assetTexture = aTexture;
-            m_commName = commName;
-            m_logg = logg;
-        }
-
-        public override bool  DoIt() {
-            foreach (WaitingInfo wii in m_completeWork) {
-                EntityName textureEntityName = EntityNameLL.ConvertTextureWorldIDToEntityName(m_acontext, wii.worldID);
-                bool m_convertToPng = LookingGlassBase.Instance.AppParams.ParamBool(m_commName + ".Assets.ConvertPNG");
-                OMV.Imaging.ManagedImage managedImage;
-                System.Drawing.Image tempImage = null;
-                if (wii.type == AssetType.Texture) {
-                    // a regular texture we write out as it's JPEG2000 image
-                    try {
-                        hasTransparancy = CheckAssetTextureForTransparancy(m_assetTexture);
-                        MakeParentDirectoriesExist(wii.filename);
-                        if (m_convertToPng) {
-                            // This PNG code kinda works but PNGs are larger than the JPEG files and
-                            // there are occasional 'out of memory'. It also uses WAY MORE disk space.
-                            if (OMVI.OpenJPEG.DecodeToImage(m_assetTexture.AssetData, out managedImage)) {
-                                try {
-                                    tempImage = OMVI.LoadTGAClass.LoadTGA(new MemoryStream(managedImage.ExportTGA()));
-                                }
-                                catch (Exception e) {
-                                    m_logg.Log(LogLevel.DBADERROR, "Failed to export and load TGA data from decoded image: {0}", 
-                                        e.ToString());
-                                }
-                                using (Bitmap textureBitmap = new Bitmap(tempImage.Width, tempImage.Height,
-                                            System.Drawing.Imaging.PixelFormat.Format32bppArgb)) {
-                                    using (Graphics graphics = Graphics.FromImage(textureBitmap)) {
-                                        graphics.DrawImage(tempImage, 0, 0);
-                                        graphics.Flush();
-                                    }
-                                    lock (LLAssetContext.FileSystemAccessLock) {
-                                        using (FileStream fileStream = File.Open(wii.filename, FileMode.Create)) {
-                                            textureBitmap.Save(fileStream, System.Drawing.Imaging.ImageFormat.Png);
-                                            fileStream.Flush();
-                                            fileStream.Close();
-                                        }
-                                    }
-                                }
-                            }
-                            else {
-                                m_logg.Log(LogLevel.DBADERROR, "TEXTURE DOWNLOAD COMPLETE. FAILED JPEG2 DECODE FOR {0}", textureEntityName.Name);
-                            }
-                        }
-                        else {
-                            // Just save the JPEG2000 file
-                            lock (LLAssetContext.FileSystemAccessLock) {
-                                using (FileStream fileStream = File.Open(wii.filename, FileMode.Create)) {
-                                    fileStream.Flush();
-                                    fileStream.Write(m_assetTexture.AssetData, 0, m_assetTexture.AssetData.Length);
-                                    fileStream.Close();
-                                }
-                            }
-                        }
-                        m_logg.Log(LogLevel.DTEXTUREDETAIL, "Download finished callback: " + wii.worldID.ToString());
-                        wii.callback(textureEntityName.Name, hasTransparancy);
-                    }
-                    catch (Exception e) {
-                        m_logg.Log(LogLevel.DBADERROR, "TEXTURE DOWNLOAD COMPLETE. FAILED FILE CREATION FOR {0}: {1}", 
-                            textureEntityName.Name, e.ToString());
-                    }
-                }
-                if (wii.type == AssetType.SculptieTexture) {
-                    // for sculpties, we clear the alpha channel and write out a PNG
-                    try {
-                        if (OMVI.OpenJPEG.DecodeToImage(m_assetTexture.AssetData, out managedImage)) {
-
-                            // have to clear the alpha channel for sculptie textures because of the TGA conversion
-                            if (managedImage.Alpha != null) {
-                                for (int ii = 0; ii < managedImage.Alpha.Length; ii++) managedImage.Alpha[ii] = 255;
-                            }
-                            try {
-                                tempImage = OMVI.LoadTGAClass.LoadTGA(new MemoryStream(managedImage.ExportTGA()));
-                            }
-                            catch (Exception e) {
-                                m_logg.Log(LogLevel.DBADERROR, "Failed to export and load TGA data from decoded image: {0}", 
-                                    e.ToString());
-                            }
-
-                            MakeParentDirectoriesExist(wii.filename);
-                            using (Bitmap textureBitmap = new Bitmap(tempImage.Width, tempImage.Height,
-                                        System.Drawing.Imaging.PixelFormat.Format32bppArgb)) {
-                                using (Graphics graphics = Graphics.FromImage(textureBitmap)) {
-                                    graphics.DrawImage(tempImage, 0, 0);
-                                    graphics.Flush();
-                                }
-
-                                lock (LLAssetContext.FileSystemAccessLock) {
-                                    string tempFilename = wii.filename + ".tmp";
-                                    using (FileStream fileStream = File.Open(tempFilename, FileMode.Create)) {
-                                        textureBitmap.Save(fileStream, System.Drawing.Imaging.ImageFormat.Png);
-                                        fileStream.Flush();
-                                        fileStream.Close();
-                                        // attempt to make the creation of the file almost atomic
-                                        FileInfo fi = new FileInfo(tempFilename);
-                                        fi.MoveTo(wii.filename);
-                                    }
-                                }
-                            }
-                            m_logg.Log(LogLevel.DTEXTUREDETAIL, "Download sculpty finished callback: " + wii.worldID.ToString());
-                            wii.callback(textureEntityName.Name, false);
-                        }
-                        else {
-                            m_logg.Log(LogLevel.DBADERROR, "SCULPTIE TEXTURE DOWNLOAD COMPLETE. FAILED JPEG2 DECODE FOR {0}", textureEntityName.Name);
-                        }
-                    }
-                    catch (Exception e) {
-                        m_logg.Log(LogLevel.DBADERROR, "SCULPTIE TEXTURE DOWNLOAD COMPLETE. FAILED FILE CREATION FOR {0}: {1}", 
-                            textureEntityName.Name, e.ToString());
-                    }
-                }
-            }
-            m_completeWork.Clear();
-            return true;
-        }
-    }
-     */
 
     /// <summary>
     /// Get the texture right now. If the texture is not immediately available (not on local

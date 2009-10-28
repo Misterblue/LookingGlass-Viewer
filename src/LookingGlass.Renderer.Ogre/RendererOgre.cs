@@ -1010,29 +1010,11 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         return true;
     }
 
-    /*
-    private sealed class RequestTextureLater: DoLaterBase {
-        RendererOgre m_renderer;
-        EntityNameOgre m_entName;
-        public RequestTextureLater(RendererOgre renderer, EntityNameOgre entName) : base() {
-            m_renderer = renderer;
-            m_entName = entName;
-        }
-        public override bool DoIt() {
-            // note the super kludge since we don't know the real asset context
-            // This information is hopefully coded into the entity name
-            // The callback can (and will) be called multiple times as the texture gets better resolution
-            AssetContextBase.RequestTextureLoad(m_entName, AssetContextBase.AssetType.Texture, TextureLoadedCallback);
-            return true;
-        }
-*/
     // the texture is loaded so get to the right time to tell the renderer
     private void TextureLoadedCallback(string textureEntityName, bool hasTransparancy) {
         LogManager.Log.Log(LogLevel.DRENDERDETAIL, "TextureLoadedCallback: Load complete. Name: {0}", textureEntityName);
         EntityNameOgre entName = new EntityNameOgre(textureEntityName);
         Object[] textureCompleteParameters = { entName, hasTransparancy };
-        // m_workQueue.DoLater(RequestTextureCompletionLater, textureCompletionParameters);
-        // Experimental: the new BF functions just queue and come back. Might not need the work queue here.
         string ogreResourceName = entName.OgreResourceName;
         if (hasTransparancy) {
             lock (RendererOgre.BetweenFrameLock) Ogr.RefreshResourceBF(100, Ogr.ResourceTypeTransparentTexture, ogreResourceName);
@@ -1041,23 +1023,6 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             lock (RendererOgre.BetweenFrameLock) Ogr.RefreshResourceBF(100, Ogr.ResourceTypeTexture, ogreResourceName);
         }
         return;
-    }
-
-    private bool RequestTextureCompletionLater(DoLaterBase qInstance, Object parms) {
-        Object[] loadParams = (Object[])parms;
-        EntityNameOgre m_entName = (EntityNameOgre)loadParams[0];
-        bool m_hasTransparancy = (bool)loadParams[1];
-
-        string ogreResourceName = m_entName.OgreResourceName;
-        m_log.Log(LogLevel.DRENDERDETAIL, "RequestTextureCompleteLater: Load complete. Refreshing texture {0}, t={1}", 
-                    ogreResourceName, m_hasTransparancy);
-        if (m_hasTransparancy) {
-            lock (RendererOgre.BetweenFrameLock) Ogr.RefreshResourceBF(100, Ogr.ResourceTypeTransparentTexture, ogreResourceName);
-        }
-        else {
-            lock (RendererOgre.BetweenFrameLock) Ogr.RefreshResourceBF(100, Ogr.ResourceTypeTexture, ogreResourceName);
-        }
-        return true;
     }
 
     // ==========================================================================
