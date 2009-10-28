@@ -42,7 +42,9 @@ public class BasicWorkQueue : IWorkQueue {
 
     private Queue<DoLaterBase> m_workItems;
     private int m_activeWorkProcessors;
+    public int ActiveWorkProcessors { get { return m_activeWorkProcessors; } }
     private int m_workProcessorsMax = 4;
+    public int MaxWorkProcessors { get { return m_workProcessorsMax; } set { m_workProcessorsMax = value; } }
 
     // IWorkQueue.CurrentQueued()
     public long CurrentQueued { get { return (long)m_workItems.Count; } }
@@ -54,6 +56,9 @@ public class BasicWorkQueue : IWorkQueue {
         WorkQueueManager.Instance.Register(this);
         if (LookingGlassBase.Instance.AppParams.HasParameter("Framework.WorkQueue.MaxThreads")) {
             m_workProcessorsMax = LookingGlassBase.Instance.AppParams.ParamInt("Framework.WorkQueue.MaxThreads");
+        }
+        if (LookingGlassBase.Instance.AppParams.HasParameter(m_queueName+".WorkQueue.MaxThreads")) {
+            m_workProcessorsMax = LookingGlassBase.Instance.AppParams.ParamInt(m_queueName+".WorkQueue.MaxThreads");
         }
     }
 

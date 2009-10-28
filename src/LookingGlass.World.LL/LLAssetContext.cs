@@ -184,8 +184,8 @@ public sealed class LLAssetContext : AssetContextBase {
                     // this is here because RequestTexture might immediately call the callback
                     //   and we should be outside the lock
                     m_log.Log(LogLevel.DTEXTUREDETAIL, "DoTextureLoad: Requesting: " + textureEntityName);
-                    // m_texturePipe.RequestTexture(binID, OMV.ImageType.Normal, 50f, 0, 0, OnACDownloadFinished, false);
-                    m_comm.GridClient.Assets.RequestImage(binID, OMV.ImageType.Normal, 50f, 0, 0, OnACDownloadFinished, false);
+                    // m_texturePipe.RequestTexture(binID, OMV.ImageType.Normal, 101300, 0, 0, OnACDownloadFinished, false);
+                    m_comm.GridClient.Assets.RequestImage(binID, OMV.ImageType.Normal, 101300f, 0, 0, OnACDownloadFinished, false);
                 }
             }
         }
@@ -301,10 +301,131 @@ public sealed class LLAssetContext : AssetContextBase {
                 }
             }
         }
-        m_completionWork.DoLater(new CompleteDownloadLater(this, assetTexture, toCall, m_comm.Name, m_log));
+        // m_completionWork.DoLater(new CompleteDownloadLater(this, assetTexture, toCall, m_comm.Name, m_log));
+        Object[] completeDownloadParams = { assetTexture, toCall, m_comm.Name };
+        m_completionWork.DoLater(CompleteDownloadLater, completeDownloadParams);
         return;
     }
 
+    private bool CompleteDownloadLater(DoLaterBase qInstance, Object parms) {
+        Object[] lParams = (Object[])parms;
+        OMV.Assets.AssetTexture m_assetTexture = (OMV.Assets.AssetTexture)lParams[0];
+        List<WaitingInfo> m_completeWork = (List<WaitingInfo>)lParams[1];
+        string m_commName = (string)lParams[2];
+        bool hasTransparancy;
+
+        foreach (WaitingInfo wii in m_completeWork) {
+            EntityName textureEntityName = EntityNameLL.ConvertTextureWorldIDToEntityName(this, wii.worldID);
+            bool m_convertToPng = LookingGlassBase.Instance.AppParams.ParamBool(m_commName + ".Assets.ConvertPNG");
+            OMV.Imaging.ManagedImage managedImage;
+            System.Drawing.Image tempImage = null;
+            if (wii.type == AssetType.Texture) {
+                // a regular texture we write out as it's JPEG2000 image
+                try {
+                    hasTransparancy = CheckAssetTextureForTransparancy(m_assetTexture);
+                    MakeParentDirectoriesExist(wii.filename);
+                    if (m_convertToPng) {
+                        // This PNG code kinda works but PNGs are larger than the JPEG files and
+                        // there are occasional 'out of memory'. It also uses WAY MORE disk space.
+                        if (OMVI.OpenJPEG.DecodeToImage(m_assetTexture.AssetData, out managedImage)) {
+                            try {
+                                tempImage = OMVI.LoadTGAClass.LoadTGA(new MemoryStream(managedImage.ExportTGA()));
+                            }
+                            catch (Exception e) {
+                                m_log.Log(LogLevel.DBADERROR, "Failed to export and load TGA data from decoded image: {0}", 
+                                    e.ToString());
+                            }
+                            using (Bitmap textureBitmap = new Bitmap(tempImage.Width, tempImage.Height,
+                                        System.Drawing.Imaging.PixelFormat.Format32bppArgb)) {
+                                using (Graphics graphics = Graphics.FromImage(textureBitmap)) {
+                                    graphics.DrawImage(tempImage, 0, 0);
+                                    graphics.Flush();
+                                }
+                                lock (LLAssetContext.FileSystemAccessLock) {
+                                    using (FileStream fileStream = File.Open(wii.filename, FileMode.Create)) {
+                                        textureBitmap.Save(fileStream, System.Drawing.Imaging.ImageFormat.Png);
+                                        fileStream.Flush();
+                                        fileStream.Close();
+                                    }
+                                }
+                            }
+                        }
+                        else {
+                            m_log.Log(LogLevel.DBADERROR, "TEXTURE DOWNLOAD COMPLETE. FAILED JPEG2 DECODE FOR {0}", textureEntityName.Name);
+                        }
+                    }
+                    else {
+                        // Just save the JPEG2000 file
+                        lock (LLAssetContext.FileSystemAccessLock) {
+                            using (FileStream fileStream = File.Open(wii.filename, FileMode.Create)) {
+                                fileStream.Flush();
+                                fileStream.Write(m_assetTexture.AssetData, 0, m_assetTexture.AssetData.Length);
+                                fileStream.Close();
+                            }
+                        }
+                    }
+                    m_log.Log(LogLevel.DTEXTUREDETAIL, "Download finished callback: " + wii.worldID.ToString());
+                    wii.callback(textureEntityName.Name, hasTransparancy);
+                }
+                catch (Exception e) {
+                    m_log.Log(LogLevel.DBADERROR, "TEXTURE DOWNLOAD COMPLETE. FAILED FILE CREATION FOR {0}: {1}", 
+                        textureEntityName.Name, e.ToString());
+                }
+            }
+            if (wii.type == AssetType.SculptieTexture) {
+                // for sculpties, we clear the alpha channel and write out a PNG
+                try {
+                    if (OMVI.OpenJPEG.DecodeToImage(m_assetTexture.AssetData, out managedImage)) {
+
+                        // have to clear the alpha channel for sculptie textures because of the TGA conversion
+                        if (managedImage.Alpha != null) {
+                            for (int ii = 0; ii < managedImage.Alpha.Length; ii++) managedImage.Alpha[ii] = 255;
+                        }
+                        try {
+                            tempImage = OMVI.LoadTGAClass.LoadTGA(new MemoryStream(managedImage.ExportTGA()));
+                        }
+                        catch (Exception e) {
+                            m_log.Log(LogLevel.DBADERROR, "Failed to export and load TGA data from decoded image: {0}", 
+                                e.ToString());
+                        }
+
+                        MakeParentDirectoriesExist(wii.filename);
+                        using (Bitmap textureBitmap = new Bitmap(tempImage.Width, tempImage.Height,
+                                    System.Drawing.Imaging.PixelFormat.Format32bppArgb)) {
+                            using (Graphics graphics = Graphics.FromImage(textureBitmap)) {
+                                graphics.DrawImage(tempImage, 0, 0);
+                                graphics.Flush();
+                            }
+
+                            lock (LLAssetContext.FileSystemAccessLock) {
+                                string tempFilename = wii.filename + ".tmp";
+                                using (FileStream fileStream = File.Open(tempFilename, FileMode.Create)) {
+                                    textureBitmap.Save(fileStream, System.Drawing.Imaging.ImageFormat.Png);
+                                    fileStream.Flush();
+                                    fileStream.Close();
+                                    // attempt to make the creation of the file almost atomic
+                                    FileInfo fi = new FileInfo(tempFilename);
+                                    fi.MoveTo(wii.filename);
+                                }
+                            }
+                        }
+                        m_log.Log(LogLevel.DTEXTUREDETAIL, "Download sculpty finished callback: " + wii.worldID.ToString());
+                        wii.callback(textureEntityName.Name, false);
+                    }
+                    else {
+                        m_log.Log(LogLevel.DBADERROR, "SCULPTIE TEXTURE DOWNLOAD COMPLETE. FAILED JPEG2 DECODE FOR {0}", textureEntityName.Name);
+                    }
+                }
+                catch (Exception e) {
+                    m_log.Log(LogLevel.DBADERROR, "SCULPTIE TEXTURE DOWNLOAD COMPLETE. FAILED FILE CREATION FOR {0}: {1}", 
+                        textureEntityName.Name, e.ToString());
+                }
+            }
+        }
+        m_completeWork.Clear();
+        return true;
+    }
+    /*
     private sealed class CompleteDownloadLater : DoLaterBase {
         private List<WaitingInfo> m_completeWork;
         private AssetContextBase m_acontext;
@@ -434,6 +555,7 @@ public sealed class LLAssetContext : AssetContextBase {
             return true;
         }
     }
+     */
 
     /// <summary>
     /// Get the texture right now. If the texture is not immediately available (not on local
