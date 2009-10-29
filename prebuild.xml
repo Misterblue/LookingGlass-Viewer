@@ -375,6 +375,7 @@
       <Reference name="LookingGlass.Comm.LLLP.dll"/>
       <Reference name="LookingGlass.Framework.dll"/>
       <Reference name="LookingGlass.Radegast.dll"/>
+      <Reference name="LookingGlass.View.dll"/>
       <Reference name="OpenMetaverse.dll"/>
       <Reference name="Radegast.exe"/>
       <Files>

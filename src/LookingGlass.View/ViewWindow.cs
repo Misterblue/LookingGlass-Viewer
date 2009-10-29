@@ -41,8 +41,10 @@ public partial class ViewWindow : Form {
     private System.Threading.Timer m_refreshTimer;
     private int m_framesPerSec;
 
-    private PaintEventHandler m_paintEventHandler = null;
-    private EventHandler m_resizeEventHandler = null;
+    private IUserInterfaceProvider m_UILink = null;
+    private bool m_MouseIn = false;     // true if mouse is over our window
+    private float m_MouseLastX = -3456f;
+    private float m_MouseLastY = -3456f;
 
     public ViewWindow(LookingGlassBase lgbase) {
         m_lgb = lgbase;
@@ -57,20 +59,14 @@ public partial class ViewWindow : Form {
         m_framesPerSec = m_lgb.AppParams.ParamInt("Viewer.FramesPerSec");
         m_renderer = (IRenderProvider)m_lgb.ModManager.Module(rendererName);
 
-        Control[] subControls = this.Controls.Find("viewPanel", true);
-        if (subControls.Length == 1) {
-            m_renderPanel = (Panel)subControls[0];
+        string uiName = m_lgb.AppParams.ParamString("Viewer.UI.Name");
+        m_UILink = (IUserInterfaceProvider)m_lgb.ModManager.Module(uiName);
+        if (m_UILink == null) {
+            LogManager.Log.Log(LogLevel.DBADERROR, "ViewerWindow.Initialize: COULD NOT ATTACH UI INTERFACE '{0};", uiName);
         }
-        m_paintEventHandler = new System.Windows.Forms.PaintEventHandler(viewControl_Paint);
-        m_renderPanel.Paint += m_paintEventHandler;
-        m_resizeEventHandler = new System.EventHandler(viewControl_Resize);
-        m_renderPanel.Resize += m_resizeEventHandler;
-        // m_renderPanel.MouseClick
-        // m_renderPanel.MouseWheel
-        // m_renderPanel.MouseMove
-        // m_renderPanel.MouseLeave
-        // m_renderPanel.MouseDown
-        // m_renderPanel.MouseUp
+        else {
+            LogManager.Log.Log(LogLevel.DVIEWDETAIL, "ViewerWindow.Initialize: Successfully attached UI");
+        }
 
         m_refreshTimer = new System.Threading.Timer(delegate(Object param) {
             m_renderPanel.Invalidate();
@@ -90,11 +86,9 @@ public partial class ViewWindow : Form {
             m_refreshTimer = null;
         }
         // Those forms events are needed either
-        if (m_paintEventHandler != null) m_renderPanel.Paint -= m_paintEventHandler;
-        if (m_resizeEventHandler != null) m_renderPanel.Resize -= m_resizeEventHandler;
     }
 
-    public void viewControl_Paint(object sender, PaintEventArgs e) {
+    public void LGWindow_Paint(object sender, PaintEventArgs e) {
         if (this.InvokeRequired) {
             BeginInvoke((MethodInvoker)delegate() { m_renderer.RenderOneFrame(false, 100); });
         }
@@ -104,8 +98,64 @@ public partial class ViewWindow : Form {
         return;
     }
 
-    public void viewControl_Resize(object sender, EventArgs e) {
+    public void LGWindow_Resize(object sender, EventArgs e) {
         return;
     }
+
+    private void LGWindow_MouseDown(object sender, MouseEventArgs e) {
+        if (m_UILink != null && m_MouseIn) {
+            int butn = ConvertMouseButtonCode(e.Button);
+            m_UILink.ReceiveUserIO(ReceiveUserIOInputEventTypeCode.MouseButtonDown, butn, 0f, 0f);
+        }
+    }
+
+    private void LGWindow_MouseMove(object sender, MouseEventArgs e) {
+        if (m_UILink != null && m_MouseIn) {
+            int butn = ConvertMouseButtonCode(e.Button);
+            if (m_MouseLastX == -3456f) m_MouseLastX = e.X;
+            if (m_MouseLastY == -3456f) m_MouseLastY = e.Y;
+            m_UILink.ReceiveUserIO(ReceiveUserIOInputEventTypeCode.MouseMove, butn,
+                            e.X - m_MouseLastX, e.Y - m_MouseLastY);
+            m_MouseLastX = e.X;
+            m_MouseLastY = e.Y;
+        }
+    }
+
+    private void LGWindow_MouseLeave(object sender, EventArgs e) {
+        m_MouseIn = false;
+    }
+
+    private void LGWindow_MouseEnter(object sender, EventArgs e) {
+        m_MouseIn = true;
+    }
+
+    private void LGWindow_MouseUp(object sender, MouseEventArgs e) {
+        if (m_UILink != null) {
+            int butn = ConvertMouseButtonCode(e.Button);
+            m_UILink.ReceiveUserIO(ReceiveUserIOInputEventTypeCode.MouseButtonUp, butn, 0f, 0f);
+        }
+    }
+
+    private void RadegastWindow_KeyDown(object sender, KeyEventArgs e) {
+        if (m_UILink != null) {
+            LogManager.Log.Log(LogLevel.DVIEWDETAIL, "RadegastWindow.LGWindow_KeyDown: k={0}", e.KeyCode);
+            m_UILink.ReceiveUserIO(ReceiveUserIOInputEventTypeCode.KeyPress, (int)e.KeyCode, 0f, 0f);
+        }
+    }
+
+    private void RadegastWindow_KeyUp(object sender, KeyEventArgs e) {
+        if (m_UILink != null) {
+            LogManager.Log.Log(LogLevel.DVIEWDETAIL, "RadegastWindow.LGWindow_KeyUp: k={0}", e.KeyCode);
+            m_UILink.ReceiveUserIO(ReceiveUserIOInputEventTypeCode.KeyRelease, (int)e.KeyCode, 0f, 0f);
+        }
+    }
+
+    private int ConvertMouseButtonCode(MouseButtons inCode) {
+        if ((inCode & MouseButtons.Left) != 0) return (int)ReceiveUserIOMouseButtonCode.Left;
+        if ((inCode & MouseButtons.Right) != 0) return (int)ReceiveUserIOMouseButtonCode.Right;
+        if ((inCode & MouseButtons.Middle) != 0) return (int)ReceiveUserIOMouseButtonCode.Middle;
+        return 0;
+    }
+
 }
 }

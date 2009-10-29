@@ -64,25 +64,33 @@ namespace LookingGlass.View {
         /// the contents of this method with the code editor.
         /// </summary>
         private void InitializeComponent() {
-            // this.renderingPanel = new System.Windows.Forms.Panel();
-            this.renderingPanel = new DBPanel();
+            this.renderingPanel2 = new LookingGlass.View.ViewWindow.DBPanel();
             this.SuspendLayout();
             // 
-            // renderingPanel
+            // renderingPanel2
             // 
-            this.renderingPanel.Location = new System.Drawing.Point(5, 5);
-            this.renderingPanel.Name = "renderingPanel";
-            this.renderingPanel.Size = new System.Drawing.Size(800, 600);
-            this.renderingPanel.TabIndex = 0;
+            this.renderingPanel2.Location = new System.Drawing.Point(5, 5);
+            this.renderingPanel2.Name = "renderingPanel2";
+            this.renderingPanel2.Size = new System.Drawing.Size(800, 600);
+            this.renderingPanel2.TabIndex = 0;
+            this.renderingPanel2.MouseLeave += new System.EventHandler(this.LGWindow_MouseLeave);
+            this.renderingPanel2.Paint += new System.Windows.Forms.PaintEventHandler(this.LGWindow_Paint);
+            this.renderingPanel2.MouseMove += new System.Windows.Forms.MouseEventHandler(this.LGWindow_MouseMove);
+            this.renderingPanel2.MouseDown += new System.Windows.Forms.MouseEventHandler(this.LGWindow_MouseDown);
+            this.renderingPanel2.Resize += new System.EventHandler(this.LGWindow_Resize);
+            this.renderingPanel2.MouseUp += new System.Windows.Forms.MouseEventHandler(this.LGWindow_MouseUp);
+            this.renderingPanel2.MouseEnter += new System.EventHandler(this.LGWindow_MouseEnter);
             // 
             // ViewWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(807, 608);
-            this.Controls.Add(this.renderingPanel);
+            this.Controls.Add(this.renderingPanel2);
             this.Name = "ViewWindow";
             this.Text = "ViewWindow";
+            this.KeyUp += new System.Windows.Forms.KeyEventHandler(this.RadegastWindow_KeyUp);
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.RadegastWindow_KeyDown);
             this.Load += new System.EventHandler(this.ViewWindow_Load);
             this.ResumeLayout(false);
 
@@ -91,5 +99,6 @@ namespace LookingGlass.View {
         #endregion
 
         private System.Windows.Forms.Panel renderingPanel;
+        private ViewWindow.DBPanel renderingPanel2;
     }
 }

@@ -24,13 +24,16 @@ using System;
 using System.Reflection;
 using System.Threading;
 using System.Collections.Generic;
+using System.Windows.Forms;
 using LookingGlass.Framework.Logging;
 using LookingGlass.Framework.Parameters;
+using LookingGlass.View;
 
 namespace LookingGlass {
 class Program {
     static ILog m_log = LogManager.GetLogger("Main");
     static Dictionary<string, string> m_Parameters;
+    static ViewWindow m_viewDialog = null;
 
     [STAThread]
     static void Main(string[] args) {
@@ -102,6 +105,28 @@ class Program {
                     return;
             }
         }
+
+        // Point the Ogre renderer to our panel window
+        // Ya, ya. I know it's RendererOgre specific. Fix that someday.
+        ViewWindow m_viewDialog = new ViewWindow(LGB);
+        Control[] subControls = m_viewDialog.Controls.Find("LGWindow", true);
+        if (subControls.Length == 1) {
+            Control windowPanel = subControls[0];
+            string wHandle = windowPanel.Handle.ToString();
+            m_log.Log(LogLevel.DRADEGASTDETAIL, "Connecting to external window {0}, w={1}, h={2}",
+                wHandle, windowPanel.Width, windowPanel.Height);
+            LGB.AppParams.AddDefaultParameter("Renderer.Ogre.ExternalWindow.Handle",
+                windowPanel.Handle.ToString(),
+                "The window handle to use for our rendering");
+            LGB.AppParams.AddDefaultParameter("Renderer.Ogre.ExternalWindow.Width",
+                windowPanel.Width.ToString(), "width of external window");
+            LGB.AppParams.AddDefaultParameter("Renderer.Ogre.ExternalWindow.Height",
+                windowPanel.Height.ToString(), "Height of external window");
+        }
+        else {
+            throw new Exception("Could not find window control on dialog");
+        }
+
         try {
             LGB.ReadConfigurationFile();
         }
@@ -115,6 +140,13 @@ class Program {
         if (LGB.Initialize()) {
             LGB.Start();
         }
+
+        // initialize the viewer dialog
+        m_viewDialog.Initialize();
+
+        // put the dialog up
+        m_viewDialog.Show();
+        // The dialog window will do all the image updating
 
         m_log.Log(LogLevel.DINIT, "EXIT");
     }

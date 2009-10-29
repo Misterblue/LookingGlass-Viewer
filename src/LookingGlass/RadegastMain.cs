@@ -29,6 +29,7 @@ using LookingGlass.Comm.LLLP;
 using LookingGlass.Framework.Logging;
 using LookingGlass.Framework.Parameters;
 using LookingGlass.Radegast;
+using LookingGlass.View;
 using OMV = OpenMetaverse;
 using Radegast;
 
@@ -134,7 +135,6 @@ class RadegastMain : IRadegastPlugin {
 
         // put the dialog up
         m_viewDialog.Show();
-
         // The dialog window will do all the image updating
     }
 
