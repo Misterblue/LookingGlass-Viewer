@@ -288,6 +288,7 @@ public class Viewer : ModuleBase, IViewProvider {
     // called from the renderer when the state of the keyboard changes
     private void UserInterface_OnKeypress(Keys key, bool updown) {
         try {   // we let exceptions test for null
+            m_log.Log(LogLevel.DVIEWDETAIL, "UserInterfase_OnKeypress: k={0}, f={1}", key, updown);
             switch (key) {
                 case (Keys.Control | Keys.C):
                     // CNTL-C says to stop everything now

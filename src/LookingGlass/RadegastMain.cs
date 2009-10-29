@@ -123,6 +123,8 @@ class RadegastMain : IRadegastPlugin {
         m_log.Log(LogLevel.DRADEGASTDETAIL, "RadegastMain: Network_OnSimConnected for {0}",
                         RadInstance.Client.Network.CurrentSim.Name);
         worldComm.Network_OnSimConnected(RadInstance.Client.Network.CurrentSim);
+        // if anything was queue for this sim, put them in the world
+        LoadWorldObjects.LoadASim(RadInstance.Client.Network.CurrentSim, RadInstance.Client, worldComm);
 
         // copy the objects that are already in the comm layer into the world
         LoadWorldObjects.Load(RadInstance.Client, worldComm);

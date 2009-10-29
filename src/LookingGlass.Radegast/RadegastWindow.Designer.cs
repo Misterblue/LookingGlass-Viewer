@@ -57,6 +57,9 @@
             this.LGWindow.MouseDown += new System.Windows.Forms.MouseEventHandler(this.LGWindow_MouseDown);
             this.LGWindow.MouseUp += new System.Windows.Forms.MouseEventHandler(this.LGWindow_MouseUp);
             this.LGWindow.MouseEnter += new System.EventHandler(this.LGWindow_MouseEnter);
+            this.LGWindow.Paint += new System.Windows.Forms.PaintEventHandler(this.LGWindow_Paint);
+            this.LGWindow.Resize += new System.EventHandler(this.LGWindow_Resize);
+
             // 
             // RadegastWindow
             // 

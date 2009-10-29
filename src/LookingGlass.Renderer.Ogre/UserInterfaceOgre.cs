@@ -105,11 +105,11 @@ public class UserInterfaceOgre : ModuleBase, IUserInterfaceProvider {
     public void ReceiveUserIO(ReceiveUserIOInputEventTypeCode typ, int param1, float param2, float param3) {
         switch (typ) {
             case ReceiveUserIOInputEventTypeCode.KeyPress:
-                // m_log.Log(LogLevel.DRENDERDETAIL, "DoLaterProcessUserIO: Key pressed: {0}", m_param1);
+                m_log.Log(LogLevel.DRENDERDETAIL, "DoLaterProcessUserIO: Key pressed: {0} -> {1}", param1, ConvertScanCodeModifiers(param1));
                 m_ui.ReceiveUserIO(typ, ConvertScanCodeModifiers(param1), param2, param3);
                 break;
             case ReceiveUserIOInputEventTypeCode.KeyRelease:
-                // m_log.Log(LogLevel.DRENDERDETAIL, "DoLaterProcessUserIO: Key released: {0}", m_param1);
+                m_log.Log(LogLevel.DRENDERDETAIL, "DoLaterProcessUserIO: Key released: {0} -> {1}", param1, ConvertScanCodeModifiers(param1));
                 m_ui.ReceiveUserIO(typ, ConvertScanCodeModifiers(param1), param2, param3);
                 break;
             case ReceiveUserIOInputEventTypeCode.MouseButtonDown:

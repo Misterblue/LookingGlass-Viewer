@@ -188,7 +188,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.LL.EarlyMaterialCreate", "false",
                     "Create materials while creating mesh rather than waiting");
 
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.BetweenFrame.WorkItems", "5000",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.BetweenFrame.WorkItems", "1000",
                     "Cost of queued C++ work items to do between each frame");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.BetweenFrame.Costs.Total", "1000",
                     "The total cost of C# operations to do between each frame");

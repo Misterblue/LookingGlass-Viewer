@@ -133,6 +133,7 @@ public class UserInterfaceCommon : IUserInterfaceProvider {
         
         switch (typ) {
             case ReceiveUserIOInputEventTypeCode.KeyPress:
+                m_log.Log(LogLevel.DVIEWDETAIL, "UserInterfaceCommon: ReceiveLater: KeyPress: {0}", param1);
                 this.UpdateModifier(param1, true);
                 AddKeyToLastKeyCode(param1);
                 // this.LastKeyCode = (Keys)param1;
@@ -143,7 +144,7 @@ public class UserInterfaceCommon : IUserInterfaceProvider {
                     this.OnUserInterfaceKeypress(this.LastKeyCode, true);
                 break;
             case ReceiveUserIOInputEventTypeCode.KeyRelease:
-                // m_log.Log(LogLevel.DRENDERDETAIL, "DoLaterProcessUserIO: Key released: {0}", param1);
+                m_log.Log(LogLevel.DVIEWDETAIL, "UserInterfaceCommon: ReceiveLater: KeyRelease: {0}", param1);
                 this.UpdateModifier(param1, false);
                 AddKeyToLastKeyCode(param1);
                 // this.LastKeyCode = (Keys)param1;

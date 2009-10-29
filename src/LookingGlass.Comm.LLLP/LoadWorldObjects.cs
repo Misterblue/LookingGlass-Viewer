@@ -77,9 +77,7 @@ public class LoadWorldObjects {
             try {
                 foreach (OMV.Simulator sim in simsToLoad) {
                     simm = sim;
-                    LogManager.Log.Log(LogLevel.DCOMM, "LoadWorldObjects: loading avatars and objects for sim {0}", sim.Name);
-                    AddAvatars(sim, netComm, worldComm);
-                    AddObjects(sim, netComm, worldComm);
+                    LoadASim(sim, netComm, worldComm);
                 }
             }
             catch (Exception e) {
@@ -91,6 +89,12 @@ public class LoadWorldObjects {
             LogManager.Log.Log(LogLevel.DBADERROR, "LoadWorldObjects: exception: {0}", e.ToString());
         }
         LogManager.Log.Log(LogLevel.DCOMM, "LoadWorldObjects: completed loading sim objects");
+    }
+
+    public static void LoadASim(OMV.Simulator sim, OMV.GridClient netComm, CommLLLP worldComm) {
+        LogManager.Log.Log(LogLevel.DCOMM, "LoadWorldObjects: loading avatars and objects for sim {0}", sim.Name);
+        AddAvatars(sim, netComm, worldComm);
+        AddObjects(sim, netComm, worldComm);
     }
 
     // Return 'true' if we don't have this region in our world yet

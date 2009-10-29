@@ -22,12 +22,20 @@
  */
 #pragma once
 
+// #define LGLOCK_SPINLOCK
+// #define LGLOCK_MSGPUMP
+// #define LGLOCK_PTHREADS
+#define LGLOCK_BOOST
+
 #include "LGOCommon.h"
+#ifdef LGLOCK_PTHREADS
+#include "pthreads.h"
+#endif
+#ifdef LGLOCK_BOOST
+#include "boost/thread/mutex.hpp"
+#endif
 
 namespace LGLocking {
-
-// #define LGLOCK_SPINLOCK
-#define LGLOCK_MSGPUMP
 
 class LGLock {
 public:
@@ -40,8 +48,18 @@ public:
 	void Lock();
 	void Unlock();
 private:
+#ifdef LGLOCK_SPINLOCK
 	int flag;
 	int x;
+#endif
+#ifdef LGLOCK_MSGPUMP
+	int flag;
+#endif
+#ifdef LGLOCK_PTHREADS
+#endif
+#ifdef LGLOCK_BOOST
+	boost::mutex* m_mutex;
+#endif
 };
 
 extern LGLock* LGLock_Allocate_Mutex(Ogre::String name);

@@ -39,12 +39,8 @@ public partial class RadegastWindow : Form {
 
     private RadegastInstance m_radInstance;
     private LookingGlassBase m_lgb;
-    private Panel m_renderPanel;
     private IRenderProvider m_renderer;
     private System.Threading.Timer m_refreshTimer;
-
-    private PaintEventHandler m_paintEventHandler = null;
-    private EventHandler m_resizeEventHandler = null;
 
     private IUserInterfaceProvider m_UILink = null;
     private bool m_MouseIn = false;     // true if mouse is over our window
@@ -74,18 +70,12 @@ public partial class RadegastWindow : Form {
         if (m_UILink == null) {
             LogManager.Log.Log(LogLevel.DBADERROR, "RadegastWindow.Initialize: COULD NOT ATTACH UI INTERFACE '{0};", uiName);
         }
-
-        Control[] subControls = this.Controls.Find("LGWindow", true);
-        if (subControls.Length == 1) {
-            m_renderPanel = (Panel)subControls[0];
+        else {
+            LogManager.Log.Log(LogLevel.DVIEWDETAIL, "RadegastWindow.Initialize: Successfully attached UI");
         }
-        m_paintEventHandler = new System.Windows.Forms.PaintEventHandler(LGWindow_Paint);
-        m_renderPanel.Paint += m_paintEventHandler;
-        m_resizeEventHandler = new System.EventHandler(LGWindow_Resize);
-        m_renderPanel.Resize += m_resizeEventHandler;
 
         m_refreshTimer = new System.Threading.Timer(delegate(Object param) {
-            m_renderPanel.Invalidate();
+            this.LGWindow.Invalidate();
         }, null, 2000, 100);
 
     }
@@ -99,8 +89,7 @@ public partial class RadegastWindow : Form {
             m_refreshTimer = null;
         }
         // Those forms events are needed either
-        if (m_paintEventHandler != null) m_renderPanel.Paint -= m_paintEventHandler;
-        if (m_resizeEventHandler != null) m_renderPanel.Resize -= m_resizeEventHandler;
+        // unhook events
     }
 
     private void LGWindow_Paint(object sender, PaintEventArgs e) {
@@ -153,12 +142,14 @@ public partial class RadegastWindow : Form {
 
     private void RadegastWindow_KeyDown(object sender, KeyEventArgs e) {
         if (m_UILink != null) {
+            LogManager.Log.Log(LogLevel.DVIEWDETAIL, "RadegastWindow.LGWindow_KeyDown: k={0}", e.KeyCode);
             m_UILink.ReceiveUserIO(ReceiveUserIOInputEventTypeCode.KeyPress, (int)e.KeyCode, 0f, 0f);
         }
     }
 
     private void RadegastWindow_KeyUp(object sender, KeyEventArgs e) {
         if (m_UILink != null) {
+            LogManager.Log.Log(LogLevel.DVIEWDETAIL, "RadegastWindow.LGWindow_KeyUp: k={0}", e.KeyCode);
             m_UILink.ReceiveUserIO(ReceiveUserIOInputEventTypeCode.KeyRelease, (int)e.KeyCode, 0f, 0f);
         }
     }
