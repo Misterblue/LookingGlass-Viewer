@@ -16,8 +16,6 @@
             base.Dispose(disposing);
         }
 
-        #region Windows Form Designer generated code
-
         /// <summary>
         /// Override class that wraps Panel and makes sure it doesn't get
         /// painted so the OnPaint operation only is the callback taht we
@@ -37,6 +35,8 @@
             
         }
 
+        #region Windows Form Designer generated code
+
         /// <summary>
         /// Required method for Designer support - do not modify
         /// the contents of this method with the code editor.
@@ -53,19 +53,19 @@
             this.LGWindow.Size = new System.Drawing.Size(802, 582);
             this.LGWindow.TabIndex = 0;
             this.LGWindow.MouseLeave += new System.EventHandler(this.LGWindow_MouseLeave);
+            this.LGWindow.Paint += new System.Windows.Forms.PaintEventHandler(this.LGWindow_Paint);
             this.LGWindow.MouseMove += new System.Windows.Forms.MouseEventHandler(this.LGWindow_MouseMove);
             this.LGWindow.MouseDown += new System.Windows.Forms.MouseEventHandler(this.LGWindow_MouseDown);
+            this.LGWindow.Resize += new System.EventHandler(this.LGWindow_Resize);
             this.LGWindow.MouseUp += new System.Windows.Forms.MouseEventHandler(this.LGWindow_MouseUp);
             this.LGWindow.MouseEnter += new System.EventHandler(this.LGWindow_MouseEnter);
-            this.LGWindow.Paint += new System.Windows.Forms.PaintEventHandler(this.LGWindow_Paint);
-            this.LGWindow.Resize += new System.EventHandler(this.LGWindow_Resize);
-
             // 
             // RadegastWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(804, 585);
+            this.BackgroundImage = global::LookingGlass.Radegast.Properties.Resources.LookingGlassLogo256;
+            this.ClientSize = new System.Drawing.Size(852, 585);
             this.Controls.Add(this.LGWindow);
             this.Name = "RadegastWindow";
             this.Text = "LookingGlass View";

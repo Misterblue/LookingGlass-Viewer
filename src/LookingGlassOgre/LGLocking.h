@@ -37,6 +37,19 @@
 
 namespace LGLocking {
 
+	// Lock wrapper. The usage pattern is:
+	// ...
+	// LGLOCK_MUTEX* m_myLock;
+	// ...
+	// m_myLock = LGLOCK_ALLOCATION_MUTEX("ProtextXQueue");
+	// ...
+	// LGLOCK_LOCK(m_myLock);
+	// ... critical section
+	// LGLOCK_UNLOCK(m_myLock);
+	// ...
+	// LGLOCK_RELEASE_MUTEX(m_myLock);
+	// 
+	// Underlying this wrapper is whatever works on this system
 class LGLock {
 public:
 	LGLock();
