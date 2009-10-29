@@ -118,12 +118,29 @@ public class UserInterfaceCommon : IUserInterfaceProvider {
     }
 
     // IUserInterfaceProvider.ReceiveUserIO
+    /// <summary>
+    /// One of the input subsystems has received a charaaction or mouse. Queue the
+    /// processing to delink us from the IO thread.
+    /// If a typed char, we use it to update the modifiers (alt, ...) and  then
+    /// assemble the keycode or'ed with the current modifers into this.LastKeyCode.
+    /// Then, anyone waiting is given a callback.
+    /// </summary>
+    /// <param name="type"></param>
+    /// <param name="param1"></param>
+    /// <param name="param2"></param>
+    /// <param name="param3"></param>
     public void ReceiveUserIO(ReceiveUserIOInputEventTypeCode type, int param1, float param2, float param3) {
         Object[] receiveLaterParams = { type, param1, param2, param3 };
         m_workQueue.DoLater(ReceiveLater, receiveLaterParams);
         return;
     }
 
+    /// <summary>
+    /// One of the input subsystems has received a key or mouse press.
+    /// </summary>
+    /// <param name="qInstance"></param>
+    /// <param name="parms"></param>
+    /// <returns></returns>
     private bool ReceiveLater(DoLaterBase qInstance, Object parms) {
         Object[] loadParams = (Object[])parms;
         ReceiveUserIOInputEventTypeCode typ = (ReceiveUserIOInputEventTypeCode)loadParams[0];
@@ -133,10 +150,10 @@ public class UserInterfaceCommon : IUserInterfaceProvider {
         
         switch (typ) {
             case ReceiveUserIOInputEventTypeCode.KeyPress:
+                param1 = param1 & (int)Keys.KeyCode; // remove extra cruft
                 m_log.Log(LogLevel.DVIEWDETAIL, "UserInterfaceCommon: ReceiveLater: KeyPress: {0}", param1);
                 this.UpdateModifier(param1, true);
                 AddKeyToLastKeyCode(param1);
-                // this.LastKeyCode = (Keys)param1;
                 this.m_repeatKey = param1;
                 this.KeyPressed = true;
                 this.m_repeatTimer.Change(this.KeyRepeatMs, this.KeyRepeatMs);
@@ -144,6 +161,7 @@ public class UserInterfaceCommon : IUserInterfaceProvider {
                     this.OnUserInterfaceKeypress(this.LastKeyCode, true);
                 break;
             case ReceiveUserIOInputEventTypeCode.KeyRelease:
+                param1 = param1 & (int)Keys.KeyCode; // remove extra cruft
                 m_log.Log(LogLevel.DVIEWDETAIL, "UserInterfaceCommon: ReceiveLater: KeyRelease: {0}", param1);
                 this.UpdateModifier(param1, false);
                 AddKeyToLastKeyCode(param1);
