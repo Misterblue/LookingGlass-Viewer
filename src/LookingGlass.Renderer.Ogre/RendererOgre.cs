@@ -104,14 +104,10 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     private static int m_betweenFrameUpdateTerrainCost = 50;
     private static int m_betweenFrameMapTextureCost = 10;
 
-    public static Object BetweenFrameLock = new Object();
-
     // private Thread m_rendererThread = null;
 
     private RestHandler m_restHandler;
     private StatisticManager m_stats;
-    private IIntervalCounter m_statRefreshMaterialInterval;
-    private IIntervalCounter m_statCreateMaterialInterval;
     private ICounter m_statMaterialsRequested;
     private ICounter m_statMeshesRequested;
     private ICounter m_statTexturesRequested;
@@ -249,8 +245,6 @@ public class RendererOgre : ModuleBase, IRenderProvider {
 
         // some counters and intervals to see how long things take
         m_stats = new StatisticManager(m_moduleName);
-        m_statRefreshMaterialInterval = m_stats.GetIntervalCounter("UpdateTexture");
-        m_statCreateMaterialInterval = m_stats.GetIntervalCounter("CreateMaterial");
         m_statMaterialsRequested = m_stats.GetCounter("MaterialsRequested");
         m_statMeshesRequested = m_stats.GetCounter("MeshesRequested");
         m_statTexturesRequested = m_stats.GetCounter("TexturesRequested");
@@ -610,20 +604,18 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     // This will cause the load function to be called and create all
                     //   the callbacks that will actually create the object
                     string entMeshName = (string)m_ri.basicObject;
-                    lock (RendererOgre.BetweenFrameLock) {
-                        if (!m_sceneMgr.CreateMeshSceneNodeBF(qInstance.priority,
-                                        entitySceneNodeName,
-                                        parentSceneNodeName,
-                                        entMeshName,
-                                        false, true,
-                                        m_ri.position.X, m_ri.position.Y, m_ri.position.Z,
-                                        m_ri.scale.X, m_ri.scale.Y, m_ri.scale.Z,
-                                        m_ri.rotation.W, m_ri.rotation.X, m_ri.rotation.Y, m_ri.rotation.Z)) {
-                            m_log.Log(LogLevel.DRENDERDETAIL, "Delaying rendering {0}/{1}. {2} waiting for parent {3}",
-                                qInstance.sequence, qInstance.timesRequeued, m_ent.Name.Name,
-                                (parentSceneNodeName == null ? "NULL" : parentSceneNodeName));
-                            return false;   // if I must have parent, requeue if no parent
-                        }
+                    if (!m_sceneMgr.CreateMeshSceneNodeBF(qInstance.priority,
+                                    entitySceneNodeName,
+                                    parentSceneNodeName,
+                                    entMeshName,
+                                    false, true,
+                                    m_ri.position.X, m_ri.position.Y, m_ri.position.Z,
+                                    m_ri.scale.X, m_ri.scale.Y, m_ri.scale.Z,
+                                    m_ri.rotation.W, m_ri.rotation.X, m_ri.rotation.Y, m_ri.rotation.Z)) {
+                        m_log.Log(LogLevel.DRENDERDETAIL, "Delaying rendering {0}/{1}. {2} waiting for parent {3}",
+                            qInstance.sequence, qInstance.timesRequeued, m_ent.Name.Name,
+                            (parentSceneNodeName == null ? "NULL" : parentSceneNodeName));
+                        return false;   // if I must have parent, requeue if no parent
                     }
 
                     // Add the name of the created scene node name so we know it's created and
@@ -676,14 +668,12 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             // world position has changed. Tell Ogre they have changed
             string entitySceneNodeName = EntityNameOgre.ConvertToOgreSceneNodeName(ent.Name);
             m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: Updating position/rotation for {0}", entitySceneNodeName);
-            lock (RendererOgre.BetweenFrameLock) {
-                Ogr.UpdateSceneNodeBF(CalculateInterestOrder(ent), entitySceneNodeName,
-                    ((what & UpdateCodes.Position) != 0),
-                    ent.RelativePosition.X, ent.RelativePosition.Y, ent.RelativePosition.Z,
-                    false, 1f, 1f, 1f,  // don't pass scale yet
-                    ((what & UpdateCodes.Rotation) != 0),
-                    ent.Heading.W, ent.Heading.X, ent.Heading.Y, ent.Heading.Z);
-            }
+            Ogr.UpdateSceneNodeBF(CalculateInterestOrder(ent), entitySceneNodeName,
+                ((what & UpdateCodes.Position) != 0),
+                ent.RelativePosition.X, ent.RelativePosition.Y, ent.RelativePosition.Z,
+                false, 1f, 1f, 1f,  // don't pass scale yet
+                ((what & UpdateCodes.Rotation) != 0),
+                ent.Heading.W, ent.Heading.X, ent.Heading.Y, ent.Heading.Z);
         }
         if ((what & UpdateCodes.ParentID) != 0) {
             // prim was detached or attached
@@ -917,8 +907,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
 
             // tell Ogre to refresh (reload) the resource
             m_log.Log(LogLevel.DRENDERDETAIL, "RendererOgre.RequestMeshLater: refresh for {0}", m_meshName);
-            lock (RendererOgre.BetweenFrameLock) Ogr.RefreshResourceBF(qInstance.priority,
-                            Ogr.ResourceTypeMesh, m_meshName);
+            Ogr.RefreshResourceBF(qInstance.priority, Ogr.ResourceTypeMesh, m_meshName);
             lock (this.MeshesWaiting) {
                 // no longer waiting for this mesh to get created
                 if (this.MeshesWaiting.ContainsKey(m_meshName)) {
@@ -966,10 +955,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                 else {
                     // Create the material resource and then make the rendering redisplay
                     RendererOgre.GetWorldRenderConv(ent).CreateMaterialResource(qInstance.priority, m_sceneMgr, ent, m_matName);
-
-                    lock (RendererOgre.BetweenFrameLock) {
-                        Ogr.RefreshResourceBF(qInstance.priority, Ogr.ResourceTypeMaterial, m_matName);
-                    }
+                    Ogr.RefreshResourceBF(qInstance.priority, Ogr.ResourceTypeMaterial, m_matName);
                 }
             }
             else {
@@ -1017,10 +1003,10 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         Object[] textureCompleteParameters = { entName, hasTransparancy };
         string ogreResourceName = entName.OgreResourceName;
         if (hasTransparancy) {
-            lock (RendererOgre.BetweenFrameLock) Ogr.RefreshResourceBF(100, Ogr.ResourceTypeTransparentTexture, ogreResourceName);
+            Ogr.RefreshResourceBF(100, Ogr.ResourceTypeTransparentTexture, ogreResourceName);
         }
         else {
-            lock (RendererOgre.BetweenFrameLock) Ogr.RefreshResourceBF(100, Ogr.ResourceTypeTexture, ogreResourceName);
+            Ogr.RefreshResourceBF(100, Ogr.ResourceTypeTexture, ogreResourceName);
         }
         return;
     }

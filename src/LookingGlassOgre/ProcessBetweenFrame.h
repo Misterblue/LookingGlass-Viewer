@@ -79,6 +79,8 @@ private:
 	int m_numWorkItemsToDoBetweenFrames;
 	LGLOCK_MUTEX m_workItemMutex;
 
+	bool m_modified;		// true if it's time to sort the work queue
+
 	// Forward definition
 	void QueueWork(GenericQc*);
 };

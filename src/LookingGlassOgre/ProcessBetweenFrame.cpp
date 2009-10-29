@@ -218,6 +218,7 @@ ProcessBetweenFrame::ProcessBetweenFrame(RendererOgre::RendererOgre* ro, int wor
 	m_workItemMutex = LGLOCK_ALLOCATE_MUTEX("ProcessBetweenFrames");
 	// this is the number of work items to do when between two frames
 	m_numWorkItemsToDoBetweenFrames = workItems;
+	m_modified = false;
 	// link into the renderer.
 	LookingGlassOgr::GetOgreRoot()->addFrameListener(this);
 }
@@ -306,6 +307,7 @@ void ProcessBetweenFrame::QueueWork(GenericQc* wi) {
 		// TODO:
 	}
 	m_betweenFrameWork.push_back(wi);
+	m_modified = true;
 	LGLOCK_UNLOCK(m_workItemMutex);
 }
 
@@ -327,9 +329,12 @@ void ProcessBetweenFrame::ProcessWorkItems(int numToProcess) {
 	// This sort is intended to put the highest priority (ones with lowest numbers) at
 	//   the front of the list for processing first.
 	// TODO: figure out why uncommenting this line causes exceptions
-	// LGLOCK_LOCK(m_workItemMutex);
-	// m_betweenFrameWork.sort(XXCompareElements);
-	// LGLOCK_UNLOCK(m_workItemMutex);
+	if (m_modified) {
+		LGLOCK_LOCK(m_workItemMutex);
+		m_betweenFrameWork.sort(XXCompareElements);
+		LGLOCK_UNLOCK(m_workItemMutex);
+		m_modified = false;
+	}
 	int loopCost = numToProcess;
 	while (!m_betweenFrameWork.empty() && (loopCost > 0) ) {
 		LGLOCK_LOCK(m_workItemMutex);

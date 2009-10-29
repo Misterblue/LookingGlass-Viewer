@@ -355,9 +355,7 @@ public class RendererOgreLL : IWorldRenderConv {
                 + " vi=" + vertI
                 );
             // Now create the mesh
-            lock (RendererOgre.BetweenFrameLock) {
-                Ogr.CreateMeshResourceBF(priority, meshName, faceCounts, faceVertices);
-            }
+            Ogr.CreateMeshResourceBF(priority, meshName, faceCounts, faceVertices);
         }
         return true;
     }
@@ -410,7 +408,7 @@ public class RendererOgreLL : IWorldRenderConv {
         string textureOgreResourceName = "";
         CreateMaterialParameters(ent, prim, 0, ref textureParams, faceNum, out textureOgreResourceName);
         m_log.Log(LogLevel.DRENDERDETAIL, "CreateMaterialResource2: m=" + materialName + ",o=" + textureOgreResourceName);
-        lock (RendererOgre.BetweenFrameLock) Ogr.CreateMaterialResource2BF(priority, materialName, textureOgreResourceName, textureParams);
+        Ogr.CreateMaterialResource2BF(priority, materialName, textureOgreResourceName, textureParams);
     }
 
     private void CreateMaterialParameters(IEntity ent, OMV.Primitive prim, int pBase, ref float[] textureParams, 
