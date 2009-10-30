@@ -249,7 +249,7 @@ public class Viewer : ModuleBase, IViewProvider {
         // m_log.Log(LogLevel.DVIEWDETAIL, "OnMouseMove:"
         //             + " x=" + x.ToString() + ", y=" + y.ToString()
         //             + "time since last = " + sinceLastMouse.ToString() );
-        if (m_mainCamera != null) {
+        if (m_mainCamera != null && (Renderer.UserInterface.LastMouseButtons & MouseButtons.Left) != 0) {
             if (((Renderer.UserInterface.LastKeyCode & Keys.Control) == 0)
                     && ((Renderer.UserInterface.LastKeyCode & Keys.Alt) != 0)) {
             }

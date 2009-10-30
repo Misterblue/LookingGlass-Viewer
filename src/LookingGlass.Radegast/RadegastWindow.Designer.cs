@@ -50,7 +50,7 @@
             this.LGWindow.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
             this.LGWindow.Location = new System.Drawing.Point(1, 1);
             this.LGWindow.Name = "LGWindow";
-            this.LGWindow.Size = new System.Drawing.Size(802, 582);
+            this.LGWindow.Size = new System.Drawing.Size(800, 600);
             this.LGWindow.TabIndex = 0;
             this.LGWindow.MouseLeave += new System.EventHandler(this.LGWindow_MouseLeave);
             this.LGWindow.Paint += new System.Windows.Forms.PaintEventHandler(this.LGWindow_Paint);
@@ -64,8 +64,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackgroundImage = global::LookingGlass.Radegast.Properties.Resources.LookingGlassLogo256;
-            this.ClientSize = new System.Drawing.Size(852, 585);
+            this.ClientSize = new System.Drawing.Size(801, 601);
             this.Controls.Add(this.LGWindow);
             this.Name = "RadegastWindow";
             this.Text = "LookingGlass View";
