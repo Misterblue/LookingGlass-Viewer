@@ -36,7 +36,9 @@ static class Ogr {
     public const int StatMaterialUpdatesRemaining = 0;
     // misc info
     public const int StatTotalFrames = 18;
-    // the number of stat values (oversized for fudge factors)
+    public const int StatFramesPerSec = 19;
+    public const int StatLastFrameMs = 20;
+    // the number of stat values (oversized for a fudge factor)
     public const int StatSize = 30;
 
     // =============================================================================

@@ -68,6 +68,8 @@ static const int StatBetweenFrameUpdateSceneNode = 12;
 static const int StatBetweenFrameTotalProcessed = 16;
 static const int StatBetweenFrameUnknownProcess = 17;
 static const int StatTotalFrames = 18;
+static const int StatFramesPerSecond = 19;
+static const int StatLastFrameMs = 20;
 
 #define OLArchiveTypeName "OLFileSystem"
 #define OLPreloadTypeName "OLPreloadFileSystem"

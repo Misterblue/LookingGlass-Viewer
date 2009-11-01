@@ -97,6 +97,7 @@ public class UserInterfaceRadegast : ModuleBase, IUserInterfaceProvider  {
     // IUserInterfaceProvider.KeyRepeatRate
     public float KeyRepeatRate { get { return m_ui.KeyRepeatRate; } set { m_ui.KeyRepeatRate = value; } }
 
+    // The raw input from the user. When a key is pressed or mouse moves, it comes in here.
     // IUserInterfaceProvider.ReceiveUserIO
     public void ReceiveUserIO(ReceiveUserIOInputEventTypeCode type, int param1, float param2, float param3) {
         m_ui.ReceiveUserIO(type, param1, param2, param3);

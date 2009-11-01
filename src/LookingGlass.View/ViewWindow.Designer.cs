@@ -43,8 +43,8 @@ namespace LookingGlass.View {
         /// painted so the OnPaint operation only is the callback taht we
         /// registered in the regular RadegastWindow class.
         /// </summary>
-        private class DBPanel : System.Windows.Forms.Panel {
-            public DBPanel()
+        private class LGPanel : System.Windows.Forms.Panel {
+            public LGPanel()
                 : base() {
                 // DoubleBuffered = true;
                 SetStyle(System.Windows.Forms.ControlStyles.AllPaintingInWmPaint, true);
@@ -64,41 +64,40 @@ namespace LookingGlass.View {
         /// the contents of this method with the code editor.
         /// </summary>
         private void InitializeComponent() {
-            this.renderingPanel2 = new LookingGlass.View.ViewWindow.DBPanel();
+            this.LGWindow = new LookingGlass.View.ViewWindow.LGPanel();
             this.SuspendLayout();
             // 
-            // renderingPanel2
+            // LGWindow
             // 
-            this.renderingPanel2.Location = new System.Drawing.Point(5, 5);
-            this.renderingPanel2.Name = "renderingPanel2";
-            this.renderingPanel2.Size = new System.Drawing.Size(800, 600);
-            this.renderingPanel2.TabIndex = 0;
-            this.renderingPanel2.MouseLeave += new System.EventHandler(this.LGWindow_MouseLeave);
-            this.renderingPanel2.Paint += new System.Windows.Forms.PaintEventHandler(this.LGWindow_Paint);
-            this.renderingPanel2.MouseMove += new System.Windows.Forms.MouseEventHandler(this.LGWindow_MouseMove);
-            this.renderingPanel2.MouseDown += new System.Windows.Forms.MouseEventHandler(this.LGWindow_MouseDown);
-            this.renderingPanel2.Resize += new System.EventHandler(this.LGWindow_Resize);
-            this.renderingPanel2.MouseUp += new System.Windows.Forms.MouseEventHandler(this.LGWindow_MouseUp);
-            this.renderingPanel2.MouseEnter += new System.EventHandler(this.LGWindow_MouseEnter);
+            this.LGWindow.Location = new System.Drawing.Point(5, 5);
+            this.LGWindow.Name = "LGWindow";
+            this.LGWindow.Size = new System.Drawing.Size(800, 600);
+            this.LGWindow.TabIndex = 0;
+            this.LGWindow.MouseLeave += new System.EventHandler(this.LGWindow_MouseLeave);
+            this.LGWindow.Paint += new System.Windows.Forms.PaintEventHandler(this.LGWindow_Paint);
+            this.LGWindow.MouseMove += new System.Windows.Forms.MouseEventHandler(this.LGWindow_MouseMove);
+            this.LGWindow.MouseDown += new System.Windows.Forms.MouseEventHandler(this.LGWindow_MouseDown);
+            this.LGWindow.Resize += new System.EventHandler(this.LGWindow_Resize);
+            this.LGWindow.MouseUp += new System.Windows.Forms.MouseEventHandler(this.LGWindow_MouseUp);
+            this.LGWindow.MouseEnter += new System.EventHandler(this.LGWindow_MouseEnter);
             // 
             // ViewWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(807, 608);
-            this.Controls.Add(this.renderingPanel2);
+            this.Controls.Add(this.LGWindow);
             this.Name = "ViewWindow";
             this.Text = "ViewWindow";
-            this.KeyUp += new System.Windows.Forms.KeyEventHandler(this.RadegastWindow_KeyUp);
-            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.RadegastWindow_KeyDown);
             this.Load += new System.EventHandler(this.ViewWindow_Load);
+            this.KeyUp += new System.Windows.Forms.KeyEventHandler(this.LGWindow_KeyUp);
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.LGWindow_KeyDown);
             this.ResumeLayout(false);
 
         }
 
         #endregion
 
-        private System.Windows.Forms.Panel renderingPanel;
-        private ViewWindow.DBPanel renderingPanel2;
+        private ViewWindow.LGPanel LGWindow;
     }
 }

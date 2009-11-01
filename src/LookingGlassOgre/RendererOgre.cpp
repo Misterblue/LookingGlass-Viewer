@@ -88,6 +88,9 @@ namespace RendererOgre {
 				now = timeKeeper->getMilliseconds();
 				remaining = msPerFrame - ((int)(now - timeStartedLastFrame));
 			}
+			int totalMSForLastFrame = (int)(timeKeeper->getMilliseconds() - timeStartedLastFrame);
+			if (totalMSForLastFrame < 0) totalMSForLastFrame = 1;
+			LookingGlassOgr::SetStat(LookingGlassOgr::StatFramesPerSecond, 1000000/totalMSForLastFrame);
 			timeStartedLastFrame = timeKeeper->getMilliseconds();
 		}
 		Log("RendererOgre::renderingThread: Completed rendering");
@@ -105,6 +108,7 @@ namespace RendererOgre {
 	// If the passed parameter is 'true' we call the windows message pump
 	// and the number of ms this frame should take. We do between frame work
 	// with any extra time.
+	unsigned long m_lastFrameTime;
 	bool RendererOgre::renderOneFrame(bool pump, int len) {
 		bool ret = false;
 		unsigned long now = timeKeeper->getMilliseconds();
@@ -127,6 +131,11 @@ namespace RendererOgre {
 			now = timeKeeper->getMilliseconds();
 			remaining = len - ((int)(now - timeStartedLastFrame));
 		}
+		int totalMSForLastFrame = (int)(timeKeeper->getMilliseconds() - m_lastFrameTime);
+		if (totalMSForLastFrame <= 0) totalMSForLastFrame = 1;
+		LookingGlassOgr::SetStat(LookingGlassOgr::StatLastFrameMs, totalMSForLastFrame);
+		LookingGlassOgr::SetStat(LookingGlassOgr::StatFramesPerSecond, 1000000/totalMSForLastFrame);
+		m_lastFrameTime = timeKeeper->getMilliseconds();
 
 		return ret;
 	}

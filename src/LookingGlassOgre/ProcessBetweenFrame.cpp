@@ -67,8 +67,9 @@ public:
 	float parms[OLMaterialTracker::OLMaterialTracker::CreateMaterialSize];
 	CreateMaterialResourceQc(int prio, Ogre::String uni, 
 					const char* mName, const char* tName, const float* inParms) {
-		this->priority = prio;
-		this->cost = 10;
+		// this->priority = prio;
+		this->priority = 0;	// kludge to get materials out of the way
+		this->cost = 0;
 		this->uniq = uni;
 		this->matName = Ogre::String(mName);
 		this->texName = Ogre::String(tName);
@@ -231,7 +232,7 @@ ProcessBetweenFrame::~ProcessBetweenFrame() {
 // ====================================================================
 // refresh a resource
 void ProcessBetweenFrame::RefreshResource(int priority, char* resourceName, int rType) {
-	RefreshResourceQc* rrq = new RefreshResourceQc(priority, Ogre::String(), resourceName, rType);
+	RefreshResourceQc* rrq = new RefreshResourceQc(priority, resourceName, resourceName, rType);
 	QueueWork((GenericQc*)rrq);
 	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameWorkItems);
 	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameRefreshResource);
@@ -239,7 +240,7 @@ void ProcessBetweenFrame::RefreshResource(int priority, char* resourceName, int 
 
 void ProcessBetweenFrame::CreateMaterialResource2(int priority, 
 			  const char* matName, const char* texName, const float* parms) {
-	CreateMaterialResourceQc* cmrq = new CreateMaterialResourceQc(priority, Ogre::String(), matName, texName, parms);
+	CreateMaterialResourceQc* cmrq = new CreateMaterialResourceQc(priority, matName, matName, texName, parms);
 	QueueWork((GenericQc*)cmrq);
 	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameWorkItems);
 	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameCreateMaterialResource);
@@ -247,7 +248,7 @@ void ProcessBetweenFrame::CreateMaterialResource2(int priority,
 
 void ProcessBetweenFrame::CreateMeshResource(int priority, 
 				 const char* meshName, const int* faceCounts, const float* faceVertices) {
-	CreateMeshResourceQc* cmrq = new CreateMeshResourceQc(priority, Ogre::String(), meshName, faceCounts, faceVertices);
+	CreateMeshResourceQc* cmrq = new CreateMeshResourceQc(priority, meshName, meshName, faceCounts, faceVertices);
 	QueueWork((GenericQc*)cmrq);
 	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameWorkItems);
 	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameCreateMeshResource);
@@ -263,7 +264,7 @@ void ProcessBetweenFrame::CreateMeshSceneNode(int priority,
 					float px, float py, float pz,
 					float sx, float sy, float sz,
 					float ow, float ox, float oy, float oz) {
-	CreateMeshSceneNodeQc* csnq = new CreateMeshSceneNodeQc(priority, Ogre::String(), 
+	CreateMeshSceneNodeQc* csnq = new CreateMeshSceneNodeQc(priority, sceneNodeName, 
 					sceneMgr, 
 					sceneNodeName,
 					parentNode,
@@ -282,7 +283,7 @@ void ProcessBetweenFrame::UpdateSceneNode(int priority, char* entName,
 					bool setPosition, float px, float py, float pz,
 					bool setScale, float sx, float sy, float sz,
 					bool setRotation, float ow, float ox, float oy, float oz) {
-	UpdateSceneNodeQc* usnq = new UpdateSceneNodeQc(priority, Ogre::String(),
+	UpdateSceneNodeQc* usnq = new UpdateSceneNodeQc(priority, entName,
 					entName,
 					setPosition, px, py, pz,
 					setScale, sx, sy, sz,
@@ -303,8 +304,16 @@ bool ProcessBetweenFrame::frameEnded(const Ogre::FrameEvent& evt) {
 void ProcessBetweenFrame::QueueWork(GenericQc* wi) {
 	LGLOCK_LOCK(m_workItemMutex);
 	// Check to see if uniq is specified and remove any duplicates
-	if (wi->uniq.length() == 0 ) {
-		// TODO:
+	if (wi->uniq.length() != 0 ) {
+		// There will be duplicate requests for things. If we already have a request, delete the old
+		std::list<GenericQc*>::iterator li;
+		for (li = m_betweenFrameWork.begin(); li != m_betweenFrameWork.end(); li++) {
+			if (li._Ptr->_Myval->uniq.length() != 0) {
+				if (wi->uniq == li._Ptr->_Myval->uniq) {
+					m_betweenFrameWork.erase(li,li);
+				}
+			}
+		}
 	}
 	m_betweenFrameWork.push_back(wi);
 	m_modified = true;

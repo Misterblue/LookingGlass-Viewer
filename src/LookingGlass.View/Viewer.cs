@@ -246,36 +246,38 @@ public class Viewer : ModuleBase, IViewProvider {
     // called from the renderer when the mouse moves
     private void UserInterface_OnMouseMove(int param, float x, float y) {
         int sinceLastMouse = System.Environment.TickCount - m_lastMouseMoveTime;
-        // m_log.Log(LogLevel.DVIEWDETAIL, "OnMouseMove:"
-        //             + " x=" + x.ToString() + ", y=" + y.ToString()
-        //             + "time since last = " + sinceLastMouse.ToString() );
-        if (m_mainCamera != null && (Renderer.UserInterface.LastMouseButtons & MouseButtons.Left) != 0) {
+        m_lastMouseMoveTime = System.Environment.TickCount;
+        m_log.Log(LogLevel.DVIEWDETAIL, "OnMouseMove: x={0}, y={1}, time since last={2}", x, y, sinceLastMouse);
+        if (m_mainCamera != null) {
             if (((Renderer.UserInterface.LastKeyCode & Keys.Control) == 0)
                     && ((Renderer.UserInterface.LastKeyCode & Keys.Alt) != 0)) {
+                m_log.Log(LogLevel.DVIEWDETAIL, "OnMouseMove: CNTL-ALT: ");
             }
-            if ( ((Renderer.UserInterface.LastKeyCode & Keys.Control) != 0)
+            else if ( ((Renderer.UserInterface.LastKeyCode & Keys.Control) != 0)
                     && ((Renderer.UserInterface.LastKeyCode & Keys.Alt) != 0) ) {
                 // if ALT+CNTL is held down, movement is on view plain
                 float xMove = x * m_cameraSpeed;
                 float yMove = y * m_cameraSpeed;
                 OMV.Vector3d movement = new OMV.Vector3d( 0, xMove, yMove);
+                m_log.Log(LogLevel.DVIEWDETAIL, "OnMouseMove: ALT: Move camera x={0}, y={1}", xMove, yMove);
                 m_mainCamera.GlobalPosition -= movement;
             }
             else if ((Renderer.UserInterface.LastKeyCode & Keys.Control) != 0) {
                 // if CNTL is held down, movement is on land plane
                 float xMove = x * m_cameraSpeed;
                 float yMove = y * m_cameraSpeed;
-                // m_log.Log(LogLevel.DVIEWDETAIL, "OnMouseMove: Move camera x={0}, y={1}", xMove, yMove);
+                m_log.Log(LogLevel.DVIEWDETAIL, "OnMouseMove: CNTL: Move camera x={0}, y={1}", xMove, yMove);
                 OMV.Vector3d movement = new OMV.Vector3d( yMove, xMove, 0f);
                 m_mainCamera.GlobalPosition -= movement;
             }
-            else {
-                // move the camera around the horizontal (X) and vertical (Z) axis
-                float xMove = (-x * m_cameraRotationSpeed * Constants.DEGREETORADIAN) % Constants.TWOPI;
-                float yMove = (-y * m_cameraRotationSpeed * Constants.DEGREETORADIAN) % Constants.TWOPI;
-                // rotate around local axis
-                // m_log.Log(LogLevel.DVIEWDETAIL, "OnMouseMove: Rotate camera x={0}, y={1}", xMove, yMove);
-                m_mainCamera.rotate(yMove, 0f, xMove);
+            else if ((Renderer.UserInterface.LastMouseButtons & MouseButtons.Left) != 0) {
+                    // move the camera around the horizontal (X) and vertical (Z) axis
+                    float xMove = (-x * m_cameraRotationSpeed * Constants.DEGREETORADIAN) % Constants.TWOPI;
+                    float yMove = (-y * m_cameraRotationSpeed * Constants.DEGREETORADIAN) % Constants.TWOPI;
+                    // rotate around local axis
+                    m_log.Log(LogLevel.DVIEWDETAIL, "OnMouseMove: Rotate camera x={0}, y={1}, lmb={2}", 
+                            xMove, yMove, Renderer.UserInterface.LastMouseButtons);
+                    m_mainCamera.rotate(yMove, 0f, xMove);
             }
         }
         return;

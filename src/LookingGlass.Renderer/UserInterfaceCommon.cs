@@ -107,8 +107,10 @@ public class UserInterfaceCommon : IUserInterfaceProvider {
     private void OnRepeatTimer(Object xx) {
         if (this.KeyPressed) {
             // fake receiving another key press
-            ReceiveUserIO(ReceiveUserIOInputEventTypeCode.KeyPress, m_repeatKey, 0f, 0f);
-            // m_log.Log(LogLevel.DBADERROR, "OnRepeatTimer: Faking key {0}", m_repeatKey);
+            if (m_workQueue.CurrentQueued < 4) { // if getting behind, don't repeat
+                ReceiveUserIO(ReceiveUserIOInputEventTypeCode.KeyPress, m_repeatKey, 0f, 0f);
+                // m_log.Log(LogLevel.DBADERROR, "OnRepeatTimer: Faking key {0}", m_repeatKey);
+            }
         }
         else { 
             // key not pressed so don't repeat any more
@@ -151,9 +153,10 @@ public class UserInterfaceCommon : IUserInterfaceProvider {
         switch (typ) {
             case ReceiveUserIOInputEventTypeCode.KeyPress:
                 param1 = param1 & (int)Keys.KeyCode; // remove extra cruft
-                m_log.Log(LogLevel.DVIEWDETAIL, "UserInterfaceCommon: ReceiveLater: KeyPress: {0}", param1);
                 this.UpdateModifier(param1, true);
                 AddKeyToLastKeyCode(param1);
+                m_log.Log(LogLevel.DVIEWDETAIL, "UserInterfaceCommon: ReceiveLater: KeyPress: {0}. LastKeyCode={1}", 
+                                param1, this.LastKeyCode);
                 this.m_repeatKey = param1;
                 this.KeyPressed = true;
                 this.m_repeatTimer.Change(this.KeyRepeatMs, this.KeyRepeatMs);
@@ -162,10 +165,10 @@ public class UserInterfaceCommon : IUserInterfaceProvider {
                 break;
             case ReceiveUserIOInputEventTypeCode.KeyRelease:
                 param1 = param1 & (int)Keys.KeyCode; // remove extra cruft
-                m_log.Log(LogLevel.DVIEWDETAIL, "UserInterfaceCommon: ReceiveLater: KeyRelease: {0}", param1);
                 this.UpdateModifier(param1, false);
                 AddKeyToLastKeyCode(param1);
-                // this.LastKeyCode = (Keys)param1;
+                m_log.Log(LogLevel.DVIEWDETAIL, "UserInterfaceCommon: ReceiveLater: KeyRelease: {0}. LastKeyCode={1}", 
+                                param1, this.LastKeyCode);
                 this.KeyPressed = false;
                 this.m_repeatTimer.Change(Timeout.Infinite, Timeout.Infinite);
                 if (this.OnUserInterfaceKeypress != null)
@@ -173,13 +176,17 @@ public class UserInterfaceCommon : IUserInterfaceProvider {
                 break;
             case ReceiveUserIOInputEventTypeCode.MouseButtonDown:
                 this.UpdateMouseModifier(param1, true);
-                if (this.OnUserInterfaceMouseButton != null) this.OnUserInterfaceMouseButton(
-                                ThisMouseButtonCode(param1), false);
-                break;
-            case ReceiveUserIOInputEventTypeCode.MouseButtonUp:
-                this.UpdateMouseModifier(param1, true);
+                m_log.Log(LogLevel.DVIEWDETAIL, "UserInterfaceCommon: ReceiveLater: MouseBtnDown: {0}, {1}", 
+                                param1, this.LastMouseButtons);
                 if (this.OnUserInterfaceMouseButton != null) this.OnUserInterfaceMouseButton(
                                 ThisMouseButtonCode(param1), true);
+                break;
+            case ReceiveUserIOInputEventTypeCode.MouseButtonUp:
+                this.UpdateMouseModifier(param1, false);
+                m_log.Log(LogLevel.DVIEWDETAIL, "UserInterfaceCommon: ReceiveLater: MouseBtnUp: {0}, {1}", 
+                                param1, this.LastMouseButtons);
+                if (this.OnUserInterfaceMouseButton != null) this.OnUserInterfaceMouseButton(
+                                ThisMouseButtonCode(param1), false);
                 break;
             case ReceiveUserIOInputEventTypeCode.MouseMove:
                 // pass the routine tracking the raw position information
@@ -195,6 +202,7 @@ public class UserInterfaceCommon : IUserInterfaceProvider {
 
     private void AddKeyToLastKeyCode(int kee) {
         this.LastKeyCode = (this.LastKeyCode & Keys.Modifiers) | (Keys)kee;
+        m_log.Log(LogLevel.DVIEWDETAIL, "UserInterfaceCommon: AddKeyToLastKeyCode: adding {0}, lkc={1}", kee, this.LastKeyCode);
     }
 
     /// <summary>
@@ -204,7 +212,7 @@ public class UserInterfaceCommon : IUserInterfaceProvider {
     /// <param name="updown">true if the key is down, false otherwise</param>
     private void UpdateModifier(int param1, bool updown) {
         Keys kparam1 = (Keys)param1;
-        if (kparam1 == Keys.LMenu || kparam1 == Keys.RMenu) {
+        if (kparam1 == Keys.Menu || kparam1 == Keys.LMenu || kparam1 == Keys.RMenu) {
             if (updown && ((LastKeyCode & Keys.Alt) == 0)) {
                 LastKeyCode |= Keys.Alt;
             }
@@ -212,7 +220,7 @@ public class UserInterfaceCommon : IUserInterfaceProvider {
                 LastKeyCode ^= Keys.Alt;
             }
         }
-        if (kparam1 == Keys.RShiftKey || kparam1 == Keys.LShiftKey) {
+        if (kparam1 == Keys.ShiftKey || kparam1 == Keys.RShiftKey || kparam1 == Keys.LShiftKey) {
             if (updown && ((LastKeyCode & Keys.Shift) == 0)) {
                 LastKeyCode |= Keys.Shift;
             }
@@ -220,11 +228,13 @@ public class UserInterfaceCommon : IUserInterfaceProvider {
                 LastKeyCode ^= Keys.Shift;
             }
         }
-        if (kparam1 == Keys.LControlKey || kparam1 == Keys.RControlKey) {
+        if (kparam1 == Keys.ControlKey || kparam1 == Keys.LControlKey || kparam1 == Keys.RControlKey) {
             if (updown && ((LastKeyCode & Keys.Control) == 0)) {
+                m_log.Log(LogLevel.DVIEWDETAIL, "UserInterfaceCommon: UpdateModifier: add cntl, lkc={0}", this.LastKeyCode);
                 LastKeyCode |= Keys.Control;
             }
             if (!updown && ((LastKeyCode & Keys.Control) != 0)) {
+                m_log.Log(LogLevel.DVIEWDETAIL, "UserInterfaceCommon: UpdateModifier: remove cntl, lkc={0}", this.LastKeyCode);
                 LastKeyCode ^= Keys.Control;
             }
         }
@@ -254,15 +264,15 @@ public class UserInterfaceCommon : IUserInterfaceProvider {
     private void UpdateMouseModifier(int param1, bool updown) {
         if (param1 == (int)ReceiveUserIOMouseButtonCode.Left) {
             if (updown) m_lastButtons |= MouseButtons.Left;
-            if (!updown && (m_lastButtons & MouseButtons.Left) != 0) m_lastButtons ^= MouseButtons.Left;
+            if (!updown && ((m_lastButtons & MouseButtons.Left) != 0)) m_lastButtons ^= MouseButtons.Left;
         }
         if (param1 == (int)ReceiveUserIOMouseButtonCode.Right) {
             if (updown) m_lastButtons |= MouseButtons.Right;
-            if (!updown && (m_lastButtons & MouseButtons.Right) != 0) m_lastButtons ^= MouseButtons.Right;
+            if (!updown && ((m_lastButtons & MouseButtons.Right) != 0)) m_lastButtons ^= MouseButtons.Right;
         }
         if (param1 == (int)ReceiveUserIOMouseButtonCode.Middle) {
             if (updown) m_lastButtons |= MouseButtons.Middle;
-            if (!updown && (m_lastButtons & MouseButtons.Middle) != 0) m_lastButtons ^= MouseButtons.Middle;
+            if (!updown && ((m_lastButtons & MouseButtons.Middle) != 0)) m_lastButtons ^= MouseButtons.Middle;
         }
     }
 }

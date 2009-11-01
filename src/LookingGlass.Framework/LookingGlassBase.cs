@@ -22,6 +22,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Windows.Forms;
 using System.Text;
 using System.Threading;
 using LookingGlass.Framework;
@@ -135,29 +136,24 @@ public class LookingGlassBase : IInstance<LookingGlassBase> {
     }
 
     /// <summary>
-    /// Send the calling thread into the renderer to do all the work. This call does
-    /// not return until rendering stops and/or KeepRunning is false;
+    /// Start a thread to wait for the keep running flag to turn off
     /// </summary>
-    public void Start() {
-        // Some renderers (Mogre and Ogre, I'm looking at you) require the main thread to
-        // do their rendering and window management. This kludge calls into the
-        // viewer to give the main thread to the renderer. If the renderer doesn't
-        // need it, the function returns 'false' and we just wait for things to
-        // finish.
-        while (KeepRunning) {
-            if (m_wantsMainThread != null) {
-                m_log.Log(LogLevel.DINIT, "Someone asking for main thread");
-                // The next call will only return after rendering is done if it
-                // uses the thread.
-                // If it returns 'true' it used the thread so now it's done and we turn off KeepRunning
-                KeepRunning = !m_wantsMainThread();
-                m_wantsMainThread = null;
-            }
+    private Thread m_KeepRunningThread = null;
+    private ApplicationContext m_formsContext;
+    public void Start(ApplicationContext formsContext) {
+        m_formsContext = formsContext;
+        if (m_KeepRunningThread == null) {
+            m_KeepRunningThread = new Thread(CheckKeepRunning);
+            m_KeepRunningThread.Name = "Check keep running";
+            m_log.Log(LogLevel.DINIT, "Starting keep running thread");
+            m_KeepRunningThread.Start();
+        }
+    }
+
+    private void CheckKeepRunning() {
+        while (this.KeepRunning) {
             Thread.Sleep(1 * 1000);
         }
-
-        Thread.Sleep(3 * 1000);
-
         StopEverything();
     }
     
@@ -177,7 +173,12 @@ public class LookingGlassBase : IInstance<LookingGlassBase> {
 
     private void StopEverything() {
         try {
-            m_log.Log(LogLevel.DINIT, "STOP INITIATED. Stopping modules.");
+            m_log.Log(LogLevel.DINIT, "STOP INITIATED. Stopping forms.");
+            if (m_formsContext != null) {
+                m_formsContext.ExitThread();
+            }
+
+            m_log.Log(LogLevel.DINIT, "Stopping modules.");
             ModManager.Stop();
 
             m_log.Log(LogLevel.DINIT, "Unloading modules.");

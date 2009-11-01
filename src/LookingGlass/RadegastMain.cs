@@ -118,7 +118,12 @@ class RadegastMain : IRadegastPlugin {
         string radCommName = m_lgb.AppParams.ParamString("Radegast.Comm.Name");
         CommLLLP worldComm = (CommLLLP)m_lgb.ModManager.Module(radCommName);
 
-        // this sets up a bunch of structures and naming
+        // Set up a bunch of structures and naming
+        // Since the user is already logged in and connected to a simulator, this fakes
+        // the connection sequence to get the use logged in and connected for the first
+        // sim. This is needed to set up the region structures, etc. The contents of that
+        // first sim are also copied into LG. The other sims are taken care of by the 
+        // second call to LoadWorldObjects.
         m_log.Log(LogLevel.DRADEGASTDETAIL, "RadegastMain: Network_OnLogin");
         worldComm.Network_OnLogin(OMV.LoginStatus.Success, "Radegast prelogin");
         m_log.Log(LogLevel.DRADEGASTDETAIL, "RadegastMain: Network_OnSimConnected for {0}",

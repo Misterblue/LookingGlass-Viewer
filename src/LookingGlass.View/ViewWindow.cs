@@ -34,12 +34,15 @@ using LookingGlass.Renderer;
 
 namespace LookingGlass.View {
 public partial class ViewWindow : Form {
+    private ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
 
     private LookingGlassBase m_lgb;
     private Panel m_renderPanel;
     private IRenderProvider m_renderer;
     private System.Threading.Timer m_refreshTimer;
     private int m_framesPerSec;
+    private int m_frameTimeMs;      // 1000/framesPerSec
+    private int m_frameAllowanceMs; // maz(1000/framesPerSec - 30, 10) time allowed for frame plus extra work
 
     private IUserInterfaceProvider m_UILink = null;
     private bool m_MouseIn = false;     // true if mouse is over our window
@@ -48,29 +51,34 @@ public partial class ViewWindow : Form {
 
     public ViewWindow(LookingGlassBase lgbase) {
         m_lgb = lgbase;
-
+        m_lgb.AppParams.AddDefaultParameter("ViewerWindow.Renderer.Name", "Renderer", "The renderer we will get UI from");
+        m_lgb.AppParams.AddDefaultParameter("ViewerWindow.FramesPerSec", "10", "The rate to throttle frame rendering");
         InitializeComponent();
     }
 
     // Called after LookingGlass is initialized
     public void Initialize() {
-        // get a handle to the renderer module in LookingGlass
-        string rendererName = m_lgb.AppParams.ParamString("Viewer.Renderer.Name");
-        m_framesPerSec = m_lgb.AppParams.ParamInt("Viewer.FramesPerSec");
-        m_renderer = (IRenderProvider)m_lgb.ModManager.Module(rendererName);
+        try {
+            // get a handle to the renderer module in LookingGlass
+            string rendererName = m_lgb.AppParams.ParamString("ViewerWindow.Renderer.Name");
+            m_framesPerSec = Math.Min(100, Math.Max(1, m_lgb.AppParams.ParamInt("ViewerWindow.FramesPerSec")));
+            m_frameTimeMs = 1000 / m_framesPerSec;
+            m_frameAllowanceMs = Math.Max(m_framesPerSec - 30, 10);
+            m_renderer = (IRenderProvider)m_lgb.ModManager.Module(rendererName);
+            m_log.Log(LogLevel.DVIEWDETAIL, "Initialize. Connecting to renderer {0} at {1}fps",
+                            m_renderer, m_framesPerSec);
 
-        string uiName = m_lgb.AppParams.ParamString("Viewer.UI.Name");
-        m_UILink = (IUserInterfaceProvider)m_lgb.ModManager.Module(uiName);
-        if (m_UILink == null) {
-            LogManager.Log.Log(LogLevel.DBADERROR, "ViewerWindow.Initialize: COULD NOT ATTACH UI INTERFACE '{0};", uiName);
-        }
-        else {
-            LogManager.Log.Log(LogLevel.DVIEWDETAIL, "ViewerWindow.Initialize: Successfully attached UI");
-        }
+            // the link to the renderer for display is also a link to the user interface routines
+            m_UILink = m_renderer.UserInterface;
 
-        m_refreshTimer = new System.Threading.Timer(delegate(Object param) {
-            m_renderPanel.Invalidate();
-        }, null, 2000, 100);
+            m_refreshTimer = new System.Threading.Timer(delegate(Object param) {
+                this.LGWindow.Invalidate();
+                }, null, 2000, m_frameTimeMs);
+        }
+        catch (Exception e) {
+            m_log.Log(LogLevel.DBADERROR, "Initialize. exception: {0}", e.ToString());
+            throw new LookingGlassException("Exception initializing view");
+        }
 
     }
     
@@ -90,10 +98,10 @@ public partial class ViewWindow : Form {
 
     public void LGWindow_Paint(object sender, PaintEventArgs e) {
         if (this.InvokeRequired) {
-            BeginInvoke((MethodInvoker)delegate() { m_renderer.RenderOneFrame(false, 100); });
+            BeginInvoke((MethodInvoker)delegate() { m_renderer.RenderOneFrame(false, m_frameAllowanceMs); });
         }
         else {
-            m_renderer.RenderOneFrame(false, 100);
+            m_renderer.RenderOneFrame(false, m_frameAllowanceMs);
         }
         return;
     }
@@ -111,6 +119,7 @@ public partial class ViewWindow : Form {
 
     private void LGWindow_MouseMove(object sender, MouseEventArgs e) {
         if (m_UILink != null && m_MouseIn) {
+            // ReceiveUserIO wants relative mouse movement. Convert abs to rel
             int butn = ConvertMouseButtonCode(e.Button);
             if (m_MouseLastX == -3456f) m_MouseLastX = e.X;
             if (m_MouseLastY == -3456f) m_MouseLastY = e.Y;
@@ -136,16 +145,16 @@ public partial class ViewWindow : Form {
         }
     }
 
-    private void RadegastWindow_KeyDown(object sender, KeyEventArgs e) {
+    private void LGWindow_KeyDown(object sender, KeyEventArgs e) {
         if (m_UILink != null) {
-            LogManager.Log.Log(LogLevel.DVIEWDETAIL, "RadegastWindow.LGWindow_KeyDown: k={0}", e.KeyCode);
+            LogManager.Log.Log(LogLevel.DVIEWDETAIL, "ViewWindow.LGWindow_KeyDown: k={0}", e.KeyCode);
             m_UILink.ReceiveUserIO(ReceiveUserIOInputEventTypeCode.KeyPress, (int)e.KeyCode, 0f, 0f);
         }
     }
 
-    private void RadegastWindow_KeyUp(object sender, KeyEventArgs e) {
+    private void LGWindow_KeyUp(object sender, KeyEventArgs e) {
         if (m_UILink != null) {
-            LogManager.Log.Log(LogLevel.DVIEWDETAIL, "RadegastWindow.LGWindow_KeyUp: k={0}", e.KeyCode);
+            LogManager.Log.Log(LogLevel.DVIEWDETAIL, "ViewWindow.LGWindow_KeyUp: k={0}", e.KeyCode);
             m_UILink.ReceiveUserIO(ReceiveUserIOInputEventTypeCode.KeyRelease, (int)e.KeyCode, 0f, 0f);
         }
     }

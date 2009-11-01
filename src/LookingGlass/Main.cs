@@ -24,16 +24,19 @@ using System;
 using System.Reflection;
 using System.Threading;
 using System.Collections.Generic;
+using System.Windows;
 using System.Windows.Forms;
 using LookingGlass.Framework.Logging;
 using LookingGlass.Framework.Parameters;
 using LookingGlass.View;
 
 namespace LookingGlass {
-class Program {
+class LookingGlassMain : ApplicationContext {
     static ILog m_log = LogManager.GetLogger("Main");
     static Dictionary<string, string> m_Parameters;
-    static ViewWindow m_viewDialog = null;
+
+    // Application instance for the forms
+    public LookingGlassMain LGApplicationInstance = null;
 
     [STAThread]
     static void Main(string[] args) {
@@ -106,8 +109,19 @@ class Program {
             }
         }
 
+        LookingGlassMain LGApplicationInstance = new LookingGlassMain();
+        LGApplicationInstance.LGApplicationInstance = LGApplicationInstance;
+
+        Application.Run(LGApplicationInstance);
+    }
+
+    // ENTRY
+    public LookingGlassMain() {
+        LookingGlassBase LGB = LookingGlassBase.Instance;
+
         // Point the Ogre renderer to our panel window
         // Ya, ya. I know it's RendererOgre specific. Fix that someday.
+
         ViewWindow m_viewDialog = new ViewWindow(LGB);
         Control[] subControls = m_viewDialog.Controls.Find("LGWindow", true);
         if (subControls.Length == 1) {
@@ -124,6 +138,7 @@ class Program {
                 windowPanel.Height.ToString(), "Height of external window");
         }
         else {
+            m_log.Log(LogLevel.DBADERROR, "Could not find window control on dialog");
             throw new Exception("Could not find window control on dialog");
         }
 
@@ -138,17 +153,18 @@ class Program {
         LogManager.CurrentLogLevel = (LogLevel)LGB.AppParams.ParamInt("Log.FilterLevel");
 
         if (LGB.Initialize()) {
-            LGB.Start();
+            // initialize the viewer dialog
+            m_viewDialog.Initialize();
+
+            // put the dialog up
+            m_viewDialog.Show();
+            // The dialog window will do all the image updating
+
+            // send the thread to render or wait. This only returns when exiting.
+            LGB.Start(LGApplicationInstance);
         }
 
-        // initialize the viewer dialog
-        m_viewDialog.Initialize();
-
-        // put the dialog up
-        m_viewDialog.Show();
-        // The dialog window will do all the image updating
-
-        m_log.Log(LogLevel.DINIT, "EXIT");
+        // m_log.Log(LogLevel.DINIT, "EXIT");
     }
 
     private static string Invocation()

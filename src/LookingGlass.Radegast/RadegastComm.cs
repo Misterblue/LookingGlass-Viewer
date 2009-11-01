@@ -85,6 +85,8 @@ public class RadegastComm : CommLLLP {
             m_client.Network.OnEventQueueRunning += new OMV.NetworkManager.EventQueueRunningCallback(Network_OnEventQueueRunning);
         }
         catch (Exception e) {
+            m_log.Log(LogLevel.DCOMMDETAIL, "Exception initializing libomv: {0}", e.ToString());
+            return;
         }
 
         // fake like this is the initial teleport

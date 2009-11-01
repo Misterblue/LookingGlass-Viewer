@@ -36,11 +36,15 @@ using LookingGlass.Renderer;
 namespace LookingGlass.Radegast {
 
 public partial class RadegastWindow : Form {
+    private ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
 
     private RadegastInstance m_radInstance;
     private LookingGlassBase m_lgb;
     private IRenderProvider m_renderer;
     private System.Threading.Timer m_refreshTimer;
+    private int m_framesPerSec;
+    private int m_frameTimeMs;      // 1000/framesPerSec
+    private int m_frameAllowanceMs; // maz(1000/framesPerSec - 30, 10) time allowed for frame plus extra work
 
     private IUserInterfaceProvider m_UILink = null;
     private bool m_MouseIn = false;     // true if mouse is over our window
@@ -51,32 +55,39 @@ public partial class RadegastWindow : Form {
     public RadegastWindow(RadegastInstance rinst, LookingGlassBase lgbase) {
         m_radInstance = rinst;
         m_lgb = lgbase;
+        m_lgb.AppParams.AddDefaultParameter("RadegastWindow.Renderer.Name", "Renderer", "The renderer we will get UI from");
+        m_lgb.AppParams.AddDefaultParameter("RadegastWindow.FramesPerSec", "10", "The rate to throttle frame rendering");
 
         InitializeComponent();
     }
 
     // Called after LookingGlass is initialized
     public void Initialize() {
-        // get a handle to the renderer module in LookingGlass
-        string rendererName = m_lgb.AppParams.ParamString("Radegast.Renderer.Name");
-        m_renderer = (IRenderProvider)m_lgb.ModManager.Module(rendererName);
-        if (m_renderer == null) {
-            LogManager.Log.Log(LogLevel.DBADERROR, "RadegastWindow.Initialize: COULD NOT ATTACH RENDERER '{0};", rendererName);
-            return;
-        }
+        try {
+            // get a handle to the renderer module in LookingGlass
+            string rendererName = m_lgb.AppParams.ParamString("RadegastWindow.Renderer.Name");
+            m_framesPerSec = Math.Min(100, Math.Max(1, m_lgb.AppParams.ParamInt("RadegastWindow.FramesPerSec")));
+            m_frameTimeMs = 1000 / m_framesPerSec;
+            m_frameAllowanceMs = Math.Max(m_framesPerSec - 20, 10);
+            m_renderer = (IRenderProvider)m_lgb.ModManager.Module(rendererName);
+            if (m_renderer == null) {
+                m_log.Log(LogLevel.DBADERROR, "RadegastWindow.Initialize: COULD NOT ATTACH RENDERER '{0};", rendererName);
+                throw new LookingGlassException(String.Format("RadegastWindow.Initialize: COULD NOT ATTACH RENDERER '{0};", rendererName));
+            }
+            m_log.Log(LogLevel.DVIEWDETAIL, "Initialize. Connecting to renderer {0} at {1}fps",
+                            m_renderer, m_framesPerSec);
 
-        string uiName = m_lgb.AppParams.ParamString("Radegast.UI.Name");
-        m_UILink = (IUserInterfaceProvider)m_lgb.ModManager.Module(uiName);
-        if (m_UILink == null) {
-            LogManager.Log.Log(LogLevel.DBADERROR, "RadegastWindow.Initialize: COULD NOT ATTACH UI INTERFACE '{0};", uiName);
-        }
-        else {
-            LogManager.Log.Log(LogLevel.DVIEWDETAIL, "RadegastWindow.Initialize: Successfully attached UI");
-        }
+            // The linkage to the renderer for display is also a link into it's UI system
+            m_UILink = m_renderer.UserInterface;
 
-        m_refreshTimer = new System.Threading.Timer(delegate(Object param) {
-            this.LGWindow.Invalidate();
-        }, null, 2000, 100);
+            m_refreshTimer = new System.Threading.Timer(delegate(Object param) {
+                this.LGWindow.Invalidate();
+            }, null, 2000, m_frameTimeMs);
+        }
+        catch (Exception e) {
+            m_log.Log(LogLevel.DBADERROR, "Initialize. exception: {0}", e.ToString());
+            throw new LookingGlassException("Exception initializing view");
+        }
 
     }
 
@@ -94,10 +105,10 @@ public partial class RadegastWindow : Form {
 
     private void LGWindow_Paint(object sender, PaintEventArgs e) {
         if (this.InvokeRequired) {
-            BeginInvoke((MethodInvoker)delegate() { m_renderer.RenderOneFrame(false, 80); });
+            BeginInvoke((MethodInvoker)delegate() { m_renderer.RenderOneFrame(false, m_frameAllowanceMs); });
         }
         else {
-            m_renderer.RenderOneFrame(false, 80);
+            m_renderer.RenderOneFrame(false, m_frameAllowanceMs);
         }
         return;
     }
@@ -115,6 +126,7 @@ public partial class RadegastWindow : Form {
 
     private void LGWindow_MouseMove(object sender, MouseEventArgs e) {
         if (m_UILink != null && m_MouseIn) {
+            // ReceiveUserIO wants relative mouse movement. Convert abs to rel
             int butn = ConvertMouseButtonCode(e.Button);
             if (m_MouseLastX == -3456f) m_MouseLastX = e.X;
             if (m_MouseLastY == -3456f) m_MouseLastY = e.Y;
@@ -142,14 +154,14 @@ public partial class RadegastWindow : Form {
 
     private void RadegastWindow_KeyDown(object sender, KeyEventArgs e) {
         if (m_UILink != null) {
-            LogManager.Log.Log(LogLevel.DVIEWDETAIL, "RadegastWindow.LGWindow_KeyDown: k={0}", e.KeyCode);
+            m_log.Log(LogLevel.DVIEWDETAIL, "RadegastWindow.LGWindow_KeyDown: k={0}", e.KeyCode);
             m_UILink.ReceiveUserIO(ReceiveUserIOInputEventTypeCode.KeyPress, (int)e.KeyCode, 0f, 0f);
         }
     }
 
     private void RadegastWindow_KeyUp(object sender, KeyEventArgs e) {
         if (m_UILink != null) {
-            LogManager.Log.Log(LogLevel.DVIEWDETAIL, "RadegastWindow.LGWindow_KeyUp: k={0}", e.KeyCode);
+            m_log.Log(LogLevel.DVIEWDETAIL, "RadegastWindow.LGWindow_KeyUp: k={0}", e.KeyCode);
             m_UILink.ReceiveUserIO(ReceiveUserIOInputEventTypeCode.KeyRelease, (int)e.KeyCode, 0f, 0f);
         }
     }

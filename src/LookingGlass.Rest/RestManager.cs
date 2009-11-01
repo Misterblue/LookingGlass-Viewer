@@ -108,41 +108,41 @@ public class RestManager : ModuleBase, HttpServer.ILogWriter {
     #region IModule methods
     public override void OnLoad(string modName, LookingGlassBase lgbase) {
         base.OnLoad(modName, lgbase);
-        ModuleParams.AddDefaultParameter("Rest.Manager.Port", "9144",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Port", "9144",
                     "Local port used for rest interfaces");
-        ModuleParams.AddDefaultParameter("Rest.Manager.BaseURL", "http://127.0.0.1",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".BaseURL", "http://127.0.0.1",
                     "Base URL for rest interfaces");
-        ModuleParams.AddDefaultParameter("Rest.Manager.CSSLocalURL", "/std/LookingGlass.css",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".CSSLocalURL", "/std/LookingGlass.css",
                     "CSS file for rest display");
-        ModuleParams.AddDefaultParameter("Rest.Manager.Browser", @"""\Program Files\Mozilla Firefox\firefox.exe""",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Browser", @"""\Program Files\Mozilla Firefox\firefox.exe""",
                     "The browser to run");
-        ModuleParams.AddDefaultParameter("Rest.Manager.UIContentDir", 
+        ModuleParams.AddDefaultParameter(m_moduleName + ".UIContentDir", 
                     Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "./LookingGlassUI"),
                     "Directory for static HTML content");
-        ModuleParams.AddDefaultParameter("Rest.Manager.Skin", "Default",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Skin", "Default",
                     "If specified, the subdirectory under StaticContentDir to take files from");
     }
 
     override public bool AfterAllModulesLoaded() {
         m_log.Log(LogLevel.DINIT, "entered AfterAllModulesLoaded()");
 
-        m_port = ModuleParams.ParamInt("Rest.Manager.Port");
-        m_baseURL = ModuleParams.ParamString("Rest.Manager.BaseURL");
+        m_port = ModuleParams.ParamInt(m_moduleName + ".Port");
+        m_baseURL = ModuleParams.ParamString(m_moduleName + ".BaseURL");
         // m_Server = new WebServer(System.Net.IPAddress.Any, Port);
         m_Server = HttpServer.HttpListener.Create(this, System.Net.IPAddress.Any, Port);
         m_Server.Start(10);
 
-        string baseUIDir = ModuleParams.ParamString("Rest.Manager.UIContentDir");
+        string baseUIDir = ModuleParams.ParamString(m_moduleName + ".UIContentDir");
         if (baseUIDir.EndsWith("/")) baseUIDir = baseUIDir.Substring(0, baseUIDir.Length-1);
 
         // things referenced as static are from the skinning directory below the UI dir
         string staticDir = baseUIDir;
-        if (ModuleParams.HasParameter("Rest.Manager.Skin")) {
-            string skinName = ModuleParams.ParamString("Rest.Manager.Skin");
+        if (ModuleParams.HasParameter(m_moduleName + ".Skin")) {
+            string skinName = ModuleParams.ParamString(m_moduleName + ".Skin");
             skinName.Replace("/", "");  // skin names shouldn't fool with directories
             skinName.Replace("\\", "");
             skinName.Replace("..", "");
-            staticDir = staticDir + "/" + ModuleParams.ParamString("Rest.Manager.Skin");
+            staticDir = staticDir + "/" + ModuleParams.ParamString(m_moduleName + ".Skin");
         }
         staticDir += "/";
         m_log.Log(LogLevel.DINITDETAIL, "Registering FileHandler {0} -> {1}", "/static/", staticDir);

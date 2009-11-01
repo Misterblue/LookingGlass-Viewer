@@ -105,6 +105,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     private static int m_betweenFrameMapTextureCost = 10;
 
     // private Thread m_rendererThread = null;
+    private bool m_shouldRenderOnMainThread = false;
 
     private RestHandler m_restHandler;
     private StatisticManager m_stats;
@@ -126,7 +127,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     #region IModule
     public override void OnLoad(string name, LookingGlassBase lgbase) {
         base.OnLoad(name, lgbase);
-        ModuleParams.AddDefaultParameter(m_moduleName + ".InputSystem.Name", 
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.InputSystem.Name", 
                     "OgreUI",
                     "Module to handle user IO on the rendering screen");
 
@@ -146,6 +147,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "Initial window size");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.FramePerSecMax", "30",
                     "Maximum number of frames to display per second");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".ShouldRenderOnMainThread", "false",
+                    "True if ogre rendering otherwise someone has to call RenderOneFrame");
 
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.PluginFilename", "plugins.cfg",
                     "File that lists Ogre plugins to load");
@@ -264,8 +267,6 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     private Ogr.RequestResourceCallback requestResourceCallbackHandle;
     private Ogr.BetweenFramesCallback betweenFramesCallbackHandle;
     // ==========================================================================
-    private int m_framesPerSecondLastTime = 10; // used to calclate frames per sec
-    private int m_framesPerSecondLastFrames = 1;
     override public bool AfterAllModulesLoaded() {
         // allow others to get our statistics
         m_restHandler = new RestHandler("/stats/" + m_moduleName + "/detailStats", m_stats);
@@ -283,6 +284,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         m_ogreStatsDesc = new Dictionary<string,string>();
         // NOTE: PUTTING ANY UPPER CASE IN THE KEY STRINGS CAUSES FAILURES!!
         // culling and visibility
+        m_ogreStatsIndex.Add("lastframems", Ogr.StatLastFrameMs);
+        m_ogreStatsDesc.Add("lastframems", "Milliseconds used rendering last frame");
         m_ogreStatsIndex.Add("totalframes", Ogr.StatTotalFrames);
         m_ogreStatsDesc.Add("totalframes", "Number of frames rendered");
         m_ogreStatsIndex.Add("visibletovisible", Ogr.StatVisibleToVisible);
@@ -307,15 +310,15 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         m_ogreStatsIndex.Add("betweenframeworkitems", Ogr.StatBetweenFrameWorkItems);
         m_ogreStatsDesc.Add("betweenframeworkitems", "Number of between frame work items waiting");
         m_ogreStatsIndex.Add("totalbetweenframerefreshresource", Ogr.StatBetweenFrameRefreshResource);
-        m_ogreStatsDesc.Add("totalbetweenframerefreshresource", "Number of 'refresh resource' work items performed");
+        m_ogreStatsDesc.Add("totalbetweenframerefreshresource", "Number of 'refresh resource' work items queued");
         m_ogreStatsIndex.Add("totalbetweenframecreatematerialresource", Ogr.StatBetweenFrameCreateMaterialResource);
-        m_ogreStatsDesc.Add("totalbetweenframecreatematerialresource", "Number of 'create material resource' work items performed");
+        m_ogreStatsDesc.Add("totalbetweenframecreatematerialresource", "Number of 'create material resource' work items queued");
         m_ogreStatsIndex.Add("totalbetweenframecreatemeshresource", Ogr.StatBetweenFrameCreateMeshResource);
-        m_ogreStatsDesc.Add("totalbetweenframecreatemeshresource", "Number of 'create mesh resource' work items performed");
+        m_ogreStatsDesc.Add("totalbetweenframecreatemeshresource", "Number of 'create mesh resource' work items queued");
         m_ogreStatsIndex.Add("totalbetweenframecreatemeshscenenode", Ogr.StatBetweenFrameCreateMeshSceneNode);
-        m_ogreStatsDesc.Add("totalbetweenframecreatemeshscenenode", "Number of 'create mesh scene node' work items performed");
+        m_ogreStatsDesc.Add("totalbetweenframecreatemeshscenenode", "Number of 'create mesh scene node' work items queued");
         m_ogreStatsIndex.Add("totalbetweenframeupdatescenenode", Ogr.StatBetweenFrameUpdateSceneNode);
-        m_ogreStatsDesc.Add("totalbetweenframeupdatescenenode", "Number of 'update scene node' work items performed");
+        m_ogreStatsDesc.Add("totalbetweenframeupdatescenenode", "Number of 'update scene node' work items queued");
         m_ogreStatsIndex.Add("totalbetweenframeunknownprocess", Ogr.StatBetweenFrameUnknownProcess);
         m_ogreStatsDesc.Add("totalbetweenframeunknownprocess", "Number of work items with unknow process codes");
         m_ogreStatsIndex.Add("totalbetweenframetotalprocessed", Ogr.StatBetweenFrameTotalProcessed);
@@ -329,13 +332,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         // add an initial parameter that calculates frames per sec
         m_ogreStats.Add("framespersecond",
             delegate(string xx) {
-                int intrvl = Environment.TickCount - m_framesPerSecondLastTime;
-                if (intrvl < 0) intrvl += Int32.MaxValue;   // TickCount wraps
-                float fps = ((float)(m_ogreStatsPinned[Ogr.StatTotalFrames] - m_framesPerSecondLastFrames));
-                fps /= (float)intrvl / 1000f;
-                m_framesPerSecondLastTime = Environment.TickCount;
-                m_framesPerSecondLastFrames = m_ogreStatsPinned[Ogr.StatTotalFrames];
-                return new OMVSD.OSDString(fps.ToString());
+                return new OMVSD.OSDString(((float)m_ogreStatsPinned[Ogr.StatFramesPerSec] / 1000f).ToString());
             }, "Frames per second"
         );
         // Add parameters for each name with a delegate to get the value from the pinned data array
@@ -351,7 +348,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
 
         // Load the input system we're supposed to be using
         // The input system is a module tha we get given the name of. Go find it and link it in.
-        String uiModule = ModuleParams.ParamString(m_moduleName + ".InputSystem.Name");
+        String uiModule = ModuleParams.ParamString(m_moduleName + ".Ogre.InputSystem.Name");
         if (uiModule != null && uiModule.Length > 0) {
             try {
                 m_log.Log(LogLevel.DRENDER, "Loading UI processor '{0}'", uiModule);
@@ -398,6 +395,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         m_sceneMagnification = float.Parse(ModuleParams.ParamString(m_moduleName + ".Ogre.LL.SceneMagnification"));
 
         m_shouldForceMeshRebuild = ModuleParams.ParamBool(m_moduleName + ".Ogre.ForceMeshRebuild");
+        m_shouldRenderOnMainThread = ModuleParams.ParamBool(m_moduleName + ".ShouldRenderOnMainThread");
 
         // pick up a bunch of parameterized values
         m_betweenFrameTotalCost = ModuleParams.ParamInt(m_moduleName + ".Ogre.BetweenFrame.Costs.Total");
@@ -460,8 +458,10 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     // ==========================================================================
     // IModule.Start()
     override public void Start() {
-        m_log.Log(LogLevel.DRENDER, "Start: requesting main thread");
-        LGB.GetMainThread(RendererThread);
+        if (m_shouldRenderOnMainThread) {
+            m_log.Log(LogLevel.DRENDER, "Start: requesting main thread");
+            LGB.GetMainThread(RendererThread);
+        }
         return;
     }
 
@@ -907,7 +907,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
 
             // tell Ogre to refresh (reload) the resource
             m_log.Log(LogLevel.DRENDERDETAIL, "RendererOgre.RequestMeshLater: refresh for {0}", m_meshName);
-            Ogr.RefreshResourceBF(qInstance.priority, Ogr.ResourceTypeMesh, m_meshName);
+            Ogr.RefreshResourceBF(priority, Ogr.ResourceTypeMesh, m_meshName);
             lock (this.MeshesWaiting) {
                 // no longer waiting for this mesh to get created
                 if (this.MeshesWaiting.ContainsKey(m_meshName)) {
@@ -955,7 +955,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                 else {
                     // Create the material resource and then make the rendering redisplay
                     RendererOgre.GetWorldRenderConv(ent).CreateMaterialResource(qInstance.priority, m_sceneMgr, ent, m_matName);
-                    Ogr.RefreshResourceBF(qInstance.priority, Ogr.ResourceTypeMaterial, m_matName);
+                    Ogr.RefreshResourceBF(this.CalculateInterestOrder(ent), Ogr.ResourceTypeMaterial, m_matName);
                 }
             }
             else {
