@@ -70,3 +70,10 @@ table.LGDefaultParametersTable {
 table.LGDefaultParametersTable td {
     border: 1px solid;
 }
+#LGDefaultParameters-table td.LGDefaultParameters-value-class {
+    text-align: left;
+}
+#LGDefaultParameters-table td.LGDefaultParameters-description-class {
+    text-align: left;
+    width: 400px;
+}

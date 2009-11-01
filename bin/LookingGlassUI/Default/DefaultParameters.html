@@ -5,6 +5,7 @@
 <title>LookingGlass</title>
 <link rel="stylesheet" href="/static/LookingGlass.css" type="text/css"/>
 <script type="application/javascript" src="/std/jquery.js"></script>
+<script type="application/javascript" src="/std/LGScripts.js"></script>
 <script type="application/javascript">
 $(document).ready(function() {
     GetDefaultParameters();
@@ -19,7 +20,7 @@ function GetDefaultParameters() {
         timeout: 5000,
         success: function(data, status) {
             if (status == 'success') {
-                BuildBasicTable('#LGDefaultParameters', data, true);
+                BuildBasicTable('#LGDefaultParameters', data, true, false);
             }
         },
         error: function(xmlHTTPRequest, errorType) {
@@ -27,75 +28,6 @@ function GetDefaultParameters() {
         }
     });
 };
-
-// build a table in the specified section.
-// Clear whatever is there and refill it with the data.
-// We presume the data is in the form:
-//   {rowname: { col1: val, col2: val; ...}, ...)
-function BuildBasicTable(sect, data, addRowName) {
-    var sectID = sect.substr(1);
-    var tableID = sectID + "-table";
-    if ($('#' + tableID).length == 0) {
-        // table does not exist. Build same
-        // build an array of all the column names
-        var columns = new Array();
-        for (row in data) {
-            for (col in data[row]) {
-                if (columns[col] == undefined) {
-                    columns[col] = col;
-                }
-                
-            }
-        }
-        // create a table with td's with id's for cell addressing
-        var buff = new StringBuffer();
-        buff.append('<table id="' + tableID + '" class="LGDefaultParametersTable">');
-        buff.append('<tr>');
-        if (addRowName) buff.append('<th></th>');
-        for (col in columns) {
-            var headerClass = MakeID(sectID + '-' + columns[col] + '-header');
-            buff.append('<th class="' + headerClass +'">' + columns[col] + '</th>');
-        }
-        buff.append('</tr>');
-        for (row in data) {
-            buff.append('<tr>');
-            if (addRowName) {
-                buff.append('<td id="' + MakeID(sectID + '-rowName-' + row) + '">.</td>');
-            }
-            for (col in columns) {
-                var cellID = MakeID(sectID + '-' + row + '-' + col);
-                var cellClass = MakeID(sectID + '-' + col + '-class');
-                buff.append('<td id="' + cellID + '" class="' + cellClass + '">.</td>');
-            }
-            buff.append('</tr>');
-        }
-        buff.append('</table>');
-        $(sect).append(buff.toString());
-    }
-    // table exist. Fill its cells with the text data
-    for (row in data) {
-        $(MakeID('#' + sectID + '-rowName-' + row)).text(row);
-        for (col in data[row]) {
-            var cellID = MakeID(sectID + '-' + row + '-' + col);
-            $('#' + cellID).text(data[row][col]);
-        }
-    }
-}
-
-// clean up ID so there are no dots
-function MakeID(inID) {
-    return inID.replace(/\./g, '-');
-}
-
-function StringBuffer() {
-    this.__strings__ = new Array;
-}
-StringBuffer.prototype.append = function(str) {
-    this.__strings__.push(str);
-}
-StringBuffer.prototype.toString = function() {
-    return this.__strings__.join("");
-}
 
 </script>
 </head>
