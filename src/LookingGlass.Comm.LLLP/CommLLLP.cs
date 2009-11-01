@@ -51,6 +51,18 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     protected ParameterSet m_commStatistics;
     public ParameterSet CommStatistics() { return m_commStatistics; }
     protected RestHandler m_commStatsHandler;
+    private int m_statNetDisconnected;
+    private int m_statNetQueueRunning;
+    private int m_statNetLoginProgress;
+    private int m_statNetSimChanged;
+    private int m_statNetSimConnected;
+    private int m_statObjAttachmentUpdate;
+    private int m_statObjAvatarUpdate;
+    private int m_statObjKillObject;
+    private int m_statObjObjectProperties;
+    private int m_statObjObjectPropertiesUpdate;
+    private int m_statObjObjectUpdate;
+    private int m_statObjTerseUpdate;
 
     // ICommProvider.GridClient
     protected OMV.GridClient m_client;
@@ -305,10 +317,11 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
             m_client.Throttle.Asset = 2446000.0f;
             m_client.Settings.THROTTLE_OUTGOING_PACKETS = true;
 
-            m_client.Network.OnLogin += new OMV.NetworkManager.LoginCallback(Network_OnLogin);
-            m_client.Network.OnDisconnected += new OMV.NetworkManager.DisconnectedCallback(Network_OnDisconnected);
-            m_client.Network.OnCurrentSimChanged += new OMV.NetworkManager.CurrentSimChangedCallback(Network_OnCurrentSimChanged);
-            m_client.Network.OnEventQueueRunning += new OMV.NetworkManager.EventQueueRunningCallback(Network_OnEventQueueRunning);
+            m_client.Network.LoginProgress += Network_LoginProgress;
+            m_client.Network.Disconnected += Network_Disconnected;
+            m_client.Network.SimConnected += Network_SimConnected;
+            m_client.Network.SimChanged += Network_SimChanged;
+            m_client.Network.EventQueueRunning += Network_EventQueueRunning;
 
         }
         catch (Exception e) {
@@ -488,24 +501,27 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     }
 
 
-    public virtual void Network_OnLogin(OMV.LoginStatus login, string message) {
-        if (login == OMV.LoginStatus.Success) {
-            m_log.Log(LogLevel.DCOMM, "Successful login: {0}", message);
+    // ===========================================================
+    public virtual void Network_LoginProgress(Object sender, OMV.LoginProgressEventArgs args) {
+        this.m_statNetLoginProgress++;
+        if (args.Status == OMV.LoginStatus.Success) {
+            m_log.Log(LogLevel.DCOMM, "Successful login: {0}", args.Message);
             m_isConnected = true;
             m_isLoggedIn = true;
             m_isLoggingIn = false;
-            m_loginMsg = message;
+            m_loginMsg = args.Message;
             Comm_OnLoggedIn();
         }
-        else if (login == OMV.LoginStatus.Failed) {
-            m_log.Log(LogLevel.DCOMM, "Login failed: {0}", message);
+        else if (args.Status == OMV.LoginStatus.Failed) {
+            m_log.Log(LogLevel.DCOMM, "Login failed: {0}", args.Message);
             m_isLoggingIn = false;
             m_shouldBeLoggedIn = false;
-            m_loginMsg = message;
+            m_loginMsg = args.Message;
         }
     }
 
-    public virtual void Network_OnDisconnected(OMV.NetworkManager.DisconnectType reason, string message) {
+    public virtual void Network_Disconnected(Object sender, OMV.DisconnectedEventArgs args) {
+        this.m_statNetDisconnected++;
         m_log.Log(LogLevel.DCOMM, "Disconnected");
         m_isConnected = false;
         //x BeginInvoke(
@@ -515,9 +531,10 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         //x });
     }
 
-    public virtual void Network_OnEventQueueRunning(OMV.Simulator simulator) {
-        m_log.Log(LogLevel.DCOMM, "Event queue running on {0}", simulator.Name);
-        if (simulator == m_client.Network.CurrentSim) {
+    public virtual void Network_EventQueueRunning(Object sender, OMV.EventQueueRunningEventArgs args) {
+        this.m_statNetQueueRunning++;
+        m_log.Log(LogLevel.DCOMM, "Event queue running on {0}", args.Simulator.Name);
+        if (args.Simulator == m_client.Network.CurrentSim) {
             m_SwitchingSims = false;
         }
         // Now seems like a good time to start requesting parcel information
@@ -528,22 +545,40 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     public override bool AfterAllModulesLoaded() {
         // make my connections for the communication events
         OMV.GridClient gc = m_client;
-        gc.Network.OnSimConnected += new OMV.NetworkManager.SimConnectedCallback(Network_OnSimConnected);
-        gc.Network.OnCurrentSimChanged += new OMV.NetworkManager.CurrentSimChangedCallback(Network_OnCurrentSimChanged);
-        gc.Objects.OnNewPrim += new OMV.ObjectManager.NewPrimCallback(Objects_OnNewPrim);
-        gc.Objects.OnNewAttachment += new OMV.ObjectManager.NewAttachmentCallback(Objects_OnNewAttachment);
-        gc.Objects.OnObjectUpdated += new OMV.ObjectManager.ObjectUpdatedCallback(Objects_OnObjectUpdated);
+        // gc.Network.OnSimConnected += new OMV.NetworkManager.SimConnectedCallback(Network_OnSimConnected);
+        // gc.Network.OnCurrentSimChanged += new OMV.NetworkManager.CurrentSimChangedCallback(Network_OnCurrentSimChanged);
+        // gc.Objects.OnNewPrim += new OMV.ObjectManager.NewPrimCallback(Objects_OnNewPrim);
+        // gc.Objects.OnNewAttachment += new OMV.ObjectManager.NewAttachmentCallback(Objects_OnNewAttachment);
+        // gc.Objects.OnObjectUpdated += new OMV.ObjectManager.ObjectUpdatedCallback(Objects_OnObjectUpdated);
         // NewAttachmentCallback
-        gc.Objects.OnNewAvatar += new OMV.ObjectManager.NewAvatarCallback(Objects_OnNewAvatar);
+        // gc.Objects.OnNewAvatar += new OMV.ObjectManager.NewAvatarCallback(Objects_OnNewAvatar);
         // AvatarSitChangedCallback
         // ObjectPropertiesCallback
-        gc.Objects.OnObjectKilled += new OMV.ObjectManager.KillObjectCallback(Objects_OnObjectKilled);
+        // gc.Objects.OnObjectKilled += new OMV.ObjectManager.KillObjectCallback(Objects_OnObjectKilled);
+
+        gc.Objects.ObjectPropertiesUpdated += Objects_ObjectPropertiesUpdated;
+        gc.Objects.ObjectUpdate += Objects_ObjectUpdate;
+        gc.Objects.ObjectProperties += Objects_ObjectProperties;
+        gc.Objects.TerseObjectUpdate += Objects_TerseObjectUpdate;
+        gc.Objects.AvatarUpdate += Objects_AvatarUpdate;
+        gc.Objects.KillObject += Objects_KillObject;
         gc.Settings.STORE_LAND_PATCHES = true;
         gc.Terrain.OnLandPatch += new OMV.TerrainManager.LandPatchCallback(Terrain_OnLandPatch);
 
+        m_commStatistics.Add("WaitingTilOnline", delegate(string xx) { return new OMVSD.OSDString(m_waitTilOnline.Count.ToString()); });
+        m_commStatistics.Add("Network_Disconnected", delegate(string xx) { return new OMVSD.OSDString(m_statNetDisconnected.ToString()); });
+        m_commStatistics.Add("Network_EventQueueRunning", delegate(string xx) { return new OMVSD.OSDString(m_statNetQueueRunning.ToString()); });
+        m_commStatistics.Add("Network_LoginProgress", delegate(string xx) { return new OMVSD.OSDString(m_statNetLoginProgress.ToString()); });
+        m_commStatistics.Add("Network_SimChanged", delegate(string xx) { return new OMVSD.OSDString(m_statNetSimChanged.ToString()); });
+        m_commStatistics.Add("Network_SimConnected", delegate(string xx) { return new OMVSD.OSDString(m_statNetSimConnected.ToString()); });
+        m_commStatistics.Add("Objects_AttachmentUpdate", delegate(string xx) { return new OMVSD.OSDString(m_statObjAttachmentUpdate.ToString()); });
+        m_commStatistics.Add("Objects_AvatarUpdate", delegate(string xx) { return new OMVSD.OSDString(m_statObjAvatarUpdate.ToString()); });
+        m_commStatistics.Add("Objects_KillObject", delegate(string xx) { return new OMVSD.OSDString(m_statObjKillObject.ToString()); });
+        m_commStatistics.Add("Objects_ObjectProperties", delegate(string xx) { return new OMVSD.OSDString(m_statObjObjectProperties.ToString()); });
+        m_commStatistics.Add("Objects_ObjectPropertiesUpdate", delegate(string xx) { return new OMVSD.OSDString(m_statObjObjectPropertiesUpdate.ToString()); });
+        m_commStatistics.Add("Objects_ObjectUpdate", delegate(string xx) { return new OMVSD.OSDString(m_statObjObjectUpdate.ToString()); });
+        m_commStatistics.Add("Objects_TerseObjectUpdate", delegate(string xx) { return new OMVSD.OSDString(m_statObjTerseUpdate.ToString()); });
         m_commStatsHandler = new RestHandler("/stats/" + m_moduleName + "/stats", m_commStatistics);
-        m_commStatistics.Add("WaitingTilOnline", delegate(string xx) { 
-            return new OMVSD.OSDString(m_waitTilOnline.Count.ToString()); });
 
         return true;
     }
@@ -558,13 +593,15 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
 
     #endregion ICommProvider
     // ===============================================================
-    public virtual void Network_OnSimConnected(OMV.Simulator sim) {
+    public virtual void Network_SimConnected(Object sender, OMV.SimConnectedEventArgs args) {
+        this.m_statNetSimConnected++;
         m_isConnected = true;   // good enough reason to think we're connected
-        m_log.Log(LogLevel.DWORLD, "Network_OnSimConnected: Simulator connected {0}", sim.Name);
+        this.m_statNetSimConnected++;
+        m_log.Log(LogLevel.DWORLD, "Network_SimConnected: Simulator connected {0}", args.Simulator.Name);
 
-        LLRegionContext regionContext = FindRegion(sim);
+        LLRegionContext regionContext = FindRegion(args.Simulator);
         if (regionContext == null) {
-            m_log.Log(LogLevel.DWORLD, "Network_OnSimConnected: NO REGION CONTEXT FOR {0}", sim.Name);
+            m_log.Log(LogLevel.DWORLD, "Network_SimConnected: NO REGION CONTEXT FOR {0}", args.Simulator.Name);
             return;
         }
 
@@ -587,14 +624,15 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     }
 
     // ===============================================================
-    public virtual void Network_OnCurrentSimChanged(OMV.Simulator prevSim) {
+    public virtual void Network_SimChanged(Object sender, OMV.SimChangedEventArgs args) {
         // disable teleports until we have a good connection to the simulator (event queue working)
+        this.m_statNetSimChanged++;
         if (!m_client.Network.CurrentSim.Caps.IsEventQueueRunning) {
             m_SwitchingSims = true;
         }
-        if (prevSim != null) {      // there is no prev sim the first time
-            m_log.Log(LogLevel.DWORLD, "Simulator changed from {0}", prevSim.Name);
-            LLRegionContext regionContext = FindRegion(prevSim);
+        if (args.PreviousSimulator != null) {      // there is no prev sim the first time
+            m_log.Log(LogLevel.DWORLD, "Simulator changed from {0}", args.PreviousSimulator.Name);
+            LLRegionContext regionContext = FindRegion(args.PreviousSimulator);
             if (regionContext == null) return;
             // TODO: what to do with this operation?
         }
@@ -616,7 +654,199 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     }
 
     // ===============================================================
-    public virtual void Objects_OnNewPrim(OMV.Simulator sim, OMV.Primitive prim, ulong regionHandle, ushort timeDilation) {
+    public void Objects_ObjectUpdate(Object sender, OMV.PrimEventArgs args) {
+        if (args.IsAttachment) {
+            Objects_AttachmentUpdate(sender, args);
+            return;
+        }
+        LLRegionContext rcontext = FindRegion(args.Simulator);
+        if (rcontext == null) return;
+        if (rcontext.State.IfNotOnline(delegate() {
+                QueueTilOnline(rcontext, CommActionCode.OnObjectUpdated, sender, args);
+            }) ) return;
+        this.m_statObjObjectUpdate++;
+        IEntity updatedEntity = null;
+        UpdateCodes updateFlags = UpdateCodes.New | UpdateCodes.Acceleration | UpdateCodes.AngularVelocity
+                    | UpdateCodes.Position | UpdateCodes.Rotation | UpdateCodes.Velocity;
+        lock (m_opLock) {
+            m_log.Log(LogLevel.DCOMMDETAIL, "Object update: id={0}, p={1}, r={2}", 
+                args.Prim.LocalID, args.Prim.Position.ToString(), args.Prim.Rotation.ToString());
+            // assume somethings changed no matter what
+            try {
+                if (rcontext.TryGetCreateEntityLocalID(args.Prim.LocalID, out updatedEntity, delegate() {
+                            IEntity newEnt = new LLEntityPhysical(rcontext.AssetContext,
+                                            rcontext, args.Simulator.Handle, args.Prim.LocalID, args.Prim);
+                            return newEnt;
+                        }) ) {
+                    // new prim created
+                }
+            }
+            catch (Exception e) {
+                m_log.Log(LogLevel.DBADERROR, "FAILED CREATION OF NEW PRIM: " + e.ToString());
+            }
+        }
+        // special update for the agent so it knows there is new info from the network
+        // The real logic to push the update through happens in the IEntityAvatar.Update()
+        if (updatedEntity != null) {
+            if (m_myAgent != null && updatedEntity == m_myAgent.AssociatedAvatar) {
+                m_myAgent.DataUpdate(updateFlags);
+            }
+            updatedEntity.Update(updateFlags);
+        }
+
+        return;
+    }
+    // ===============================================================
+    public void Objects_AttachmentUpdate(Object sender, OMV.PrimEventArgs args) {
+        LLRegionContext rcontext = FindRegion(args.Simulator);
+        if (rcontext == null) return;
+        if (rcontext.State.IfNotOnline(delegate() {
+                QueueTilOnline(rcontext, CommActionCode.OnAttachmentUpdate, sender, args);
+            }) ) return;
+        this.m_statObjAttachmentUpdate++;
+        m_log.Log(LogLevel.DCOMMDETAIL, "OnNewAttachment: id={0}, lid={1}", args.Prim.ID.ToString(), args.Prim.LocalID);
+        try {
+            IEntity ent;
+            if (rcontext.TryGetCreateEntityLocalID(args.Prim.LocalID, out ent, delegate() {
+                        IEntity newEnt = new LLEntityPhysical(rcontext.AssetContext,
+                                        rcontext, args.Simulator.Handle, args.Prim.LocalID, args.Prim);
+                        return newEnt;
+                    }) ) {
+                // if new or not, assume everything about this entity has changed
+                rcontext.UpdateEntity(ent, UpdateCodes.FullUpdate | UpdateCodes.New);
+            }
+            else {
+                m_log.Log(LogLevel.DBADERROR, "FAILED CREATION OF NEW ATTACHMENT");
+            }
+        }
+        catch (Exception e) {
+            m_log.Log(LogLevel.DBADERROR, "FAILED CREATION OF NEW ATTACHMENT: " + e.ToString());
+        }
+        return;
+    }
+    // ===============================================================
+    private void Objects_TerseObjectUpdate(Object sender, OMV.TerseObjectUpdateEventArgs args) {
+        LLRegionContext rcontext = FindRegion(args.Simulator);
+        OMV.ObjectMovementUpdate update = args.Update;
+        if (rcontext == null) return;
+        if (rcontext.State.IfNotOnline(delegate() {
+                QueueTilOnline(rcontext, CommActionCode.OnObjectUpdated, sender, args);
+            }) ) return;
+        this.m_statObjTerseUpdate++;
+        IEntity updatedEntity = null;
+        UpdateCodes updateFlags = UpdateCodes.Acceleration | UpdateCodes.AngularVelocity
+                    | UpdateCodes.Position | UpdateCodes.Rotation | UpdateCodes.Velocity;
+        lock (m_opLock) {
+            m_log.Log(LogLevel.DCOMMDETAIL, "Object update: id={0}, p={1}, r={2}", 
+                update.LocalID, update.Position.ToString(), update.Rotation.ToString());
+            // assume somethings changed no matter what
+            if (update.Avatar) updateFlags |= UpdateCodes.CollisionPlane;
+            if (update.Textures != null) updateFlags |= UpdateCodes.Textures;
+
+            if (rcontext.TryGetEntityLocalID(update.LocalID, out updatedEntity)) {
+                if ((updateFlags & UpdateCodes.Position) != 0) {
+                    updatedEntity.RelativePosition = update.Position;
+                }
+                if ((updateFlags & UpdateCodes.Rotation) != 0) {
+                    updatedEntity.Heading = update.Rotation;
+                }
+            }
+            else {
+                m_log.Log(LogLevel.DCOMM, "OnObjectUpdated: can't find local ID {0}. NOT UPDATING", update.LocalID);
+            }
+        }
+        // special update for the agent so it knows there is new info from the network
+        // The real logic to push the update through happens in the IEntityAvatar.Update()
+        if (updatedEntity != null) {
+            if (m_myAgent != null && updatedEntity == m_myAgent.AssociatedAvatar) {
+                m_myAgent.DataUpdate(updateFlags);
+            }
+            updatedEntity.Update(updateFlags);
+        }
+
+        return;
+    }
+    // ===============================================================
+    private void Objects_ObjectProperties(Object sender, OMV.ObjectPropertiesEventArgs args) {
+        this.m_statObjObjectProperties++;
+    }
+    // ===============================================================
+    private void Objects_ObjectPropertiesUpdated(Object sender, OMV.ObjectPropertiesUpdatedEventArgs args) {
+        this.m_statObjObjectPropertiesUpdate++;
+    }
+    // ===============================================================
+    public void Objects_AvatarUpdate(Object sender, OMV.AvatarUpdateEventArgs args) {
+        LLRegionContext rcontext = FindRegion(args.Simulator);
+        if (rcontext == null) return;
+        if (rcontext.State.IfNotOnline(delegate() {
+                QueueTilOnline(rcontext, CommActionCode.OnAvatarUpdate, sender, args);
+            }) ) return;
+        this.m_statObjAvatarUpdate++;
+        IEntity updatedEntity = null;
+        UpdateCodes updateFlags = UpdateCodes.Acceleration | UpdateCodes.AngularVelocity
+                    | UpdateCodes.Position | UpdateCodes.Rotation | UpdateCodes.Velocity;
+        lock (m_opLock) {
+            m_log.Log(LogLevel.DCOMMDETAIL, "Objects_OnNewAvatar:");
+            m_log.Log(LogLevel.DCOMMDETAIL, "cntl={0}, parent={1}, p={2}, r={3}", 
+                    args.Avatar.ControlFlags.ToString("x"), args.Avatar.ParentID, 
+                    args.Avatar.Position.ToString(), args.Avatar.Rotation.ToString());
+
+            // assume somethings changed no matter what
+            updateFlags |= UpdateCodes.CollisionPlane;
+
+            EntityName avatarEntityName = LLEntityAvatar.AvatarEntityNameFromID(rcontext.AssetContext, args.Avatar.ID);
+            if (rcontext.TryGetCreateEntity(avatarEntityName, out updatedEntity, delegate() {
+                            m_log.Log(LogLevel.DCOMMDETAIL, "OnNewAvatar: creating avatar {0} {1} ({2})",
+                                args.Avatar.FirstName, args.Avatar.LastName, args.Avatar.ID.ToString());
+                            IEntityAvatar newEnt = new LLEntityAvatar(rcontext.AssetContext,
+                                            rcontext, args.Simulator.Handle, args.Avatar);
+                            return (IEntity)newEnt;
+                        }) ) {
+                updatedEntity.RelativePosition = args.Avatar.Position;
+                updatedEntity.Heading = args.Avatar.Rotation;
+                updateFlags |= UpdateCodes.New;     // a new avatar
+            }
+        }
+
+        // we can check here if this avatar goes with the agent in the world
+        // If this av is with the agent, make the connection
+        if (args.Avatar.LocalID == m_client.Self.LocalID) {
+            m_log.Log(LogLevel.DCOMMDETAIL, "OnNewAvatar: associating agent with new avatar");
+            m_myAgent.AssociatedAvatar = (IEntityAvatar)updatedEntity;
+            // an extra update for the agent so it knows things have changed
+            m_myAgent.DataUpdate(updateFlags);
+        }
+
+        // tell the entity it changed. Since this is an avatar entity it will update the agent if necessary.
+        if (updatedEntity != null) updatedEntity.Update(updateFlags);
+        return;
+    }
+
+    // ===============================================================
+    public virtual void Objects_KillObject(Object sender, OMV.KillObjectEventArgs args) {
+        LLRegionContext rcontext = FindRegion(args.Simulator);
+        if (rcontext == null) return;
+        if (rcontext.State.IfNotOnline(delegate() {
+                QueueTilOnline(rcontext, CommActionCode.KillObject, sender, args);
+            }) ) return;
+        m_statObjKillObject++;
+        m_log.Log(LogLevel.DWORLDDETAIL, "Object killed:");
+        try {
+            IEntity removedEntity;
+            if (rcontext.TryGetEntityLocalID(args.ObjectLocalID, out removedEntity)) {
+                // we need a handle to the objectID
+                rcontext.RemoveEntity(removedEntity);
+            }
+        }
+        catch (Exception e) {
+            m_log.Log(LogLevel.DBADERROR, "FAILED DELETION OF OBJECT: " + e.ToString());
+        }
+        return;
+    }
+
+    /*
+    // ===============================================================
+    public virtual void XXXObjects_OnNewPrim(OMV.Simulator sim, OMV.Primitive prim, ulong regionHandle, ushort timeDilation) {
         LLRegionContext rcontext = FindRegion(sim);
         if (rcontext == null) return;
         if (rcontext.State.IfNotOnline(delegate() {
@@ -646,7 +876,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     }
 
     // ===============================================================
-    public virtual void Objects_OnNewAttachment(OMV.Simulator sim, OMV.Primitive prim, ulong regionHandle, ushort timeDilation) {
+    public virtual void XXXObjects_OnNewAttachment(OMV.Simulator sim, OMV.Primitive prim, ulong regionHandle, ushort timeDilation) {
         LLRegionContext rcontext = FindRegion(sim);
         if (rcontext == null) return;
         if (rcontext.State.IfNotOnline(delegate() {
@@ -674,7 +904,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     }
 
     // ===============================================================
-    public virtual void Objects_OnObjectUpdated(OMV.Simulator sim, OMV.ObjectUpdate update, ulong regionHandle, ushort timeDilation) {
+    public virtual void XXXObjects_OnObjectUpdated(OMV.Simulator sim, OMV.ObjectUpdate update, ulong regionHandle, ushort timeDilation) {
         LLRegionContext rcontext = FindRegion(sim);
         if (rcontext == null) return;
         if (rcontext.State.IfNotOnline(delegate() {
@@ -715,7 +945,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     }
 
     // ===============================================================
-    public virtual void Objects_OnObjectKilled(OMV.Simulator sim, uint objectID) {
+    public virtual void XXXObjects_OnObjectKilled(OMV.Simulator sim, uint objectID) {
         LLRegionContext rcontext = FindRegion(sim);
         if (rcontext == null) return;
         if (rcontext.State.IfNotOnline(delegate() {
@@ -789,6 +1019,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         if (updatedEntity != null) updatedEntity.Update(updateFlags);
         return;
     }
+     */
 
     // ===============================================================
     /// <summary>
@@ -871,10 +1102,10 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     // events until we're online.
     public enum CommActionCode {
         RegionStateChange,
-        OnNewPrim,
         OnObjectUpdated,
-        OnObjectKilled,
-        OnNewAvatar
+        OnAttachmentUpdate,
+        KillObject,
+        OnAvatarUpdate
     }
 
     struct ParamBlock {
@@ -939,21 +1170,22 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
                 m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: RegionStateChange");
                 ((RegionContextBase)p1).Update((World.UpdateCodes)p2);
                 break;
-            case CommActionCode.OnNewPrim:
-                m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: OnNewPrim");
-                Objects_OnNewPrim((OMV.Simulator)p1, (OMV.Primitive)p2, (ulong)p3, (ushort)p4);
-                break;
             case CommActionCode.OnObjectUpdated:
                 m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: OnObjectUpdated");
-                Objects_OnObjectUpdated((OMV.Simulator)p1, (OMV.ObjectUpdate)p2, (ulong)p3, (ushort)p4);
+                // Objects_OnObjectUpdated((OMV.Simulator)p1, (OMV.ObjectUpdate)p2, (ulong)p3, (ushort)p4);
+                Objects_ObjectUpdate(p1, (OMV.PrimEventArgs)p2);
                 break;
-            case CommActionCode.OnObjectKilled:
-                m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: OnObjectKilled");
-                Objects_OnObjectKilled((OMV.Simulator)p1, (uint)p2);
+            case CommActionCode.OnAttachmentUpdate:
+                m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: OnAttachmentUpdated");
+                Objects_AttachmentUpdate(p1, (OMV.PrimEventArgs)p2);
                 break;
-            case CommActionCode.OnNewAvatar:
-                m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: OnNewAvatar");
-                Objects_OnNewAvatar((OMV.Simulator)p1, (OMV.Avatar)p2, (ulong)p3, (ushort)p4);
+            case CommActionCode.KillObject:
+                m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: KillObject");
+                Objects_KillObject(p1, (OMV.KillObjectEventArgs)p2);
+                break;
+            case CommActionCode.OnAvatarUpdate:
+                m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: AvatarUpdate");
+                Objects_AvatarUpdate(p1, (OMV.AvatarUpdateEventArgs)p2);
                 break;
             default:
                 break;

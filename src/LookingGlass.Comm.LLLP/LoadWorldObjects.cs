@@ -49,7 +49,7 @@ public class LoadWorldObjects {
                 if (WeDontKnowAboutThisSimulator(sim, netComm, worldComm)) {
                     // tell the world about this simulator
                     LogManager.Log.Log(LogLevel.DCOMMDETAIL, "LoadWorldObjects: adding simulator {0}", sim.Name);
-                    worldComm.Network_OnSimConnected(sim);
+                    worldComm.Network_SimConnected(netComm, new OMV.SimConnectedEventArgs(sim));
                     simsToLoad.Add(sim);
                 }
             }
@@ -113,7 +113,7 @@ public class LoadWorldObjects {
         });
         // this happens outside the avatar list lock
         foreach (OMV.Avatar av in avatarsToNew) {
-            worldComm.Objects_OnNewAvatar(sim, av, sim.Handle, 0);
+            worldComm.Objects_AvatarUpdate(netComm, new OMV.AvatarUpdateEventArgs(sim, av, 0));
         }
     }
 
@@ -124,7 +124,8 @@ public class LoadWorldObjects {
             primsToNew.Add(prim);
         });
         foreach (OMV.Primitive prim in primsToNew) {
-            worldComm.Objects_OnNewPrim(sim, prim, sim.Handle, 0);
+            // TODO: how can we tell if this prim might be an attachment?
+            worldComm.Objects_ObjectUpdate(netComm, new OpenMetaverse.PrimEventArgs(sim, prim, 0, false));
         }
     }
 

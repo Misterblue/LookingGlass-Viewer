@@ -125,10 +125,10 @@ class RadegastMain : IRadegastPlugin {
         // first sim are also copied into LG. The other sims are taken care of by the 
         // second call to LoadWorldObjects.
         m_log.Log(LogLevel.DRADEGASTDETAIL, "RadegastMain: Network_OnLogin");
-        worldComm.Network_OnLogin(OMV.LoginStatus.Success, "Radegast prelogin");
+        worldComm.Network_LoginProgress(this, new OMV.LoginProgressEventArgs(OMV.LoginStatus.Success, "Radegast prelogin"));
         m_log.Log(LogLevel.DRADEGASTDETAIL, "RadegastMain: Network_OnSimConnected for {0}",
                         RadInstance.Client.Network.CurrentSim.Name);
-        worldComm.Network_OnSimConnected(RadInstance.Client.Network.CurrentSim);
+        worldComm.Network_SimConnected(this, new OMV.SimConnectedEventArgs(RadInstance.Client.Network.CurrentSim));
         // if anything was queue for this sim, put them in the world
         LoadWorldObjects.LoadASim(RadInstance.Client.Network.CurrentSim, RadInstance.Client, worldComm);
 

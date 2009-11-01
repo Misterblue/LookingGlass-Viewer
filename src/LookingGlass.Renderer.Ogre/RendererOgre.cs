@@ -243,7 +243,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "After this distance, only large things are visible");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.Large", "8",
                     "How big is considered 'large' for 'OnlyLargeAfter' calculation");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.MeshesReloadedPerFrame", "20",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.MeshesReloadedPerFrame", "50",
                     "When reloading newly visible meshes, how many to load per frame");
 
         // some counters and intervals to see how long things take

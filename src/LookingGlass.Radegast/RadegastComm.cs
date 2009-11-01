@@ -79,10 +79,16 @@ public class RadegastComm : CommLLLP {
             // Crank up the throttle on texture downloads
             m_client.Throttle.Texture = 446000.0f;
 
-            m_client.Network.OnLogin += new OMV.NetworkManager.LoginCallback(Network_OnLogin);
-            m_client.Network.OnDisconnected += new OMV.NetworkManager.DisconnectedCallback(Network_OnDisconnected);
-            m_client.Network.OnCurrentSimChanged += new OMV.NetworkManager.CurrentSimChangedCallback(Network_OnCurrentSimChanged);
-            m_client.Network.OnEventQueueRunning += new OMV.NetworkManager.EventQueueRunningCallback(Network_OnEventQueueRunning);
+            // m_client.Network.OnLogin += new OMV.NetworkManager.LoginCallback(Network_OnLogin);
+            // m_client.Network.OnDisconnected += new OMV.NetworkManager.DisconnectedCallback(Network_OnDisconnected);
+            // m_client.Network.OnCurrentSimChanged += new OMV.NetworkManager.CurrentSimChangedCallback(Network_OnCurrentSimChanged);
+            // m_client.Network.OnEventQueueRunning += new OMV.NetworkManager.EventQueueRunningCallback(Network_OnEventQueueRunning);
+
+            m_client.Network.LoginProgress += Network_LoginProgress;
+            m_client.Network.Disconnected += Network_Disconnected;
+            m_client.Network.SimConnected += Network_SimConnected;
+            m_client.Network.SimChanged += Network_SimChanged;
+            m_client.Network.EventQueueRunning += Network_EventQueueRunning;
         }
         catch (Exception e) {
             m_log.Log(LogLevel.DCOMMDETAIL, "Exception initializing libomv: {0}", e.ToString());
@@ -115,7 +121,7 @@ public class RadegastComm : CommLLLP {
     }
      */
 
-    public override void Network_OnLogin(OMV.LoginStatus login, string message) {
+    public override void Network_LoginProgress(Object sender, OMV.LoginProgressEventArgs args) {
         switch (m_radInstance.Netcom.LoginOptions.Grid) {
             case global::Radegast.Netcom.LoginGrid.MainGrid:
                 m_loginGrid = "SecondLife.com";
@@ -129,7 +135,7 @@ public class RadegastComm : CommLLLP {
                 m_loginGrid = loginUri.GetComponents(UriComponents.Host, UriFormat.Unescaped);
                 break;
         }
-        base.Network_OnLogin(login, message);
+        base.Network_LoginProgress(sender, args);
     }
 
     public override void Start() {
