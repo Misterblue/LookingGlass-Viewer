@@ -279,69 +279,77 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         // m_ogreStatsPinned = (int[])Marshal.AllocHGlobal(Ogr.StatSize * 4);
         // Ogr.SetStatsBlock(m_ogreStatsPinned);
 
-        // Create a dictionary of the statistic names and offsets into the stats array
-        m_ogreStatsIndex = new Dictionary<string,int>();
-        m_ogreStatsDesc = new Dictionary<string,string>();
-        // NOTE: PUTTING ANY UPPER CASE IN THE KEY STRINGS CAUSES FAILURES!!
-        // culling and visibility
-        m_ogreStatsIndex.Add("lastframems", Ogr.StatLastFrameMs);
-        m_ogreStatsDesc.Add("lastframems", "Milliseconds used rendering last frame");
-        m_ogreStatsIndex.Add("totalframes", Ogr.StatTotalFrames);
-        m_ogreStatsDesc.Add("totalframes", "Number of frames rendered");
-        m_ogreStatsIndex.Add("visibletovisible", Ogr.StatVisibleToVisible);
-        m_ogreStatsDesc.Add("visibletovisible", "Meshes at were visible that are still visible in last frame");
-        m_ogreStatsIndex.Add("invisibletovisible", Ogr.StatInvisibleToVisible);
-        m_ogreStatsDesc.Add("invisibletovisible", "Meshes that were invisible that are now visible in last frame");
-        m_ogreStatsIndex.Add("visibletoinvisible", Ogr.StatVisibleToInvisible);
-        m_ogreStatsDesc.Add("visibletoinvisible", "Meshes that were visible that are now invisible in last frame");
-        m_ogreStatsIndex.Add("invisibletoinvisible", Ogr.StatInvisibleToInvisible);
-        m_ogreStatsDesc.Add("invisibletoinvisible", "Meshes that were invisible that are still invisible in last frame");
-        m_ogreStatsIndex.Add("cullmeshesloaded", Ogr.StatCullMeshesLoaded);
-        m_ogreStatsDesc.Add("cullmeshesloaded", "Total meshes loaded due to unculling");
-        m_ogreStatsIndex.Add("culltexturesloaded", Ogr.StatCullTexturesLoaded);
-        m_ogreStatsDesc.Add("culltexturesloaded", "Total textures loaded due to unculling");
-        m_ogreStatsIndex.Add("cullmeshesunloaded", Ogr.StatCullMeshesUnloaded);
-        m_ogreStatsDesc.Add("cullmeshesunloaded", "Total meshes unloaded due to culling");
-        m_ogreStatsIndex.Add("culltexturesunloaded", Ogr.StatCullTexturesUnloaded);
-        m_ogreStatsDesc.Add("culltexturesunloaded", "Total textures unloaded due to culling");
-        m_ogreStatsIndex.Add("cullmeshesqueuedtoload", Ogr.StatCullMeshesQueuedToLoad);
-        m_ogreStatsDesc.Add("cullmeshesqueuedtoload", "Meshes currently queued to load due to unculling");
-        // between frame work
-        m_ogreStatsIndex.Add("betweenframeworkitems", Ogr.StatBetweenFrameWorkItems);
-        m_ogreStatsDesc.Add("betweenframeworkitems", "Number of between frame work items waiting");
-        m_ogreStatsIndex.Add("totalbetweenframerefreshresource", Ogr.StatBetweenFrameRefreshResource);
-        m_ogreStatsDesc.Add("totalbetweenframerefreshresource", "Number of 'refresh resource' work items queued");
-        m_ogreStatsIndex.Add("totalbetweenframecreatematerialresource", Ogr.StatBetweenFrameCreateMaterialResource);
-        m_ogreStatsDesc.Add("totalbetweenframecreatematerialresource", "Number of 'create material resource' work items queued");
-        m_ogreStatsIndex.Add("totalbetweenframecreatemeshresource", Ogr.StatBetweenFrameCreateMeshResource);
-        m_ogreStatsDesc.Add("totalbetweenframecreatemeshresource", "Number of 'create mesh resource' work items queued");
-        m_ogreStatsIndex.Add("totalbetweenframecreatemeshscenenode", Ogr.StatBetweenFrameCreateMeshSceneNode);
-        m_ogreStatsDesc.Add("totalbetweenframecreatemeshscenenode", "Number of 'create mesh scene node' work items queued");
-        m_ogreStatsIndex.Add("totalbetweenframeupdatescenenode", Ogr.StatBetweenFrameUpdateSceneNode);
-        m_ogreStatsDesc.Add("totalbetweenframeupdatescenenode", "Number of 'update scene node' work items queued");
-        m_ogreStatsIndex.Add("totalbetweenframeunknownprocess", Ogr.StatBetweenFrameUnknownProcess);
-        m_ogreStatsDesc.Add("totalbetweenframeunknownprocess", "Number of work items with unknow process codes");
-        m_ogreStatsIndex.Add("totalbetweenframetotalprocessed", Ogr.StatBetweenFrameTotalProcessed);
-        m_ogreStatsDesc.Add("totalbetweenframetotalprocessed", "Total number of work items actually processed");
-        // material processing queues
-        m_ogreStatsIndex.Add("materialupdatesremaining", Ogr.StatMaterialUpdatesRemaining);
-        m_ogreStatsDesc.Add("materialupdatesremaining", "Number of material updates waiting");
-
         // Create a ParameterSet that can be read externally via REST/JSON
         m_ogreStats = new ParameterSet();
         // add an initial parameter that calculates frames per sec
-        m_ogreStats.Add("framespersecond",
+        m_ogreStats.Add("FramesPerSecond",
             delegate(string xx) {
                 return new OMVSD.OSDString(((float)m_ogreStatsPinned[Ogr.StatFramesPerSec] / 1000f).ToString());
             }, "Frames per second"
         );
-        // Add parameters for each name with a delegate to get the value from the pinned data array
-        // The c++ code updates the array and we pick up the values with the ParameterSet delegates
-        foreach (string key in m_ogreStatsIndex.Keys) {
-            m_ogreStats.Add(key, 
-                delegate(string xx) { return new OMVSD.OSDString(m_ogreStatsPinned[m_ogreStatsIndex[xx]].ToString()); },
-                m_ogreStatsDesc[key]);
-        }
+        m_ogreStats.Add("LastFrameMS", delegate(string xx) {
+                return new OMVSD.OSDString(m_ogreStatsPinned[Ogr.StatLastFrameMs].ToString()); },
+                "Milliseconds used rendering last frame");
+        m_ogreStats.Add("TotalFrames", delegate(string xx) {
+                return new OMVSD.OSDString(m_ogreStatsPinned[Ogr.StatTotalFrames].ToString()); },
+                "Number of frames rendered");
+        m_ogreStats.Add("VisibleToVisible", delegate(string xx) {
+                return new OMVSD.OSDString(m_ogreStatsPinned[Ogr.StatVisibleToVisible].ToString()); },
+                "Meshes at were visible that are still visible in last frame");
+        m_ogreStats.Add("InvisibleToVisible", delegate(string xx) {
+                return new OMVSD.OSDString(m_ogreStatsPinned[Ogr.StatInvisibleToVisible].ToString()); },
+                "Meshes that were invisible that are now visible in last frame");
+        m_ogreStats.Add("VisibleToInvisible", delegate(string xx) {
+                return new OMVSD.OSDString(m_ogreStatsPinned[Ogr.StatVisibleToInvisible].ToString()); },
+                "Meshes that were visible that are now invisible in last frame");
+        m_ogreStats.Add("InvisibleToInvisible", delegate(string xx) {
+                return new OMVSD.OSDString(m_ogreStatsPinned[Ogr.StatInvisibleToInvisible].ToString()); },
+                "Meshes that were invisible that are still invisible in last frame");
+        m_ogreStats.Add("CullMeshesLoaded", delegate(string xx) {
+                return new OMVSD.OSDString(m_ogreStatsPinned[Ogr.StatCullMeshesLoaded].ToString()); },
+                "Total meshes loaded due to unculling");
+        m_ogreStats.Add("CullTexturesLoaded", delegate(string xx) {
+                return new OMVSD.OSDString(m_ogreStatsPinned[Ogr.StatCullTexturesLoaded].ToString()); },
+                "Total textures loaded due to unculling");
+        m_ogreStats.Add("CullMeshesUnloaded", delegate(string xx) {
+                return new OMVSD.OSDString(m_ogreStatsPinned[Ogr.StatCullMeshesUnloaded].ToString()); },
+                "Total meshes unloaded due to culling");
+        m_ogreStats.Add("CullTexturesUnloaded", delegate(string xx) {
+                return new OMVSD.OSDString(m_ogreStatsPinned[Ogr.StatCullTexturesUnloaded].ToString()); },
+                "Total textures unloaded due to culling");
+        m_ogreStats.Add("CullMeshesQueuedToLoad", delegate(string xx) {
+                return new OMVSD.OSDString(m_ogreStatsPinned[Ogr.StatCullMeshesQueuedToLoad].ToString()); },
+                "Meshes currently queued to load due to unculling");
+        // between frame work
+        m_ogreStats.Add("BetweenFrameworkItems", delegate(string xx) {
+                return new OMVSD.OSDString(m_ogreStatsPinned[Ogr.StatBetweenFrameWorkItems].ToString()); },
+                "Number of between frame work items waiting");
+        m_ogreStats.Add("TotalBetweenFrameRefreshResource", delegate(string xx) {
+                return new OMVSD.OSDString(m_ogreStatsPinned[Ogr.StatBetweenFrameRefreshResource].ToString()); },
+                "Number of 'refresh resource' work items queued");
+        m_ogreStats.Add("TotalBetweenFrameCreateMaterialResource", delegate(string xx) {
+                return new OMVSD.OSDString(m_ogreStatsPinned[Ogr.StatBetweenFrameCreateMaterialResource].ToString()); },
+                "Number of 'create material resource' work items queued");
+        m_ogreStats.Add("TotalBetweenFrameCreateMeshResource", delegate(string xx) {
+                return new OMVSD.OSDString(m_ogreStatsPinned[Ogr.StatBetweenFrameCreateMeshResource].ToString()); },
+                "Number of 'create mesh resource' work items queued");
+        m_ogreStats.Add("TotalBetweenFrameCreateMeshScenenode", delegate(string xx) {
+                return new OMVSD.OSDString(m_ogreStatsPinned[Ogr.StatBetweenFrameCreateMeshSceneNode].ToString()); },
+                "Number of 'create mesh scene node' work items queued");
+        m_ogreStats.Add("TotalBetweenframeupdatescenenode", delegate(string xx) {
+                return new OMVSD.OSDString(m_ogreStatsPinned[Ogr.StatBetweenFrameUpdateSceneNode].ToString()); },
+                "Number of 'update scene node' work items queued");
+        m_ogreStats.Add("TotalBetweenFrameUnknownProcess", delegate(string xx) {
+                return new OMVSD.OSDString(m_ogreStatsPinned[Ogr.StatBetweenFrameUnknownProcess].ToString()); },
+                "Number of work items with unknow process codes");
+        m_ogreStats.Add("TotalBetweenFrameTotalProcessed", delegate(string xx) {
+                return new OMVSD.OSDString(m_ogreStatsPinned[Ogr.StatBetweenFrameTotalProcessed].ToString()); },
+                "Total number of work items actually processed");
+        // material processing queues
+        m_ogreStats.Add("MaterialUpdatesRemaining", delegate(string xx) {
+                return new OMVSD.OSDString(m_ogreStatsPinned[Ogr.StatMaterialUpdatesRemaining].ToString()); },
+                "Number of material updates waiting");
+
         // make the values accessable from outside
         m_ogreStatsHandler = new RestHandler("/stats/" + m_moduleName + "/ogreStats", m_ogreStats);
         #endregion OGRE STATS

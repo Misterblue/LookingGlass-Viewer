@@ -164,7 +164,7 @@ class LookingGlassMain : ApplicationContext {
             LGB.Start(LGApplicationInstance);
         }
 
-        // m_log.Log(LogLevel.DINIT, "EXIT");
+        m_log.Log(LogLevel.DINIT, "EXIT");
     }
 
     private static string Invocation()

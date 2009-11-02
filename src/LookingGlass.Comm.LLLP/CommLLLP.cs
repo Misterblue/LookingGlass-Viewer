@@ -755,10 +755,10 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
                 m_log.Log(LogLevel.DCOMM, "OnObjectUpdated: can't find local ID {0}. NOT UPDATING", update.LocalID);
             }
         }
-        // special update for the agent so it knows there is new info from the network
-        // The real logic to push the update through happens in the IEntityAvatar.Update()
         if (updatedEntity != null) {
             if (m_myAgent != null && updatedEntity == m_myAgent.AssociatedAvatar) {
+                // special update for the agent so it knows there is new info from the network
+                // The real logic to push the update through happens in the IEntityAvatar.Update()
                 m_myAgent.DataUpdate(updateFlags);
             }
             updatedEntity.Update(updateFlags);
@@ -786,7 +786,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         UpdateCodes updateFlags = UpdateCodes.Acceleration | UpdateCodes.AngularVelocity
                     | UpdateCodes.Position | UpdateCodes.Rotation | UpdateCodes.Velocity;
         lock (m_opLock) {
-            m_log.Log(LogLevel.DCOMMDETAIL, "Objects_OnNewAvatar:");
+            m_log.Log(LogLevel.DCOMMDETAIL, "Objects_AvatarUpdate:");
             m_log.Log(LogLevel.DCOMMDETAIL, "cntl={0}, parent={1}, p={2}, r={3}", 
                     args.Avatar.ControlFlags.ToString("x"), args.Avatar.ParentID, 
                     args.Avatar.Position.ToString(), args.Avatar.Rotation.ToString());
@@ -796,7 +796,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
 
             EntityName avatarEntityName = LLEntityAvatar.AvatarEntityNameFromID(rcontext.AssetContext, args.Avatar.ID);
             if (rcontext.TryGetCreateEntity(avatarEntityName, out updatedEntity, delegate() {
-                            m_log.Log(LogLevel.DCOMMDETAIL, "OnNewAvatar: creating avatar {0} {1} ({2})",
+                            m_log.Log(LogLevel.DCOMMDETAIL, "AvatarUpdate: creating avatar {0} {1} ({2})",
                                 args.Avatar.FirstName, args.Avatar.LastName, args.Avatar.ID.ToString());
                             IEntityAvatar newEnt = new LLEntityAvatar(rcontext.AssetContext,
                                             rcontext, args.Simulator.Handle, args.Avatar);
@@ -805,15 +805,16 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
                 updatedEntity.RelativePosition = args.Avatar.Position;
                 updatedEntity.Heading = args.Avatar.Rotation;
                 updateFlags |= UpdateCodes.New;     // a new avatar
+                // we can check here if this avatar goes with the agent in the world
+                // If this av is with the agent, make the connection
+                if (args.Avatar.LocalID == m_client.Self.LocalID) {
+                    m_log.Log(LogLevel.DCOMMDETAIL, "AvatarUpdate: associating agent with new avatar");
+                    m_myAgent.AssociatedAvatar = (IEntityAvatar)updatedEntity;
+                }
             }
         }
-
-        // we can check here if this avatar goes with the agent in the world
-        // If this av is with the agent, make the connection
         if (args.Avatar.LocalID == m_client.Self.LocalID) {
-            m_log.Log(LogLevel.DCOMMDETAIL, "OnNewAvatar: associating agent with new avatar");
-            m_myAgent.AssociatedAvatar = (IEntityAvatar)updatedEntity;
-            // an extra update for the agent so it knows things have changed
+            // an extra special update for the agent so it knows things have changed
             m_myAgent.DataUpdate(updateFlags);
         }
 

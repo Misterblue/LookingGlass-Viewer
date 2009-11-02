@@ -127,7 +127,7 @@ public class LookingGlassBase : IInstance<LookingGlassBase> {
 
         if (KeepRunning) {
             m_log.Log(LogLevel.DINIT, "Completed main module startup");
-            System.Threading.ThreadPool.SetMaxThreads(100, 1000);
+            System.Threading.ThreadPool.SetMaxThreads(200, 1000);
         }
         else {
             m_log.Log(LogLevel.DBADERROR, "STARTEVERYTHING FAILED. NOT RUNNING");

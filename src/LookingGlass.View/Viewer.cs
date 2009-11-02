@@ -294,6 +294,7 @@ public class Viewer : ModuleBase, IViewProvider {
             switch (key) {
                 case (Keys.Control | Keys.C):
                     // CNTL-C says to stop everything now
+                    m_log.Log(LogLevel.DVIEW, "UserInterfase_OnKeypress: CNTL-C. Setting KeepRunning to FALSE");
                     LGB.KeepRunning = false;
                     break;
                 case Keys.Right:
