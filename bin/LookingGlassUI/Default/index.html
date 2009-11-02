@@ -228,15 +228,24 @@ function DebugLog(msg) {
 <div class="LGSectionContainer">
 <a class="LGSectionHeader" href="#">Statistics</a>
 <div id="LGStatistics" class="LGSection">
-<div id="LGQueueStats">
-<h1>WorkQueues</h1>
-</div>  <!-- LGQueueStats -->
-<div id="LGRendererStats">
-<h1>Renderer</h1>
-</div>  <!-- LGRendererStats -->
+<table width="100%">
+<tr><td rowspan="2">
 <div id="LGCommStats">
 <h1>Communication Stats</h1>
 </div>  <!-- LGCommStats -->
+</td>
+<td>
+<div id="LGQueueStats">
+<h1>WorkQueues</h1>
+</div>  <!-- LGQueueStats -->
+</td></tr>
+<tr><td>
+<div id="LGRendererStats">
+<h1>Renderer</h1>
+</div>  <!-- LGRendererStats -->
+</td></tr>
+</table>
+
 <div id="LGOgreStats">
 <h1>Ogre Stats</h1>
 </div>  <!-- LGOgreStats -->
