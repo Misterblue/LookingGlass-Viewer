@@ -103,7 +103,11 @@ public sealed class LLAssetContext : AssetContextBase {
         m_comm.GridClient.Assets.Cache.ComputeAssetCacheFilename = ComputeTextureFilename;
 
         m_comm.CommStatistics().Add("TexturesWaitingFor",
-            delegate(string xx) { return new OMVSD.OSDString(m_waiting.Count.ToString()); });
+            delegate(string xx) { return new OMVSD.OSDString(m_waiting.Count.ToString()); },
+            "Number of unique textures requests outstanding");
+        m_comm.CommStatistics().Add("CurrentOutstandingTextureRequests",
+            delegate(string xx) { return new OMVSD.OSDString(m_currentOutstandingTextureRequests.ToString()); },
+            "Number of texture requests that have been passed to libomv");
     }
 
     public string ComputeTextureFilename(string cacheDir, OMV.UUID textureID) {
@@ -188,12 +192,49 @@ public sealed class LLAssetContext : AssetContextBase {
                     m_log.Log(LogLevel.DTEXTUREDETAIL, "DoTextureLoad: Requesting: " + textureEntityName);
                     // m_texturePipe.RequestTexture(binID, OMV.ImageType.Normal, 50f, 0, 0, OnACDownloadFinished, false);
                     // m_comm.GridClient.Assets.RequestImage(binID, OMV.ImageType.Normal, 101300f, 0, 0, OnACDownloadFinished, false);
-                    m_comm.GridClient.Assets.RequestImage(binID, OMV.ImageType.Normal, 50f, 0, 0, OnACDownloadFinished, false);
+                    // m_comm.GridClient.Assets.RequestImage(binID, OMV.ImageType.Normal, 50f, 0, 0, OnACDownloadFinished, false);
+                    ThrottleTextureRequests(binID);
                 }
             }
         }
         return;
     }
+
+    #region THROTTLE TEXTURES
+    // some routines to throttle the number of outstand textures requetst to see if 
+    //  libomv is getting overwhelmed by thousands of requests
+    Queue<OMV.UUID> m_textureQueue = new Queue<OpenMetaverse.UUID>();
+    int m_maxOutstandingTextureRequests = 4;
+    int m_currentOutstandingTextureRequests = 0;
+    BasicWorkQueue m_doThrottledTextureRequest = new BasicWorkQueue("ThrottledTexture");
+    private void ThrottleTextureRequests(OMV.UUID binID) {
+        lock (m_textureQueue) {
+            m_textureQueue.Enqueue(binID);
+        }
+        ThrottleTextureRequestsCheck();
+    }
+    private void ThrottleTextureRequestsCheck() {
+        OMV.UUID binID = OMV.UUID.Zero;
+        lock (m_textureQueue) {
+            if (m_textureQueue.Count > 0 && m_currentOutstandingTextureRequests < m_maxOutstandingTextureRequests) {
+                m_currentOutstandingTextureRequests++;
+                binID = m_textureQueue.Dequeue();
+            }
+        }
+        if (binID != OMV.UUID.Zero) {
+            m_doThrottledTextureRequest.DoLater(ThrottleTextureMakeRequest, binID);
+        }
+    }
+    private bool ThrottleTextureMakeRequest(DoLaterBase qInstance, Object obinID) {
+        OMV.UUID binID = (OMV.UUID)obinID;
+        m_comm.GridClient.Assets.RequestImage(binID, OMV.ImageType.Normal, 101300f, 0, 0, OnACDownloadFinished, false);
+        return true;
+    }
+    private void ThrottleTextureRequestsComplete() {
+        m_currentOutstandingTextureRequests--;
+        ThrottleTextureRequestsCheck();
+    }
+    #endregion THROTTLE TEXTURES
 
     // Call the callback on a separate thread to keep from getting tangled
     private bool FinishCallDoLater(DoLaterBase qInstance, Object parm) {
@@ -424,6 +465,7 @@ public sealed class LLAssetContext : AssetContextBase {
             }
         }
         m_completeWork.Clear();
+        ThrottleTextureRequestsComplete();
         return true;
     }
 

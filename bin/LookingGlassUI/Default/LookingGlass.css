@@ -64,6 +64,18 @@ th.LGOgreStats-value-header {
 table.LGStatsTable td.LGOgreStats-description-class {
     text-align: left;
 }
+table.LGCommStats {
+    text-align: right;
+}
+th.LGCommStats-description-header {
+    width: 60%;
+}
+th.LGCommStats-value-header {
+    width: 10%;
+}
+table.LGStatsTable td.LGCommStats-description-class {
+    text-align: left;
+}
 
 table.LGDefaultParametersTable {
 }
