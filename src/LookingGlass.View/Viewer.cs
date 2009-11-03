@@ -50,9 +50,6 @@ public class Viewer : ModuleBase, IViewProvider {
 
     private ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
 
-    // our reserved slot in the Entity subsystem additions list
-    private int m_EntitySlot;
-
     private IAgent m_trackedAgent;
 
     // the viewer manages the camera
@@ -90,7 +87,7 @@ public class Viewer : ModuleBase, IViewProvider {
         ModuleParams.AddDefaultParameter(m_moduleName + ".Camera.ServerFar", "300.0", "Far distance sent to server");
 
         ModuleParams.AddDefaultParameter(m_moduleName + ".Camera.BehindAgent", "1.0", "Distance camera is behind agent");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Camera.AboveAgent", "0.75", "Distance camera is above agent (combined with behind)");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Camera.AboveAgent", "1.00", "Distance camera is above agent (combined with behind)");
 
         // m_EntitySlot = EntityBase.AddAdditionSubsystem("VIEWER");        // used by anyone?
     }
@@ -136,7 +133,7 @@ public class Viewer : ModuleBase, IViewProvider {
         // this will cause the renderer to move it's camera whenever the main camera is moved
         m_mainCamera.OnCameraUpdate += new CameraControlUpdateCallback(Renderer.UpdateCamera);
         // this will cause camera direction to be sent back  to the server for interest management
-        m_mainCamera.OnCameraUpdate += new CameraControlUpdateCallback(OnCameraUpdate);
+        m_mainCamera.OnCameraUpdate += new CameraControlUpdateCallback(CameraControl_OnCameraUpdate);
 
         // force an initial update to position the displayed camera
         Renderer.UpdateCamera(m_mainCamera);
@@ -191,7 +188,8 @@ public class Viewer : ModuleBase, IViewProvider {
             m_log.Log(LogLevel.DVIEWDETAIL, "OnEntityUpdate: Avatar.");
         }
         else {
-            m_log.Log(LogLevel.DVIEWDETAIL, "OnEntityUpdate: Other");
+            m_log.Log(LogLevel.DVIEWDETAIL, "OnEntityUpdate: Other. w={0}", what);
+            this.Renderer.RenderUpdate(ent, what);
         }
         return;
     }
@@ -232,7 +230,7 @@ public class Viewer : ModuleBase, IViewProvider {
 
 
     // called when the camera changes position or orientation
-    private void OnCameraUpdate(CameraControl cam) {
+    private void CameraControl_OnCameraUpdate(CameraControl cam) {
         // m_log.Log(LogLevel.DVIEWDETAIL, "OnCameraUpdate: ");
         if (m_trackedAgent != null) {
             // tell the agent the camera moved if it cares

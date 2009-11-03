@@ -52,7 +52,7 @@ public partial class ViewWindow : Form {
     public ViewWindow(LookingGlassBase lgbase) {
         m_lgb = lgbase;
         m_lgb.AppParams.AddDefaultParameter("ViewerWindow.Renderer.Name", "Renderer", "The renderer we will get UI from");
-        m_lgb.AppParams.AddDefaultParameter("ViewerWindow.FramesPerSec", "10", "The rate to throttle frame rendering");
+        m_lgb.AppParams.AddDefaultParameter("ViewerWindow.FramesPerSec", "15", "The rate to throttle frame rendering");
         InitializeComponent();
     }
 
@@ -102,6 +102,9 @@ public partial class ViewWindow : Form {
         }
         else {
             m_renderer.RenderOneFrame(false, m_frameAllowanceMs);
+        }
+        if (!m_lgb.KeepRunning) {
+            this.Close();
         }
         return;
     }

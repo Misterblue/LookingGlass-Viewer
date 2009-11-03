@@ -561,13 +561,14 @@ namespace RendererOgre {
 			m_sceneMgr->destroyManualObject(mo);
 			mo = 0;
 
-			mesh->buildEdgeList();
-			// mesh->generateLodLevels(m_lodDistances, Ogre::ProgressiveMesh::VertexReductionQuota::VRQ_PROPORTIONAL, 0.5f);
+			// mesh->buildEdgeList();
+			// mesh->generateLodLevels(m_lodDistances, Ogre::ProgressiveMesh::VertexReductionQuota::VRQ_PROPORTIONAL, 0.25f);
 
 			if (m_serializeMeshes) {
 				// serialize the mesh to the filesystem
 				meshToResource(mesh, entName);
-		}
+			}
+			// Ogre::MeshManager::getSingleton().unload(entName);
 		}
 		catch (Ogre::Exception &e) {
 			Log("RendererOgre::CreateMeshResource: failure generating mesh: %s", e.getDescription().c_str());

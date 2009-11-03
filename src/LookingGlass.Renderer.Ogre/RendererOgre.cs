@@ -95,7 +95,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     protected BasicWorkQueue m_workQueue = new BasicWorkQueue("OgreRendererWork");
     protected OnDemandWorkQueue m_betweenFramesQueue = new OnDemandWorkQueue("OgreBetweenFrames");
     private static int m_betweenFrameTotalCost = 300;
-    private static int m_betweenFrameMinTotalCost = 50;
+    // private static int m_betweenFrameMinTotalCost = 50;
     private static int m_betweenFrameCreateMaterialCost = 5;
     private static int m_betweenFrameCreateSceneNodeCost = 20;
     private static int m_betweenFrameCreateMeshCost = 20;
@@ -117,8 +117,6 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     private ParameterSet m_ogreStats;
     private int[] m_ogreStatsPinned;
     private GCHandle m_ogreStatsHandle;
-    private Dictionary<string, int> m_ogreStatsIndex;
-    private Dictionary<string, string> m_ogreStatsDesc;
 
     // ==========================================================================
     public RendererOgre() {
@@ -243,7 +241,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "After this distance, only large things are visible");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.Large", "8",
                     "How big is considered 'large' for 'OnlyLargeAfter' calculation");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.MeshesReloadedPerFrame", "50",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.MeshesReloadedPerFrame", "80",
                     "When reloading newly visible meshes, how many to load per frame");
 
         // some counters and intervals to see how long things take
@@ -667,6 +665,11 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     }
 
     // ==========================================================================
+    /// <summary>
+    /// An entity has been updated. Make the call into the renderer to move or rotate the entity.
+    /// </summary>
+    /// <param name="ent"></param>
+    /// <param name="what"></param>
     public void RenderUpdate(IEntity ent, UpdateCodes what) {
         if ((what & UpdateCodes.Material) != 0) {
             // the materials have changed on this entity. Cause materials to be recalcuated
@@ -735,8 +738,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         Ogr.UpdateCamera((float)pos.X, (float)pos.Z, (float)-pos.Y, 
             orient.W, orient.X, orient.Z, -orient.Y,
             1.0f, (float)cam.Far*m_sceneMagnification, 1.0f);
-        // m_log.Log(LogLevel.DRENDERDETAIL, "UpdateCamera: Camera to {0}, {1}, {2}",
-        //     (float)pos.X, (float)pos.Z, (float)-pos.Y);
+        m_log.Log(LogLevel.DRENDERDETAIL, "UpdateCamera: Camera to p={0}, r={1}", pos, orient);
         return;
     }
 

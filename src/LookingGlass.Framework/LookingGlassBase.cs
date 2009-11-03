@@ -154,6 +154,7 @@ public class LookingGlassBase : IInstance<LookingGlassBase> {
         while (this.KeepRunning) {
             Thread.Sleep(1 * 1000);
         }
+        m_log.Log(LogLevel.DINIT, "KEEPRUNNING OFF. SHUTTING DOWN");
         StopEverything();
     }
     
@@ -174,12 +175,13 @@ public class LookingGlassBase : IInstance<LookingGlassBase> {
     private void StopEverything() {
         try {
             m_log.Log(LogLevel.DINIT, "STOP INITIATED. Stopping forms.");
-            if (m_formsContext != null) {
-                m_formsContext.ExitThread();
-            }
-
             m_log.Log(LogLevel.DINIT, "Stopping modules.");
             ModManager.Stop();
+
+            if (m_formsContext != null) {
+                m_log.Log(LogLevel.DINIT, "Stopping forms thread");
+                m_formsContext.ExitThread();
+            }
 
             m_log.Log(LogLevel.DINIT, "Unloading modules.");
             ModManager.PrepareForUnload();

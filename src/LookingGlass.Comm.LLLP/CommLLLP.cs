@@ -272,13 +272,13 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
                     "true",
                     "Whether to move avatar when user types (otherwise wait for server round trip)");
         ModuleParams.AddDefaultParameter("World.LL.Agent.PreMove.RotFudge", 
-                    "5",
+                    "2.5",
                     "Degrees to rotate avatar when user turns (float)");
         ModuleParams.AddDefaultParameter("World.LL.Agent.PreMove.FlyFudge", 
                     "2.5",
                     "Meters to move avatar when moves forward when flying (float)");
         ModuleParams.AddDefaultParameter("World.LL.Agent.PreMove.RunFudge", 
-                    "2.5",
+                    "1.5",
                     "Meters to move avatar when moves forward when running (float)");
         ModuleParams.AddDefaultParameter("World.LL.Agent.PreMove.MoveFudge", 
                     "0.5",
@@ -666,7 +666,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
             }) ) return;
         this.m_statObjObjectUpdate++;
         IEntity updatedEntity = null;
-        UpdateCodes updateFlags = UpdateCodes.New | UpdateCodes.Acceleration | UpdateCodes.AngularVelocity
+        UpdateCodes updateFlags = UpdateCodes.Acceleration | UpdateCodes.AngularVelocity
                     | UpdateCodes.Position | UpdateCodes.Rotation | UpdateCodes.Velocity;
         lock (m_opLock) {
             m_log.Log(LogLevel.DCOMMDETAIL, "Object update: id={0}, p={1}, r={2}", 
@@ -676,6 +676,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
                 if (rcontext.TryGetCreateEntityLocalID(args.Prim.LocalID, out updatedEntity, delegate() {
                             IEntity newEnt = new LLEntityPhysical(rcontext.AssetContext,
                                             rcontext, args.Simulator.Handle, args.Prim.LocalID, args.Prim);
+                            updateFlags |= UpdateCodes.New;
                             return newEnt;
                         }) ) {
                     // new prim created
@@ -768,10 +769,12 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     }
     // ===============================================================
     private void Objects_ObjectProperties(Object sender, OMV.ObjectPropertiesEventArgs args) {
+        m_log.Log(LogLevel.DCOMMDETAIL, "Objects_ObjectProperties:");
         this.m_statObjObjectProperties++;
     }
     // ===============================================================
     private void Objects_ObjectPropertiesUpdated(Object sender, OMV.ObjectPropertiesUpdatedEventArgs args) {
+        m_log.Log(LogLevel.DCOMMDETAIL, "Objects_ObjectPropertiesUpdated:");
         this.m_statObjObjectPropertiesUpdate++;
     }
     // ===============================================================

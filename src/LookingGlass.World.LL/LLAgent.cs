@@ -180,11 +180,34 @@ public class LLAgent : IAgent {
             m_client.Self.Movement.BodyRotation *= Zturn;
             m_client.Self.Movement.HeadRotation *= Zturn;
         }
+        // Send the movement (the turn) to the simulator. The rotation above will be corrected by the simulator
         m_client.Self.Movement.SendUpdate();
+        // if we are to move the avatar when the user commands movement, push the avatar
         if (startstop && m_shouldPreMoveAvatar) {
             if (m_myAvatar != null) {
                 this.Heading = m_client.Self.Movement.BodyRotation;
                 m_myAvatar.Heading = m_client.Self.Movement.BodyRotation;
+                // This next call sets off a tricky calling sequence:
+                // LLEntityAvatar.Update
+                //    calls LLEntityBase.Update
+                //        calls EntityBase.Update
+                //            calls RegionContext.UpdateEntity
+                //                calls RegionContextBase.UpdateEntity
+                //                    fires RegionContextBase.OnEntityUpdate
+                //                        calls World.Region_OnEntityUpdate
+                //                            fires World.OnEntityUpdate
+                //                                calls Viewer.World_OnEntityUpdate
+                //                                    updates entity's pos and rot
+                //    calls World.Instance.UpdateAgent
+                //        fires World.OnAgentUpdate
+                //            calls Viewer.World_OnAgentUpdate
+                //                calls mainCameraUpdate(with agent pos and rot)
+                //                    fires CameraControl.OnCameraUpdate
+                //                        calls Renderer.UpdateCamera
+                //                            calls into renderer to update view camera position
+                //                        calls Viewer.CameraControl_OnCameraUpdate
+                //                            calls LLAgent.UpdateCamera
+                //                                sends camera interest info (pos and rot) to simulator
                 m_myAvatar.Update(UpdateCodes.Rotation);
             }
         }
