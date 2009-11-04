@@ -223,7 +223,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\OLMeshTracker.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\OLPreloadArchive.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ProcessAnyTime.cpp"
 				>
 			</File>
 			<File
@@ -305,7 +313,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\OLMeshTracker.h"
+				>
+			</File>
+			<File
 				RelativePath=".\OLPreloadArchive.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ProcessAnyTime.h"
 				>
 			</File>
 			<File

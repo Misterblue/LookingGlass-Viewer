@@ -35,7 +35,6 @@ namespace ProcessBetweenFrame {
 ProcessBetweenFrame* m_singleton;
 RendererOgre::RendererOgre* m_ro;
 
-
 // ====================================================================
 // RefreshResource
 // Given a resource name and a resource type, cause Ogre to reload the resource
