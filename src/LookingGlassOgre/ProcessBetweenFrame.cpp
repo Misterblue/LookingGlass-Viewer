@@ -338,11 +338,9 @@ void ProcessBetweenFrame::ProcessWorkItems(int numToProcess) {
 	//   the front of the list for processing first.
 	// TODO: figure out why uncommenting this line causes exceptions
 	if (m_modified) {
-		/*
 		LGLOCK_LOCK(m_workItemMutex);
 		m_betweenFrameWork.sort(XXCompareElements);
 		LGLOCK_UNLOCK(m_workItemMutex);
-		*/
 		m_modified = false;
 	}
 	int loopCost = numToProcess;
