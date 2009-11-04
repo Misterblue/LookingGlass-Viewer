@@ -27,12 +27,19 @@
 namespace RendererOgre { class RendererOgre; }
 
 namespace OLMeshTracker {
+/*
+NOTE TO THE NEXT PERSON: CODE NOT COMPLETE OR HOOKED INTO MAIN CODE
+This code is started but not complete. The idea is to create a routine that
+tracks meshes and their state (loaded, unloaded, ...) with the goal of allowing
+the actual file access part of a mesh load (the call to mesh->prepare()) be
+done outside the frame rendering thread.
+*/
 	class OLMeshTracker {
 	public:
 		OLMeshTracker(RendererOgre::RendererOgre*);
 		~OLMeshTracker();
 
-		void TrackMesh(Ogre::String meshName, Ogre::String contextEntName, Ogre::String fingerprint);
+		void TrackMesh(Ogre::String meshName, Ogre::String meshGroupName, Ogre::String contextEntName, Ogre::String fingerprint);
 		void UnTrackMesh(Ogre::String meshName);
 		void MakeLoaded(Ogre::String meshName);
 		void MakeUnLoaded(Ogre::String meshName);

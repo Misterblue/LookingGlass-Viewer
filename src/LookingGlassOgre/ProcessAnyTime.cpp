@@ -21,7 +21,13 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// LookingGlassOgre.cpp : Defines the exported functions for the DLL application.
+/*
+NOTE TO THE NEXT PERSON: CODE NOT COMPLETE OR HOOKED INTO MAIN CODE
+This code is started but not complete. The idea is to create a routine that
+tracks meshes and their state (loaded, unloaded, ...) with the goal of allowing
+the actual file access part of a mesh load (the call to mesh->prepare()) be
+done outside the frame rendering thread.
+*/
 
 #include "stdafx.h"
 #include <stdarg.h>
@@ -41,6 +47,27 @@ RendererOgre::RendererOgre* m_ro;
 // Once loaded, we can do the refresh between frame
 class PrepareMeshQc : public GenericQc {
 	Ogre::String meshName;
+	Ogre::String meshGroup;
+	PrepareMeshQc(Ogre::String meshN, Ogre::String meshG) {
+		this->meshName = meshN;
+		this->meshGroup = meshG;
+	}
+	~PrepareMeshQc() {
+		this->meshName.clear();
+		this->meshGroup.clear();
+	}
+	void Process() {
+		Ogre::ResourceManager::ResourceCreateOrRetrieveResult theMeshResult = 
+					Ogre::MeshManager::getSingleton().createOrRetrieve(this->meshName, this->meshGroup);
+		Ogre::MeshPtr theMesh = (Ogre::MeshPtr)theMeshResult.first;
+		if (!theMesh->isPrepared()) {
+			// read the mesh in from the disk
+			theMesh->prepare();
+			// when complete, 
+			// TODO:
+		}
+
+	}
 };
 
 // ====================================================================
@@ -61,6 +88,15 @@ ProcessAnyTime::ProcessAnyTime(RendererOgre::RendererOgre* ro) {
 ProcessAnyTime::~ProcessAnyTime() {
 	LGLOCK_RELEASE_MUTEX(m_workItemMutex);
 }
+
+bool ProcessAnyTime::HasWorkItems(){
+	// TODO:
+}
+
+void ProcessAnyTime::ProcessWorkItems(int amountOfWorkToDo) {
+	// TODO:
+}
+
 }
 
 

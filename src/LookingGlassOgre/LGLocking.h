@@ -22,8 +22,6 @@
  */
 #pragma once
 
-// #define LGLOCK_SPINLOCK
-// #define LGLOCK_MSGPUMP
 // #define LGLOCK_PTHREADS
 #define LGLOCK_BOOST
 
@@ -33,6 +31,7 @@
 #endif
 #ifdef LGLOCK_BOOST
 #include "boost/thread/mutex.hpp"
+#include "boost/thread/condition.hpp"
 #endif
 
 namespace LGLocking {
@@ -60,19 +59,19 @@ public:
 
 	void Lock();
 	void Unlock();
+	void Wait();
+	void NotifyOne();
+	void NotifyAll();
+
+	// public so we can reference it in Wait()
+	boost::mutex* m_mutex;
 private:
-#ifdef LGLOCK_SPINLOCK
-	int flag;
-	int x;
-#endif
-#ifdef LGLOCK_MSGPUMP
-	int flag;
-#endif
 #ifdef LGLOCK_PTHREADS
 #endif
 #ifdef LGLOCK_BOOST
-	boost::mutex* m_mutex;
+	boost::condition* m_condition;
 #endif
+
 };
 
 extern LGLock* LGLock_Allocate_Mutex(Ogre::String name);
@@ -86,5 +85,13 @@ extern void LGLock_Release_Lock(LGLock* lock);
 #define LGLOCK_MUTEX LGLocking::LGLock*
 #define LGLOCK_LOCK(mutex) (mutex)->Lock()
 #define LGLOCK_UNLOCK(mutex) (mutex)->Unlock()
+
+#define LGLOCK_WAIT(mutex) (mutex)->Wait((mutex)->m_mutex);
+#define LGLOCK_NOTIFY_ONE(mutex) (mutex)->NotifyOne();
+#define LGLOCK_NOTIFY_ALL(mutex) (mutex)->NotifyAll();
+
+#define LGLOCK_THREAD boost::thread
+#define LGLOCK_ALLOCATE_THREAD(func) new boost::thread(boost::function0<void>(func));
+#define LGLOCK_RELEASE_THREAD(thread) delete thread;
 
 }

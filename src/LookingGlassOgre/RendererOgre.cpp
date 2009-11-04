@@ -568,7 +568,7 @@ namespace RendererOgre {
 				// serialize the mesh to the filesystem
 				meshToResource(mesh, entName);
 			}
-			// Ogre::MeshManager::getSingleton().unload(entName);
+			Ogre::MeshManager::getSingleton().unload(entName);
 		}
 		catch (Ogre::Exception &e) {
 			Log("RendererOgre::CreateMeshResource: failure generating mesh: %s", e.getDescription().c_str());

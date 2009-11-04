@@ -22,6 +22,13 @@
  */
 #pragma once
 
+/*
+NOTE TO THE NEXT PERSON: CODE NOT COMPLETE OR HOOKED INTO MAIN CODE
+This code is started but not complete. The idea is to create a routine that
+tracks meshes and their state (loaded, unloaded, ...) with the goal of allowing
+the actual file access part of a mesh load (the call to mesh->prepare()) be
+done outside the frame rendering thread.
+*/
 #include "LGOCommon.h"
 #include "LGLocking.h"
 
@@ -48,9 +55,7 @@ public:
 	bool HasWorkItems();
 	void ProcessWorkItems(int);
 
-
 private:
-	int m_numWorkItemsToDoAnyTime;
 	LGLOCK_MUTEX m_workItemMutex;
 
 	bool m_modified;		// true if it's time to sort the work queue

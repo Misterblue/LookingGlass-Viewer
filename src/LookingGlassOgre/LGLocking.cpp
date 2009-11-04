@@ -31,17 +31,12 @@ namespace LGLocking {
 LGLock::LGLock() { }
 LGLock::LGLock(Ogre::String nam) { 
 	Name = nam;
-#if defined(LGLOCK_SPINLOCK) || defined(LGLOCK_MSGPUMP)
-	flag = 0;
-#endif
 #if defined(LGLOCK_BOOST)
 	m_mutex = new boost::mutex();
+	m_condition = new boost::condition();
 #endif
 }
 LGLock::~LGLock() { 
-#if defined(LGLOCK_SPINLOCK) || defined(LGLOCK_MSGPUMP)
-	flag = 0;
-#endif
 #if defined(LGLOCK_BOOST)
 	delete m_mutex;
 	m_mutex = NULL;
@@ -50,19 +45,6 @@ LGLock::~LGLock() {
 
 // =========================================
 void LGLock::Lock() {
-#if defined(LGLOCK_SPINLOCK) || defined(LGLOCK_MSGPUMP)
-	flag++;
-#endif
-#ifdef LGLOCK_MSGPUMP
-	while (flag > 1) {
-		Ogre::WindowEventUtilities::messagePump();
-	}
-#endif
-#ifdef LGLOCK_SPINLOCK
-	while (flag > 1) {
-		x = x + 1;
-	}
-#endif
 #ifdef LGLOCK_BOOST
 	m_mutex->lock();
 #endif
@@ -70,9 +52,6 @@ void LGLock::Lock() {
 }
 // =========================================
 void LGLock::Unlock() {
-#if defined(LGLOCK_SPINLOCK) || defined(LGLOCK_MSGPUMP)
-	flag--;
-#endif
 #ifdef LGLOCK_BOOST
 	m_mutex->unlock();
 #endif

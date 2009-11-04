@@ -25,22 +25,34 @@
 #include "RendererOgre.h"
 #include "LGLocking.h"
 
-#define MESH_STATE_UNKNOWN 0
-#define MESH_STATE_BEING_PREPARED 1
-#define MESH_STATE_PREPARED 2
-#define MESH_STATE_LOADED 3
-#define MESH_STATE_UNLOADED 4
+/*
+NOTE TO THE NEXT PERSON: CODE NOT COMPLETE OR HOOKED INTO MAIN CODE
+This code is started but not complete. The idea is to create a routine that
+tracks meshes and their state (loaded, unloaded, ...) with the goal of allowing
+the actual file access part of a mesh load (the call to mesh->prepare()) be
+done outside the frame rendering thread.
+*/
+
+#define MESH_STATE_UNKNOWN	0
+#define MESH_STATE_REQUESTING 1
+#define MESH_STATE_BEING_PREPARED 2
+#define MESH_STATE_PREPARED 3
+#define MESH_STATE_LOADED 4
+#define MESH_STATE_UNLOADED 5
 
 namespace OLMeshTracker {
 	typedef struct s_meshInfo {
 		int state;
 		Ogre::String name;
+		Ogre::String groupName;
 		Ogre::String contextEntityName;
 		Ogre::String fingerprint;
 	} MeshInfo;
 
-	stdext::hash_map<Ogre::String, MeshInfo> m_meshMap;
-	typedef std::pair<Ogre::String, MeshInfo> MapPair;
+	typedef stdext::hash_map<Ogre::String, MeshInfo> MeshMap;
+	typedef std::pair<Ogre::String, MeshInfo> MeshMapPair;
+	typedef stdext::hash_map<Ogre::String, MeshInfo>::iterator MeshMapIterator;
+	MeshMap* m_meshMap;
 	LGLOCK_MUTEX m_mapLock;
 
 	OLMeshTracker::OLMeshTracker(RendererOgre::RendererOgre* ro) {
@@ -51,29 +63,41 @@ namespace OLMeshTracker {
 		LGLOCK_RELEASE_MUTEX(m_mapLock);
 	}
 
-	void OLMeshTracker::TrackMesh(Ogre::String meshNameP, Ogre::String contextEntNameP, Ogre::String fingerprintP) {
-		MeshInfo* meshToTrack = (MeshInfo*)malloc(sizeof(MeshInfo));
-		meshToTrack->name = meshNameP;
+	// we have complete information about the mesh. Add or update the table info
+	void OLMeshTracker::TrackMesh(Ogre::String meshNameP, Ogre::String meshGroupP, Ogre::String contextEntNameP, Ogre::String fingerprintP) {
+		MeshInfo* meshToTrack;
+		LGLOCK_LOCK(m_mapLock);
+		MeshMapIterator meshI = m_meshMap->find(meshNameP);
+		if (meshI == m_meshMap->end()) {
+			meshToTrack = (MeshInfo*)malloc(sizeof(MeshInfo));
+			meshToTrack->name = meshNameP;
+			m_meshMap->insert(MeshMapPair(meshNameP, *meshToTrack));
+			meshToTrack->state = MESH_STATE_UNKNOWN;
+		}
+		else {
+			meshToTrack = &(meshI->second);
+		}
+		// update other entries
+		meshToTrack->groupName = meshGroupP;
 		meshToTrack->contextEntityName = contextEntNameP;
 		meshToTrack->fingerprint = fingerprintP;
-		LGLOCK_LOCK(m_mapLock);
-		m_meshMap.insert(MapPair(meshNameP, *meshToTrack));
+		Ogre::ResourceManager::ResourceCreateOrRetrieveResult theMeshResult = 
+					Ogre::MeshManager::getSingleton().createOrRetrieve(meshNameP, meshGroupP);
+		Ogre::MeshPtr meshEnt = (Ogre::MeshPtr)theMeshResult.first;
+		// TODO:
 		LGLOCK_UNLOCK(m_mapLock);
 
 	}
 	void OLMeshTracker::UnTrackMesh(Ogre::String meshName) {
 	}
 	void OLMeshTracker::MakeLoaded(Ogre::String meshName) {
-		// already in work list?
-		//     MESH_STATE_BEING_PREPARED
-		//         return
-		//     MESH_STATE_PREPARED
-		//         return
-		//     MESH_STATE_LOADED
-		//         return
-		//     MESH_STATE_UNLOADED
-		//         break
-		// otherwise, set state to BEING_PREPARED and queue prepare op
+		/*
+		if (we aren't tracking this mesh) {
+			LookingGlassOgr::RequestResource(meshName.c_str(), contextEntName.c_str(), LookingGlassOgr::ResourceTypeMesh);
+			add mesh to tracking map
+			TODO:
+		}
+		*/
 	}
 	void OLMeshTracker::MakeUnLoaded(Ogre::String meshName) {
 	}
