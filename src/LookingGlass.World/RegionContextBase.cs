@@ -101,7 +101,7 @@ public abstract class RegionContextBase : EntityBase, IRegionContext, IDisposabl
     }
 
     public void UpdateEntity(IEntity entity, UpdateCodes detail) {
-        m_log.Log(LogLevel.DWORLDDETAIL, "UpdateEntity: " + entity.Name);
+        m_log.Log(LogLevel.DUPDATEDETAIL, "UpdateEntity: " + entity.Name);
         if (OnEntityUpdate != null) OnEntityUpdate(entity, detail);
     }
 

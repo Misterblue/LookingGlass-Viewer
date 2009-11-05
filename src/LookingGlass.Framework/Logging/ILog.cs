@@ -43,6 +43,8 @@ namespace LookingGlass.Framework.Logging {
         DTEXTUREDETAIL= 0x40002000,
         DMODULE       = 0x00004000,
         DMODULEDETAIL = 0x40008000,
+        DUPDATE       = 0x00010000,
+        DUPDATEDETAIL = 0x40020000,
         DRADEGAST     = 0x00010000,
         DRADEGASTDETAIL = 0x40020000,
 

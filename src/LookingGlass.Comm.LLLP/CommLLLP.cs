@@ -669,7 +669,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         UpdateCodes updateFlags = UpdateCodes.Acceleration | UpdateCodes.AngularVelocity
                     | UpdateCodes.Position | UpdateCodes.Rotation | UpdateCodes.Velocity;
         lock (m_opLock) {
-            m_log.Log(LogLevel.DCOMMDETAIL, "Object update: id={0}, p={1}, r={2}", 
+            m_log.Log(LogLevel.DUPDATEDETAIL, "Object update: id={0}, p={1}, r={2}", 
                 args.Prim.LocalID, args.Prim.Position.ToString(), args.Prim.Rotation.ToString());
             // assume somethings changed no matter what
             try {
@@ -705,7 +705,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
                 QueueTilOnline(rcontext, CommActionCode.OnAttachmentUpdate, sender, args);
             }) ) return;
         this.m_statObjAttachmentUpdate++;
-        m_log.Log(LogLevel.DCOMMDETAIL, "OnNewAttachment: id={0}, lid={1}", args.Prim.ID.ToString(), args.Prim.LocalID);
+        m_log.Log(LogLevel.DUPDATEDETAIL, "OnNewAttachment: id={0}, lid={1}", args.Prim.ID.ToString(), args.Prim.LocalID);
         try {
             IEntity ent;
             if (rcontext.TryGetCreateEntityLocalID(args.Prim.LocalID, out ent, delegate() {
@@ -738,7 +738,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         UpdateCodes updateFlags = UpdateCodes.Acceleration | UpdateCodes.AngularVelocity
                     | UpdateCodes.Position | UpdateCodes.Rotation | UpdateCodes.Velocity;
         lock (m_opLock) {
-            m_log.Log(LogLevel.DCOMMDETAIL, "Object update: id={0}, p={1}, r={2}", 
+            m_log.Log(LogLevel.DUPDATEDETAIL, "Object update: id={0}, p={1}, r={2}", 
                 update.LocalID, update.Position.ToString(), update.Rotation.ToString());
             // assume somethings changed no matter what
             if (update.Avatar) updateFlags |= UpdateCodes.CollisionPlane;
@@ -753,7 +753,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
                 }
             }
             else {
-                m_log.Log(LogLevel.DCOMM, "OnObjectUpdated: can't find local ID {0}. NOT UPDATING", update.LocalID);
+                m_log.Log(LogLevel.DUPDATE, "OnObjectUpdated: can't find local ID {0}. NOT UPDATING", update.LocalID);
             }
         }
         if (updatedEntity != null) {
@@ -769,12 +769,12 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     }
     // ===============================================================
     private void Objects_ObjectProperties(Object sender, OMV.ObjectPropertiesEventArgs args) {
-        m_log.Log(LogLevel.DCOMMDETAIL, "Objects_ObjectProperties:");
+        m_log.Log(LogLevel.DUPDATEDETAIL, "Objects_ObjectProperties:");
         this.m_statObjObjectProperties++;
     }
     // ===============================================================
     private void Objects_ObjectPropertiesUpdated(Object sender, OMV.ObjectPropertiesUpdatedEventArgs args) {
-        m_log.Log(LogLevel.DCOMMDETAIL, "Objects_ObjectPropertiesUpdated:");
+        m_log.Log(LogLevel.DUPDATEDETAIL, "Objects_ObjectPropertiesUpdated:");
         this.m_statObjObjectPropertiesUpdate++;
     }
     // ===============================================================
@@ -785,22 +785,20 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
                 QueueTilOnline(rcontext, CommActionCode.OnAvatarUpdate, sender, args);
             }) ) return;
         this.m_statObjAvatarUpdate++;
+        m_log.Log(LogLevel.DUPDATEDETAIL, "Objects_AvatarUpdate: cntl={0}, parent={1}, p={2}, r={3}", 
+                    args.Avatar.ControlFlags.ToString("x"), args.Avatar.ParentID, 
+                    args.Avatar.Position, args.Avatar.Rotation);
         IEntity updatedEntity = null;
         UpdateCodes updateFlags = UpdateCodes.Acceleration | UpdateCodes.AngularVelocity
                     | UpdateCodes.Position | UpdateCodes.Rotation | UpdateCodes.Velocity;
         lock (m_opLock) {
-            m_log.Log(LogLevel.DCOMMDETAIL, "Objects_AvatarUpdate:");
-            m_log.Log(LogLevel.DCOMMDETAIL, "cntl={0}, parent={1}, p={2}, r={3}", 
-                    args.Avatar.ControlFlags.ToString("x"), args.Avatar.ParentID, 
-                    args.Avatar.Position.ToString(), args.Avatar.Rotation.ToString());
-
-            // assume somethings changed no matter what
+            // This is an avatar, assume somethings changed no matter what
             updateFlags |= UpdateCodes.CollisionPlane;
 
             EntityName avatarEntityName = LLEntityAvatar.AvatarEntityNameFromID(rcontext.AssetContext, args.Avatar.ID);
             if (rcontext.TryGetCreateEntity(avatarEntityName, out updatedEntity, delegate() {
-                            m_log.Log(LogLevel.DCOMMDETAIL, "AvatarUpdate: creating avatar {0} {1} ({2})",
-                                args.Avatar.FirstName, args.Avatar.LastName, args.Avatar.ID.ToString());
+                            m_log.Log(LogLevel.DUPDATEDETAIL, "AvatarUpdate: creating avatar {0} {1} ({2})",
+                                args.Avatar.FirstName, args.Avatar.LastName, args.Avatar.ID);
                             IEntityAvatar newEnt = new LLEntityAvatar(rcontext.AssetContext,
                                             rcontext, args.Simulator.Handle, args.Avatar);
                             return (IEntity)newEnt;
@@ -811,7 +809,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
                 // we can check here if this avatar goes with the agent in the world
                 // If this av is with the agent, make the connection
                 if (args.Avatar.LocalID == m_client.Self.LocalID) {
-                    m_log.Log(LogLevel.DCOMMDETAIL, "AvatarUpdate: associating agent with new avatar");
+                    m_log.Log(LogLevel.DUPDATEDETAIL, "AvatarUpdate: associating agent with new avatar");
                     m_myAgent.AssociatedAvatar = (IEntityAvatar)updatedEntity;
                 }
             }
@@ -847,183 +845,6 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         }
         return;
     }
-
-    /*
-    // ===============================================================
-    public virtual void XXXObjects_OnNewPrim(OMV.Simulator sim, OMV.Primitive prim, ulong regionHandle, ushort timeDilation) {
-        LLRegionContext rcontext = FindRegion(sim);
-        if (rcontext == null) return;
-        if (rcontext.State.IfNotOnline(delegate() {
-                QueueTilOnline(rcontext, CommActionCode.OnNewPrim, sim, prim, regionHandle, timeDilation);
-            }) ) return;
-        IEntity ent = null; ;
-        lock (m_opLock) {
-            m_log.Log(LogLevel.DCOMMDETAIL, "OnNewPrim: id={0}, lid={1}", prim.ID.ToString(), prim.LocalID);
-            try {
-                if (rcontext.TryGetCreateEntityLocalID(prim.LocalID, out ent, delegate() {
-                            IEntity newEnt = new LLEntityPhysical(rcontext.AssetContext,
-                                            rcontext, regionHandle, prim.LocalID, prim);
-                            return newEnt;
-                        }) ) {
-                    // new prim created
-                }
-                else {
-                    // if not created, make an update happen
-                    if (ent != null) ent.Update(UpdateCodes.FullUpdate);
-                }
-            }
-            catch (Exception e) {
-                m_log.Log(LogLevel.DBADERROR, "FAILED CREATION OF NEW PRIM: " + e.ToString());
-            }
-        }
-        return;
-    }
-
-    // ===============================================================
-    public virtual void XXXObjects_OnNewAttachment(OMV.Simulator sim, OMV.Primitive prim, ulong regionHandle, ushort timeDilation) {
-        LLRegionContext rcontext = FindRegion(sim);
-        if (rcontext == null) return;
-        if (rcontext.State.IfNotOnline(delegate() {
-                QueueTilOnline(rcontext, CommActionCode.OnNewPrim, sim, prim, regionHandle, timeDilation);
-            }) ) return;
-        m_log.Log(LogLevel.DCOMMDETAIL, "OnNewAttachment: id={0}, lid={1}", prim.ID.ToString(), prim.LocalID);
-        try {
-            IEntity ent;
-            if (rcontext.TryGetCreateEntityLocalID(prim.LocalID, out ent, delegate() {
-                        IEntity newEnt = new LLEntityPhysical(rcontext.AssetContext,
-                                        rcontext, regionHandle, prim.LocalID, prim);
-                        return newEnt;
-                    }) ) {
-                // if new or not, assume everything about this entity has changed
-                rcontext.UpdateEntity(ent, UpdateCodes.FullUpdate | UpdateCodes.New);
-            }
-            else {
-                m_log.Log(LogLevel.DBADERROR, "FAILED CREATION OF NEW ATTACHMENT");
-            }
-        }
-        catch (Exception e) {
-            m_log.Log(LogLevel.DBADERROR, "FAILED CREATION OF NEW ATTACHMENT: " + e.ToString());
-        }
-        return;
-    }
-
-    // ===============================================================
-    public virtual void XXXObjects_OnObjectUpdated(OMV.Simulator sim, OMV.ObjectUpdate update, ulong regionHandle, ushort timeDilation) {
-        LLRegionContext rcontext = FindRegion(sim);
-        if (rcontext == null) return;
-        if (rcontext.State.IfNotOnline(delegate() {
-                QueueTilOnline(rcontext, CommActionCode.OnObjectUpdated, sim, update, regionHandle, timeDilation);
-            }) ) return;
-        IEntity updatedEntity = null;
-        UpdateCodes updateFlags = UpdateCodes.Acceleration | UpdateCodes.AngularVelocity
-                    | UpdateCodes.Position | UpdateCodes.Rotation | UpdateCodes.Velocity;
-        lock (m_opLock) {
-            m_log.Log(LogLevel.DCOMMDETAIL, "Object update: id={0}, p={1}, r={2}", 
-                update.LocalID, update.Position.ToString(), update.Rotation.ToString());
-            // assume somethings changed no matter what
-            if (update.Avatar) updateFlags |= UpdateCodes.CollisionPlane;
-            if (update.Textures != null) updateFlags |= UpdateCodes.Textures;
-
-            if (rcontext.TryGetEntityLocalID(update.LocalID, out updatedEntity)) {
-                if ((updateFlags & UpdateCodes.Position) != 0) {
-                    updatedEntity.RelativePosition = update.Position;
-                }
-                if ((updateFlags & UpdateCodes.Rotation) != 0) {
-                    updatedEntity.Heading = update.Rotation;
-                }
-            }
-            else {
-                m_log.Log(LogLevel.DCOMM, "OnObjectUpdated: can't find local ID {0}. NOT UPDATING", update.LocalID);
-            }
-        }
-        // special update for the agent so it knows there is new info from the network
-        // The real logic to push the update through happens in the IEntityAvatar.Update()
-        if (updatedEntity != null) {
-            if (m_myAgent != null && updatedEntity == m_myAgent.AssociatedAvatar) {
-                m_myAgent.DataUpdate(updateFlags);
-            }
-            updatedEntity.Update(updateFlags);
-        }
-
-        return;
-    }
-
-    // ===============================================================
-    public virtual void XXXObjects_OnObjectKilled(OMV.Simulator sim, uint objectID) {
-        LLRegionContext rcontext = FindRegion(sim);
-        if (rcontext == null) return;
-        if (rcontext.State.IfNotOnline(delegate() {
-                QueueTilOnline(rcontext, CommActionCode.OnObjectKilled, sim, objectID);
-            }) ) return;
-        m_log.Log(LogLevel.DWORLDDETAIL, "Object killed:");
-        try {
-            IEntity removedEntity;
-            if (rcontext.TryGetEntityLocalID(objectID, out removedEntity)) {
-                // we need a handle to the objectID
-                rcontext.RemoveEntity(removedEntity);
-            }
-        }
-        catch (Exception e) {
-            m_log.Log(LogLevel.DBADERROR, "FAILED DELETION OF OBJECT: " + e.ToString());
-        }
-        return;
-    }
-
-    // ===============================================================
-    /// <summary>
-    /// This routine is called when there is a new avatar and whenever the avatar is
-    /// updated. Should be called "OnNewOrUpdatedAvatar". 
-    /// </summary>
-    /// <param name="sim"></param>
-    /// <param name="av"></param>
-    /// <param name="regionHandle"></param>
-    /// <param name="timeDilation"></param>
-    public virtual void Objects_OnNewAvatar(OMV.Simulator sim, OMV.Avatar av, ulong regionHandle, ushort timeDilation) {
-        LLRegionContext rcontext = FindRegion(sim);
-        if (rcontext == null) return;
-        if (rcontext.State.IfNotOnline(delegate() {
-                QueueTilOnline(rcontext, CommActionCode.OnNewAvatar, sim, av, regionHandle, timeDilation);
-            }) ) return;
-        IEntity updatedEntity = null;
-        UpdateCodes updateFlags = UpdateCodes.Acceleration | UpdateCodes.AngularVelocity
-                    | UpdateCodes.Position | UpdateCodes.Rotation | UpdateCodes.Velocity;
-        lock (m_opLock) {
-            m_log.Log(LogLevel.DCOMMDETAIL, "Objects_OnNewAvatar:");
-            m_log.Log(LogLevel.DCOMMDETAIL, "cntl={0}, parent={1}, p={2}, r={3}", 
-                    av.ControlFlags.ToString("x"), av.ParentID, av.Position.ToString(), av.Rotation.ToString());
-
-
-            // assume somethings changed no matter what
-            updateFlags |= UpdateCodes.CollisionPlane;
-
-            EntityName avatarEntityName = LLEntityAvatar.AvatarEntityNameFromID(rcontext.AssetContext, av.ID);
-            if (rcontext.TryGetCreateEntity(avatarEntityName, out updatedEntity, delegate() {
-                            m_log.Log(LogLevel.DCOMMDETAIL, "OnNewAvatar: creating avatar {0} {1} ({2})",
-                                av.FirstName, av.LastName, av.ID.ToString());
-                            IEntityAvatar newEnt = new LLEntityAvatar(rcontext.AssetContext,
-                                            rcontext, regionHandle, av);
-                            return (IEntity)newEnt;
-                        }) ) {
-                updatedEntity.RelativePosition = av.Position;
-                updatedEntity.Heading = av.Rotation;
-                updateFlags |= UpdateCodes.New;     // a new avatar
-            }
-        }
-
-        // we can check here if this avatar goes with the agent in the world
-        // If this av is with the agent, make the connection
-        if (av.LocalID == m_client.Self.LocalID) {
-            m_log.Log(LogLevel.DCOMMDETAIL, "OnNewAvatar: associating agent with new avatar");
-            m_myAgent.AssociatedAvatar = (IEntityAvatar)updatedEntity;
-            // an extra update for the agent so it knows things have changed
-            m_myAgent.DataUpdate(updateFlags);
-        }
-
-        // tell the entity it changed. Since this is an avatar entity it will update the agent if necessary.
-        if (updatedEntity != null) updatedEntity.Update(updateFlags);
-        return;
-    }
-     */
 
     // ===============================================================
     /// <summary>

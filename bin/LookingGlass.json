@@ -1,8 +1,9 @@
 {
 // Uncomment this if you like lots of debug output
-"Log.FilterLevel": "2147483647",	// 0x7fffffff: log everything
+// "Log.FilterLevel": "2147483647",	// 0x7fffffff: log everything
 // "Log.FilterLevel": "5592405",	// 0x555555: log info messages
 // "Log.FilterLevel": "1073744896",	// 0x40000c00: RENDER and RENDERDETAIL
+"Log.FilterLevel": "1073938432",	// 0x40030000: UPDATE and UPDATEDETAIL
 
 // ====================================================
 // "World.Parameters": "xx",

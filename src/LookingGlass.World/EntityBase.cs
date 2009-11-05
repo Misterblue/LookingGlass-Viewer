@@ -235,6 +235,7 @@ public abstract class EntityBase : IEntity {
     // Tell the entity that something about it changed
     virtual public void Update(UpdateCodes what) {
         if (this.RegionContext != null) {
+            LogManager.Log.Log(LogLevel.DUPDATEDETAIL, "EntityBase.Update calling RegionContext.UpdateEntity. w={0}", what);
             this.RegionContext.UpdateEntity(this, what);
         }
         return;

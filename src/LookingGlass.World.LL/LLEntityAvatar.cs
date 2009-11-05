@@ -104,6 +104,7 @@ namespace LookingGlass.World.LL {
             base.Update(what);
             // if we are the agent in the world, also update the agent
             if (this == World.Instance.Agent.AssociatedAvatar) {
+                LogManager.Log.Log(LogLevel.DUPDATEDETAIL, "LLEntityAvatar: calling World.UpdateAgent: what={0}", what);
                 World.Instance.UpdateAgent(what);
             }
         }

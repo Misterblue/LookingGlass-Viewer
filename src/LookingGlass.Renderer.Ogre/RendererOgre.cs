@@ -889,13 +889,16 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             if (MeshesWaiting.ContainsKey(meshName)) return;
             MeshesWaiting.Add(meshName, contextEntity);
         }
-        m_workQueue.DoLater(RequestMeshLater, (object)meshName);
+        Object[] meshLaterParams = { meshName, contextEntity };
+        m_workQueue.DoLater(RequestMeshLater, (object)meshLaterParams);
         return;
     }
 
     // Called on workQueue to call into gather parameters and create the mesh resource
     private bool RequestMeshLater(DoLaterBase qInstance, Object parm) {
-        string m_meshName = (string)parm;
+        Object[] lparams = (Object[])parm;
+        string m_meshName = (string)lparams[0];
+        string m_contextEntityName = (string)lparams[1];
         try {
             // type information is at the end of the name. remove if there
             EntityName eName = EntityNameOgre.ConvertOgreResourceToEntityName(m_meshName);
@@ -916,8 +919,9 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             }
 
             // tell Ogre to refresh (reload) the resource
-            m_log.Log(LogLevel.DRENDERDETAIL, "RendererOgre.RequestMeshLater: refresh for {0}", m_meshName);
-            Ogr.RefreshResourceBF(priority, Ogr.ResourceTypeMesh, m_meshName);
+            m_log.Log(LogLevel.DRENDERDETAIL, "RendererOgre.RequestMeshLater: refresh for {0}. prio={1}", 
+                    m_meshName, priority);
+            // Ogr.RefreshResourceBF(priority, Ogr.ResourceTypeMesh, m_meshName);
             lock (this.MeshesWaiting) {
                 // no longer waiting for this mesh to get created
                 if (this.MeshesWaiting.ContainsKey(m_meshName)) {
