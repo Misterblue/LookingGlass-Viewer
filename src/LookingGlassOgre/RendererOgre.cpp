@@ -165,15 +165,17 @@ namespace RendererOgre {
 	}
 
 	// called at the beginning of the frame so we can slrp the camera
-#define SLERP_SPEED 1.0
+#define SECONDS_TO_SLERP 0.25
 	void RendererOgre::AdvanceCamera(const Ogre::FrameEvent& evt) {
-		// TODO: calculate progress number based on time since last frame
-		m_desiredCameraOrientationProgress += 0.1;
+		// Say time since last frame is .1s. That's 1/10 sec and if we're trying to
+		//   to the smooth turn in 1/2 sec, this is 1/5 of our way there.
+		float progress = evt.timeSinceLastEvent / SECONDS_TO_SLERP;
+		m_desiredCameraOrientationProgress += progress;
 		if (m_desiredCameraOrientationProgress < 1.0) {
 			Ogre::Quaternion newOrientation = Ogre::Quaternion::Slerp(m_desiredCameraOrientationProgress, 
 				m_camera->getOrientation(), m_desiredCameraOrientation, true);
-			// XXXX m_camera->setOrientation(newOrientation);
-			// XXXX m_visCalc->RecalculateVisibility();
+			// XXXX m_camera->setOrientation(newOrientation); // XXXX
+			// XXXX m_visCalc->RecalculateVisibility(); // XXXX
 		}
 	}
 

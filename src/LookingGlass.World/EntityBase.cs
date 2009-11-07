@@ -142,8 +142,6 @@ public abstract class EntityBase : IEntity {
         }
         set {
             m_relativePosition = value;
-            LogManager.Log.Log(LogLevel.DRENDERDETAIL, 
-                "EntityBase: setting relative position: n={0}, r={1}", this.Name, m_relativePosition);
         }
     }
 
@@ -151,8 +149,6 @@ public abstract class EntityBase : IEntity {
     virtual public OMV.Vector3d GlobalPosition {
         get {
             if (m_regionContext != null) {
-                LogManager.Log.Log(LogLevel.DRENDERDETAIL, "EntityBase: get GlobalPosition . n={0}, G={1}, r={2}",
-                        this.Name, m_regionContext.WorldBase, RelativePosition);
                 return new OMV.Vector3d(
                     m_regionContext.WorldBase.X + (double)RelativePosition.X,
                     m_regionContext.WorldBase.Y + (double)RelativePosition.Y,
@@ -223,8 +219,6 @@ public abstract class EntityBase : IEntity {
                 // }
                 // Additions = newAdditions;
             }
-            LogManager.Log.Log(LogLevel.DINIT,
-                    "IENTITY: ADDADDITION: NEW: " + addClass + " = " + ret.ToString());
         }
         return ret;
     }

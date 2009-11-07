@@ -91,6 +91,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
 
     // we remember where the camera last was so we can do some interest management
     private OMV.Vector3d m_lastCameraPosition;
+    private OMV.Quaternion m_lastCameraOrientation;
 
     protected BasicWorkQueue m_workQueue = new BasicWorkQueue("OgreRendererWork");
     protected OnDemandWorkQueue m_betweenFramesQueue = new OnDemandWorkQueue("OgreBetweenFrames");
@@ -657,9 +658,11 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     /// <returns>Zero to N with larger meaning less interested</returns>
     private int CalculateInterestOrder(IEntity ent) {
         float ret = 100f;
-        if (m_lastCameraPosition != null) {
+        if (m_lastCameraPosition != null && m_lastCameraOrientation != null) {
             double dist = OMV.Vector3d.Distance(ent.GlobalPosition, m_lastCameraPosition);
             // if (entity is behind the camera) dist += 200;
+            OMV.Vector3 dir = OMV.Vector3.UnitX * m_lastCameraOrientation;
+            if (dir.X < 0) dist += 200;
             if (dist < 0) dist = -dist;
             if (dist > 1000.0) dist = 1000.0;
             // m_log.Log(LogLevel.DRENDERDETAIL, "CalcualteInterestOrder: ent={0}, cam={1}, d={2}", 
@@ -738,8 +741,10 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         OMV.Quaternion orient = OMV.Quaternion.CreateFromAxisAngle(OMV.Vector3.UnitZ, -Constants.PI / 2) * cam.Heading;
         // OMV.Quaternion orient = cam.Heading;
         orient.Normalize();
-        OMV.Vector3d pos = cam.GlobalPosition * m_sceneMagnification;
         m_lastCameraPosition = cam.GlobalPosition;
+        m_lastCameraOrientation = orient;
+        // note the conversion from LL coordinates (Z up) to Ogre coordinates (Y up)
+        OMV.Vector3d pos = cam.GlobalPosition * m_sceneMagnification;
         Ogr.UpdateCamera((float)pos.X, (float)pos.Z, (float)-pos.Y, 
             orient.W, orient.X, orient.Z, -orient.Y,
             1.0f, (float)cam.Far*m_sceneMagnification, 1.0f);

@@ -116,7 +116,7 @@ function TimerDataStuff() {
         });
         $.getJSON(BASEURL+'/api/stats/Renderer/ogreStats', function(data, status) {
             if (status == 'success') {
-                BuildBasicTable('#LGOgreStats', data, true, false);
+                BuildBasicTable('#LGOgreStats', data, false, false);
             }
         });
         $.getJSON(BASEURL+'/api/stats/Comm/stats', function(data, status) {
