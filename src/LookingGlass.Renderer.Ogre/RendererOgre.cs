@@ -83,7 +83,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
 
     // If true, requesting a mesh causes the mesh to be rebuilt and written out
     // This makes sure cached copy is the same as server but is also slow
-    protected bool m_shouldForceMeshRebuild = false;
+    protected bool m_shouldForceMeshRebuild = true;
 
     // this shouldn't be here... this is a feature of the LL renderer
     protected float m_sceneMagnification;
@@ -595,6 +595,12 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                         }
                     }
 
+                    // Experiemental: force the creation of the mesh
+                    string entMeshName = (string)m_ri.basicObject;
+                    if (m_shouldForceMeshRebuild) {
+                        RequestMesh(m_ent.Name.Name, entMeshName);
+                    }
+
                     // Find a handle to the parent for this node
                     string parentSceneNodeName = null;
                     if (m_ri.parentEntity != null) {
@@ -610,7 +616,6 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     // and add the definition for the object on to the scene node
                     // This will cause the load function to be called and create all
                     //   the callbacks that will actually create the object
-                    string entMeshName = (string)m_ri.basicObject;
                     m_log.Log(LogLevel.DRENDERDETAIL, "DoRenderLater: mesh={0}, prio={1}", 
                                     entMeshName, qInstance.priority);
                     if (!m_sceneMgr.CreateMeshSceneNodeBF(qInstance.priority,
@@ -631,10 +636,6 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     // we can find it later.
                     m_ent.SetAddition(RendererOgre.AddSceneNodeName, entitySceneNodeName);
 
-                    // Experiemental: force the creation of the mesh
-                    if (m_shouldForceMeshRebuild) {
-                        RequestMesh(m_ent.Name.Name, entMeshName);
-                    }
                 }
                 catch (Exception e) {
                     m_log.Log(LogLevel.DBADERROR, "Render: Failed conversion: " + e.ToString());

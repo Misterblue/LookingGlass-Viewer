@@ -498,6 +498,7 @@ namespace RendererOgre {
 					bool updatePosition, float px, float py, float pz, 
 					bool updateScale, float sx, float sy, float sz,
 					bool updateRotation, float ow, float ox, float oy, float oz) {
+		LookingGlassOgr::Log("RendererOgre::UpdateSceneNode: update %s", entName);
 		if (m_sceneMgr->hasSceneNode(entName)) {
 			Ogre::SceneNode* sceneNode = m_sceneMgr->getSceneNode(entName);
 			if (updatePosition) {
@@ -507,6 +508,7 @@ namespace RendererOgre {
 				sceneNode->setScale(sx, sy, sz);
 			}
 			if (updateRotation) {
+				LookingGlassOgr::Log("RendererOgre::UpdateSceneNode: update rotation: w%f, x%f, y%f, z%f", ow, ox, oy, oz);
 				sceneNode->setOrientation(ow, ox, oy, oz);
 			}
 			sceneNode->needUpdate(false);
