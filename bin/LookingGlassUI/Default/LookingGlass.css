@@ -45,36 +45,44 @@ pre {
     font-size: 12px;
 }
 
-table.LGStatsTable {
-}
-table.LGStatsTable td {
-    border: 1px solid;
-    width: 15px;
+table.LGCommStats-table-class td {
     text-align: right;
-}
-table.LGOgreStatsTable {
-    text-align: right;
-}
-th.LGOgreStats-description-header {
-    width: 60%;
-}
-th.LGOgreStats-value-header {
-    width: 10%;
-}
-table.LGStatsTable td.LGOgreStats-description-class {
-    text-align: left;
-}
-table.LGCommStats {
-    text-align: right;
-}
-th.LGCommStats-description-header {
-    width: 60%;
+    padding: 0px 0px 0px 5px;
+    margin: 0px 0px 0px 0px;
 }
 th.LGCommStats-value-header {
     width: 10%;
 }
-table.LGStatsTable td.LGCommStats-description-class {
+th.LGCommStats-description-header {
+    width: 45%;
+}
+table.LGCommStats-table-class td.LGCommStats-description-class {
     text-align: left;
+}
+
+table.LGOgreStats-table-class td {
+    text-align: right;
+    padding: 0px 0px 0px 5px;
+    margin: 0px 0px 0px 0px;
+}
+th.LGOgreStats-value-header {
+    width: 10%;
+}
+th.LGOgreStats-description-header {
+    width: 60%;
+}
+table.LGOgreStats-table-class td.LGOgreStats-description-class {
+    text-align: left;
+}
+
+table.LGQueueStats-table-class td {
+    border: 1px solid;
+    text-align: right;
+}
+
+table.LGRendererStats-table-class td {
+    border: 1px solid;
+    text-align: right;
 }
 
 table.LGDefaultParametersTable {

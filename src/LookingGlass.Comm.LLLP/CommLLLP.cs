@@ -574,19 +574,46 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         gc.Settings.STORE_LAND_PATCHES = true;
         gc.Terrain.OnLandPatch += new OMV.TerrainManager.LandPatchCallback(Terrain_OnLandPatch);
 
-        m_commStatistics.Add("WaitingTilOnline", delegate(string xx) { return new OMVSD.OSDString(m_waitTilOnline.Count.ToString()); });
-        m_commStatistics.Add("Network_Disconnected", delegate(string xx) { return new OMVSD.OSDString(m_statNetDisconnected.ToString()); });
-        m_commStatistics.Add("Network_EventQueueRunning", delegate(string xx) { return new OMVSD.OSDString(m_statNetQueueRunning.ToString()); });
-        m_commStatistics.Add("Network_LoginProgress", delegate(string xx) { return new OMVSD.OSDString(m_statNetLoginProgress.ToString()); });
-        m_commStatistics.Add("Network_SimChanged", delegate(string xx) { return new OMVSD.OSDString(m_statNetSimChanged.ToString()); });
-        m_commStatistics.Add("Network_SimConnected", delegate(string xx) { return new OMVSD.OSDString(m_statNetSimConnected.ToString()); });
-        m_commStatistics.Add("Objects_AttachmentUpdate", delegate(string xx) { return new OMVSD.OSDString(m_statObjAttachmentUpdate.ToString()); });
-        m_commStatistics.Add("Objects_AvatarUpdate", delegate(string xx) { return new OMVSD.OSDString(m_statObjAvatarUpdate.ToString()); });
-        m_commStatistics.Add("Objects_KillObject", delegate(string xx) { return new OMVSD.OSDString(m_statObjKillObject.ToString()); });
-        m_commStatistics.Add("Objects_ObjectProperties", delegate(string xx) { return new OMVSD.OSDString(m_statObjObjectProperties.ToString()); });
-        m_commStatistics.Add("Objects_ObjectPropertiesUpdate", delegate(string xx) { return new OMVSD.OSDString(m_statObjObjectPropertiesUpdate.ToString()); });
-        m_commStatistics.Add("Objects_ObjectUpdate", delegate(string xx) { return new OMVSD.OSDString(m_statObjObjectUpdate.ToString()); });
-        m_commStatistics.Add("Objects_TerseObjectUpdate", delegate(string xx) { return new OMVSD.OSDString(m_statObjTerseUpdate.ToString()); });
+        m_commStatistics.Add("WaitingTilOnline", 
+            delegate(string xx) { return new OMVSD.OSDString(m_waitTilOnline.Count.ToString()); },
+            "Number of event waiting until sim is online");
+        m_commStatistics.Add("Network_Disconnected", 
+            delegate(string xx) { return new OMVSD.OSDString(m_statNetDisconnected.ToString()); },
+            "Number of 'network disconnected' messages");
+        m_commStatistics.Add("Network_EventQueueRunning", 
+            delegate(string xx) { return new OMVSD.OSDString(m_statNetQueueRunning.ToString()); },
+            "Number of 'event queue running' messages");
+        m_commStatistics.Add("Network_LoginProgress", 
+            delegate(string xx) { return new OMVSD.OSDString(m_statNetLoginProgress.ToString()); },
+            "Number of 'login progress' messages");
+        m_commStatistics.Add("Network_SimChanged", 
+            delegate(string xx) { return new OMVSD.OSDString(m_statNetSimChanged.ToString()); },
+            "Number of 'sim changed' messages");
+        m_commStatistics.Add("Network_SimConnected", 
+            delegate(string xx) { return new OMVSD.OSDString(m_statNetSimConnected.ToString()); },
+            "Number of 'sim connected' messages");
+        m_commStatistics.Add("Objects_AttachmentUpdate", 
+            delegate(string xx) { return new OMVSD.OSDString(m_statObjAttachmentUpdate.ToString()); },
+            "Number of 'attachment update' messages");
+        m_commStatistics.Add("Objects_AvatarUpdate", 
+            delegate(string xx) { return new OMVSD.OSDString(m_statObjAvatarUpdate.ToString()); },
+            "Number of 'avatar update' messages");
+        m_commStatistics.Add("Objects_KillObject", 
+            delegate(string xx) { return new OMVSD.OSDString(m_statObjKillObject.ToString()); },
+            "Number of 'kill object' messages");
+        m_commStatistics.Add("Objects_ObjectProperties", 
+            delegate(string xx) { return new OMVSD.OSDString(m_statObjObjectProperties.ToString()); },
+            "Number of 'object properties' messages");
+        m_commStatistics.Add("Objects_ObjectPropertiesUpdate", 
+            delegate(string xx) { return new OMVSD.OSDString(m_statObjObjectPropertiesUpdate.ToString()); },
+            "Number of 'object properties update' messages");
+        m_commStatistics.Add("Objects_ObjectUpdate", 
+            delegate(string xx) { return new OMVSD.OSDString(m_statObjObjectUpdate.ToString()); },
+            "Number of 'object update' messages");
+        m_commStatistics.Add("Objects_TerseObjectUpdate", 
+            delegate(string xx) { return new OMVSD.OSDString(m_statObjTerseUpdate.ToString()); },
+            "Number of 'terse object update' messages");
+
         m_commStatsHandler = new RestHandler("/stats/" + m_moduleName + "/stats", m_commStatistics);
 
         return true;

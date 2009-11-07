@@ -121,7 +121,7 @@ function TimerDataStuff() {
         });
         $.getJSON(BASEURL+'/api/stats/Comm/stats', function(data, status) {
             if (status == 'success') {
-                BuildBasicTable('#LGCommStats', data, true, false);
+                BuildBasicTable('#LGCommStats', data, false, false);
             }
         });
     }

@@ -509,6 +509,7 @@ namespace RendererOgre {
 			if (updateRotation) {
 				sceneNode->setOrientation(ow, ox, oy, oz);
 			}
+			sceneNode->needUpdate(false);
 		}
 		else {
 			LookingGlassOgr::Log("RendererOgre::UpdateSceneNode: entity not found. Did not update entity %s", entName);
