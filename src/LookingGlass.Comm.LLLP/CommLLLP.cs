@@ -445,6 +445,15 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
             LookingGlassBase.ApplicationName, 
             LookingGlassBase.ApplicationVersion);
 
+        // create the agent structure that will hold  the logged in client
+        if (m_myAgent != null) {
+            m_log.Log(LogLevel.DWORLD, "Comm_OnLoggedIn: Removing agent that is already here");
+            // there shouldn't be on already there... odd but remove it
+            World.World.Instance.RemoveAgent();
+            m_myAgent = null;
+        }
+        m_myAgent = new LLAgent(m_client);
+
         // Select sim in the grid
         // the format that we must pass is "uri:sim&x&y&z" or the strings "home" or "last"
         // The user inputs either "home", "last", "sim" or "sim/x/y/z"
@@ -852,13 +861,6 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     /// </summary>
     public virtual void Comm_OnLoggedIn() {
         m_log.Log(LogLevel.DWORLD, "Comm_OnLoggedIn:");
-        if (m_myAgent != null) {
-            m_log.Log(LogLevel.DWORLD, "Comm_OnLoggedIn: Removing agent that is already here");
-            // there shouldn't be on already there... odd but remove it
-            World.World.Instance.RemoveAgent();
-            m_myAgent = null;
-        }
-        m_myAgent = new LLAgent(m_client);
         World.World.Instance.AddAgent(m_myAgent);
         // I work by taking LLLP messages and updating the agent
         // The agent will be updated in the world (usually by the viewer)

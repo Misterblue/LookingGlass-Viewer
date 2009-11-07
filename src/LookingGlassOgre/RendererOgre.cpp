@@ -147,6 +147,9 @@ namespace RendererOgre {
 		if (m_camera) {
 			LookingGlassOgr::Log("RendererOgre::UpdateCamera: pos=<%f, %f, %f>", (double)px, (double)py, (double)pz);
 			m_camera->setPosition(px, py, pz);
+			m_desiredCameraOrientation = Ogre::Quaternion(dw, dx, dy, dz);
+			m_desiredCameraOrientationProgress = 0.0;
+			// to do slerped movement, comment out this line and uncomment "XXXX" below
 			m_camera->setOrientation(Ogre::Quaternion(dw, dx, dy, dz));
 			if (nearClip != m_camera->getNearClipDistance()) {
 				m_camera->setNearClipDistance(nearClip);
@@ -159,6 +162,19 @@ namespace RendererOgre {
 			m_visCalc->RecalculateVisibility();
 		}
 		return;
+	}
+
+	// called at the beginning of the frame so we can slrp the camera
+#define SLERP_SPEED 1.0
+	void RendererOgre::AdvanceCamera(const Ogre::FrameEvent& evt) {
+		// TODO: calculate progress number based on time since last frame
+		m_desiredCameraOrientationProgress += 0.1;
+		if (m_desiredCameraOrientationProgress < 1.0) {
+			Ogre::Quaternion newOrientation = Ogre::Quaternion::Slerp(m_desiredCameraOrientationProgress, 
+				m_camera->getOrientation(), m_desiredCameraOrientation, true);
+			// XXXX m_camera->setOrientation(newOrientation);
+			// XXXX m_visCalc->RecalculateVisibility();
+		}
 	}
 
 	// Called from managed code via InitializeOgre().
@@ -405,6 +421,7 @@ namespace RendererOgre {
 
 	// ========== Ogre::FrameListener
 	bool RendererOgre::frameStarted(const Ogre::FrameEvent& evt) {
+		AdvanceCamera(evt);
 		return true;
 	}
 
@@ -568,7 +585,8 @@ namespace RendererOgre {
 				// serialize the mesh to the filesystem
 				meshToResource(mesh, entName);
 			}
-			Ogre::MeshManager::getSingleton().unload(entName);
+			// you'd think doing  the unload here would be the right thing but it causes crashes
+			// Ogre::MeshManager::getSingleton().unload(entName);
 		}
 		catch (Ogre::Exception &e) {
 			Log("RendererOgre::CreateMeshResource: failure generating mesh: %s", e.getDescription().c_str());

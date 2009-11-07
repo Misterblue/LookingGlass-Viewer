@@ -55,6 +55,7 @@ public:
 
 	// update objects anvironment routines
 	void updateCamera(float, float, float, float, float, float, float, float, float, float);
+	void AdvanceCamera(const Ogre::FrameEvent&);
 
 	void AddEntity(Ogre::SceneManager*, Ogre::SceneNode*, const char*, const char*);
 	Ogre::SceneNode* RendererOgre::CreateSceneNode(Ogre::SceneManager* sceneMgr, const char* nodeName,
@@ -121,5 +122,9 @@ private:
 	Ogre::String m_defaultTerrainMaterial; 
 	bool m_serializeMeshes;
 	Ogre::MeshSerializer* m_meshSerializer;
+
+	Ogre::Quaternion m_desiredCameraOrientation;
+	float m_desiredCameraOrientationProgress;
+
 };
 }

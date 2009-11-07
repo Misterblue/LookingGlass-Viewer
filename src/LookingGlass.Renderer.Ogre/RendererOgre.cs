@@ -610,6 +610,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     // This will cause the load function to be called and create all
                     //   the callbacks that will actually create the object
                     string entMeshName = (string)m_ri.basicObject;
+                    m_log.Log(LogLevel.DRENDERDETAIL, "DoRenderLater: mesh={0}, prio={1}", 
+                                    entMeshName, qInstance.priority);
                     if (!m_sceneMgr.CreateMeshSceneNodeBF(qInstance.priority,
                                     entitySceneNodeName,
                                     parentSceneNodeName,
@@ -657,8 +659,11 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         float ret = 100f;
         if (m_lastCameraPosition != null) {
             double dist = OMV.Vector3d.Distance(ent.GlobalPosition, m_lastCameraPosition);
+            // if (entity is behind the camera) dist += 200;
             if (dist < 0) dist = -dist;
             if (dist > 1000.0) dist = 1000.0;
+            // m_log.Log(LogLevel.DRENDERDETAIL, "CalcualteInterestOrder: ent={0}, cam={1}, d={2}", 
+            //             ent.GlobalPosition, m_lastCameraPosition, dist);
             ret = (float)dist;
         }
         return (int)ret;
@@ -921,7 +926,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             // tell Ogre to refresh (reload) the resource
             m_log.Log(LogLevel.DRENDERDETAIL, "RendererOgre.RequestMeshLater: refresh for {0}. prio={1}", 
                     m_meshName, priority);
-            // Ogr.RefreshResourceBF(priority, Ogr.ResourceTypeMesh, m_meshName);
+            Ogr.RefreshResourceBF(priority, Ogr.ResourceTypeMesh, m_meshName);
             lock (this.MeshesWaiting) {
                 // no longer waiting for this mesh to get created
                 if (this.MeshesWaiting.ContainsKey(m_meshName)) {

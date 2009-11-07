@@ -43,10 +43,10 @@ public class LLAgent : IAgent {
 
     // if 'true', move avatar when we get the outgoing command to move the agent
     private bool m_shouldPreMoveAvatar = false;
-    private float m_rotFudge = 5f;      // degrees moved per rotation
-    private float m_moveFudge = 0.5f;      // meters moved per movement
+    private float m_rotFudge = 3f;      // degrees moved per rotation
+    private float m_moveFudge = 0.4f;      // meters moved per movement
     private float m_flyFudge = 2.5f;      // meters moved per movement
-    private float m_runFudge = 1.0f;      // meters moved per movement
+    private float m_runFudge = 0.8f;      // meters moved per movement
 
     private IEntityAvatar m_myAvatar = null;
     public IEntityAvatar AssociatedAvatar {
@@ -96,7 +96,7 @@ public class LLAgent : IAgent {
             if (m_myAvatar != null) {
                 OMV.Vector3 newPos = m_myAvatar.RelativePosition +
                             new OMV.Vector3(CalcMoveFudge(), 0f, 0f) * m_myAvatar.Heading;
-                m_log.Log(LogLevel.DWORLDDETAIL, "MoveForward: premove from {0} to {1}", 
+                m_log.Log(LogLevel.DWORLDDETAIL|LogLevel.DUPDATEDETAIL, "MoveForward: premove from {0} to {1}", 
                         m_myAvatar.RelativePosition.ToString(), newPos);
                 this.RelativePosition = newPos;
                 m_myAvatar.RelativePosition = newPos;
@@ -113,7 +113,7 @@ public class LLAgent : IAgent {
             if (m_myAvatar != null) {
                 OMV.Vector3 newPos = m_myAvatar.RelativePosition +
                             new OMV.Vector3(-CalcMoveFudge(), 0f, 0f) * m_myAvatar.Heading;
-                m_log.Log(LogLevel.DWORLDDETAIL, "MoveBackward: premove from {0} to {1}", 
+                m_log.Log(LogLevel.DWORLDDETAIL|LogLevel.DUPDATEDETAIL, "MoveBackward: premove from {0} to {1}", 
                         m_myAvatar.RelativePosition.ToString(), newPos);
                 this.RelativePosition = newPos;
                 m_myAvatar.RelativePosition = newPos;
@@ -168,6 +168,8 @@ public class LLAgent : IAgent {
                 this.Heading = m_client.Self.Movement.BodyRotation;
                 m_myAvatar.Heading = m_client.Self.Movement.BodyRotation;
                 m_myAvatar.Update(UpdateCodes.Rotation);
+                m_log.Log(LogLevel.DWORLDDETAIL | LogLevel.DUPDATEDETAIL, "TurnLeft: premove to {0}", 
+                    m_client.Self.Movement.BodyRotation);
             }
         }
     }
@@ -186,6 +188,8 @@ public class LLAgent : IAgent {
         if (startstop && m_shouldPreMoveAvatar) {
             if (m_myAvatar != null) {
                 this.Heading = m_client.Self.Movement.BodyRotation;
+                m_log.Log(LogLevel.DWORLDDETAIL | LogLevel.DUPDATEDETAIL, "TurnRight: premove to {0}", 
+                    m_client.Self.Movement.BodyRotation);
                 m_myAvatar.Heading = m_client.Self.Movement.BodyRotation;
                 // This next call sets off a tricky calling sequence:
                 // LLEntityAvatar.Update
