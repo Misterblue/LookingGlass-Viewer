@@ -272,7 +272,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
                     "true",
                     "Whether to move avatar when user types (otherwise wait for server round trip)");
         ModuleParams.AddDefaultParameter("World.LL.Agent.PreMove.RotFudge", 
-                    "2.5",
+                    "5.0",
                     "Degrees to rotate avatar when user turns (float)");
         ModuleParams.AddDefaultParameter("World.LL.Agent.PreMove.FlyFudge", 
                     "2.5",
@@ -281,7 +281,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
                     "1.5",
                     "Meters to move avatar when moves forward when running (float)");
         ModuleParams.AddDefaultParameter("World.LL.Agent.PreMove.MoveFudge", 
-                    "0.5",
+                    "0.4",
                     "Meters to move avatar when moves forward when walking (float)");
 
         if (shouldInit) InitConnectionFramework();
@@ -300,7 +300,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
             m_client.Settings.AVATAR_TRACKING = true; //but we want to use the libsl avatar system
             m_client.Settings.SEND_AGENT_APPEARANCE = true;    // for the moment, don't do appearance
             m_client.Settings.SEND_AGENT_THROTTLE = true;    // tell them how fast we want it when connected
-            m_client.Settings.PARCEL_TRACKING = false;
+            m_client.Settings.PARCEL_TRACKING = true;
             m_client.Settings.ALWAYS_REQUEST_PARCEL_ACL = false;
             m_client.Settings.ALWAYS_REQUEST_PARCEL_DWELL = false;
             m_client.Settings.USE_INTERPOLATION_TIMER = false;  // don't need the library helping
@@ -702,8 +702,11 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
             }) ) return;
         this.m_statObjObjectUpdate++;
         IEntity updatedEntity = null;
+        // a full update says everything changed
         UpdateCodes updateFlags = UpdateCodes.Acceleration | UpdateCodes.AngularVelocity
                     | UpdateCodes.Position | UpdateCodes.Rotation | UpdateCodes.Velocity;
+        updateFlags |= UpdateCodes.Textures;
+        updateFlags |= UpdateCodes.PrimData;
         lock (m_opLock) {
             m_log.Log(LogLevel.DUPDATEDETAIL, "Object update: id={0}, p={1}, r={2}", 
                 args.Prim.LocalID, args.Prim.Position.ToString(), args.Prim.Rotation.ToString());

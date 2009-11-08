@@ -43,7 +43,7 @@ public class LLAgent : IAgent {
 
     // if 'true', move avatar when we get the outgoing command to move the agent
     private bool m_shouldPreMoveAvatar = false;
-    private float m_rotFudge = 2f;      // degrees moved per rotation
+    private float m_rotFudge = 5f;      // degrees moved per rotation
     private float m_moveFudge = 0.4f;      // meters moved per movement
     private float m_flyFudge = 2.5f;      // meters moved per movement
     private float m_runFudge = 0.8f;      // meters moved per movement
@@ -99,6 +99,7 @@ public class LLAgent : IAgent {
                 m_log.Log(LogLevel.DWORLDDETAIL|LogLevel.DUPDATEDETAIL, "MoveForward: premove from {0} to {1}", 
                         m_myAvatar.RelativePosition.ToString(), newPos);
                 this.RelativePosition = newPos;
+                m_client.Self.RelativePosition = newPos;
                 m_myAvatar.RelativePosition = newPos;
                 m_myAvatar.Update(UpdateCodes.Position);
             }
@@ -117,6 +118,7 @@ public class LLAgent : IAgent {
                         m_myAvatar.RelativePosition.ToString(), newPos);
                 this.RelativePosition = newPos;
                 m_myAvatar.RelativePosition = newPos;
+                m_client.Self.RelativePosition = newPos;
                 m_myAvatar.Update(UpdateCodes.Position);
             }
         }
@@ -129,6 +131,7 @@ public class LLAgent : IAgent {
             if (m_myAvatar != null) {
                 this.RelativePosition = m_myAvatar.RelativePosition + new OMV.Vector3(0f, 0f, CalcMoveFudge());
                 m_myAvatar.RelativePosition = this.RelativePosition;
+                m_client.Self.RelativePosition = this.RelativePosition;
                 m_myAvatar.Update(UpdateCodes.Position);
             }
         }
@@ -141,6 +144,7 @@ public class LLAgent : IAgent {
             if (m_myAvatar != null) {
                 this.RelativePosition = m_myAvatar.RelativePosition + new OMV.Vector3(0f, 0f, -CalcMoveFudge());
                 m_myAvatar.RelativePosition = this.RelativePosition;
+                m_client.Self.RelativePosition = this.RelativePosition;
                 m_myAvatar.Update(UpdateCodes.Position);
             }
         }
@@ -157,10 +161,11 @@ public class LLAgent : IAgent {
     public void TurnLeft(bool startstop) {
         m_client.Self.Movement.TurnLeft = startstop;
         if (startstop) {
-            OMV.Quaternion Zturn = OMV.Quaternion.CreateFromAxisAngle(OMV.Vector3.UnitZ, Constants.PI / (180/m_rotFudge));
+            OMV.Quaternion Zturn = OMV.Quaternion.CreateFromAxisAngle(OMV.Vector3.UnitZ, Constants.PI / 180 * m_rotFudge);
             Zturn.Normalize();
-            m_client.Self.Movement.BodyRotation *= Zturn;
-            m_client.Self.Movement.HeadRotation *= Zturn;
+            m_client.Self.Movement.BodyRotation = OMV.Quaternion.Normalize(m_client.Self.Movement.BodyRotation* Zturn);
+            m_client.Self.Movement.HeadRotation = OMV.Quaternion.Normalize(m_client.Self.Movement.HeadRotation* Zturn);
+            //m_client.Self.RelativeRotation += Zturn;
         }
         m_client.Self.Movement.SendUpdate();
         if (startstop && m_shouldPreMoveAvatar) {
@@ -177,10 +182,11 @@ public class LLAgent : IAgent {
     public void TurnRight(bool startstop) {
         m_client.Self.Movement.TurnRight = startstop;
         if (startstop) {
-            OMV.Quaternion Zturn = OMV.Quaternion.CreateFromAxisAngle(OMV.Vector3.UnitZ, -Constants.PI / 18);
+            OMV.Quaternion Zturn = OMV.Quaternion.CreateFromAxisAngle(OMV.Vector3.UnitZ, -Constants.PI / 180 * m_rotFudge);
             Zturn.Normalize();
-            m_client.Self.Movement.BodyRotation *= Zturn;
-            m_client.Self.Movement.HeadRotation *= Zturn;
+            m_client.Self.Movement.BodyRotation = OMV.Quaternion.Normalize(m_client.Self.Movement.BodyRotation* Zturn);
+            m_client.Self.Movement.HeadRotation = OMV.Quaternion.Normalize(m_client.Self.Movement.HeadRotation* Zturn);
+            // m_client.Self.RelativeRotation += Zturn;
         }
         // Send the movement (the turn) to the simulator. The rotation above will be corrected by the simulator
         m_client.Self.Movement.SendUpdate();

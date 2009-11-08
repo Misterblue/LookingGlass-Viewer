@@ -595,7 +595,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                         }
                     }
 
-                    // Experiemental: force the creation of the mesh
+                    // create the mesh we know we need
                     string entMeshName = (string)m_ri.basicObject;
                     if (m_shouldForceMeshRebuild) {
                         RequestMesh(m_ent.Name.Name, entMeshName);
@@ -680,6 +680,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     /// <param name="ent"></param>
     /// <param name="what"></param>
     public void RenderUpdate(IEntity ent, UpdateCodes what) {
+        int priority = CalculateInterestOrder(ent);
         if ((what & UpdateCodes.Material) != 0) {
             // the materials have changed on this entity. Cause materials to be recalcuated
             m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: Material changed");
@@ -688,7 +689,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             // world position has changed. Tell Ogre they have changed
             string entitySceneNodeName = EntityNameOgre.ConvertToOgreSceneNodeName(ent.Name);
             m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: Updating position/rotation for {0}", entitySceneNodeName);
-            Ogr.UpdateSceneNodeBF(CalculateInterestOrder(ent), entitySceneNodeName,
+            Ogr.UpdateSceneNodeBF(priority, entitySceneNodeName,
                 ((what & UpdateCodes.Position) != 0),
                 ent.RelativePosition.X, ent.RelativePosition.Y, ent.RelativePosition.Z,
                 false, 1f, 1f, 1f,  // don't pass scale yet
@@ -708,7 +709,9 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         if ((what & UpdateCodes.Textures) != 0) {
             // texure on the prim were updated. Refresh them.
             m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: textures changed");
-            DoRenderQueued(ent);
+            // to get the textures to refresh, we must force the situation
+            RendererOgre.GetWorldRenderConv(ent).RebuildEntityMaterials(priority, ent);
+            Ogr.RefreshResourceBF(priority, Ogr.ResourceTypeMesh, EntityNameOgre.ConvertToOgreMeshName(ent.Name).Name);
         }
         if ((what & UpdateCodes.Text) != 0) {
             // text associated with the prim changed
@@ -979,7 +982,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                 }
                 else {
                     // Create the material resource and then make the rendering redisplay
-                    RendererOgre.GetWorldRenderConv(ent).CreateMaterialResource(qInstance.priority, m_sceneMgr, ent, m_matName);
+                    RendererOgre.GetWorldRenderConv(ent).CreateMaterialResource(qInstance.priority, ent, m_matName);
                     Ogr.RefreshResourceBF(this.CalculateInterestOrder(ent), Ogr.ResourceTypeMaterial, m_matName);
                 }
             }

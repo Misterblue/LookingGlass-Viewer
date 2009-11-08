@@ -369,8 +369,7 @@ public class RendererOgreLL : IWorldRenderConv {
         return false;
     }
 
-    public void CreateMaterialResource(int priority, Object sMgr, IEntity ent, string materialName) {
-        OgreSceneMgr m_sceneMgr = (OgreSceneMgr)sMgr;
+    public void CreateMaterialResource(int priority, IEntity ent, string materialName) {
         LLEntityPhysical llent;
         OMV.Primitive prim;
 
@@ -473,6 +472,23 @@ public class RendererOgreLL : IWorldRenderConv {
         texName = textureOgreResourceName;
     }
 
+    public void RebuildEntityMaterials(int priority, IEntity ent) {
+        LLEntityBase llent;
+        LLRegionContext rcontext;
+        OMV.Primitive prim;
+
+        try {
+            llent = (LLEntityBase)ent;
+            rcontext = (LLRegionContext)llent.RegionContext;
+            prim = llent.Prim;
+            if (prim == null) throw new LookingGlassException("ASSERT: RenderOgreLL: prim is null");
+        }
+        catch (Exception e) {
+            m_log.Log(LogLevel.DRENDERDETAIL, "RenderingInfoLL: conversion of pointers failed: " + e.ToString());
+            throw e;
+        }
+        CreateMaterialResource6(priority, llent, prim);
+    }
 
     /// <summary>
     /// Create the primary six materials for the prim

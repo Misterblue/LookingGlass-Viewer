@@ -67,7 +67,15 @@ public interface IWorldRenderConv {
     /// be created from the passed, world specific entity information.
     /// </summary>
     /// <param name="ent"></param>
-    void CreateMaterialResource(int priority, Object sceneMgr, IEntity ent, string materialName);
+    void CreateMaterialResource(int priority, IEntity ent, string materialName);
+
+    /// <summary>
+    /// Given an entity, recreate all the materials for this entity. Used when object
+    /// initially created and when materials change
+    /// </summary>
+    /// <param name="priority"></param>
+    /// <param name="ent"></param>
+    void RebuildEntityMaterials(int priority, IEntity ent);
 
     /// <summary>
     /// Given a new region context and a scene, convert the world specific region
