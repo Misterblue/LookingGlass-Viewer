@@ -102,7 +102,9 @@ namespace OLMeshTracker {
 	void OLMeshTracker::MakeUnLoaded(Ogre::String meshName) {
 	}
 	Ogre::String OLMeshTracker::GetMeshContext(Ogre::String meshName) {
+		return Ogre::String();
 	}
 	Ogre::String OLMeshTracker::GetSimilarMesh(Ogre::String fingerprint) {
+		return Ogre::String();
 	}
 }

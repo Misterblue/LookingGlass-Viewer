@@ -38,6 +38,8 @@ public:
 	void Stop();
 
 	void RecalculateVisibility();
+	// called to do low level visibility calc
+	virtual bool CalculateVisibilityImpl(Ogre::Camera*, Ogre::Entity*, float);
 
 	// Ogre::FrameListener
 	// bool frameStarted(const Ogre::FrameEvent &e);

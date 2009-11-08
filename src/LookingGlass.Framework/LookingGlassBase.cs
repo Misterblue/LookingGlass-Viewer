@@ -150,6 +150,10 @@ public class LookingGlassBase : IInstance<LookingGlassBase> {
         }
     }
 
+    /// <summary>
+    /// Hang around here waiting for the application to stop then make
+    /// sure everything is stopped and shutdown.
+    /// </summary>
     private void CheckKeepRunning() {
         while (this.KeepRunning) {
             Thread.Sleep(1 * 1000);

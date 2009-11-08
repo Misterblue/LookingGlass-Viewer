@@ -29,7 +29,11 @@ using LookingGlass.Framework.Parameters;
 namespace LookingGlass.Framework.Modules {
 
 /// <summary>
-/// There are lots of plugs and this is the wrapper for them all.
+/// Classes that are modules used to be inheritied from this class but since C#
+/// does not allow multiple inheritance, this is the wrong thing to use the one 
+/// inheritance for.
+/// When you create a module, cut the code out of this and adapt it to the module
+/// and say the module implements IModule.
 /// </summary>
 public class ModuleBase : IModule {
 
@@ -46,25 +50,30 @@ public class ModuleBase : IModule {
         m_moduleName = System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name;
     }
 
+    // IModule.OnLoad
     public virtual void OnLoad(string modName, LookingGlassBase lgbase) {
         LogManager.Log.Log(LogLevel.DINIT, "ModuleBase.OnLoad()");
         m_moduleName = modName;
         m_lgb = lgbase;
     }
 
+    // IModule.AfterAllModulesLoaded
     public virtual bool AfterAllModulesLoaded() {
         LogManager.Log.Log(LogLevel.DINIT, "ModuleBase.AfterAllModulesLoaded()");
         return true;
     }
 
+    // IModule.Start
     public virtual void Start() {
         return;
     }
 
+    // IModule.Stop
     public virtual void Stop() {
         return;
     }
 
+    // IModule.PrepareForUnload
     public virtual bool PrepareForUnload() {
         return false;
     }

@@ -143,12 +143,6 @@ public class EntityName : IComparable {
         return ret;
     }
 
-    // we really don't do headers yet
-    // Can be overridden for context specific changes
-    public virtual string ExtractHeaderPartFromEntityName() {
-        return "";
-    }
-
     // the default way to build a cache filename.
     // Can be overridden for context specific changes
     public virtual string CacheFilename {
@@ -157,10 +151,17 @@ public class EntityName : IComparable {
         }
     }
 
+    // we really don't do headers yet
+    // Can be overridden for context specific changes
+    public virtual string ExtractHeaderPartFromEntityName() {
+        return "";
+    }
+
     // default way to get the host part out of an entity name
     // The default format is HOSTPART + "/" + ENTITYPART
     // Can be overridden for context specific changes
     public virtual string ExtractHostPartFromEntityName() {
+        int pos1 = this.Name.IndexOf(HeaderSeparator);
         int pos = this.Name.IndexOf(PartSeparator);
         if (pos > 0) {
             return this.Name.Substring(0, pos);
@@ -169,6 +170,7 @@ public class EntityName : IComparable {
     }
 
     // Can be overridden for context specific changes
+    // we assume it's whatever's after the first slash
     public virtual string ExtractEntityFromEntityName() {
         int pos = this.Name.IndexOf(PartSeparator);
         if (pos >= 0) {

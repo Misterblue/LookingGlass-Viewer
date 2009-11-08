@@ -142,6 +142,15 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     protected GridLists m_gridLists = null;
 
     protected IAgent m_myAgent = null;
+    protected IAgent MainAgent {
+        get {
+            if (m_myAgent == null) {
+                m_myAgent = new LLAgent(m_client);
+            }
+            return m_myAgent;
+        }
+        set { m_myAgent = value; }
+    }
 
     public CommLLLP() {
         InitVariables();
@@ -445,14 +454,6 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
             LookingGlassBase.ApplicationName, 
             LookingGlassBase.ApplicationVersion);
 
-        // create the agent structure that will hold  the logged in client
-        if (m_myAgent != null) {
-            m_log.Log(LogLevel.DWORLD, "Comm_OnLoggedIn: Removing agent that is already here");
-            // there shouldn't be on already there... odd but remove it
-            World.World.Instance.RemoveAgent();
-            m_myAgent = null;
-        }
-        m_myAgent = new LLAgent(m_client);
 
         // Select sim in the grid
         // the format that we must pass is "uri:sim&x&y&z" or the strings "home" or "last"
@@ -728,8 +729,8 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         // special update for the agent so it knows there is new info from the network
         // The real logic to push the update through happens in the IEntityAvatar.Update()
         if (updatedEntity != null) {
-            if (m_myAgent != null && updatedEntity == m_myAgent.AssociatedAvatar) {
-                m_myAgent.DataUpdate(updateFlags);
+            if (updatedEntity == this.MainAgent.AssociatedAvatar) {
+                this.MainAgent.DataUpdate(updateFlags);
             }
             updatedEntity.Update(updateFlags);
         }
@@ -796,10 +797,10 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
             }
         }
         if (updatedEntity != null) {
-            if (m_myAgent != null && updatedEntity == m_myAgent.AssociatedAvatar) {
+            if (updatedEntity == this.MainAgent.AssociatedAvatar) {
                 // special update for the agent so it knows there is new info from the network
                 // The real logic to push the update through happens in the IEntityAvatar.Update()
-                m_myAgent.DataUpdate(updateFlags);
+                this.MainAgent.DataUpdate(updateFlags);
             }
             updatedEntity.Update(updateFlags);
         }
@@ -849,13 +850,13 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
                 // If this av is with the agent, make the connection
                 if (args.Avatar.LocalID == m_client.Self.LocalID) {
                     m_log.Log(LogLevel.DUPDATEDETAIL, "AvatarUpdate: associating agent with new avatar");
-                    m_myAgent.AssociatedAvatar = (IEntityAvatar)updatedEntity;
+                    this.MainAgent.AssociatedAvatar = (IEntityAvatar)updatedEntity;
                 }
             }
         }
         if (args.Avatar.LocalID == m_client.Self.LocalID) {
             // an extra special update for the agent so it knows things have changed
-            m_myAgent.DataUpdate(updateFlags);
+            this.MainAgent.DataUpdate(updateFlags);
         }
 
         // tell the entity it changed. Since this is an avatar entity it will update the agent if necessary.
@@ -891,11 +892,11 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     /// </summary>
     public virtual void Comm_OnLoggedIn() {
         m_log.Log(LogLevel.DWORLD, "Comm_OnLoggedIn:");
-        World.World.Instance.AddAgent(m_myAgent);
+        World.World.Instance.AddAgent(this.MainAgent);
         // I work by taking LLLP messages and updating the agent
         // The agent will be updated in the world (usually by the viewer)
         // Create the two way communication linkage
-        m_myAgent.OnAgentUpdated += new AgentUpdatedCallback(Comm_OnAgentUpdated);
+        this.MainAgent.OnAgentUpdated += new AgentUpdatedCallback(Comm_OnAgentUpdated);
     }
 
     // ===============================================================

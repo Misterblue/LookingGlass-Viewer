@@ -48,6 +48,8 @@ public class RendererOgreLL : IWorldRenderConv {
     private bool m_useRendererMeshScaling;
     private bool m_useRendererTextureScaling;
 
+    private string m_defaultAvatarMesh;
+
     static RendererOgreLL m_instance = null;
     public static RendererOgreLL Instance {
         get {
@@ -82,6 +84,7 @@ public class RendererOgreLL : IWorldRenderConv {
         // true if to creat materials while we are creating the mesh
         m_buildMaterialsAtMeshCreationTime = LookingGlassBase.Instance.AppParams.ParamBool("Renderer.Ogre.LL.EarlyMaterialCreate");
         m_buildMaterialsAtRenderInfoTime = LookingGlassBase.Instance.AppParams.ParamBool("Renderer.Ogre.LL.RenderInfoMaterialCreate");
+        m_defaultAvatarMesh = LookingGlassBase.Instance.AppParams.ParamString("Renderer.Ogre.LL.DefaultAvatarMesh");
     }
 
     /// <summary>
@@ -106,7 +109,6 @@ public class RendererOgreLL : IWorldRenderConv {
         LLEntityBase llent;
         LLRegionContext rcontext;
         OMV.Primitive prim;
-        string newMeshName = EntityNameOgre.ConvertToOgreNameX(ent.Name, ".mesh");
         // true if we should do the scaling with the rendering parameters
         bool shouldHaveRendererScale = m_useRendererMeshScaling;
 
@@ -114,7 +116,6 @@ public class RendererOgreLL : IWorldRenderConv {
             llent = (LLEntityBase)ent;
             rcontext = (LLRegionContext)llent.RegionContext;
             prim = llent.Prim;
-            if (prim == null) throw new LookingGlassException("ASSERT: RenderOgreLL: prim is null");
         }
         catch (Exception e) {
             m_log.Log(LogLevel.DRENDERDETAIL, "RenderingInfoLL: conversion of pointers failed: " + e.ToString());
@@ -122,46 +123,62 @@ public class RendererOgreLL : IWorldRenderConv {
         }
 
         RenderableInfo ri = new RenderableInfo();
-        ri.basicObject = newMeshName;   // pass the name of the mesh that should be created
-        
-        // if a standard type (done by Ogre), let the rendering system do the scaling
-        int meshType = 0;
-        int meshFaces = 0;
-        if (CheckStandardMeshType(prim, out meshType, out meshFaces)) {
-            // if a standard mesh type, use Ogre scaling so we can reuse base shapes
-            shouldHaveRendererScale = true;
-        }
-
-        // if the prim has a parent, we must hang this scene node off the parent's scene node
-        if (prim.ParentID != 0) {
-            if (!rcontext.TryGetEntityLocalID(prim.ParentID, out ri.parentEntity)) {
-                // we can't find the parent. Can't build render info.
-                // if we've been waiting for that parent, ask for same
-                if ((callCount != 0) && ((callCount % 3) == 0)) {
-                    rcontext.RequestLocalID(prim.ParentID);
-                }
-                return null;
-            }
-        }
-        
-        ri.rotation = prim.Rotation;
-        ri.position = prim.Position;
-
-        // If the mesh was scaled just pass the renderer a scale of one
-        // otherwise, if the mesh was not scaled, have the renderer do the scaling
-        // This specifies what we want the renderer to do
-        if (shouldHaveRendererScale) {
-            ri.scale = prim.Scale * m_sceneMagnification;
-        }
-        else {
+        // figure out what this entity is:
+        LLEntityAvatar av = null;
+        if (llent.TryGet<LLEntityAvatar>(out av)) {
+            // this is an avatar
+            ri.basicObject = new EntityNameLL(m_defaultAvatarMesh);
+            ri.rotation = av.Heading;
+            ri.position = av.RelativePosition;
             ri.scale = new OMV.Vector3(m_sceneMagnification, m_sceneMagnification, m_sceneMagnification);
         }
+        // else if (llent.TryGet<LLEntityAttachment>(out atch) {
+        // }
+        else {
+            // must be a regular prim
+            if (prim == null) throw new LookingGlassException("ASSERT: RenderOgreLL: prim is null");
 
-        // while we're in the neighborhood, we can create the materials
-        if (m_buildMaterialsAtRenderInfoTime) {
-            CreateMaterialResource6(priority, ent, prim);
+            EntityName newMeshName = EntityNameOgre.ConvertToOgreMeshName(ent.Name);
+            ri.basicObject = newMeshName;   // pass the name of the mesh that should be created
+
+            // if a standard type (done by Ogre), let the rendering system do the scaling
+            int meshType = 0;
+            int meshFaces = 0;
+            if (CheckStandardMeshType(prim, out meshType, out meshFaces)) {
+                // if a standard mesh type, use Ogre scaling so we can reuse base shapes
+                shouldHaveRendererScale = true;
+            }
+
+            // if the prim has a parent, we must hang this scene node off the parent's scene node
+            if (prim.ParentID != 0) {
+                if (!rcontext.TryGetEntityLocalID(prim.ParentID, out ri.parentEntity)) {
+                    // we can't find the parent. Can't build render info.
+                    // if we've been waiting for that parent, ask for same
+                    if ((callCount != 0) && ((callCount % 3) == 0)) {
+                        rcontext.RequestLocalID(prim.ParentID);
+                    }
+                    return null;
+                }
+            }
+            
+            ri.rotation = prim.Rotation;
+            ri.position = prim.Position;
+
+            // If the mesh was scaled just pass the renderer a scale of one
+            // otherwise, if the mesh was not scaled, have the renderer do the scaling
+            // This specifies what we want the renderer to do
+            if (shouldHaveRendererScale) {
+                ri.scale = prim.Scale * m_sceneMagnification;
+            }
+            else {
+                ri.scale = new OMV.Vector3(m_sceneMagnification, m_sceneMagnification, m_sceneMagnification);
+            }
+
+            // while we're in the neighborhood, we can create the materials
+            if (m_buildMaterialsAtRenderInfoTime) {
+                CreateMaterialResource6(priority, ent, prim);
+            }
         }
-
         return ri;
     }
 
@@ -376,19 +393,31 @@ public class RendererOgreLL : IWorldRenderConv {
         try {
             llent = (LLEntityPhysical)ent;
             prim = llent.Prim;
-            if (prim == null) throw new LookingGlassException("ASSERT: RenderOgreLL: prim is null");
         }
         catch (Exception e) {
             m_log.Log(LogLevel.DRENDERDETAIL, "CreateMaterialResource: conversion of pointers failed: " + e.ToString());
             throw e;
         }
-        int faceNum = EntityNameOgre.GetFaceFromOgreMaterialNameX(materialName);
-        if (faceNum < 0) {
-            // no face was found in the material name
-            m_log.Log(LogLevel.DRENDERDETAIL, "CreateMaterialResource: no face number for " + materialName);
-            return;
+
+        // figure out what this entity is:
+        LLEntityAvatar av = null;
+        if (llent.TryGet<LLEntityAvatar>(out av)) {
+            // this is an avatar
+            // materials are done all differently
         }
-        CreateMaterialResource2(priority, ent, prim, materialName, faceNum);
+        // else if (llent.TryGet<LLEntityAttachment>(out atch) {
+        // }
+        else {
+            if (prim == null) throw new LookingGlassException("ASSERT: RenderOgreLL: prim is null");
+
+            int faceNum = EntityNameOgre.GetFaceFromOgreMaterialNameX(materialName);
+            if (faceNum < 0) {
+                // no face was found in the material name
+                m_log.Log(LogLevel.DRENDERDETAIL, "CreateMaterialResource: no face number for " + materialName);
+                return;
+            }
+            CreateMaterialResource2(priority, ent, prim, materialName, faceNum);
+        }
     }
 
     /// <summary>
@@ -481,13 +510,21 @@ public class RendererOgreLL : IWorldRenderConv {
             llent = (LLEntityBase)ent;
             rcontext = (LLRegionContext)llent.RegionContext;
             prim = llent.Prim;
-            if (prim == null) throw new LookingGlassException("ASSERT: RenderOgreLL: prim is null");
         }
         catch (Exception e) {
             m_log.Log(LogLevel.DRENDERDETAIL, "RenderingInfoLL: conversion of pointers failed: " + e.ToString());
             throw e;
         }
-        CreateMaterialResource6(priority, llent, prim);
+
+        LLEntityAvatar av = null;
+        if (llent.TryGet<LLEntityAvatar>(out av)) {
+            // this is an avatar and the material mapping is really different
+        }
+        else {
+            // a standard prim, for the rebulding of it's materials
+            if (prim == null) throw new LookingGlassException("ASSERT: RenderOgreLL: prim is null");
+            CreateMaterialResource6(priority, llent, prim);
+        }
     }
 
     /// <summary>

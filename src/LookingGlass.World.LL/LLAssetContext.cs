@@ -374,19 +374,25 @@ public sealed class LLAssetContext : AssetContextBase {
                                 m_log.Log(LogLevel.DBADERROR, "Failed to export and load TGA data from decoded image: {0}", 
                                     e.ToString());
                             }
-                            using (Bitmap textureBitmap = new Bitmap(tempImage.Width, tempImage.Height,
-                                        System.Drawing.Imaging.PixelFormat.Format32bppArgb)) {
-                                using (Graphics graphics = Graphics.FromImage(textureBitmap)) {
-                                    graphics.DrawImage(tempImage, 0, 0);
-                                    graphics.Flush();
-                                }
-                                lock (LLAssetContext.FileSystemAccessLock) {
-                                    using (FileStream fileStream = File.Open(wii.filename, FileMode.Create)) {
-                                        textureBitmap.Save(fileStream, System.Drawing.Imaging.ImageFormat.Png);
-                                        fileStream.Flush();
-                                        fileStream.Close();
+                            try {
+                                using (Bitmap textureBitmap = new Bitmap(tempImage.Width, tempImage.Height,
+                                            System.Drawing.Imaging.PixelFormat.Format32bppArgb)) {
+                                    using (Graphics graphics = Graphics.FromImage(textureBitmap)) {
+                                        graphics.DrawImage(tempImage, 0, 0);
+                                        graphics.Flush();
+                                    }
+                                    lock (LLAssetContext.FileSystemAccessLock) {
+                                        using (FileStream fileStream = File.Open(wii.filename, FileMode.Create)) {
+                                            textureBitmap.Save(fileStream, System.Drawing.Imaging.ImageFormat.Png);
+                                            fileStream.Flush();
+                                            fileStream.Close();
+                                        }
                                     }
                                 }
+                            }
+                            catch (Exception e) {
+                                m_log.Log(LogLevel.DBADERROR, "TEXTURE DOWNLOAD COMPLETE. FAILED PNG FILE CREATION FOR {0}: {1}", 
+                                        textureEntityName.Name, e.ToString());
                             }
                         }
                         else {
@@ -395,12 +401,18 @@ public sealed class LLAssetContext : AssetContextBase {
                     }
                     else {
                         // Just save the JPEG2000 file
-                        lock (LLAssetContext.FileSystemAccessLock) {
-                            using (FileStream fileStream = File.Open(wii.filename, FileMode.Create)) {
-                                fileStream.Flush();
-                                fileStream.Write(m_assetTexture.AssetData, 0, m_assetTexture.AssetData.Length);
-                                fileStream.Close();
+                        try {
+                            lock (LLAssetContext.FileSystemAccessLock) {
+                                using (FileStream fileStream = File.Open(wii.filename, FileMode.Create)) {
+                                    fileStream.Flush();
+                                    fileStream.Write(m_assetTexture.AssetData, 0, m_assetTexture.AssetData.Length);
+                                    fileStream.Close();
+                                }
                             }
+                        }
+                        catch (Exception e) {
+                            m_log.Log(LogLevel.DBADERROR, "TEXTURE DOWNLOAD COMPLETE. ERROR JPEG2000 FILE CREATION FOR {0}: {1}", 
+                                        textureEntityName.Name, e.ToString());
                         }
                     }
                     m_log.Log(LogLevel.DTEXTUREDETAIL, "Download finished callback: " + wii.worldID.ToString());
@@ -409,7 +421,7 @@ public sealed class LLAssetContext : AssetContextBase {
                     m_completionWork.DoLater(FinishCallDoLater, finishCallParams);
                 }
                 catch (Exception e) {
-                    m_log.Log(LogLevel.DBADERROR, "TEXTURE DOWNLOAD COMPLETE. FAILED FILE CREATION FOR {0}: {1}", 
+                    m_log.Log(LogLevel.DBADERROR, "TEXTURE DOWNLOAD COMPLETE. UNKNOWN FAILURE CREATING FILE FOR {0}: {1}", 
                         textureEntityName.Name, e.ToString());
                 }
             }
@@ -438,16 +450,23 @@ public sealed class LLAssetContext : AssetContextBase {
                                 graphics.Flush();
                             }
 
-                            lock (LLAssetContext.FileSystemAccessLock) {
-                                string tempFilename = wii.filename + ".tmp";
-                                using (FileStream fileStream = File.Open(tempFilename, FileMode.Create)) {
-                                    textureBitmap.Save(fileStream, System.Drawing.Imaging.ImageFormat.Png);
-                                    fileStream.Flush();
-                                    fileStream.Close();
-                                    // attempt to make the creation of the file almost atomic
-                                    FileInfo fi = new FileInfo(tempFilename);
-                                    fi.MoveTo(wii.filename);
+                            try {
+                                lock (LLAssetContext.FileSystemAccessLock) {
+                                    string tempFilename = wii.filename + ".tmp";
+                                    using (FileStream fileStream = File.Open(tempFilename, FileMode.Create)) {
+                                        textureBitmap.Save(fileStream, System.Drawing.Imaging.ImageFormat.Png);
+                                        fileStream.Flush();
+                                        fileStream.Close();
+                                        // attempt to make the creation of the file almost atomic
+                                        FileInfo fi = new FileInfo(tempFilename);
+                                        fi.MoveTo(wii.filename);
+                                    }
                                 }
+                            }
+                            catch (Exception e) {
+                                m_log.Log(LogLevel.DBADERROR, "SCULPTIE TEXTURE DOWNLOAD COMPLETE. FAILED FILE CREATION FOR {0}: {1}", 
+                                        textureEntityName.Name, e.ToString());
+                                // the usual error is 'file already exists' so let the system use it
                             }
                         }
                         m_log.Log(LogLevel.DTEXTUREDETAIL, "Download sculpty finished callback: " + wii.worldID.ToString());
@@ -459,7 +478,7 @@ public sealed class LLAssetContext : AssetContextBase {
                     }
                 }
                 catch (Exception e) {
-                    m_log.Log(LogLevel.DBADERROR, "SCULPTIE TEXTURE DOWNLOAD COMPLETE. FAILED FILE CREATION FOR {0}: {1}", 
+                    m_log.Log(LogLevel.DBADERROR, "SCULPTIE TEXTURE DOWNLOAD COMPLETE. UNKNOWN ERROR PROCESSING {0}: {1}", 
                         textureEntityName.Name, e.ToString());
                 }
             }

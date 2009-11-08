@@ -27,12 +27,13 @@ using System.Threading;
 using System.Windows.Forms;
 using LookingGlass.Framework.Logging;
 using LookingGlass.Framework.Modules;
+using LookingGlass.Framework.Parameters;
 using LookingGlass.Framework.WorkQueue;
 using LookingGlass.Renderer;
 using LookingGlass.World;
 
 namespace LookingGlass.Renderer.Ogr {
-public class UserInterfaceOgre : ModuleBase, IUserInterfaceProvider {
+public class UserInterfaceOgre : IModule, IUserInterfaceProvider {
     private ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
 
 # pragma warning disable 0067   // disable unused event warning
@@ -47,10 +48,19 @@ public class UserInterfaceOgre : ModuleBase, IUserInterfaceProvider {
 
     IUserInterfaceProvider m_ui;
 
-    #region ModuleBase
+    #region IModule
+    protected string m_moduleName;
+    public string ModuleName { get { return m_moduleName; } set { m_moduleName = value; } }
+
+    protected LookingGlassBase m_lgb = null;
+    public LookingGlassBase LGB { get { return m_lgb; } }
+
+    public IAppParameters ModuleParams { get { return m_lgb.AppParams; } }
+
     // IModule.OnLoad
-    public override void OnLoad(string name, LookingGlassBase lgbase) {
-        base.OnLoad(name, lgbase);
+    public void OnLoad(string name, LookingGlassBase lgbase) {
+        m_moduleName = name;
+        m_lgb = lgbase;
         m_ui = new UserInterfaceCommon();
         m_ui.OnUserInterfaceKeypress += UI_OnUserInterfaceKeypress;
         m_ui.OnUserInterfaceMouseMove += UI_OnUserInterfaceMouseMove;
@@ -72,15 +82,25 @@ public class UserInterfaceOgre : ModuleBase, IUserInterfaceProvider {
     }
 
     // IModule.AfterAllModulesLoaded
-    public override bool AfterAllModulesLoaded() {
+    public virtual bool AfterAllModulesLoaded() {
+        LogManager.Log.Log(LogLevel.DINIT, "ModuleBase.AfterAllModulesLoaded()");
         return true;
     }
 
     // IModule.Start
-    public override void Start() { }
+    public virtual void Start() {
+        return;
+    }
 
     // IModule.Stop
-    public override void Stop() { }
+    public virtual void Stop() {
+        return;
+    }
+
+    // IModule.PrepareForUnload
+    public virtual bool PrepareForUnload() {
+        return false;
+    }
     #endregion IModule
 
     #region IUserInterfaceProvider

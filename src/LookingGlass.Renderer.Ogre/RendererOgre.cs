@@ -185,6 +185,9 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "Create materials while gathering mesh generation info (earlier than mesh creation)");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.LL.EarlyMaterialCreate", "false",
                     "Create materials while creating mesh rather than waiting");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.LL.DefaultAvatarMesh", 
+                    "Preload/00000000-0000-2222-3333-112200000001.mesh",
+                    "Entity name of mesh to use for avatars");
 
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.BetweenFrame.WorkItems", "1000",
                     "Cost of queued C++ work items to do between each frame");
@@ -596,9 +599,9 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     }
 
                     // create the mesh we know we need
-                    string entMeshName = (string)m_ri.basicObject;
+                    EntityName entMeshName = (EntityName)m_ri.basicObject;
                     if (m_shouldForceMeshRebuild) {
-                        RequestMesh(m_ent.Name.Name, entMeshName);
+                        RequestMesh(m_ent.Name.Name, entMeshName.Name);
                     }
 
                     // Find a handle to the parent for this node
@@ -617,11 +620,11 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     // This will cause the load function to be called and create all
                     //   the callbacks that will actually create the object
                     m_log.Log(LogLevel.DRENDERDETAIL, "DoRenderLater: mesh={0}, prio={1}", 
-                                    entMeshName, qInstance.priority);
+                                    entMeshName.Name, qInstance.priority);
                     if (!m_sceneMgr.CreateMeshSceneNodeBF(qInstance.priority,
                                     entitySceneNodeName,
                                     parentSceneNodeName,
-                                    entMeshName,
+                                    entMeshName.Name,
                                     false, true,
                                     m_ri.position.X, m_ri.position.Y, m_ri.position.Z,
                                     m_ri.scale.X, m_ri.scale.Y, m_ri.scale.Z,
@@ -710,8 +713,10 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             // texure on the prim were updated. Refresh them.
             m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: textures changed");
             // to get the textures to refresh, we must force the situation
-            RendererOgre.GetWorldRenderConv(ent).RebuildEntityMaterials(priority, ent);
-            Ogr.RefreshResourceBF(priority, Ogr.ResourceTypeMesh, EntityNameOgre.ConvertToOgreMeshName(ent.Name).Name);
+            if (RendererOgre.GetWorldRenderConv(ent) != null) {
+                RendererOgre.GetWorldRenderConv(ent).RebuildEntityMaterials(priority, ent);
+                Ogr.RefreshResourceBF(priority, Ogr.ResourceTypeMesh, EntityNameOgre.ConvertToOgreMeshName(ent.Name).Name);
+            }
         }
         if ((what & UpdateCodes.Text) != 0) {
             // text associated with the prim changed

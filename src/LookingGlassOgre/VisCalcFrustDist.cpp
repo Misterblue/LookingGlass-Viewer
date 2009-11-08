@@ -137,7 +137,6 @@ void VisCalcFrustDist::calculateEntityVisibility(Ogre::Node* node) {
 	// children taken care of... check fo attached objects to this node
 	Ogre::SceneNode* snode = (Ogre::SceneNode*)node;
 	float snodeDistance = m_ro->m_camera->getPosition().distance(snode->_getWorldAABB().getCenter());
-	float snodeEntitySize;
 	Ogre::SceneNode::ObjectIterator snodeObjectIterator = snode->getAttachedObjectIterator();
 	while (snodeObjectIterator.hasMoreElements()) {
 		Ogre::MovableObject* snodeObject = snodeObjectIterator.getNext();
@@ -146,14 +145,8 @@ void VisCalcFrustDist::calculateEntityVisibility(Ogre::Node* node) {
 			Ogre::Entity* snodeEntity = (Ogre::Entity*)snodeObject;
 			// check it's visibility if it's not world geometry (terrain and ocean)
 			if ((snodeEntity->getQueryFlags() & Ogre::SceneManager::WORLD_GEOMETRY_TYPE_MASK) == 0) {
-				snodeEntitySize = snodeEntity->getBoundingRadius() * 2;
 				// computation if it should be visible
-				bool frust = m_shouldCullByFrustrum && m_ro->m_camera->isVisible(snodeEntity->getWorldBoundingBox());
-				bool dist = m_shouldCullByDistance && calculateScaleVisibility(snodeDistance, snodeEntitySize);
-				bool viz = (!m_shouldCullByFrustrum && !m_shouldCullByDistance)	// don't cull
-					|| (!m_shouldCullByDistance && frust)	// if frust cull only, it must be true
-					|| (!m_shouldCullByFrustrum && dist)	// if dist cull only, it must be true
-					|| (dist && frust);						// if cull both ways, both must be true
+				bool viz = CalculateVisibilityImpl(m_ro->m_camera, snodeEntity, snodeDistance);
 				if (snodeEntity->isVisible()) {
 					// we currently think this object is visible. make sure it should stay that way
 					if (viz) {
@@ -187,6 +180,18 @@ void VisCalcFrustDist::calculateEntityVisibility(Ogre::Node* node) {
 			}
 		}
 	}
+}
+
+// overloadable function that asks if, given this camera and entity, is the entity visible
+bool VisCalcFrustDist::CalculateVisibilityImpl(Ogre::Camera* cam, Ogre::Entity* ent, float entDistance) {
+	float snodeEntitySize = ent->getBoundingRadius() * 2;
+	bool frust = m_shouldCullByFrustrum && cam->isVisible(ent->getWorldBoundingBox());
+	bool dist = m_shouldCullByDistance && calculateScaleVisibility(entDistance, snodeEntitySize);
+	bool viz = (!m_shouldCullByFrustrum && !m_shouldCullByDistance)	// don't cull
+		|| (!m_shouldCullByDistance && frust)	// if frust cull only, it must be true
+		|| (!m_shouldCullByFrustrum && dist)	// if dist cull only, it must be true
+		|| (dist && frust);						// if cull both ways, both must be true
+	return viz;
 }
 
 // BETWEEN FRAME OPERATION

@@ -91,6 +91,7 @@ ProcessAnyTime::~ProcessAnyTime() {
 
 bool ProcessAnyTime::HasWorkItems(){
 	// TODO:
+	return false;
 }
 
 void ProcessAnyTime::ProcessWorkItems(int amountOfWorkToDo) {

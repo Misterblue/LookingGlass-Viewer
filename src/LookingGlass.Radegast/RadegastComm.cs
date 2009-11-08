@@ -65,12 +65,12 @@ public class RadegastComm : CommLLLP {
             m_client.Settings.OBJECT_TRACKING = true; // We use our own object tracking system
             m_client.Settings.AVATAR_TRACKING = true; //but we want to use the libsl avatar system
             // m_client.Settings.SEND_AGENT_APPEARANCE = false;    // for the moment, don't do appearance
-            // m_client.Settings.PARCEL_TRACKING = false;
+            m_client.Settings.PARCEL_TRACKING = true;
             // m_client.Settings.USE_INTERPOLATION_TIMER = false;  // don't need the library helping
             m_client.Settings.SEND_AGENT_UPDATES = true;
             m_client.Self.Movement.AutoResetControls = true;    // I will do the repeat operations
             // m_client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = true;
-            // m_client.Settings.USE_ASSET_CACHE = false;
+            m_client.Settings.USE_ASSET_CACHE = false;      // need to turn this off because we store the files
             m_client.Settings.PIPELINE_REQUEST_TIMEOUT = 120 * 1000;
             // m_client.Settings.ASSET_CACHE_DIR = ModuleParams.ParamString(ModuleName + ".Assets.CacheDir");
             // m_client.Settings.ALWAYS_REQUEST_PARCEL_ACL = false;
@@ -146,10 +146,12 @@ public class RadegastComm : CommLLLP {
     // If the base system says to stop, we make sure we're disconnected
     public override void Stop() {
         base.Stop();
+        m_client.Settings.USE_ASSET_CACHE = true;      // regular Radegast wants libomv to store things
     }
 
     public override bool PrepareForUnload() {
         base.PrepareForUnload();
+        m_client.Settings.USE_ASSET_CACHE = true;      // regular Radegast wants libomv to store things
         return true;
     }
 
