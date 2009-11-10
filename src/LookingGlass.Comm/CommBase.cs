@@ -1,4 +1,4 @@
-﻿/* Copyright (c) Robert Adams
+﻿/* Copyright 2008 (c) Robert Adams
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *     * Redistributions of source code must retain the above copyright
@@ -23,35 +23,42 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using LookingGlass;
+using LookingGlass.Framework.Logging;
+using LookingGlass.Framework.Parameters;
+using OMV = OpenMetaverse;
+using OMVSD = OpenMetaverse.StructuredData;
 
-namespace LookingGlass.Framework.WorkQueue {
+namespace LookingGlass.Comm {
     /// <summary>
-    /// An object to do later. When a work item is to be executed later, an
-    /// instance is created that implements this interface and then it is
-    /// enqueue in one of the queue systems. The "DoIt" method will be called
-    /// sometime later -- probably when a thread is available.
+    /// Someday abstract out the basic object conversion logic (creation of
+    /// agents, ...) into this base routine and let the comm specific stuff
+    /// be in a subclass of this base.
+    /// This class would have no comm (LLLP) or virtual world (LL) specific
+    /// code in it. This classes sole purpose is to provide the bridge
+    /// classes between comm and LookingGlass.World.
+    /// for
     /// </summary>
+public class CommBase /*: ICommProvider*/ {
+    /*
+    string Name { get; }
+    
+    bool IsConnected { get; }
 
-    public delegate bool DoLaterCallback(DoLaterBase q, Object p);
+    bool IsLoggedIn { get; }
 
-    public abstract class DoLaterBase {
-        static long baseSequence = 0;
+    bool Connect(ParameterSet parms);
 
-        abstract public bool DoIt();
+    bool Disconnect();
 
-        public DoLaterBase() {
-            requeueWait = 500;
-            cost = 10;
-            priority = 100;
-            sequence = ++baseSequence;
-        }
+    // initiate a connection
+    ParameterSet ConnectionParams { get; }
 
-        public float priority;
-        public int requeueWait;
-        public int remainingWait;
-        public int timesRequeued;
-        public object containingClass;
-        public int cost;
-        public long sequence;
-    }
+    // kludge to get underlying LL Comm (circular ref Comm.LLLP <=> World.LL)
+    OMV.GridClient GridClient { get; }
+
+    // each comm provider has a block of statistics
+    ParameterSet CommStatistics();
+     */
+}
 }

@@ -33,7 +33,7 @@ namespace ProcessBetweenFrame {
 // the generic base class that goes in the list
 class GenericQc {
 public:
-	int priority;
+	float priority;
 	int cost;
 	Ogre::String uniq;
 	virtual void Process() {};
@@ -57,10 +57,10 @@ public:
 	// Ogre::FrameListener
 	bool frameEnded(const Ogre::FrameEvent&);
 
-	void RefreshResource(int, char*, int);
-	void CreateMaterialResource2(int, const char*, const char*, const float*);
-	void CreateMeshResource(int, const char*, const int*, const float*);
-	void CreateMeshSceneNode(int,  Ogre::SceneManager* sceneMgr, 
+	void RefreshResource(float, char*, int);
+	void CreateMaterialResource2(float, const char*, const char*, const float*);
+	void CreateMeshResource(float, const char*, const int*, const float*);
+	void CreateMeshSceneNode(float,  Ogre::SceneManager* sceneMgr, 
 					char* sceneNodeName, 
 					Ogre::SceneNode* parentNode,
 					char* entityName,
@@ -69,7 +69,7 @@ public:
 					float px, float py, float pz,
 					float sx, float sy, float sz,
 					float ow, float ox, float oy, float oz);
-	void UpdateSceneNode(int, char* nodeName,
+	void UpdateSceneNode(float, char* nodeName,
 					bool setPosition, float px, float py, float pz,
 					bool setScale, float sx, float sy, float sz,
 					bool setRotation, float ow, float ox, float oy, float oz);

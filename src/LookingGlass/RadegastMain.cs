@@ -129,11 +129,6 @@ class RadegastMain : IRadegastPlugin {
         m_log.Log(LogLevel.DRADEGASTDETAIL, "RadegastMain: Network_OnSimConnected for {0}",
                         RadInstance.Client.Network.CurrentSim.Name);
         worldComm.Network_SimConnected(this, new OMV.SimConnectedEventArgs(RadInstance.Client.Network.CurrentSim));
-        // if anything was queue for this sim, put them in the world
-        LoadWorldObjects.LoadASim(RadInstance.Client.Network.CurrentSim, RadInstance.Client, worldComm);
-
-        // copy the objects that are already in the comm layer into the world
-        LoadWorldObjects.Load(RadInstance.Client, worldComm);
             
         // initialize the viewer dialog
         m_viewDialog.Initialize();
@@ -141,6 +136,12 @@ class RadegastMain : IRadegastPlugin {
         // put the dialog up
         m_viewDialog.Show();
         // The dialog window will do all the image updating
+
+        // if anything was queue for this sim, put them in the world
+        LoadWorldObjects.LoadASim(RadInstance.Client.Network.CurrentSim, RadInstance.Client, worldComm);
+
+        // copy the objects that are already in the comm layer into the world
+        LoadWorldObjects.Load(RadInstance.Client, worldComm);
     }
 
     public void StopPlugin(RadegastInstance inst) {

@@ -41,7 +41,7 @@ namespace LookingGlass.Comm.LLLP {
 /// <summary>
 /// Communication handler for Linden Lab Legacy Protocol
 /// </summary>
-public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
+public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
     protected ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
 
     // ICommProvider.Name
@@ -250,14 +250,22 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
 
     #region IModule methods
 
-    // IModule.OnLoad
-    public override void OnLoad(string name, LookingGlassBase lgbase) {
+    protected string m_moduleName;
+    public string ModuleName { get { return m_moduleName; } set { m_moduleName = value; } }
+
+    protected LookingGlassBase m_lgb = null;
+    public LookingGlassBase LGB { get { return m_lgb; } }
+
+    public IAppParameters ModuleParams { get { return m_lgb.AppParams; } }
+
+    public virtual void OnLoad(string name, LookingGlassBase lgbase) {
         OnLoad2(name, lgbase, true);
     }
 
     // Internal OnLoad that can be used by derived classes
     protected void OnLoad2(string name, LookingGlassBase lgbase, bool shouldInit) {
-        base.OnLoad(name, lgbase);
+        m_moduleName = name;
+        m_lgb = lgbase;
         ModuleParams.AddDefaultParameter(ModuleName + ".Assets.CacheDir", 
                     Utilities.GetDefaultApplicationStorageDir(null),
                     "Filesystem location to build the texture cache");
@@ -342,13 +350,12 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     }
 
     // IModule.Start()
-    public override void Start() {
+    public virtual void Start() {
         Start2(true);
     }
 
     // internal Start to be used by derived classes
     protected void Start2(bool shouldKeepLoggedin) {
-        base.Start();
         m_loaded = true;
         if (shouldKeepLoggedin) {
             if (m_LoginThread == null) {
@@ -362,15 +369,13 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
 
     // IModule.Stop()
     // If the base system says to stop, we make sure we're disconnected
-    public override void Stop() {
-        base.Stop();
+    public virtual void Stop() {
         m_log.Log(LogLevel.DCOMM, "Stopping. Attempting to disconnect");
         Disconnect();
     }
 
     // IModule.PrepareForUnload()
-    public override bool PrepareForUnload() {
-        base.PrepareForUnload();
+    public virtual bool PrepareForUnload() {
         m_log.Log(LogLevel.DCOMM, "communication unload. We'll never login again");
         if (m_commStatsHandler != null) {
             m_commStatsHandler.Dispose();   // get rid of the handlers we created
@@ -552,7 +557,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     }
 
 
-    public override bool AfterAllModulesLoaded() {
+    public bool AfterAllModulesLoaded() {
         // make my connections for the communication events
         OMV.GridClient gc = m_client;
         // gc.Network.OnSimConnected += new OMV.NetworkManager.SimConnectedCallback(Network_OnSimConnected);
@@ -771,7 +776,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
         OMV.ObjectMovementUpdate update = args.Update;
         if (rcontext == null) return;
         if (rcontext.State.IfNotOnline(delegate() {
-                QueueTilOnline(rcontext, CommActionCode.OnObjectUpdated, sender, args);
+                QueueTilOnline(rcontext, CommActionCode.TerseObjectUpdate, sender, args);
             }) ) return;
         this.m_statObjTerseUpdate++;
         IEntity updatedEntity = null;
@@ -961,6 +966,7 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
     public enum CommActionCode {
         RegionStateChange,
         OnObjectUpdated,
+        TerseObjectUpdate,
         OnAttachmentUpdate,
         KillObject,
         OnAvatarUpdate
@@ -1032,6 +1038,10 @@ public class CommLLLP : ModuleBase, LookingGlass.Comm.ICommProvider  {
                 m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: OnObjectUpdated");
                 // Objects_OnObjectUpdated((OMV.Simulator)p1, (OMV.ObjectUpdate)p2, (ulong)p3, (ushort)p4);
                 Objects_ObjectUpdate(p1, (OMV.PrimEventArgs)p2);
+                break;
+            case CommActionCode.TerseObjectUpdate:
+                m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: TerseObjectUpdate");
+                Objects_TerseObjectUpdate(p1, (OMV.TerseObjectUpdateEventArgs)p2);
                 break;
             case CommActionCode.OnAttachmentUpdate:
                 m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: OnAttachmentUpdated");

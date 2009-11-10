@@ -85,7 +85,7 @@ namespace LookingGlass.Renderer.Ogr {
         // Returns true if queued or false if we couldn't resolve the parentNodeName to
         // and actual node.
         public bool CreateMeshSceneNodeBF(
-                int priority,
+                float priority,
                 string sceneNodeName,   // name of scene node to create
                 string parentNodeName,  // name of the parent to connect it to (or zero)
                 string meshName,      // name of the entity (mesh) to add to the scene node

@@ -326,6 +326,9 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         m_ogreStats.Add("BetweenFrameworkItems", delegate(string xx) {
                 return new OMVSD.OSDString(m_ogreStatsPinned[Ogr.StatBetweenFrameWorkItems].ToString()); },
                 "Number of between frame work items waiting");
+        m_ogreStats.Add("BetweenFrameworkDiscardedDups", delegate(string xx) {
+                return new OMVSD.OSDString(m_ogreStatsPinned[Ogr.StatBetweenFrameDiscardedDups].ToString()); },
+                "Between frame work requests which duplicated existing requests");
         m_ogreStats.Add("TotalBetweenFrameRefreshResource", delegate(string xx) {
                 return new OMVSD.OSDString(m_ogreStatsPinned[Ogr.StatBetweenFrameRefreshResource].ToString()); },
                 "Number of 'refresh resource' work items queued");
@@ -660,20 +663,20 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     /// </summary>
     /// <param name="ent">Entity we're checking interest in</param>
     /// <returns>Zero to N with larger meaning less interested</returns>
-    private int CalculateInterestOrder(IEntity ent) {
+    private float CalculateInterestOrder(IEntity ent) {
         float ret = 100f;
         if (m_lastCameraPosition != null && m_lastCameraOrientation != null) {
             double dist = OMV.Vector3d.Distance(ent.GlobalPosition, m_lastCameraPosition);
             // if (entity is behind the camera) dist += 200;
-            OMV.Vector3 dir = OMV.Vector3.UnitX * m_lastCameraOrientation;
-            if (dir.X < 0) dist += 200;
+            // OMV.Vector3 dir = OMV.Vector3.UnitX * m_lastCameraOrientation;
+            // if (dir.X < 0) dist += 200;
             if (dist < 0) dist = -dist;
             if (dist > 1000.0) dist = 1000.0;
-            // m_log.Log(LogLevel.DRENDERDETAIL, "CalcualteInterestOrder: ent={0}, cam={1}, d={2}", 
-            //             ent.GlobalPosition, m_lastCameraPosition, dist);
+            m_log.Log(LogLevel.DRENDERDETAIL, "CalcualteInterestOrder: ent={0}, cam={1}, d={2}", 
+                        ent.GlobalPosition, m_lastCameraPosition, dist);
             ret = (float)dist;
         }
-        return (int)ret;
+        return ret;
     }
 
     // ==========================================================================
@@ -683,7 +686,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     /// <param name="ent"></param>
     /// <param name="what"></param>
     public void RenderUpdate(IEntity ent, UpdateCodes what) {
-        int priority = CalculateInterestOrder(ent);
+        float priority = CalculateInterestOrder(ent);
         if ((what & UpdateCodes.Material) != 0) {
             // the materials have changed on this entity. Cause materials to be recalcuated
             m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: Material changed");
@@ -931,7 +934,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             }
             // Create mesh resource. In this case its most likely a .mesh file in the cache
             // The actual mesh creation is queued and done later between frames
-            int priority = CalculateInterestOrder(ent);
+            float priority = CalculateInterestOrder(ent);
             if (!RendererOgre.GetWorldRenderConv(ent).CreateMeshResource(priority, ent, m_meshName)) {
                 // we need to wait until some resource exists before we can complete this creation
                 return false;
@@ -1036,10 +1039,10 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         Object[] textureCompleteParameters = { entName, hasTransparancy };
         string ogreResourceName = entName.OgreResourceName;
         if (hasTransparancy) {
-            Ogr.RefreshResourceBF(100, Ogr.ResourceTypeTransparentTexture, ogreResourceName);
+            Ogr.RefreshResourceBF(100f, Ogr.ResourceTypeTransparentTexture, ogreResourceName);
         }
         else {
-            Ogr.RefreshResourceBF(100, Ogr.ResourceTypeTexture, ogreResourceName);
+            Ogr.RefreshResourceBF(100f, Ogr.ResourceTypeTexture, ogreResourceName);
         }
         return;
     }

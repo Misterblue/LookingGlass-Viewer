@@ -42,7 +42,7 @@ class RefreshResourceQc : public GenericQc {
 public:
 	Ogre::String matName;
 	int rType;
-	RefreshResourceQc(int prio, Ogre::String uni, char* resourceName, int rTyp) {
+	RefreshResourceQc(float prio, Ogre::String uni, char* resourceName, int rTyp) {
 		this->priority = prio;
 		this->cost = 20;
 		this->uniq = uni;
@@ -64,10 +64,10 @@ public:
 	Ogre::String matName;
 	Ogre::String texName;
 	float parms[OLMaterialTracker::OLMaterialTracker::CreateMaterialSize];
-	CreateMaterialResourceQc(int prio, Ogre::String uni, 
+	CreateMaterialResourceQc(float prio, Ogre::String uni, 
 					const char* mName, const char* tName, const float* inParms) {
 		// this->priority = prio;
-		this->priority = 0;	// kludge to get materials out of the way
+		this->priority = 0.0;	// kludge to get materials out of the way
 		this->cost = 0;
 		this->uniq = uni;
 		this->matName = Ogre::String(mName);
@@ -90,7 +90,7 @@ public:
 	Ogre::String meshName;
 	int* faceCounts;
 	float* faceVertices;
-	CreateMeshResourceQc(int prio, Ogre::String uni, 
+	CreateMeshResourceQc(float prio, Ogre::String uni, 
 					const char* mName, const int* faceC, const float* faceV) {
 		this->priority = prio;
 		this->cost = 100;
@@ -124,7 +124,7 @@ public:
 	float px; float py; float pz;
 	float sx; float sy; float sz;
 	float ow; float ox; float oy; float oz;
-	CreateMeshSceneNodeQc(int prio, Ogre::String uni,
+	CreateMeshSceneNodeQc(float prio, Ogre::String uni,
 					Ogre::SceneManager* sceneMgr, 
 					char* sceneNodeName,
 					Ogre::SceneNode* parentNode,
@@ -175,7 +175,7 @@ public:
 	float px; float py; float pz;
 	float sx; float sy; float sz;
 	float ow; float ox; float oy; float oz;
-	UpdateSceneNodeQc(int prio, Ogre::String uni,
+	UpdateSceneNodeQc(float prio, Ogre::String uni,
 					char* entName,
 					bool setPosition, float px, float py, float pz,
 					bool setScale, float sx, float sy, float sz,
@@ -230,14 +230,14 @@ ProcessBetweenFrame::~ProcessBetweenFrame() {
 
 // ====================================================================
 // refresh a resource
-void ProcessBetweenFrame::RefreshResource(int priority, char* resourceName, int rType) {
+void ProcessBetweenFrame::RefreshResource(float priority, char* resourceName, int rType) {
 	RefreshResourceQc* rrq = new RefreshResourceQc(priority, resourceName, resourceName, rType);
 	QueueWork((GenericQc*)rrq);
 	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameWorkItems);
 	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameRefreshResource);
 }
 
-void ProcessBetweenFrame::CreateMaterialResource2(int priority, 
+void ProcessBetweenFrame::CreateMaterialResource2(float priority, 
 			  const char* matName, const char* texName, const float* parms) {
 	CreateMaterialResourceQc* cmrq = new CreateMaterialResourceQc(priority, matName, matName, texName, parms);
 	QueueWork((GenericQc*)cmrq);
@@ -245,7 +245,7 @@ void ProcessBetweenFrame::CreateMaterialResource2(int priority,
 	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameCreateMaterialResource);
 }
 
-void ProcessBetweenFrame::CreateMeshResource(int priority, 
+void ProcessBetweenFrame::CreateMeshResource(float priority, 
 				 const char* meshName, const int* faceCounts, const float* faceVertices) {
 	CreateMeshResourceQc* cmrq = new CreateMeshResourceQc(priority, meshName, meshName, faceCounts, faceVertices);
 	QueueWork((GenericQc*)cmrq);
@@ -253,7 +253,7 @@ void ProcessBetweenFrame::CreateMeshResource(int priority,
 	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameCreateMeshResource);
 }
 
-void ProcessBetweenFrame::CreateMeshSceneNode(int priority,
+void ProcessBetweenFrame::CreateMeshSceneNode(float priority,
 					Ogre::SceneManager* sceneMgr, 
 					char* sceneNodeName,
 					Ogre::SceneNode* parentNode,
@@ -278,7 +278,7 @@ void ProcessBetweenFrame::CreateMeshSceneNode(int priority,
 	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameCreateMeshSceneNode);
 }
 
-void ProcessBetweenFrame::UpdateSceneNode(int priority, char* entName,
+void ProcessBetweenFrame::UpdateSceneNode(float priority, char* entName,
 					bool setPosition, float px, float py, float pz,
 					bool setScale, float sx, float sy, float sz,
 					bool setRotation, float ow, float ox, float oy, float oz) {
@@ -310,6 +310,7 @@ void ProcessBetweenFrame::QueueWork(GenericQc* wi) {
 			if (li._Ptr->_Myval->uniq.length() != 0) {
 				if (wi->uniq == li._Ptr->_Myval->uniq) {
 					m_betweenFrameWork.erase(li,li);
+					LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameDiscardedDups);
 				}
 			}
 		}
@@ -326,10 +327,6 @@ bool ProcessBetweenFrame::HasWorkItems() {
 
 
 bool XXCompareElements(const GenericQc* e1, const GenericQc* e2) {
-	if (e1 == NULL || e2 == NULL) {
-		LookingGlassOgr::Log("ProcessBetweenFrames::XXCompareElements: found null. n1=%x, n2=%x", e1, e2);
-		return false;
-	}
 	return (e1->priority < e2->priority);
 }
 

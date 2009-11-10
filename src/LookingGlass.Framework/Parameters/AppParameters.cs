@@ -35,7 +35,7 @@ public class AppParameters : IAppParameters, IParameterPersist {
     public event ParamValueModifiedCallback OnModifiedCallback;
 #pragma warning restore 0067
 
-    protected paramErrorType paramErrorMethod = paramErrorType.eException;
+    protected paramErrorType paramErrorMethod = paramErrorType.eNullValue;
     public paramErrorType ParamErrorMethod {
         get { return paramErrorMethod; }
         set { paramErrorMethod = value; }
@@ -184,6 +184,7 @@ public class AppParameters : IAppParameters, IParameterPersist {
             set = true;
         }
         if (!set) {
+            LogManager.Log.Log(LogLevel.DBADERROR, "AppParameters: OSD parameter '{0}' not found", key);
             switch (ParamErrorMethod) {
                 case paramErrorType.eDefaultValue:
                     ret = new OMVSD.OSDMap();
@@ -222,6 +223,7 @@ public class AppParameters : IAppParameters, IParameterPersist {
             set = true;
         }
         if (!set) {
+            LogManager.Log.Log(LogLevel.DBADERROR, "AppParameters: string parameter '{0}' not found", key);
             switch (ParamErrorMethod) {
                 case paramErrorType.eDefaultValue:
                     ret = "";
@@ -260,6 +262,7 @@ public class AppParameters : IAppParameters, IParameterPersist {
             set = true;
         }
         if (!set) {
+            LogManager.Log.Log(LogLevel.DBADERROR, "AppParameters: int parameter '{0}' not found", key);
             switch (ParamErrorMethod) {
                 case paramErrorType.eDefaultValue:
                     ret = -1;
@@ -298,6 +301,7 @@ public class AppParameters : IAppParameters, IParameterPersist {
             set = true;
         }
         if (!set) {
+            LogManager.Log.Log(LogLevel.DBADERROR, "AppParameters: bool parameter '{0}' not found", key);
             switch (ParamErrorMethod) {
                 case paramErrorType.eDefaultValue:
                     ret = false;
@@ -336,6 +340,7 @@ public class AppParameters : IAppParameters, IParameterPersist {
             set = true;
         }
         if (!set) {
+            LogManager.Log.Log(LogLevel.DBADERROR, "AppParameters: float parameter '{0}' not found", key);
             switch (ParamErrorMethod) {
                 case paramErrorType.eDefaultValue:
                     ret = 0f;

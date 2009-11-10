@@ -32,6 +32,7 @@ static class Ogr {
     public const int StatBetweenFrameUpdateSceneNode = 12;
     public const int StatBetweenFrameTotalProcessed = 16;
     public const int StatBetweenFrameUnknownProcess = 17;
+    public const int StatBetweenFrameDiscardedDups = 21;
     // material processing queues
     public const int StatMaterialUpdatesRemaining = 0;
     // misc info
@@ -118,13 +119,13 @@ static class Ogr {
     public static extern void RefreshResource(int type, [MarshalAs(UnmanagedType.LPStr)]string resourceName);
     // queue for between frame processing
     [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
-    public static extern void RefreshResourceBF(int pri, int type, [MarshalAs(UnmanagedType.LPStr)]string resourceName);
+    public static extern void RefreshResourceBF(float pri, int type, [MarshalAs(UnmanagedType.LPStr)]string resourceName);
     [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
     public static extern void CreateMeshResource([MarshalAs(UnmanagedType.LPStr)]string resourceName,
                             [MarshalAs(UnmanagedType.LPArray)] int[] faceCounts, 
                             [MarshalAs(UnmanagedType.LPArray)] float[] faceVertices);
     [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
-    public static extern void CreateMeshResourceBF(int pri, 
+    public static extern void CreateMeshResourceBF(float pri, 
                             [MarshalAs(UnmanagedType.LPStr)]string resourceName,
                             [MarshalAs(UnmanagedType.LPArray)] int[] faceCounts, 
                             [MarshalAs(UnmanagedType.LPArray)] float[] faceVertices);
@@ -139,7 +140,7 @@ static class Ogr {
                             [MarshalAs(UnmanagedType.LPArray)] float[] parms);
     [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
     // queue and do between frame version of above
-    public static extern void CreateMaterialResource2BF(int pri,
+    public static extern void CreateMaterialResource2BF(float pri,
                             [MarshalAs(UnmanagedType.LPStr)]string resourceName,
                             [MarshalAs(UnmanagedType.LPStr)]string textureName,
                             [MarshalAs(UnmanagedType.LPArray)] float[] parms);
@@ -194,14 +195,14 @@ static class Ogr {
                 float rw, float rx, float ry, float rz
         );
     [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
-    public static extern void UpdateSceneNodeBF(int pri,
+    public static extern void UpdateSceneNodeBF(float pri,
                 [MarshalAs(UnmanagedType.LPStr)]string entityName,
                 bool updatePosition, float px, float py, float pz,
                 bool updateScale, float sx, float sy, float sz,
                 bool updateRotation, float rw, float rx, float ry, float rz
         );
     [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
-    public static extern bool CreateMeshSceneNodeBF(int pri,
+    public static extern bool CreateMeshSceneNodeBF(float pri,
                 System.IntPtr sceneMgr,
                 [MarshalAs(UnmanagedType.LPStr)]string sceneNodeName,
                 [MarshalAs(UnmanagedType.LPStr)]string parentNodeName,

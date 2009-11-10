@@ -52,7 +52,7 @@ public interface IWorldRenderConv {
     /// <param name="callCount">zero if do nothing, otherwise the number of times that
     /// this RenderingInfo has been asked for</param>
     /// <returns>rendering info or null if we cannot collect all data</returns>
-    RenderableInfo RenderingInfo(int priority, Object sceneMgr, IEntity ent, int callCount);
+    RenderableInfo RenderingInfo(float priority, Object sceneMgr, IEntity ent, int callCount);
 
     /// <summary>
     /// If doing mesh creation post processing, this causes the mesh resource to
@@ -60,14 +60,14 @@ public interface IWorldRenderConv {
     /// </summary>
     /// <param name="ent"></param>
     /// <returns>false if we need to wait for resources before completing mesh creation</returns>
-    bool CreateMeshResource(int priority, IEntity ent, string meshName);
+    bool CreateMeshResource(float priority, IEntity ent, string meshName);
 
     /// <summary>
     /// If doing material creation post processing, this causes the mesh resource to
     /// be created from the passed, world specific entity information.
     /// </summary>
     /// <param name="ent"></param>
-    void CreateMaterialResource(int priority, IEntity ent, string materialName);
+    void CreateMaterialResource(float priority, IEntity ent, string materialName);
 
     /// <summary>
     /// Given an entity, recreate all the materials for this entity. Used when object
@@ -75,7 +75,7 @@ public interface IWorldRenderConv {
     /// </summary>
     /// <param name="priority"></param>
     /// <param name="ent"></param>
-    void RebuildEntityMaterials(int priority, IEntity ent);
+    void RebuildEntityMaterials(float priority, IEntity ent);
 
     /// <summary>
     /// Given a new region context and a scene, convert the world specific region
@@ -83,6 +83,6 @@ public interface IWorldRenderConv {
     /// </summary>
     /// <param name="sceneMgr"></param>
     /// <param name="rcontext"></param>
-    void MapRegionIntoView(int priority, Object sceneMgr, IRegionContext rcontext);
+    void MapRegionIntoView(float priority, Object sceneMgr, IRegionContext rcontext);
 }
 }
