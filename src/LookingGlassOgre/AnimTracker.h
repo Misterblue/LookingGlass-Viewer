@@ -23,31 +23,15 @@
 #pragma once
 
 #include "LGOCommon.h"
-
 // forward definition
 namespace RendererOgre { class RendererOgre; }
 
-namespace LGSky {
+namespace AnimTracker {
+	class AnimTracker {
+	public:
+		AnimTracker();
+		~AnimTracker();
 
-	// There can be many options for Skyboxes. Any Skybox implementation
-	//   is based on this class which provides the basic interface.
-class SkyBoxBase {
-public:
-	// SkyBoxBase(RendererOgre::RendererOgre*);
-	// virtual ~SkyBoxBase();
-
-	// called when intializing Ogre
-	virtual void Initialize() {};
-	// called when we're about to start rendering
-	virtual void Start() {};
-	// called when we're shutting down rendering
-	virtual void Stop() {};
-
-	// TODO: some way to handle the updates that the sky needs to make to
-	//   terrain and anything else.
-	// This is a place holder
-	virtual void AddSkyPass(Ogre::MaterialPtr mat) {};
-	virtual void AddTerrainSkyPass(Ogre::MaterialPtr mat) {};
+	private:
 };
-
 }

@@ -903,14 +903,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         return;
     }
 
-    public Dictionary<string, string> MeshesWaiting = new Dictionary<string, string>();
     private void RequestMesh(string contextEntity, string meshName) {
         m_log.Log(LogLevel.DRENDERDETAIL, "Request for mesh " + meshName);
-        lock (MeshesWaiting) {
-            // if already working on this mesh, don't do it again
-            if (MeshesWaiting.ContainsKey(meshName)) return;
-            MeshesWaiting.Add(meshName, contextEntity);
-        }
         Object[] meshLaterParams = { meshName, contextEntity };
         m_workQueue.DoLater(RequestMeshLater, (object)meshLaterParams);
         return;
@@ -944,12 +938,6 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             m_log.Log(LogLevel.DRENDERDETAIL, "RendererOgre.RequestMeshLater: refresh for {0}. prio={1}", 
                     m_meshName, priority);
             Ogr.RefreshResourceBF(priority, Ogr.ResourceTypeMesh, m_meshName);
-            lock (this.MeshesWaiting) {
-                // no longer waiting for this mesh to get created
-                if (this.MeshesWaiting.ContainsKey(m_meshName)) {
-                    this.MeshesWaiting.Remove(m_meshName);
-                }
-            }
         }
         catch {
             // an oddity but not fatal
@@ -967,10 +955,9 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     private void RequestMaterial(string contextEntity, string matName) {
         m_log.Log(LogLevel.DRENDERDETAIL, "Request for material " + matName);
         EntityNameOgre entName = EntityNameOgre.ConvertOgreResourceToEntityName(contextEntity);
-        // m_workQueue.DoLater(new RequestMaterialDoLater(m_sceneMgr, entName, matName));
+        // remember all the materials we created. This could be a problem when regions are unloaded
         Object[] materialParameters = { entName, matName };
         m_workQueue.DoLater(RequestMaterialLater, materialParameters);
-
         return;
     }
 

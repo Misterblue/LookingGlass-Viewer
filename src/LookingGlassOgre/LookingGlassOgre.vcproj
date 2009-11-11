@@ -181,6 +181,14 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\AnimSceneNode.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\AnimTracker.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\BadImageCodec.cpp"
 				>
 			</File>
@@ -288,6 +296,14 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath=".\AnimSceneNode.h"
+				>
+			</File>
+			<File
+				RelativePath=".\AnimTracker.h"
+				>
+			</File>
 			<File
 				RelativePath=".\BadImageCodec.h"
 				>

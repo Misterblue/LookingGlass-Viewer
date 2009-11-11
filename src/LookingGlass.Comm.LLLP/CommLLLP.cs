@@ -323,7 +323,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
             m_client.Settings.USE_INTERPOLATION_TIMER = false;  // don't need the library helping
             m_client.Settings.SEND_AGENT_UPDATES = true;
             m_client.Self.Movement.AutoResetControls = true;   // I will do the key repeat operations
-            m_client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = true;
+            m_client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = false;
             m_client.Settings.USE_ASSET_CACHE = false;
             m_client.Settings.PIPELINE_REQUEST_TIMEOUT = 120 * 1000;
             m_client.Settings.ASSET_CACHE_DIR = ModuleParams.ParamString(ModuleName + ".Assets.CacheDir");

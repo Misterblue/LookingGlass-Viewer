@@ -43,7 +43,7 @@ public:
 	Ogre::String matName;
 	int rType;
 	RefreshResourceQc(float prio, Ogre::String uni, char* resourceName, int rTyp) {
-		this->priority = prio;
+		this->priority = prio + 300.0;	// EXPERIMENTAL: do refreshes last
 		this->cost = 20;
 		this->uniq = uni;
 		this->matName = Ogre::String(resourceName);
@@ -67,7 +67,8 @@ public:
 	CreateMaterialResourceQc(float prio, Ogre::String uni, 
 					const char* mName, const char* tName, const float* inParms) {
 		// this->priority = prio;
-		this->priority = 0.0;	// kludge to get materials out of the way
+		this->priority = 0.0;	// EXPERIMENTAL: to get materials out of the way
+		// this->priority = prio - fmod(prio, (float)100.0);	// EXPERIMENTAL. Group material ops
 		this->cost = 0;
 		this->uniq = uni;
 		this->matName = Ogre::String(mName);
@@ -180,7 +181,7 @@ public:
 					bool setPosition, float px, float py, float pz,
 					bool setScale, float sx, float sy, float sz,
 					bool setRotation, float ow, float ox, float oy, float oz) {
-		this->priority = prio;
+		this->priority = prio;	// EXPERIMENTAL: do refreshes last 
 		this->cost = 10;
 		this->uniq = uni;
 		this->entName = Ogre::String(entName);
