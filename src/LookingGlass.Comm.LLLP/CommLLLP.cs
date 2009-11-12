@@ -711,8 +711,8 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         // a full update says everything changed
         UpdateCodes updateFlags = UpdateCodes.Acceleration | UpdateCodes.AngularVelocity
                     | UpdateCodes.Position | UpdateCodes.Rotation | UpdateCodes.Velocity;
-        updateFlags |= UpdateCodes.Textures;
-        updateFlags |= UpdateCodes.PrimData;
+        // updateFlags |= UpdateCodes.Textures;
+        // updateFlags |= UpdateCodes.PrimData;
         lock (m_opLock) {
             m_log.Log(LogLevel.DUPDATEDETAIL, "Object update: id={0}, p={1}, r={2}", 
                 args.Prim.LocalID, args.Prim.Position.ToString(), args.Prim.Rotation.ToString());

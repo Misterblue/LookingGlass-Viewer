@@ -162,7 +162,8 @@ public class BasicWorkQueue : IWorkQueue {
     private static void DoItEvenLater(DoLaterBase w) {
         w.timesRequeued++;
         lock (doEvenLater) {
-            int nextTime = Math.Min(w.requeueWait * w.timesRequeued, 5000);
+            int nextTime = Math.Min(w.requeueWait * w.timesRequeued, 10000);
+            nextTime = Math.Max(nextTime, 100);     // never less than this
             w.remainingWait = System.Environment.TickCount + nextTime;
             doEvenLater.Add(w);
             if (doEvenLaterThread == null) {    // is there another thread doing the requeuing?
@@ -233,6 +234,7 @@ public class BasicWorkQueue : IWorkQueue {
         aMap.Add("Total", new OMVSD.OSDInteger((int)this.TotalQueued));
         aMap.Add("Current", new OMVSD.OSDInteger((int)this.CurrentQueued));
         aMap.Add("Later", new OMVSD.OSDInteger(doEvenLater.Count));
+        aMap.Add("Active", new OMVSD.OSDInteger(this.ActiveWorkProcessors));
         // Logging.LogManager.Log.Log(LogLevel.DRESTDETAIL, "BasicWorkQueue: GetDisplayable: out={0}", aMap.ToString());
         return aMap;
     }
