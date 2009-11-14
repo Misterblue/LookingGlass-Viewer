@@ -332,7 +332,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
             m_client.Throttle.Total = 2000000.0f;
             m_client.Throttle.Texture = 2446000.0f;
             m_client.Throttle.Asset = 2446000.0f;
-            m_client.Settings.THROTTLE_OUTGOING_PACKETS = true;
+            m_client.Settings.THROTTLE_OUTGOING_PACKETS = false;
 
             m_client.Network.LoginProgress += Network_LoginProgress;
             m_client.Network.Disconnected += Network_Disconnected;

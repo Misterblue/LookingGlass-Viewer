@@ -176,7 +176,7 @@ public class RendererOgreLL : IWorldRenderConv {
 
             // while we're in the neighborhood, we can create the materials
             if (m_buildMaterialsAtRenderInfoTime) {
-                CreateMaterialResource6(priority, ent, prim, 6);
+                CreateMaterialResource6X(priority, ent, prim, 6);
             }
         }
         return ri;
@@ -359,7 +359,7 @@ public class RendererOgreLL : IWorldRenderConv {
 
             // while we're in the neighborhood, we can create the materials
             if (m_buildMaterialsAtMeshCreationTime) {
-                CreateMaterialResource6(priority, ent, prim, mesh.Faces.Count);
+                CreateMaterialResource6X(priority, ent, prim, mesh.Faces.Count);
             }
 
             m_log.Log(LogLevel.DRENDERDETAIL, "RenderOgreLL: "
@@ -521,7 +521,7 @@ public class RendererOgreLL : IWorldRenderConv {
         else {
             // a standard prim, for the rebulding of it's materials
             if (prim == null) throw new LookingGlassException("ASSERT: RenderOgreLL: prim is null");
-            CreateMaterialResource6(priority, llent, prim, 6);
+            CreateMaterialResource6X(priority, llent, prim, 6);
         }
     }
 
@@ -537,14 +537,13 @@ public class RendererOgreLL : IWorldRenderConv {
         }
     }
 
-    /* Temp not use to see if between frame change is good enough. Don't have two optimizations.
     /// <summary>
     /// Create six of the basic materials for this prim. This is passed to Ogre in one big lump
     /// to make things go a lot quicker.
     /// </summary>
     /// <param name="ent"></param>
     /// <param name="prim"></param>
-    private void CreateMaterialResource6X(IEntity ent, OMV.Primitive prim) {
+    private void CreateMaterialResource6X(float prio, IEntity ent, OMV.Primitive prim, int faces) {
         // we create the usual ones. extra faces will be asked for on demand
         const int genCount = 6;
         float[] textureParams = new float[1 + ((int)Ogr.CreateMaterialParam.maxParam) * genCount];
@@ -555,18 +554,23 @@ public class RendererOgreLL : IWorldRenderConv {
         int pBase = 1;
         string textureOgreName;
         for (int j = 0; j < genCount; j++) {
-            CreateMaterialParameters(ent, prim, pBase, ref textureParams, j, out textureOgreName);
-            materialNames[j] = EntityNameOgre.ConvertToOgreMaterialNameX(ent.Name, j);
-            textureOgreNames[j] = textureOgreName;
-            pBase += (int)textureParams[0];
+            if (j >= faces) {
+                // if no face here, say there is no face here
+                materialNames[j] = null;
+            }
+            else {
+                CreateMaterialParameters(ent, prim, pBase, ref textureParams, j, out textureOgreName);
+                materialNames[j] = EntityNameOgre.ConvertToOgreMaterialNameX(ent.Name, j);
+                textureOgreNames[j] = textureOgreName;
+                pBase += (int)textureParams[0];
+            }
         }
-        Ogr.CreateMaterialResource6(
+        Ogr.CreateMaterialResource6BF(prio, materialNames[0],
             materialNames[0], materialNames[1], materialNames[2], materialNames[3], materialNames[4], materialNames[5],
             textureOgreNames[0], textureOgreNames[1], textureOgreNames[2], textureOgreNames[3], textureOgreNames[4], textureOgreNames[5],
             textureParams
         );
     }
-     */
 
     /// <summary>
     /// We have a new region to place in the view. Create the scene node for the 

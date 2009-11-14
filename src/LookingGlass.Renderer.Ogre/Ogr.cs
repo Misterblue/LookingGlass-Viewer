@@ -145,7 +145,9 @@ static class Ogr {
                             [MarshalAs(UnmanagedType.LPStr)]string textureName,
                             [MarshalAs(UnmanagedType.LPArray)] float[] parms);
     [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
-    public static extern void CreateMaterialResource6(
+    public static extern void CreateMaterialResource6BF(
+                            float prio,
+                            [MarshalAs(UnmanagedType.LPStr)]string uniq,
                             [MarshalAs(UnmanagedType.LPStr)]string matName1,
                             [MarshalAs(UnmanagedType.LPStr)]string matName2,
                             [MarshalAs(UnmanagedType.LPStr)]string matName3,

@@ -138,6 +138,20 @@ extern "C" DLLExport void CreateMaterialResource6(
 	m_ro->MaterialTracker()->CreateMaterialResource2(matName6, textureName6, &parms[1 + stride * 5]);
 }
 
+extern "C" DLLExport void CreateMaterialResource6BF(float prio, char* uniq,
+			const char* matName1, const char* matName2, const char* matName3, 
+			const char* matName4, const char* matName5, const char* matName6, 
+			char* textureName1, char* textureName2, char* textureName3, 
+			char* textureName4, char* textureName5, char* textureName6, 
+			const float* parms) {
+				m_ro->ProcessBetweenFrame()->CreateMaterialResource6(prio, uniq,
+						matName1, matName2, matName3, 
+						matName4, matName5, matName6, 
+						textureName1, textureName2, textureName3, 
+						textureName4, textureName5, textureName6, 
+						parms);
+}
+
 extern "C" DLLExport void DiagnosticAction(int flag) {
 	return;
 }
