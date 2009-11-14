@@ -223,15 +223,17 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.SkyX.LightingHDR", "true",
                     "Use high resolution lighting shaders");
 
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Ambient", "<0.4,0.4,0.4>",
-                    "color value for initial ambient lighting");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Ambient.Scene", "<0.4,0.4,0.4>",
+                    "color value for scene initial ambient lighting");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Ambient.Material", "<0.4,0.4,0.4>",
+                    "color value for material ambient lighting");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Sun.Color", "<1.0,1.0,1.0>",
                     "Color of light from the sun at noon");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Moon.Color", "<0.5,0.5,0.6>",
                     "Color of light from the moon");
 
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.Processor", "FrustrumDistance",
-                    "Name of the culling plugin to run ('FrustrumDistance' is only one)");
+                    "Name of the culling plugin to use ('FrustrumDistance', 'VariableFrustDist', 'none')");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.Cull.Frustrum", "true",
                     "whether to cull (unload) objects if not visible in camera frustrum");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.Cull.Distance", "true",
@@ -568,20 +570,13 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             // TODO: Figure out how to make this dynamic, extendable and runtime
             ent.SetAddition(RendererOgre.AddWorldRenderConv, RendererOgreLL.Instance);
         }
-        DoRenderQueued(ent);
+        // DoRenderQueued(ent);
         return;
     }
 
     // wrapper routine for the queuing if rendering work for this entity
-    private Dictionary<string, int> m_renderInProgress = new Dictionary<string, int>();
     private void DoRenderQueued(IEntity ent) {
         Object[] renderParameters = { ent, null };
-        lock (m_renderInProgress) {
-            if (m_renderInProgress.ContainsKey(ent.Name.Name)) {
-                return;
-            }
-            m_renderInProgress.Add(ent.Name.Name, 0);
-        }
         m_workQueueRender.DoLater(CalculateInterestOrder(ent), DoRenderLater, renderParameters);
     }
 
@@ -632,7 +627,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                 // and add the definition for the object on to the scene node
                 // This will cause the load function to be called and create all
                 //   the callbacks that will actually create the object
-                m_log.Log(LogLevel.DRENDERDETAIL, "DoRenderLater: mesh={0}, prio={1}", 
+                m_log.Log(LogLevel.DRENDERDETAIL, "DoRenderLater: mesh={0}, prio={1}",
                                 entMeshName.Name, qInstance.priority);
                 if (!m_sceneMgr.CreateMeshSceneNodeBF(qInstance.priority,
                                 entitySceneNodeName,
@@ -657,10 +652,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                 m_log.Log(LogLevel.DBADERROR, "Render: Failed conversion: " + e.ToString());
             }
         }
-        lock (m_renderInProgress) {
-            if (m_renderInProgress.ContainsKey(m_ent.Name.Name)) {
-                m_renderInProgress.Remove(m_ent.Name.Name);
-            }
+        else {
+            // the entity already has a scene node. We're just forcing the rebuild of the prim
         }
         return true;
     }
@@ -696,30 +689,23 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     /// <param name="what"></param>
     public void RenderUpdate(IEntity ent, UpdateCodes what) {
         float priority = CalculateInterestOrder(ent);
+        bool fullUpdate = false;    // true if a full update was done on this entity
         if ((what & UpdateCodes.Material) != 0) {
             // the materials have changed on this entity. Cause materials to be recalcuated
             m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: Material changed");
-        }
-        if ((what & (UpdateCodes.Scale | UpdateCodes.Position | UpdateCodes.Rotation)) != 0) {
-            // world position has changed. Tell Ogre they have changed
-            string entitySceneNodeName = EntityNameOgre.ConvertToOgreSceneNodeName(ent.Name);
-            m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: Updating position/rotation for {0}", entitySceneNodeName);
-            Ogr.UpdateSceneNodeBF(priority, entitySceneNodeName,
-                ((what & UpdateCodes.Position) != 0),
-                ent.RelativePosition.X, ent.RelativePosition.Y, ent.RelativePosition.Z,
-                false, 1f, 1f, 1f,  // don't pass scale yet
-                ((what & UpdateCodes.Rotation) != 0),
-                ent.Heading.W, ent.Heading.X, ent.Heading.Y, ent.Heading.Z);
         }
         if (((what & UpdateCodes.ParentID) != 0) && ((what & UpdateCodes.New) == 0)) {
             // prim was detached or attached. Rerender if not the first update
             m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: parentID changed");
             DoRenderQueued(ent);
+            fullUpdate = true;
         }
-        if (((what & (UpdateCodes.PrimFlags | UpdateCodes.PrimData)) != 0) && ((what & UpdateCodes.New) == 0)) {
+        // if (((what & (UpdateCodes.PrimFlags | UpdateCodes.PrimData)) != 0) && ((what & UpdateCodes.New) == 0)) {
+        if ((what & (UpdateCodes.PrimFlags | UpdateCodes.PrimData)) != 0) {
             // the prim parameters were changed. Re-render if this is not the new creation request
             m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: prim data changed");
             DoRenderQueued(ent);
+            fullUpdate = true;
         }
         if (((what & UpdateCodes.Textures) != 0) && ((what & UpdateCodes.New) == 0)) {
             // texure on the prim were updated. Refresh them if not the initial creation update
@@ -729,6 +715,17 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                 RendererOgre.GetWorldRenderConv(ent).RebuildEntityMaterials(priority, ent);
                 Ogr.RefreshResourceBF(priority, Ogr.ResourceTypeMesh, EntityNameOgre.ConvertToOgreMeshName(ent.Name).Name);
             }
+        }
+        if (!fullUpdate && (what & (UpdateCodes.Scale | UpdateCodes.Position | UpdateCodes.Rotation)) != 0) {
+            // world position has changed. Tell Ogre they have changed
+            string entitySceneNodeName = EntityNameOgre.ConvertToOgreSceneNodeName(ent.Name);
+            m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: Updating position/rotation for {0}", entitySceneNodeName);
+            Ogr.UpdateSceneNodeBF(priority, entitySceneNodeName,
+                ((what & UpdateCodes.Position) != 0),
+                ent.RelativePosition.X, ent.RelativePosition.Y, ent.RelativePosition.Z,
+                false, 1f, 1f, 1f,  // don't pass scale yet
+                ((what & UpdateCodes.Rotation) != 0),
+                ent.Heading.W, ent.Heading.X, ent.Heading.Y, ent.Heading.Z);
         }
         if ((what & UpdateCodes.Text) != 0) {
             // text associated with the prim changed

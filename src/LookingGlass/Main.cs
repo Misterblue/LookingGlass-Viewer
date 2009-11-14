@@ -27,6 +27,7 @@ using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Forms;
 using LookingGlass.Framework.Logging;
+using LookingGlass.Framework.Modules;
 using LookingGlass.Framework.Parameters;
 using LookingGlass.View;
 
@@ -152,14 +153,10 @@ class LookingGlassMain : ApplicationContext {
         // log level after all the parameters have been set
         LogManager.CurrentLogLevel = (LogLevel)LGB.AppParams.ParamInt("Log.FilterLevel");
 
+        // plug the window into the module system so it gets created and destroy at the right times
+        LGB.ModManager.ManageModule(new ViewerWrapper(m_viewDialog), "ViewWindow");
+
         if (LGB.Initialize()) {
-            // initialize the viewer dialog
-            m_viewDialog.Initialize();
-
-            // put the dialog up
-            m_viewDialog.Show();
-            // The dialog window will do all the image updating
-
             // send the thread to render or wait. This only returns when exiting.
             LGB.Start(LGApplicationInstance);
         }
@@ -183,6 +180,32 @@ LookingGlass
         --param parameter:value
         --renderer mogre|opengl
 ";
+    }
+
+    // A little wrapper class which will cause the dialog to be started and shut
+    //   down at the right times.
+    private class ViewerWrapper : ModuleBase {
+        ViewWindow m_viewWindow;
+        public ViewerWrapper(ViewWindow theWindow) {
+            m_viewWindow = theWindow;
+        }
+
+        public override void Start() {
+            base.Start();
+            // initialize the viewer dialog
+            m_viewWindow.Initialize();
+
+            // put the dialog up
+            m_viewWindow.Show();
+            // The dialog window will do all the image updating
+            return;
+        }
+
+        public override void Stop() {
+            base.Stop();
+            m_viewWindow.Shutdown();
+        }
+
     }
 
     #region Parameter Processing

@@ -20,35 +20,28 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#pragma once
+#include "StdAfx.h"
+#include "VisCalcFrustDist.h"
+#include "VisCalcVariable.h"
+#include "LookingGlassOgre.h"
+#include "RendererOgre.h"
 
-#include "LGOCommon.h"
-#include "SkyBoxBase.h"
-#include "SkyX.h"
+namespace VisCalc { 
+	
+VisCalcVariable::VisCalcVariable(RendererOgre::RendererOgre* ro) : VisCalcFrustDist(ro) {
+	return;
+}
 
-namespace LGSky {
+VisCalcVariable::~VisCalcVariable() {
+}
 
-class SkyBoxSkyX : public SkyBoxBase , public Ogre::FrameListener {
-public:
-	SkyBoxSkyX(RendererOgre::RendererOgre*);
-	~SkyBoxSkyX();
+bool VisCalcVariable::CalculateVisibilityImpl(Ogre::Camera* cam, Ogre::Entity* ent, float dist) {
+	bool ret = true;
+	if (this->m_shouldCullByDistance) {
+		float snodeEntitySize = ent->getBoundingRadius() * 2;
+		ret = this->calculateScaleVisibility(dist, snodeEntitySize);
+	}
+	return ret;
+}
 
-	void Initialize();
-	void Start();
-	void Stop();
-
-	void AddSkyPass(Ogre::MaterialPtr matP);
-
-	// bool frameStarted(const Ogre::FrameEvent &e);
-	bool frameRenderingQueued(const Ogre::FrameEvent &e);
-	// bool frameEnded(const Ogre::FrameEvent &e);
-
-private:
-	RendererOgre::RendererOgre* m_ro;
-	SkyX::SkyX* m_SkyX;
-
-	Ogre::Light* m_sun;				// the light that is the sun
-	Ogre::Light* m_moon;			// the light that is the moon
-
-};
 }

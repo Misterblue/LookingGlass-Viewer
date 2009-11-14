@@ -109,7 +109,8 @@ void SkyBoxSkyX::AddSkyPass(Ogre::MaterialPtr matP) {
 }
 
 
-bool SkyBoxSkyX::frameEnded(const Ogre::FrameEvent &e) {
+// bool SkyBoxSkyX::frameEnded(const Ogre::FrameEvent &e) {
+bool SkyBoxSkyX::frameRenderingQueued(const Ogre::FrameEvent &e) {
 /*
 		// Check camera height
 		Ogre::RaySceneQuery * raySceneQuery = 

@@ -88,6 +88,8 @@ public:
 	void formatIt(Ogre::String&, const char*, ...);
 	const bool checkKeepRunning();
 
+	Ogre::ColourValue SceneAmbientColor;
+	Ogre::ColourValue MaterialAmbientColor;
 	LGSky::SkyBoxBase* m_sky;
 	VisCalc::VisCalcBase* m_visCalc;	// an routine for calculating visibility
 

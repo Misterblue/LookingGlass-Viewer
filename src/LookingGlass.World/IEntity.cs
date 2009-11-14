@@ -39,6 +39,8 @@ public interface IEntity : IRegistryCore, IDisposable {
     OMV.Vector3 RelativePosition { get; set; }   // position relative to RegionContext
     OMV.Vector3d GlobalPosition { get; set;  }
 
+    // code to check to see if this thing has changed from before
+    int LastEntityHashCode { get; set; }
     // Notify the object that some of it state changed
     void Update(UpdateCodes what);
 

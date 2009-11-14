@@ -46,13 +46,14 @@ public:
 	// bool frameRenderingQueued(const Ogre::FrameEvent &e);
 	bool frameEnded(const Ogre::FrameEvent &e);
 
-private:
+protected:
 	RendererOgre::RendererOgre* m_ro;
 	VisCalcFrustDist* m_singleton;
 
 	void calculateEntityVisibility();
 	void calculateEntityVisibility(Ogre::Node*);
 	bool calculateScaleVisibility(float, float);
+
 	void processEntityVisibility();
 	void queueMeshLoad(Ogre::Entity*, Ogre::MeshPtr);
 	void queueMeshUnload(Ogre::MeshPtr);

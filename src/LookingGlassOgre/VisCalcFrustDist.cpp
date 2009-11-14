@@ -146,7 +146,8 @@ void VisCalcFrustDist::calculateEntityVisibility(Ogre::Node* node) {
 			// check it's visibility if it's not world geometry (terrain and ocean)
 			if ((snodeEntity->getQueryFlags() & Ogre::SceneManager::WORLD_GEOMETRY_TYPE_MASK) == 0) {
 				// computation if it should be visible
-				bool viz = CalculateVisibilityImpl(m_ro->m_camera, snodeEntity, snodeDistance);
+				// Note: this call is overridden by derived classes that do fancier visibility rules
+				bool viz = this->CalculateVisibilityImpl(m_ro->m_camera, snodeEntity, snodeDistance);
 				if (snodeEntity->isVisible()) {
 					// we currently think this object is visible. make sure it should stay that way
 					if (viz) {

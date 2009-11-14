@@ -23,32 +23,16 @@
 #pragma once
 
 #include "LGOCommon.h"
-#include "SkyBoxBase.h"
-#include "SkyX.h"
+#include "VisCalcFrustDist.h"
 
-namespace LGSky {
+namespace VisCalc {
 
-class SkyBoxSkyX : public SkyBoxBase , public Ogre::FrameListener {
+class VisCalcVariable : public VisCalcFrustDist {
 public:
-	SkyBoxSkyX(RendererOgre::RendererOgre*);
-	~SkyBoxSkyX();
+	VisCalcVariable(RendererOgre::RendererOgre*);
+	~VisCalcVariable();
 
-	void Initialize();
-	void Start();
-	void Stop();
-
-	void AddSkyPass(Ogre::MaterialPtr matP);
-
-	// bool frameStarted(const Ogre::FrameEvent &e);
-	bool frameRenderingQueued(const Ogre::FrameEvent &e);
-	// bool frameEnded(const Ogre::FrameEvent &e);
-
-private:
-	RendererOgre::RendererOgre* m_ro;
-	SkyX::SkyX* m_SkyX;
-
-	Ogre::Light* m_sun;				// the light that is the sun
-	Ogre::Light* m_moon;			// the light that is the moon
+	bool CalculateVisibilityImpl(Ogre::Camera* cam, Ogre::Entity* ent, float dist);
 
 };
 }

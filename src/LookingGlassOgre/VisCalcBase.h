@@ -44,6 +44,9 @@ public:
 	// called to signify that something changed so visibility should be recalcuated
 	virtual void RecalculateVisibility() {};
 
+	// internal function that returns true of the entity should be displayed
+	virtual bool CalculateVisibilityImpl(Ogre::Camera* cam, Ogre::Entity* ent, float) { return true; }
+
 };
 
 }

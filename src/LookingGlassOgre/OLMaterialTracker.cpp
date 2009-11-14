@@ -388,7 +388,7 @@ void OLMaterialTracker::CreateMaterialResource2(const char* mName, const char* t
 	Ogre::Pass* pass = tech->createPass();
 	pass->setLightingEnabled(true);
 	pass->setShininess(parms[CreateMaterialShiny]/256.0);	// origionally a byte
-	pass->setAmbient(0.4, 0.4, 0.4);
+	pass->setAmbient(m_ro->MaterialAmbientColor);
 	pass->setVertexColourTracking(Ogre::TVC_AMBIENT);
 	if (textureName.length() > 0) {
 		Ogre::TextureUnitState* tus = pass->createTextureUnitState(textureName);

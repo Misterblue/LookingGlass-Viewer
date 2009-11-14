@@ -35,6 +35,7 @@
 #include "SkyBoxSkyX.h"
 #include "VisCalcNull.h"
 #include "VisCalcFrustDist.h"
+#include "VisCalcVariable.h"
 
 namespace RendererOgre {
 
@@ -333,7 +334,9 @@ namespace RendererOgre {
 			// m_sceneMgr = m_root->createSceneManager(Ogre::ST_GENERIC, sceneName);
 			// ambient has to be adjusted for time of day. Set it initially
 			// m_sceneMgr->setAmbientLight(Ogre::ColourValue(0.5, 0.5, 0.5));
-			m_sceneMgr->setAmbientLight(LookingGlassOgr::GetParameterColor("Renderer.Ogre.Ambient"));
+			SceneAmbientColor = LookingGlassOgr::GetParameterColor("Renderer.Ogre.Ambient.Scene");
+			MaterialAmbientColor = LookingGlassOgr::GetParameterColor("Renderer.Ogre.Ambient.Material");
+			m_sceneMgr->setAmbientLight(SceneAmbientColor);
 			const char* shadowName = LookingGlassOgr::GetParameter("Renderer.Ogre.ShadowTechnique");
 			if (stricmp(shadowName, "texture-modulative") == 0) {
 				m_sceneMgr->setShadowTechnique(Ogre::SHADOWTYPE_TEXTURE_MODULATIVE);	// hardest
@@ -401,6 +404,10 @@ namespace RendererOgre {
 		if (stricmp(visName, "FrustrumDistance") == 0) {
 			LookingGlassOgr::Log("RendererOgre::createVisibilityProcessor: using VisCalcFrustDist");
 			m_visCalc = new VisCalc::VisCalcFrustDist(this);
+		}
+		else if (stricmp(visName, "VariableFrustDist") == 0) {
+				LookingGlassOgr::Log("RendererOgre::createVisibilityProcessor: using VisCalcVariable");
+				m_visCalc = new VisCalc::VisCalcVariable(this);
 		}
 		else {
 			LookingGlassOgr::Log("RendererOgre::creteVisibilityProcessor: using VisCalcNull");

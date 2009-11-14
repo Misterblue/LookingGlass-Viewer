@@ -43,7 +43,8 @@ public:
 	Ogre::String matName;
 	int rType;
 	RefreshResourceQc(float prio, Ogre::String uni, char* resourceName, int rTyp) {
-		this->priority = prio + 300.0;	// EXPERIMENTAL: do refreshes last
+		// this->priority = prio + 300.0;	// EXPERIMENTAL: do refreshes last
+		this->priority = prio;
 		this->cost = 20;
 		this->uniq = uni;
 		this->matName = Ogre::String(resourceName);
@@ -388,8 +389,18 @@ void ProcessBetweenFrame::UpdateSceneNode(float priority, char* entName,
 
 // ====================================================================
 // we're between frames, on our own thread so we can do the work without locking
+int currentCost;
 bool ProcessBetweenFrame::frameEnded(const Ogre::FrameEvent& evt) {
-	ProcessWorkItems(m_numWorkItemsToDoBetweenFrames);
+	// currentCost = m_numWorkItemsToDoBetweenFrames;
+	if (evt.timeSinceLastFrame < 0.5) {
+		currentCost = currentCost * 2;
+		if (currentCost > m_numWorkItemsToDoBetweenFrames) currentCost = m_numWorkItemsToDoBetweenFrames;
+	}
+	else {
+		currentCost = currentCost / 2;
+	}
+	if (currentCost < 100) currentCost = 100;
+	ProcessWorkItems(currentCost);
 	return true;
 }
 
@@ -397,7 +408,7 @@ bool ProcessBetweenFrame::frameEnded(const Ogre::FrameEvent& evt) {
 void ProcessBetweenFrame::QueueWork(GenericQc* wi) {
 	LGLOCK_LOCK(m_workItemMutex);
 	// Check to see if uniq is specified and remove any duplicates
-	if (wi->uniq.length() != 0 ) {
+	if (wi->uniq.length() != 0) {
 		// There will be duplicate requests for things. If we already have a request, delete the old
 		std::list<GenericQc*>::iterator li;
 		for (li = m_betweenFrameWork.begin(); li != m_betweenFrameWork.end(); li++) {
@@ -424,12 +435,21 @@ bool XXCompareElements(const GenericQc* e1, const GenericQc* e2) {
 	return (e1->priority < e2->priority);
 }
 
+int repriorityCount = 10;
 void ProcessBetweenFrame::ProcessWorkItems(int numToProcess) {
 	// This sort is intended to put the highest priority (ones with lowest numbers) at
 	//   the front of the list for processing first.
 	// TODO: figure out why uncommenting this line causes exceptions
 	if (m_modified) {
 		LGLOCK_LOCK(m_workItemMutex);
+		if (repriorityCount-- < 0) {
+			// periodically ask the items to recalc their priority
+			repriorityCount = 10;
+			std::list<GenericQc*>::iterator li;
+			for (li = m_betweenFrameWork.begin(); li != m_betweenFrameWork.end(); li++) {
+				li._Ptr->_Myval->RecalculatePriority();
+			}
+		}
 		m_betweenFrameWork.sort(XXCompareElements);
 		LGLOCK_UNLOCK(m_workItemMutex);
 		m_modified = false;

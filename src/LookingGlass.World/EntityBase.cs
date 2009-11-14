@@ -56,6 +56,9 @@ public abstract class EntityBase : IEntity {
         set { m_name = value; }
     }
 
+    protected int m_lastEntityHashCode = 0;
+    public int LastEntityHashCode { get { return m_lastEntityHashCode; } set { m_lastEntityHashCode = value; } }
+
     static EntityBase() {
         AdditionSubsystems = new Dictionary<string,int>();
     }

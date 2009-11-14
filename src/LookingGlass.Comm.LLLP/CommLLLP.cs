@@ -476,17 +476,17 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
                     }
                     else {
                         // put the user in the center of teh specified sim
-                        m_log.Log(LogLevel.DCOMM, "StartLogin: user spec middle of {0}", parts[0]);
                         loginSetting = OMV.NetworkManager.StartLocation(parts[0], 128, 128, 40);
+                        m_log.Log(LogLevel.DCOMM, "StartLogin: user spec middle of {0} -> {1}", parts[0], loginSetting);
                     }
                 }
                 else if (parts.Length == 4) {
                     int posX = int.Parse(parts[1]);
                     int posY = int.Parse(parts[2]);
                     int posZ = int.Parse(parts[3]);
-                    m_log.Log(LogLevel.DCOMM, "StartLogin: user spec start at {0}/{1}/{2}/{3}",
-                        parts[0], posX, posY, posZ);
                     loginSetting = OMV.NetworkManager.StartLocation(parts[0], posX, posY, posZ);
+                    m_log.Log(LogLevel.DCOMM, "StartLogin: user spec start at {0}/{1}/{2}/Z -> {3}",
+                        parts[0], posX, posY, loginSetting);
                 }
             }
             catch {
@@ -711,8 +711,6 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         // a full update says everything changed
         UpdateCodes updateFlags = UpdateCodes.Acceleration | UpdateCodes.AngularVelocity
                     | UpdateCodes.Position | UpdateCodes.Rotation | UpdateCodes.Velocity;
-        // updateFlags |= UpdateCodes.Textures;
-        // updateFlags |= UpdateCodes.PrimData;
         lock (m_opLock) {
             m_log.Log(LogLevel.DUPDATEDETAIL, "Object update: id={0}, p={1}, r={2}", 
                 args.Prim.LocalID, args.Prim.Position.ToString(), args.Prim.Rotation.ToString());
@@ -734,6 +732,11 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         // special update for the agent so it knows there is new info from the network
         // The real logic to push the update through happens in the IEntityAvatar.Update()
         if (updatedEntity != null) {
+            int thisHashCode = args.Prim.GetHashCode();
+            if (thisHashCode != updatedEntity.LastEntityHashCode) {
+                updateFlags |= UpdateCodes.FullUpdate;
+                updatedEntity.LastEntityHashCode = thisHashCode;
+            }
             if (updatedEntity == this.MainAgent.AssociatedAvatar) {
                 this.MainAgent.DataUpdate(updateFlags);
             }

@@ -37,6 +37,7 @@ public:
 	int cost;
 	Ogre::String uniq;
 	virtual void Process() {};
+	virtual void RecalculatePriority() {};
 	GenericQc() {
 		priority = 100;
 		cost = 50;
