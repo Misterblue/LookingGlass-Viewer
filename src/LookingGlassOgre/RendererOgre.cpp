@@ -463,14 +463,19 @@ namespace RendererOgre {
 		Ogre::ResourceGroupManager::getSingleton().declareResource(meshName,
 								"Mesh", OLResourceGroupName
 								);
-		Ogre::MovableObject* ent = sceneMgr->createEntity(entName, meshName);
-		// it's not scenery
-		ent->removeQueryFlags(Ogre::SceneManager::WORLD_GEOMETRY_TYPE_MASK);	
-		// Ogre::MovableObject* ent = sceneMgr->createEntity(entName, Ogre::SceneManager::PT_SPHERE);	// DEBUG
-		// this should somehow be settable
-		ent->setCastShadows(true);
-		sceneNode->attachObject(ent);
-		m_visCalc->RecalculateVisibility();
+		try {
+			Ogre::MovableObject* ent = sceneMgr->createEntity(entName, meshName);
+			// it's not scenery
+			ent->removeQueryFlags(Ogre::SceneManager::WORLD_GEOMETRY_TYPE_MASK);	
+			// Ogre::MovableObject* ent = sceneMgr->createEntity(entName, Ogre::SceneManager::PT_SPHERE);	// DEBUG
+			// this should somehow be settable
+			ent->setCastShadows(true);
+			sceneNode->attachObject(ent);
+			m_visCalc->RecalculateVisibility();
+		}
+		catch (Ogre::Exception e) {
+			// we presume this is because the entity already exists
+		}
 		return;
 	}
 
@@ -484,19 +489,28 @@ namespace RendererOgre {
 		Ogre::SceneNode* node = NULL;
 		Ogre::Quaternion rot = Ogre::Quaternion(ow, ox, oy, oz);
 
-		if (parentNode == 0) {
-			node = sceneMgr->getRootSceneNode()->createChildSceneNode(nodeName);
+		try {
+			if (parentNode == 0) {
+				node = sceneMgr->getRootSceneNode()->createChildSceneNode(nodeName);
+			}
+			else {
+				node = parentNode->createChildSceneNode(nodeName);
+			}
+			node->setInheritScale(inheritScale);
+			node->setInheritOrientation(inheritOrientation);
+			node->setScale(sx, sy, sz);
+			node->translate(px, py, pz);
+			node->rotate(rot);
+			node->setVisible(true);
+			node->setInitialState();
 		}
-		else {
-			node = parentNode->createChildSceneNode(nodeName);
+		catch (Ogre::Exception e) {
+			if (sceneMgr->hasSceneNode(nodeName)) {
+				// There is a race condition high up in LG and there can be two requests
+				//   to create the same scene node. This prevents that from being a bad thing.
+				node = sceneMgr->getSceneNode(nodeName);
+			}
 		}
-		node->setInheritScale(inheritScale);
-		node->setInheritOrientation(inheritOrientation);
-		node->setScale(sx, sy, sz);
-		node->translate(px, py, pz);
-		node->rotate(rot);
-		node->setVisible(true);
-		node->setInitialState();
 		return node;
 	}
 

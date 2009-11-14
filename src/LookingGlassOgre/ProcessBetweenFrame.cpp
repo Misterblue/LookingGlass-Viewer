@@ -171,9 +171,11 @@ public:
 	Ogre::String meshName;
 	int* faceCounts;
 	float* faceVertices;
+	float origPriority;
 	CreateMeshResourceQc(float prio, Ogre::String uni, 
 					const char* mName, const int* faceC, const float* faceV) {
 		this->priority = prio;
+		this->origPriority = prio;
 		this->cost = 100;
 		this->uniq = uni;
 		this->meshName = Ogre::String(mName);
@@ -191,6 +193,10 @@ public:
 	void Process() {
 		m_ro->CreateMeshResource(this->meshName.c_str(), this->faceCounts, this->faceVertices);
 	}
+
+	void RecalculatePriority() {
+		return;
+	}
 };
 
 // ====================================================================
@@ -205,6 +211,7 @@ public:
 	float px; float py; float pz;
 	float sx; float sy; float sz;
 	float ow; float ox; float oy; float oz;
+	float origPriority;
 	CreateMeshSceneNodeQc(float prio, Ogre::String uni,
 					Ogre::SceneManager* sceneMgr, 
 					char* sceneNodeName,
@@ -216,6 +223,7 @@ public:
 					float sx, float sy, float sz,
 					float ow, float ox, float oy, float oz) {
 		this->priority = prio;
+		this->origPriority = prio;
 		this->cost = 10;
 		this->uniq = uni;
 		this->sceneMgr = sceneMgr;
@@ -243,6 +251,22 @@ public:
 					this->sx, this->sy, this->sz,
 					this->ow, this->ox, this->oy, this->oz);
 		m_ro->AddEntity(this->sceneMgr, node, this->entityName.c_str(), this->meshName.c_str());
+	}
+	void RecalculatePriority() {
+		Ogre::Vector3 ourLoc = Ogre::Vector3(this->px, this->py, this->pz);
+		this->priority = ourLoc.distance(m_ro->m_camera->getPosition());
+		/*
+		Ogre::Vector3 cameraRelation = m_ro->m_camera->getOrientation() * ourLoc;
+		if (cameraRelation.x < 0) {
+			// we're behind the camera
+			this->priority = this->priority + 300.0;
+		}
+		*/
+		if (!m_ro->m_camera->isVisible(Ogre::Sphere(ourLoc, 3.0))) {
+			// we're not visible at the moment so no rush to create us
+			this->priority = this->priority + 500.0;
+		}
+		return;
 	}
 };
 

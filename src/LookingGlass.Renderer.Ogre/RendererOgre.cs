@@ -570,6 +570,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             // TODO: Figure out how to make this dynamic, extendable and runtime
             ent.SetAddition(RendererOgre.AddWorldRenderConv, RendererOgreLL.Instance);
         }
+        // We don't create the entity here because an update immediately follows the 'new'
+        //    call. That update will create the entity with the new values.
         // DoRenderQueued(ent);
         return;
     }
@@ -606,11 +608,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     }
                 }
 
-                // create the mesh we know we need
                 EntityName entMeshName = (EntityName)m_ri.basicObject;
-                if (m_shouldForceMeshRebuild) {
-                    RequestMesh(m_ent.Name.Name, entMeshName.Name);
-                }
 
                 // Find a handle to the parent for this node
                 string parentSceneNodeName = null;
@@ -647,6 +645,10 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                 // we can find it later.
                 m_ent.SetAddition(RendererOgre.AddSceneNodeName, entitySceneNodeName);
 
+                // create the mesh we know we need
+                if (m_shouldForceMeshRebuild) {
+                    RequestMesh(m_ent.Name.Name, entMeshName.Name);
+                }
             }
             catch (Exception e) {
                 m_log.Log(LogLevel.DBADERROR, "Render: Failed conversion: " + e.ToString());
