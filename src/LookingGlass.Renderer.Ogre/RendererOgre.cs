@@ -651,11 +651,31 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                 }
             }
             catch (Exception e) {
-                m_log.Log(LogLevel.DBADERROR, "Render: Failed conversion: " + e.ToString());
+                m_log.Log(LogLevel.DBADERROR, "Render: Failed conversion of {0}: {1}", m_ent.Name.Name, e.ToString());
             }
         }
         else {
             // the entity already has a scene node. We're just forcing the rebuild of the prim
+            if (m_ri == null) {
+                m_ri = RendererOgre.GetWorldRenderConv(m_ent).RenderingInfo(qInstance.priority,
+                        m_sceneMgr, m_ent, qInstance.timesRequeued);
+                if (m_ri == null) {
+                    // The rendering info couldn't be built now. This is usually because
+                    // the parent of this object is not available so we don't know where to put it
+                    m_log.Log(LogLevel.DRENDERDETAIL,
+                        "Delaying rendering with scene node {0}/{1}. RenderingInfo not built for {2}",
+                        qInstance.sequence, qInstance.timesRequeued, m_ent.Name.Name);
+                    return false;
+                }
+                else {
+                    // save the value in the parameter block if we get called again ('return false' below)
+                    loadParams[1] = (Object)m_ri;
+                }
+            }
+
+            EntityName entMeshName = (EntityName)m_ri.basicObject;
+            m_log.Log(LogLevel.DRENDERDETAIL, "DoRenderLater: entity has scenenode. Rebuilding mesh: {0}", entMeshName);
+            RequestMesh(m_ent.Name.Name, entMeshName.Name);
         }
         return true;
     }
@@ -676,8 +696,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             // if (dir.X < 0) dist += 200;
             if (dist < 0) dist = -dist;
             if (dist > 1000.0) dist = 1000.0;
-            m_log.Log(LogLevel.DRENDERDETAIL, "CalcualteInterestOrder: ent={0}, cam={1}, d={2}", 
-                        ent.GlobalPosition, m_lastCameraPosition, dist);
+            // m_log.Log(LogLevel.DRENDERDETAIL, "CalcualteInterestOrder: ent={0}, cam={1}, d={2}", 
+            //             ent.GlobalPosition, m_lastCameraPosition, dist);
             ret = (float)dist;
         }
         return ret;
@@ -692,30 +712,47 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     public void RenderUpdate(IEntity ent, UpdateCodes what) {
         float priority = CalculateInterestOrder(ent);
         bool fullUpdate = false;    // true if a full update was done on this entity
-        if ((what & UpdateCodes.Material) != 0) {
-            // the materials have changed on this entity. Cause materials to be recalcuated
-            m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: Material changed");
-        }
-        if (((what & UpdateCodes.ParentID) != 0) && ((what & UpdateCodes.New) == 0)) {
-            // prim was detached or attached. Rerender if not the first update
-            m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: parentID changed");
+        if ((what & UpdateCodes.New) != 0) {
+            // new entity. Gets the full treatment
+            m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: New entity: {0}", ent.Name.Name);
             DoRenderQueued(ent);
             fullUpdate = true;
         }
-        // if (((what & (UpdateCodes.PrimFlags | UpdateCodes.PrimData)) != 0) && ((what & UpdateCodes.New) == 0)) {
-        if ((what & (UpdateCodes.PrimFlags | UpdateCodes.PrimData)) != 0) {
-            // the prim parameters were changed. Re-render if this is not the new creation request
-            m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: prim data changed");
-            DoRenderQueued(ent);
-            fullUpdate = true;
-        }
-        if (((what & UpdateCodes.Textures) != 0) && ((what & UpdateCodes.New) == 0)) {
-            // texure on the prim were updated. Refresh them if not the initial creation update
-            m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: textures changed");
-            // to get the textures to refresh, we must force the situation
-            if (RendererOgre.GetWorldRenderConv(ent) != null) {
-                RendererOgre.GetWorldRenderConv(ent).RebuildEntityMaterials(priority, ent);
-                Ogr.RefreshResourceBF(priority, Ogr.ResourceTypeMesh, EntityNameOgre.ConvertToOgreMeshName(ent.Name).Name);
+        if ((what & UpdateCodes.New) == 0) {
+            // don't do these checks if the entity is new
+            if ((what & UpdateCodes.ParentID) != 0) {
+                // prim was detached or attached. Rerender if not the first update
+                m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: parentID changed");
+                DoRenderQueued(ent);
+                fullUpdate = true;
+            }
+            if ((what & UpdateCodes.Material) != 0) {
+                // the materials have changed on this entity. Cause materials to be recalcuated
+                m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: Material changed");
+            }
+            // if (((what & (UpdateCodes.PrimFlags | UpdateCodes.PrimData)) != 0))) {
+            if ((what & (UpdateCodes.PrimFlags | UpdateCodes.PrimData)) != 0) {
+                // the prim parameters were changed. Re-render if this is not the new creation request
+                m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: prim data changed");
+                DoRenderQueued(ent);
+                fullUpdate = true;
+            }
+            if ((what & UpdateCodes.Textures) != 0) {
+                // texure on the prim were updated. Refresh them if not the initial creation update
+                m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: textures changed");
+                // to get the textures to refresh, we must force the situation
+                if (RendererOgre.GetWorldRenderConv(ent) != null) {
+                    RendererOgre.GetWorldRenderConv(ent).RebuildEntityMaterials(priority, ent);
+                    Ogr.RefreshResourceBF(priority, Ogr.ResourceTypeMesh, EntityNameOgre.ConvertToOgreMeshName(ent.Name).Name);
+                }
+            }
+            if ((what & UpdateCodes.Text) != 0) {
+                // text associated with the prim changed
+                m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: text changed");
+            }
+            if ((what & UpdateCodes.Particles) != 0) {
+                // particles associated with the prim changed
+                m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: particles changed");
             }
         }
         if (!fullUpdate && (what & (UpdateCodes.Scale | UpdateCodes.Position | UpdateCodes.Rotation)) != 0) {
@@ -728,14 +765,6 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                 false, 1f, 1f, 1f,  // don't pass scale yet
                 ((what & UpdateCodes.Rotation) != 0),
                 ent.Heading.W, ent.Heading.X, ent.Heading.Y, ent.Heading.Z);
-        }
-        if ((what & UpdateCodes.Text) != 0) {
-            // text associated with the prim changed
-            m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: text changed");
-        }
-        if ((what & UpdateCodes.Particles) != 0) {
-            // particles associated with the prim changed
-            m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: particles changed");
         }
         return;
     }

@@ -124,19 +124,22 @@ public class RendererOgreLL : IWorldRenderConv {
 
         RenderableInfo ri = new RenderableInfo();
         // figure out what this entity is:
-        LLEntityAvatar av = null;
-        if (llent.TryGet<LLEntityAvatar>(out av)) {
+        IEntityAvatar av = null;
+        if (ent.TryGet<IEntityAvatar>(out av)) {
             // this is an avatar
             ri.basicObject = new EntityNameLL(m_defaultAvatarMesh);
+            ri.parentEntity = null;
             ri.rotation = av.Heading;
             ri.position = av.RelativePosition;
             ri.scale = new OMV.Vector3(m_sceneMagnification, m_sceneMagnification, m_sceneMagnification);
+            m_log.Log(LogLevel.DRENDERDETAIL, "RenderingInfo: assigning mesh to avatar: {0}", m_defaultAvatarMesh);
         }
         // else if (llent.TryGet<LLEntityAttachment>(out atch) {
         // }
         else {
             // must be a regular prim
-            if (prim == null) throw new LookingGlassException("ASSERT: RenderOgreLL: prim is null");
+            if (prim == null) 
+                throw new LookingGlassException("ASSERT: RenderOgreLL: prim is null");
 
             EntityName newMeshName = EntityNameOgre.ConvertToOgreMeshName(ent.Name);
             ri.basicObject = newMeshName;   // pass the name of the mesh that should be created
@@ -398,15 +401,15 @@ public class RendererOgreLL : IWorldRenderConv {
         }
 
         // figure out what this entity is:
-        LLEntityAvatar av = null;
-        if (llent.TryGet<LLEntityAvatar>(out av)) {
+        IEntityAvatar av = null;
+        if (llent.TryGet<IEntityAvatar>(out av)) {
             // this is an avatar
             // materials are done all differently
         }
         // else if (llent.TryGet<LLEntityAttachment>(out atch) {
         // }
         else {
-            if (prim == null) throw new LookingGlassException("ASSERT: RenderOgreLL: prim is null");
+            if (prim == null) throw new LookingGlassException("ASSERT: RenderOgreLL: prim is null 2");
 
             int faceNum = EntityNameOgre.GetFaceFromOgreMaterialNameX(materialName);
             if (faceNum < 0) {
@@ -514,13 +517,13 @@ public class RendererOgreLL : IWorldRenderConv {
             throw e;
         }
 
-        LLEntityAvatar av = null;
-        if (llent.TryGet<LLEntityAvatar>(out av)) {
+        IEntityAvatar av = null;
+        if (llent.TryGet<IEntityAvatar>(out av)) {
             // this is an avatar and the material mapping is really different
         }
         else {
             // a standard prim, for the rebulding of it's materials
-            if (prim == null) throw new LookingGlassException("ASSERT: RenderOgreLL: prim is null");
+            if (prim == null) throw new LookingGlassException("ASSERT: RenderOgreLL: prim is null 3");
             CreateMaterialResource6X(priority, llent, prim, 6);
         }
     }

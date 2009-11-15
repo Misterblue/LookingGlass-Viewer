@@ -479,7 +479,7 @@ void ProcessBetweenFrame::ProcessWorkItems(int numToProcess) {
 		m_modified = false;
 	}
 	int loopCost = numToProcess;
-	while (!m_betweenFrameWork.empty() && (loopCost > 0) ) {
+	while (!m_betweenFrameWork.empty() && (m_betweenFrameWork.size() > 6000 || (loopCost > 0) ) ) {
 		LGLOCK_LOCK(m_workItemMutex);
 		GenericQc* workGeneric = (GenericQc*)m_betweenFrameWork.front();
 		m_betweenFrameWork.pop_front();

@@ -149,6 +149,7 @@ public sealed class World : ModuleBase, IWorld, IProvider {
     #region REGION EVENT PROCESSING
     private RegionEntityNewCallback Region_OnNewEntityCallback = null;
     private void Region_OnNewEntity(IEntity ent) {
+        m_log.Log(LogLevel.DWORLDDETAIL, "Region_OnNewEntity: {0}", ent.Name.Name);
         if (OnWorldEntityNew != null) OnWorldEntityNew(ent);
         return;
     }
@@ -161,6 +162,7 @@ public sealed class World : ModuleBase, IWorld, IProvider {
 
     private RegionEntityRemovedCallback Region_OnRemovedEntityCallback = null;
     private void Region_OnRemovedEntity(IEntity ent) {
+        m_log.Log(LogLevel.DWORLDDETAIL, "Region_OnRemovedEntity: {0}", ent.Name.Name);
         if (OnWorldEntityRemoved != null) OnWorldEntityRemoved(ent);
         return;
     }

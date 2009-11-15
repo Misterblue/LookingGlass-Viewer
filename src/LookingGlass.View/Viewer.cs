@@ -185,7 +185,8 @@ public class Viewer : ModuleBase, IViewProvider {
     private void World_OnEntityUpdate(IEntity ent, World.UpdateCodes what) {
         IEntityAvatar av = null;
         if (ent.TryGet<IEntityAvatar>(out av)) {
-            m_log.Log(LogLevel.DUPDATEDETAIL|LogLevel.DVIEWDETAIL, "OnEntityUpdate: Avatar.");
+            m_log.Log(LogLevel.DUPDATEDETAIL|LogLevel.DVIEWDETAIL, "OnEntityUpdate: Avatar: {0}", ent.Name.Name);
+            this.Renderer.RenderUpdate(ent, what);
         }
         else {
             m_log.Log(LogLevel.DUPDATEDETAIL|LogLevel.DVIEWDETAIL, "OnEntityUpdate: Other. w={0}", what);

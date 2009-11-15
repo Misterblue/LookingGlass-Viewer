@@ -849,12 +849,12 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
                                 args.Avatar.FirstName, args.Avatar.LastName, args.Avatar.ID);
                             IEntityAvatar newEnt = new LLEntityAvatar(rcontext.AssetContext,
                                             rcontext, args.Simulator.Handle, args.Avatar);
+                            updateFlags |= UpdateCodes.New;
                             return (IEntity)newEnt;
                         }) ) {
                 updatedEntity.RelativePosition = args.Avatar.Position;
                 updatedEntity.Heading = args.Avatar.Rotation;
-                updateFlags |= UpdateCodes.New;     // a new avatar
-                // we can check here if this avatar goes with the agent in the world
+                // We check here if this avatar goes with the agent in the world
                 // If this av is with the agent, make the connection
                 if (args.Avatar.LocalID == m_client.Self.LocalID) {
                     m_log.Log(LogLevel.DUPDATEDETAIL, "AvatarUpdate: associating agent with new avatar");
