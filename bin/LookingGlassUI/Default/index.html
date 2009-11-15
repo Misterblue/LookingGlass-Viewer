@@ -6,6 +6,7 @@
 <link rel="stylesheet" href="/static/LookingGlass.css" type="text/css"/>
 <script type="application/javascript" src="/std/jquery.js"></script>
 <script type="application/javascript" src="/std/LGScripts.js"></script>
+<script type="application/javascript" src="/std/jquery.sparkline.min.js"></script>
 <script type="application/javascript">
 $(document).ready(function() {
     // setup form to post info when 'Login' is pressed
@@ -102,7 +103,14 @@ function SendLoginRequest() {
 
 // One of the sections is viewer statistics. Poll for the data.
 var statTimerHandle;
+var graphFPS;
+var xxThru = 0;
 function TimerDataStuff() {
+    statTimerHandle = setTimeout('TimerStatDisplay()', 2000);
+}
+
+// called by timer to fetch and display statistic information
+function TimerStatDisplay() {
     if ($('#LGQueueStats').is(':visible')) {
         $.getJSON(BASEURL+'/api/stats/workQueues', function(data, status) {
             if (status == 'success') {
@@ -116,7 +124,14 @@ function TimerDataStuff() {
         });
         $.getJSON(BASEURL+'/api/stats/Renderer/ogreStats', function(data, status) {
             if (status == 'success') {
-                BuildBasicTable('#LGOgreStats', data, false, false);
+                BuildBasicTable('#LGOgreStats', data, false, false, true);
+                if (typeof(graphFPS) == 'undefined') {
+                    graphFPS = new TrendData(100);
+                    graphFPS.Format = {type:'bar', width:'auto',height:'20px'};
+                                
+                }
+                graphFPS.AddPoint(data['framespersecond']['value']);
+                graphFPS.UpdateDisplay('#LGOgreStats-framespersecond-Display');
             }
         });
         $.getJSON(BASEURL+'/api/stats/Comm/stats', function(data, status) {
@@ -125,7 +140,7 @@ function TimerDataStuff() {
             }
         });
     }
-    statTimerHandle = setTimeout('TimerDataStuff()', 2000);
+    statTimerHandle = setTimeout('TimerStatDisplay()', 2000);
 };
 
 function DebugLog(msg) {

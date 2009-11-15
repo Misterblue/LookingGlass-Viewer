@@ -69,9 +69,15 @@ th.LGOgreStats-value-header {
     width: 10%;
 }
 th.LGOgreStats-description-header {
-    width: 60%;
+    width: 45%;
+}
+th.LGOgreStats-Display-header {
+    width: 45%;
 }
 table.LGOgreStats-table-class td.LGOgreStats-description-class {
+    text-align: left;
+}
+table.LGOgreStats-table-class td.LGOgreStats-Display-class {
     text-align: left;
 }
 

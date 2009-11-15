@@ -291,7 +291,10 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         // add an initial parameter that calculates frames per sec
         m_ogreStats.Add("FramesPerSecond",
             delegate(string xx) {
-                return new OMVSD.OSDString(((float)m_ogreStatsPinned[Ogr.StatFramesPerSec] / 1000f).ToString());
+                // Ogre passed the number *1000 so  there can be some decimal points
+                float fps = (float)m_ogreStatsPinned[Ogr.StatFramesPerSec] / 1000f;
+                fps = Math.Min(fps, 30.0);
+                return new OMVSD.OSDString(fps.ToString());
             }, "Frames per second"
         );
         m_ogreStats.Add("LastFrameMS", delegate(string xx) {
