@@ -43,7 +43,7 @@ public class BasicWorkQueue : IWorkQueue {
     private Queue<DoLaterBase> m_workItems;
     private int m_activeWorkProcessors;
     public int ActiveWorkProcessors { get { return m_activeWorkProcessors; } }
-    private int m_workProcessorsMax = 4;
+    private int m_workProcessorsMax = 10;
     public int MaxWorkProcessors { get { return m_workProcessorsMax; } set { m_workProcessorsMax = value; } }
 
     // IWorkQueue.CurrentQueued()

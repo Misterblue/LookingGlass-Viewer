@@ -234,7 +234,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
 
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.Processor", "FrustrumDistance",
                     "Name of the culling plugin to use ('FrustrumDistance', 'VariableFrustDist', 'none')");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.Cull.Frustrum", "true",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.Cull.Frustrum", "false",
                     "whether to cull (unload) objects if not visible in camera frustrum");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.Cull.Distance", "true",
                     "whether to cull (unload) objects depending on distance from camera");
