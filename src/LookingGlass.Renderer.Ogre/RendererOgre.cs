@@ -293,7 +293,6 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             delegate(string xx) {
                 // Ogre passed the number *1000 so  there can be some decimal points
                 float fps = (float)m_ogreStatsPinned[Ogr.StatFramesPerSec] / 1000f;
-                fps = Math.Min(fps, 30.0);
                 return new OMVSD.OSDString(fps.ToString());
             }, "Frames per second"
         );
