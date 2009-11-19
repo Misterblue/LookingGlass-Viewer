@@ -110,14 +110,18 @@ namespace RendererOgre {
 	// with any extra time.
 	unsigned long m_lastFrameTime;
 	bool RendererOgre::renderOneFrame(bool pump, int len) {
-		bool ret = false;
+		bool ret = true;
 		unsigned long now = timeKeeper->getMilliseconds();
 		unsigned long timeStartedLastFrame = timeKeeper->getMilliseconds();
 		if (m_root != NULL) {
+			LGLOCK_LOCK(m_sceneGraphLock);
 			ret = m_root->renderOneFrame();
+			LGLOCK_UNLOCK(m_sceneGraphLock);
+			LGLOCK_NOTIFY_ALL(m_sceneGraphLock);
 			if (pump) Ogre::WindowEventUtilities::messagePump();
 		}
 
+		/*
 		// The amount of time a frame takes to render is passed to us
 		// If we have time left over and there is between frame processing, do them
 		int remaining = len - ((int)(now - timeStartedLastFrame));
@@ -131,6 +135,7 @@ namespace RendererOgre {
 			now = timeKeeper->getMilliseconds();
 			remaining = len - ((int)(now - timeStartedLastFrame));
 		}
+		*/
 		int totalMSForLastFrame = (int)(timeKeeper->getMilliseconds() - m_lastFrameTime);
 		if (totalMSForLastFrame <= 0) totalMSForLastFrame = 1;
 		LookingGlassOgr::SetStat(LookingGlassOgr::StatLastFrameMs, totalMSForLastFrame);
@@ -184,6 +189,9 @@ namespace RendererOgre {
 	// (camera, lights, ...), all the resource managers and the user input system.
 	void RendererOgre::initialize() {
 		Log("RendererOgre::initialize: ");
+
+		m_sceneGraphLock = LGLOCK_ALLOCATE_MUTEX("sceneGraph");
+
 		m_cacheDir = LookingGlassOgr::GetParameter("Renderer.Ogre.CacheDir");
 		m_preloadedDir = LookingGlassOgr::GetParameter("Renderer.Ogre.PreLoadedDir");
 

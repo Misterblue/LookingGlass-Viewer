@@ -63,14 +63,14 @@ public:
 	void NotifyOne();
 	void NotifyAll();
 
-	// public so we can reference it in Wait()
-	boost::mutex* m_mutex;
-private:
 #ifdef LGLOCK_PTHREADS
 #endif
 #ifdef LGLOCK_BOOST
+	// public so we can reference it in Wait()
+	boost::mutex* m_mutex;
 	boost::condition* m_condition;
 #endif
+private:
 
 };
 
@@ -86,9 +86,15 @@ extern void LGLock_Release_Lock(LGLock* lock);
 #define LGLOCK_LOCK(mutex) (mutex)->Lock()
 #define LGLOCK_UNLOCK(mutex) (mutex)->Unlock()
 
+#ifdef LGLOCK_BOOST
+#define LGLOCK_WAIT(mutex) (mutex)->m_condition(mutex)->Wait((mutex)->m_mutex);
+#define LGLOCK_NOTIFY_ONE(mutex) (mutex)->m_condition->notify_one();
+#define LGLOCK_NOTIFY_ALL(mutex) (mutex)->m_condition->notify_all();
+#else
 #define LGLOCK_WAIT(mutex) (mutex)->Wait((mutex)->m_mutex);
 #define LGLOCK_NOTIFY_ONE(mutex) (mutex)->NotifyOne();
 #define LGLOCK_NOTIFY_ALL(mutex) (mutex)->NotifyAll();
+#endif
 
 #define LGLOCK_THREAD boost::thread
 #define LGLOCK_ALLOCATE_THREAD(func) new boost::thread(boost::function0<void>(func));

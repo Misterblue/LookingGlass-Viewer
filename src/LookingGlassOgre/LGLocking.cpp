@@ -39,6 +39,7 @@ LGLock::LGLock(Ogre::String nam) {
 LGLock::~LGLock() { 
 #if defined(LGLOCK_BOOST)
 	delete m_mutex;
+	delete m_condition;
 	m_mutex = NULL;
 #endif
 }

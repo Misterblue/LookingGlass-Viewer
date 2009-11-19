@@ -23,6 +23,7 @@
 #pragma once
 
 #include "LGOCommon.h"
+#include "LGLocking.h"
 #include "UserIO.h"
 #include "OLMaterialTracker.h"
 #include "OLMeshTracker.h"
@@ -82,6 +83,9 @@ public:
 	ProcessBetweenFrame::ProcessBetweenFrame* ProcessBetweenFrame() { return m_processBetweenFrame; }
 	OLMeshTracker::OLMeshTracker* MeshTracker() { return m_meshTracker; }
 
+	// mutex  that is locked when the scene graph is in use
+	LGLOCK_MUTEX SceneGraphLock() { return m_sceneGraphLock; }
+
 	// Utility functions
 	void Log(const char*, ...);
 	const char* GetParameter(const char*);
@@ -117,9 +121,14 @@ private:
 
 	// USER IO
 	UserIO* m_userio;
+
+	// Renderer Ogre is the keeper of various things that should be Singletons
 	OLMaterialTracker::OLMaterialTracker* m_materialTracker;
 	ProcessBetweenFrame::ProcessBetweenFrame* m_processBetweenFrame;
 	OLMeshTracker::OLMeshTracker* m_meshTracker;
+
+	// Lock for the scene graph. Locked when doing RenderOneFrame.
+	LGLOCK_MUTEX m_sceneGraphLock;
 
 	Ogre::String m_cacheDir; 
 	Ogre::String m_preloadedDir; 
