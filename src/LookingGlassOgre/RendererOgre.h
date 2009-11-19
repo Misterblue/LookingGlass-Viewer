@@ -25,6 +25,7 @@
 #include "LGOCommon.h"
 #include "UserIO.h"
 #include "OLMaterialTracker.h"
+#include "OLMeshTracker.h"
 #include "ProcessBetweenFrame.h"
 #include "SkyBoxBase.h"
 #include "VisCalcBase.h"
@@ -74,12 +75,12 @@ public:
 	// Resource groups
 	Ogre::String EntityNameToFilename(const Ogre::String, const Ogre::String);
 	void CreateParentDirectory(const Ogre::String);
-	void meshToResource(Ogre::MeshPtr, const Ogre::String);
 	void MakeParentDir(const Ogre::String);
 
 	// when a material resource is changed, tell Ogre to reload the things that use it
 	OLMaterialTracker::OLMaterialTracker* MaterialTracker() { return m_materialTracker; }
 	ProcessBetweenFrame::ProcessBetweenFrame* ProcessBetweenFrame() { return m_processBetweenFrame; }
+	OLMeshTracker::OLMeshTracker* MeshTracker() { return m_meshTracker; }
 
 	// Utility functions
 	void Log(const char*, ...);
@@ -118,12 +119,12 @@ private:
 	UserIO* m_userio;
 	OLMaterialTracker::OLMaterialTracker* m_materialTracker;
 	ProcessBetweenFrame::ProcessBetweenFrame* m_processBetweenFrame;
+	OLMeshTracker::OLMeshTracker* m_meshTracker;
 
 	Ogre::String m_cacheDir; 
 	Ogre::String m_preloadedDir; 
 	Ogre::String m_defaultTerrainMaterial; 
 	bool m_serializeMeshes;
-	Ogre::MeshSerializer* m_meshSerializer;
 
 	Ogre::Quaternion m_desiredCameraOrientation;
 	float m_desiredCameraOrientationProgress;

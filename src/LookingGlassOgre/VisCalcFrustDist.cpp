@@ -24,6 +24,7 @@
 #include "VisCalcFrustDist.h"
 #include "LookingGlassOgre.h"
 #include "RendererOgre.h"
+#include "OLMeshTracker.h"
 
 namespace VisCalc { 
 	
@@ -183,7 +184,8 @@ void VisCalcFrustDist::calculateEntityVisibility(Ogre::Node* node) {
 	}
 }
 
-// overloadable function that asks if, given this camera and entity, is the entity visible
+// Overloadable function that asks if, given this camera and entity, is the entity visible
+// Allows this class to be subclassed and just extend this one visibility calcuation
 bool VisCalcFrustDist::CalculateVisibilityImpl(Ogre::Camera* cam, Ogre::Entity* ent, float entDistance) {
 	float snodeEntitySize = ent->getBoundingRadius() * 2;
 	bool frust = m_shouldCullByFrustrum && cam->isVisible(ent->getWorldBoundingBox());
@@ -193,6 +195,24 @@ bool VisCalcFrustDist::CalculateVisibilityImpl(Ogre::Camera* cam, Ogre::Entity* 
 		|| (!m_shouldCullByFrustrum && dist)	// if dist cull only, it must be true
 		|| (dist && frust);						// if cull both ways, both must be true
 	return viz;
+}
+
+// Return TRUE if an object of this size should be seen at this distance
+bool VisCalcFrustDist::calculateScaleVisibility(float dist, float siz) {
+	// LookingGlassOgr::Log("calculateScaleVisibility: dist=%f, siz=%f", dist, siz);
+	// if it's farther than max, don't display
+	if (dist >= m_visibilityScaleMaxDistance) return false;
+	// if it's closer than min, display it
+	if (dist <= m_visibilityScaleMinDistance) return true;
+	// if it is large enough for within large thing bound, display it
+	if (siz >= m_visibilityScaleLargeSize && dist > m_visibilityScaleOnlyLargeAfter) return true;
+	// if it's size scales to big enough within scalemin and scalemax, display it
+	if (siz > ((dist - m_visibilityScaleMinDistance)
+				/(m_visibilityScaleMaxDistance - m_visibilityScaleMinDistance) 
+				* m_visibilityScaleLargeSize)) return true;
+	// not reason found to display it so don't
+	return false;
+
 }
 
 // BETWEEN FRAME OPERATION
@@ -271,29 +291,10 @@ void VisCalcFrustDist::unloadTheMesh(Ogre::MeshPtr meshP) {
 		}
 	}
 	if (m_shouldCullMeshes) {
-		Ogre::String mshName = meshP->getName();
-		Ogre::MeshManager::getSingleton().unload(mshName);
+		m_ro->MeshTracker()->MakeUnLoaded(meshP->getName(), NULL, NULL);
 		LookingGlassOgr::IncStat(LookingGlassOgr::StatCullMeshesUnloaded);
 		// LookingGlassOgr::Log("unloadTheMesh: unloading mesh %s", mshName.c_str());
 	}
-}
-
-// Return TRUE if an object of this size should be seen at this distance
-bool VisCalcFrustDist::calculateScaleVisibility(float dist, float siz) {
-	// LookingGlassOgr::Log("calculateScaleVisibility: dist=%f, siz=%f", dist, siz);
-	// if it's farther than max, don't display
-	if (dist >= m_visibilityScaleMaxDistance) return false;
-	// if it's closer than min, display it
-	if (dist <= m_visibilityScaleMinDistance) return true;
-	// if it is large enough for within large thing bound, display it
-	if (siz >= m_visibilityScaleLargeSize && dist > m_visibilityScaleOnlyLargeAfter) return true;
-	// if it's size scales to big enough within scalemin and scalemax, display it
-	if (siz > ((dist - m_visibilityScaleMinDistance)
-				/(m_visibilityScaleMaxDistance - m_visibilityScaleMinDistance) 
-				* m_visibilityScaleLargeSize)) return true;
-	// not reason found to display it so don't
-	return false;
-
 }
 
 }

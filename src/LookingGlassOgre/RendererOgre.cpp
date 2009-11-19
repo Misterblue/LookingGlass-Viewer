@@ -40,7 +40,6 @@
 namespace RendererOgre {
 
 	RendererOgre::RendererOgre() {
-		m_meshSerializer = NULL;
 	}
 
 	RendererOgre::~RendererOgre() {
@@ -267,6 +266,7 @@ namespace RendererOgre {
 		int betweenWork = LookingGlassOgr::GetParameterInt("Renderer.Ogre.BetweenFrame.WorkItems");
 		if (betweenWork == 0) betweenWork = 5000;
 		m_processBetweenFrame = new ProcessBetweenFrame::ProcessBetweenFrame(this, betweenWork);
+		m_meshTracker = new OLMeshTracker::OLMeshTracker(this);
 
 		// listener to catch references to materials in meshes when they are read in
 		Ogre::MeshManager::getSingleton().setListener(new OLMeshSerializerListener(this));
@@ -609,7 +609,7 @@ namespace RendererOgre {
 
 			if (m_serializeMeshes) {
 				// serialize the mesh to the filesystem
-				meshToResource(mesh, entName);
+				m_meshTracker->MakePersistant(mesh, entName);
 			}
 			// you'd think doing  the unload here would be the right thing but it causes crashes
 			// Ogre::MeshManager::getSingleton().unload(entName);
@@ -624,6 +624,7 @@ namespace RendererOgre {
 		return;
 	}
 
+	/*
 	// Create a simple cube to be the loading mesh representation
 	void RendererOgre::GenerateLoadingMesh() {
 		Ogre::String loadingMeshName = "LookingGlass/LoadingShape";
@@ -636,23 +637,6 @@ namespace RendererOgre {
 		Log("RendererOgre::GenerateLoadingMesh: ");
 
 		mo->begin(loadingMaterialName);
-		/*
-		mo->position(0.0, 0.0, 0.0);
-		mo->position(0.0, 0.0, 1.0);
-		mo->position(0.0, 1.0, 0.0);
-		mo->position(0.0, 1.0, 1.0);
-		mo->position(1.0, 0.0, 0.0);
-		mo->position(1.0, 0.0, 1.0);
-		mo->position(1.0, 1.0, 0.0);
-		mo->position(1.0, 1.0, 1.0);
-		
-		mo->quad(0, 2, 3, 1);
-		mo->quad(2, 6, 7, 3);
-		mo->quad(0, 4, 6, 2);
-		mo->quad(0, 4, 5, 1);
-		mo->quad(4, 5, 7, 6);
-		mo->quad(7, 5, 1, 3);
-		*/
 		// top
 		mo->position(0.0, 1.0, 0.0);
 		mo->position(1.0, 1.0, 0.0);
@@ -697,7 +681,7 @@ namespace RendererOgre {
 		// since this is called only once, we don't bother freeing the mesh
 		return;
 	}
-
+*/
 	// Passed a bunch of vertices and index information, create the mesh that goes with it.
 	// The mesh is created and serialized to a .mesh file which just happens to be in the 
 	// same spot as the resource looker-upper will look to find it when the mesh is reloaded.
@@ -751,67 +735,15 @@ namespace RendererOgre {
 			fC += 3;
 			mo->end();
 		}
-			*/
 
 		if (m_serializeMeshes) {
 			// serialize the mesh to the filesystem
-			meshToResource(manualMesh, entName);
+			m_meshTracker->MakePersistant(mesh, entName);
 		}
+			*/
 
 		return;
 	}
-
-	// BETWEEN FRAME OPERATION
-void RendererOgre::meshToResource(Ogre::MeshPtr mesh, const Ogre::String entName) {
-	Log("OLMeshManager::meshToResource: creating mesh for %s", entName.c_str());
-	Ogre::String targetFilename = EntityNameToFilename(entName, "");
-
-	// Make sure the directory exists -- I wish the serializer did this for me
-	CreateParentDirectory(targetFilename);
-	
-	if (m_meshSerializer == NULL) {
-		m_meshSerializer = new Ogre::MeshSerializer();
-	}
-	m_meshSerializer->exportMesh(mesh.getPointer(), targetFilename);
-
-	// with the mesh on the disk, get rid of the one in memory and let it reload
-	// is the next step necessary?
-	// mesh->unload();
-	// Ogre::MeshManager::getSingleton().remove(mesh->getHandle());
-}
-
-Ogre::String RendererOgre::EntityNameToFilename(const Ogre::String entName, const Ogre::String suffix) {
-	Ogre::String fullFilename = m_cacheDir;
-	fullFilename += "/";
-	fullFilename += entName;
-	fullFilename += suffix;
-	return fullFilename;
-}
-// Given a filename, make sure all it's parent directories exist
-void RendererOgre::CreateParentDirectory(const Ogre::String filename) {
-	// make any backslashes into forward slashes
-	Ogre::String fn = filename;
-	Ogre::String::size_type ii;
-	while ((ii = fn.find_first_of("\\")) != Ogre::String::npos) {
-		fn.replace(ii, 1, 1, '/');
-	}
-	MakeParentDir(fn);
-	return;
-}
-
-void RendererOgre::MakeParentDir(const Ogre::String filename) {
-	Ogre::String::size_type lastSlash = filename.find_last_of('/');
-	Ogre::String dirName = filename.substr(0, lastSlash);
-	int iResult = _mkdir(dirName.c_str());			// try to make the directory
-	if (iResult != 0) {							// if it couldn't be made
-		if (errno == ENOENT) {					// if it couldn't make because no parents
-			// Log("RendererOgre::MakeParentDir: recursing for %s", dirName.c_str());
-			MakeParentDir(dirName);				// create the parent directory
-			_mkdir(dirName.c_str());				// make the directory this time
-		}
-	}
-	return;
-}
 
 // Given a scene node for a terrain, find the manual object on that scene node and
 // update the manual object with the heightmap passed. If  there is no manual object on
@@ -912,6 +844,39 @@ void RendererOgre::AddOceanToRegion(Ogre::SceneManager* sceneMgr, Ogre::SceneNod
 }
 
 // ============= UTILITY ROUTINES
+Ogre::String RendererOgre::EntityNameToFilename(const Ogre::String entName, const Ogre::String suffix) {
+	Ogre::String fullFilename = m_cacheDir;
+	fullFilename += "/";
+	fullFilename += entName;
+	fullFilename += suffix;
+	return fullFilename;
+}
+// Given a filename, make sure all it's parent directories exist
+void RendererOgre::CreateParentDirectory(const Ogre::String filename) {
+	// make any backslashes into forward slashes
+	Ogre::String fn = filename;
+	Ogre::String::size_type ii;
+	while ((ii = fn.find_first_of("\\")) != Ogre::String::npos) {
+		fn.replace(ii, 1, 1, '/');
+	}
+	MakeParentDir(fn);
+	return;
+}
+
+void RendererOgre::MakeParentDir(const Ogre::String filename) {
+	Ogre::String::size_type lastSlash = filename.find_last_of('/');
+	Ogre::String dirName = filename.substr(0, lastSlash);
+	int iResult = _mkdir(dirName.c_str());			// try to make the directory
+	if (iResult != 0) {							// if it couldn't be made
+		if (errno == ENOENT) {					// if it couldn't make because no parents
+			// Log("RendererOgre::MakeParentDir: recursing for %s", dirName.c_str());
+			MakeParentDir(dirName);				// create the parent directory
+			_mkdir(dirName.c_str());				// make the directory this time
+		}
+	}
+	return;
+}
+
 // call out to the main program and make sure we should keep running
 const bool RendererOgre::checkKeepRunning() {
 	if (LookingGlassOgr::checkKeepRunningCallback != NULL) {

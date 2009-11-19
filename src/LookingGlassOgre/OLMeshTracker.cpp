@@ -22,6 +22,10 @@
  */
 #include "StdAfx.h"
 #include "OLMeshTracker.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <errno.h>
+#include <sys/stat.h>
 #include "RendererOgre.h"
 #include "LGLocking.h"
 
@@ -33,78 +37,127 @@ the actual file access part of a mesh load (the call to mesh->prepare()) be
 done outside the frame rendering thread.
 */
 
-#define MESH_STATE_UNKNOWN	0
-#define MESH_STATE_REQUESTING 1
-#define MESH_STATE_BEING_PREPARED 2
-#define MESH_STATE_PREPARED 3
-#define MESH_STATE_LOADED 4
-#define MESH_STATE_UNLOADED 5
+#define MESH_STATE_UNKNOWN	0			// no one knows
+#define MESH_STATE_REQUESTING 1			// request to managed code to define the mesh
+#define MESH_STATE_BEING_SERIALIZED 3	// request to serialize mesh is scheduled
+#define MESH_STATE_SERIALIZE_THEN_UNLOAD 4	// mesh is being serialized but then it should be unloaded
+#define MESH_STATE_BEING_PREPARED 5		// request in queue to do file IO for loading
+#define MESH_STATE_PREPARED 6			// all information in memory
+#define MESH_STATE_LOADED 7				// mesh is loaded and being rendered
+#define MESH_STATE_UNLOADED 8			// mesh is unloaded and unrenderable
 
 namespace OLMeshTracker {
-	typedef struct s_meshInfo {
-		int state;
-		Ogre::String name;
-		Ogre::String groupName;
-		Ogre::String contextEntityName;
-		Ogre::String fingerprint;
-	} MeshInfo;
+typedef struct s_meshInfo {
+	int state;
+	Ogre::String name;
+	Ogre::String groupName;
+	Ogre::String contextEntityName;
+	Ogre::String fingerprint;
+} MeshInfo;
 
-	typedef stdext::hash_map<Ogre::String, MeshInfo> MeshMap;
-	typedef std::pair<Ogre::String, MeshInfo> MeshMapPair;
-	typedef stdext::hash_map<Ogre::String, MeshInfo>::iterator MeshMapIterator;
-	MeshMap* m_meshMap;
-	LGLOCK_MUTEX m_mapLock;
+typedef stdext::hash_map<Ogre::String, MeshInfo> MeshMap;
+typedef std::pair<Ogre::String, MeshInfo> MeshMapPair;
+typedef stdext::hash_map<Ogre::String, MeshInfo>::iterator MeshMapIterator;
+MeshMap* m_meshMap;
+LGLOCK_MUTEX m_mapLock;
 
-	OLMeshTracker::OLMeshTracker(RendererOgre::RendererOgre* ro) {
-		m_ro = ro;
-		m_mapLock = LGLOCK_ALLOCATE_MUTEX("OLMeshTracker");
+OLMeshTracker::OLMeshTracker(RendererOgre::RendererOgre* ro) {
+	m_ro = ro;
+	m_mapLock = LGLOCK_ALLOCATE_MUTEX("OLMeshTracker");
+	m_meshSerializer = NULL;
+	m_cacheDir = LookingGlassOgr::GetParameter("Renderer.Ogre.CacheDir");
+}
+OLMeshTracker::~OLMeshTracker() {
+	LGLOCK_RELEASE_MUTEX(m_mapLock);
+}
+
+// we have complete information about the mesh. Add or update the table info
+void OLMeshTracker::TrackMesh(Ogre::String meshNameP, Ogre::String meshGroupP, Ogre::String contextEntNameP, Ogre::String fingerprintP) {
+	MeshInfo* meshToTrack;
+	LGLOCK_LOCK(m_mapLock);
+	// Look in tracking list to see if are already tracking mesh. 
+	MeshMapIterator meshI = m_meshMap->find(meshNameP);
+	if (meshI == m_meshMap->end()) {
+		// not tracking. Add a new entry
+		meshToTrack = (MeshInfo*)malloc(sizeof(MeshInfo));
+		meshToTrack->name = meshNameP;
+		m_meshMap->insert(MeshMapPair(meshNameP, *meshToTrack));
+		meshToTrack->state = MESH_STATE_UNKNOWN;
 	}
-	OLMeshTracker::~OLMeshTracker() {
-		LGLOCK_RELEASE_MUTEX(m_mapLock);
+	else {
+		// already tracking
+		meshToTrack = &(meshI->second);
+	}
+	// update the tracking information
+	meshToTrack->groupName = meshGroupP;
+	meshToTrack->contextEntityName = contextEntNameP;
+	meshToTrack->fingerprint = fingerprintP;
+	LGLOCK_UNLOCK(m_mapLock);
+
+	// TODO:
+	Ogre::MeshPtr meshEnt = (Ogre::MeshPtr)Ogre::MeshManager::getSingleton().getByName(meshNameP);
+	if (meshEnt.isNull()) {
+		// huh?
 	}
 
-	// we have complete information about the mesh. Add or update the table info
-	void OLMeshTracker::TrackMesh(Ogre::String meshNameP, Ogre::String meshGroupP, Ogre::String contextEntNameP, Ogre::String fingerprintP) {
-		MeshInfo* meshToTrack;
-		LGLOCK_LOCK(m_mapLock);
-		MeshMapIterator meshI = m_meshMap->find(meshNameP);
-		if (meshI == m_meshMap->end()) {
-			meshToTrack = (MeshInfo*)malloc(sizeof(MeshInfo));
-			meshToTrack->name = meshNameP;
-			m_meshMap->insert(MeshMapPair(meshNameP, *meshToTrack));
-			meshToTrack->state = MESH_STATE_UNKNOWN;
-		}
-		else {
-			meshToTrack = &(meshI->second);
-		}
-		// update other entries
-		meshToTrack->groupName = meshGroupP;
-		meshToTrack->contextEntityName = contextEntNameP;
-		meshToTrack->fingerprint = fingerprintP;
-		Ogre::ResourceManager::ResourceCreateOrRetrieveResult theMeshResult = 
-					Ogre::MeshManager::getSingleton().createOrRetrieve(meshNameP, meshGroupP);
-		Ogre::MeshPtr meshEnt = (Ogre::MeshPtr)theMeshResult.first;
-		// TODO:
-		LGLOCK_UNLOCK(m_mapLock);
+}
+void OLMeshTracker::UnTrackMesh(Ogre::String meshName) {
+}
 
+// Make the mesh loaded. We find the mesh entry and check if it's loaded. If not
+// we do the prepare operation (file IO) on our own thread. Once the IO is complete,
+// we schedule a refresh resource to add the mesh to the scene.
+// Callback called when mesh loaded. Called on between frame thread and passed the Param
+// as the only parameter. If 'callback' NULL, nothing is done;
+void OLMeshTracker::MakeLoaded(Ogre::String meshName, void* callback, void* callbackParam) {
+	/*
+	if (we aren't tracking this mesh) {
+		LookingGlassOgr::RequestResource(meshName.c_str(), contextEntName.c_str(), LookingGlassOgr::ResourceTypeMesh);
+		add mesh to tracking map
+		TODO:
 	}
-	void OLMeshTracker::UnTrackMesh(Ogre::String meshName) {
+	*/
+	if (callback != NULL) {
+		// *callback(callbackParam);
 	}
-	void OLMeshTracker::MakeLoaded(Ogre::String meshName) {
-		/*
-		if (we aren't tracking this mesh) {
-			LookingGlassOgr::RequestResource(meshName.c_str(), contextEntName.c_str(), LookingGlassOgr::ResourceTypeMesh);
-			add mesh to tracking map
-			TODO:
-		}
-		*/
+}
+
+// Make the mesh unloaded. Schedule the unload operation on our own thread
+// TODO: replace this inline code with something that happens on a different thread
+// Callback called when mesh unloaded. Called on between frame thread and passed the Param
+// as the only parameter. If 'callback' NULL, nothing is done;
+void OLMeshTracker::MakeUnLoaded(Ogre::String meshName, void* callback, void* callbackParam) {
+	Ogre::MeshManager::getSingleton().unload(meshName);
+	if (callback != NULL) {
+		// *callback(callbackParam);
 	}
-	void OLMeshTracker::MakeUnLoaded(Ogre::String meshName) {
+}
+
+// Serialize the mesh to it's file on our own thread.
+void OLMeshTracker::MakePersistant(Ogre::String meshName, Ogre::String entName) {
+	MakePersistant((Ogre::MeshPtr)Ogre::MeshManager::getSingleton().getByName(meshName), entName);
+}
+
+// TODO: make this inline code happen on it's own thread
+void OLMeshTracker::MakePersistant(Ogre::MeshPtr mesh, Ogre::String entName) {
+	Ogre::String targetFilename = m_ro->EntityNameToFilename(entName, "");
+
+	// Make sure the directory exists -- I wish the serializer did this for me
+	m_ro->CreateParentDirectory(targetFilename);
+	
+	if (m_meshSerializer == NULL) {
+		m_meshSerializer = new Ogre::MeshSerializer();
 	}
-	Ogre::String OLMeshTracker::GetMeshContext(Ogre::String meshName) {
-		return Ogre::String();
-	}
-	Ogre::String OLMeshTracker::GetSimilarMesh(Ogre::String fingerprint) {
-		return Ogre::String();
-	}
+	m_meshSerializer->exportMesh(mesh.getPointer(), targetFilename);
+}
+
+
+Ogre::String OLMeshTracker::GetMeshContext(Ogre::String meshName) {
+	return Ogre::String();
+}
+Ogre::String OLMeshTracker::GetSimilarMesh(Ogre::String fingerprint) {
+	return Ogre::String();
+}
+
+
 }
