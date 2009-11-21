@@ -26,9 +26,9 @@
 #include "LookingGlassOgre.h"
 #include "RendererOgre.h"
 
-namespace VisCalc { 
+namespace LG { 
 	
-VisCalcVariable::VisCalcVariable(RendererOgre::RendererOgre* ro) : VisCalcFrustDist(ro) {
+VisCalcVariable::VisCalcVariable() : VisCalcFrustDist() {
 	return;
 }
 

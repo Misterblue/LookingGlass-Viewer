@@ -26,9 +26,10 @@
 #include "OgreScriptCompiler.h"
 #include "RendererOgre.h"
 
+namespace LG {
 class OLResourceLoadingListener : public Ogre::ResourceLoadingListener {
 public:
-	OLResourceLoadingListener(RendererOgre::RendererOgre*);
+	OLResourceLoadingListener();
 	~OLResourceLoadingListener(void);
 
 	Ogre::DataStreamPtr resourceLoading(const Ogre::String&, const Ogre::String&, Ogre::Resource*);
@@ -36,28 +37,26 @@ public:
 	bool resourceCollision(Ogre::Resource*, Ogre::ResourceManager*);
 
 private:
-	RendererOgre::RendererOgre* m_ro;
 };
 
 class OLMeshSerializerListener : public Ogre::MeshSerializerListener, public Ogre::FrameListener {
 public:
-	OLMeshSerializerListener(RendererOgre::RendererOgre*);
+	OLMeshSerializerListener();
 	~OLMeshSerializerListener(void);
 	void processMaterialName(Ogre::Mesh *mesh, Ogre::String *name);
 	void processSkeletonName(Ogre::Mesh *mesh, Ogre::String *name);
 
 private:
-	RendererOgre::RendererOgre* m_ro;
 };
 
 class OLScriptCompilerListener : public Ogre::ScriptCompilerListener {
 public:
-	OLScriptCompilerListener(RendererOgre::RendererOgre*);
+	OLScriptCompilerListener();
 	~OLScriptCompilerListener(void);
 
 	bool handleEvent(Ogre::ScriptCompiler*, const Ogre::String&, const std::vector<Ogre::Any>&, Ogre::Any*);
 	Ogre::Any createObject(Ogre::ScriptCompiler*, const Ogre::String&, const std::vector<Ogre::Any>&);
 
 private:
-	RendererOgre::RendererOgre* m_ro;
 };
+}

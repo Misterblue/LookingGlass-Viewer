@@ -25,8 +25,8 @@
 #include "RendererOgre.h"
 #include "ResourceListeners.h"
 
-OLResourceLoadingListener::OLResourceLoadingListener(RendererOgre::RendererOgre* ro) {
-	m_ro = ro;
+namespace LG {
+OLResourceLoadingListener::OLResourceLoadingListener() {
 	return;
 }
 OLResourceLoadingListener::~OLResourceLoadingListener(){
@@ -36,25 +36,24 @@ OLResourceLoadingListener::~OLResourceLoadingListener(){
 Ogre::DataStreamPtr OLResourceLoadingListener::resourceLoading(const Ogre::String& rname, 
 	const Ogre::String& rgroup, Ogre::Resource* resource) {
 
-	LookingGlassOgr::Log("ResourceListeners::resourceLoading: %s", rname.c_str());
+	LG::Log("ResourceListeners::resourceLoading: %s", rname.c_str());
 	return Ogre::DataStreamPtr();
 }
 
 void OLResourceLoadingListener::resourceStreamOpened(const Ogre::String& rname, const Ogre::String& rgroup, 
 	Ogre::Resource* resource, Ogre::DataStreamPtr& rstream) {
 
-	LookingGlassOgr::Log("ResourceListeners::resourceStreamOpened: %s", rname.c_str());
+	LG::Log("ResourceListeners::resourceStreamOpened: %s", rname.c_str());
 }
 
 bool OLResourceLoadingListener::resourceCollision(Ogre::Resource* resource, Ogre::ResourceManager* rManager) {
-	LookingGlassOgr::Log("ResourceListeners::resourceCollision:");
+	LG::Log("ResourceListeners::resourceCollision:");
 	return false;
 }
 
 // ==========================================================================
-OLMeshSerializerListener::OLMeshSerializerListener(RendererOgre::RendererOgre* ro) {
-	m_ro = ro;
-	LookingGlassOgr::GetOgreRoot()->addFrameListener(this);
+OLMeshSerializerListener::OLMeshSerializerListener() {
+	LG::GetOgreRoot()->addFrameListener(this);
 	return;
 }
 OLMeshSerializerListener::~OLMeshSerializerListener() {
@@ -63,7 +62,7 @@ OLMeshSerializerListener::~OLMeshSerializerListener() {
 // called when mesh is being parsed and it comes across a material name
 // check that it is defined and, if not, create it and read it in
 void OLMeshSerializerListener::processMaterialName(Ogre::Mesh* mesh, Ogre::String* name) {
-	// LookingGlassOgr::Log("ResourceListeners::processMaterialName: %s -> %s", mesh->getName().c_str(), name->c_str());
+	// LG::Log("ResourceListeners::processMaterialName: %s -> %s", mesh->getName().c_str(), name->c_str());
 
 	// get the resource to see if it exists
 	Ogre::ResourceManager::ResourceCreateOrRetrieveResult result = 
@@ -73,16 +72,15 @@ void OLMeshSerializerListener::processMaterialName(Ogre::Mesh* mesh, Ogre::Strin
 		// The created material is an empty, blank material so we must fill it
 		Ogre::MaterialPtr theMaterial = result.first;
 		// Do the magic to make this material happen
-		m_ro->MaterialTracker()->FabricateMaterial(*name, theMaterial);
+		LG::OLMaterialTracker::Instance()->FabricateMaterial(*name, theMaterial);
 	}
 }
 void OLMeshSerializerListener::processSkeletonName(Ogre::Mesh *mesh, Ogre::String *name) {
-	LookingGlassOgr::Log("ResourceListeners::processSkeletonName: %s -> %s", mesh->getName().c_str(), name->c_str());
+	LG::Log("ResourceListeners::processSkeletonName: %s -> %s", mesh->getName().c_str(), name->c_str());
 }
 
 // ==========================================================================
-OLScriptCompilerListener::OLScriptCompilerListener(RendererOgre::RendererOgre* ro) {
-	m_ro = ro;
+OLScriptCompilerListener::OLScriptCompilerListener() {
 	return;
 }
 
@@ -92,7 +90,7 @@ OLScriptCompilerListener::~OLScriptCompilerListener() {
 
 bool OLScriptCompilerListener::handleEvent(Ogre::ScriptCompiler* compiler, const Ogre::String& oper,
 	const std::vector<Ogre::Any>& args, Ogre::Any* retval) {
-	// LookingGlassOgr::Log("ResourceListeners::handlEvent: %s", oper.c_str());
+	// LG::Log("ResourceListeners::handlEvent: %s", oper.c_str());
 	return false;
 }
 
@@ -106,7 +104,7 @@ Ogre::Any OLScriptCompilerListener::createObject(Ogre::ScriptCompiler* compiler,
 	Ogre::String objectName = Ogre::any_cast<Ogre::String>(args[1]);
 	Ogre::String groupName = Ogre::any_cast<Ogre::String>(args[2]);
 
-	LookingGlassOgr::Log("ResourceListeners::createObject: %s, %s, %s, %s", type.c_str(),
+	LG::Log("ResourceListeners::createObject: %s, %s, %s, %s", type.c_str(),
 		filename.c_str(), objectName.c_str(), groupName.c_str());
 
 	/*
@@ -116,11 +114,12 @@ Ogre::Any OLScriptCompilerListener::createObject(Ogre::ScriptCompiler* compiler,
 	Ogre::ResourceManager::ResourceCreateOrRetrieveResult result = 
 			Ogre::MaterialManager::getSingleton().createOrRetrieve(filename, groupName);
 	if ((bool)result.second)
-		LookingGlassOgr::Log("ResourceListeners::createObject: object created again");
+		LG::Log("ResourceListeners::createObject: object created again");
 	Ogre::MaterialPtr theMaterial = result.first;
 
 	return Ogre::Any(theMaterial.getPointer());
 	*/
 	return Ogre::Any();	// returning an null Any causes the script compiler to create it's own object
 
+}
 }

@@ -26,11 +26,11 @@
 #include "SkyBoxBase.h"
 #include "SkyX.h"
 
-namespace LGSky {
+namespace LG {
 
 class SkyBoxSkyX : public SkyBoxBase , public Ogre::FrameListener {
 public:
-	SkyBoxSkyX(RendererOgre::RendererOgre*);
+	SkyBoxSkyX();
 	~SkyBoxSkyX();
 
 	void Initialize();
@@ -44,11 +44,9 @@ public:
 	// bool frameEnded(const Ogre::FrameEvent &e);
 
 private:
-	RendererOgre::RendererOgre* m_ro;
 	SkyX::SkyX* m_SkyX;
 
 	Ogre::Light* m_sun;				// the light that is the sun
 	Ogre::Light* m_moon;			// the light that is the moon
-
 };
 }

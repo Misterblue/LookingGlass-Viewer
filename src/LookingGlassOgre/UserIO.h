@@ -26,9 +26,7 @@
 #include "LookingGlassOgre.h"
 #include "OIS/OIS.h"
 
-// forward definition
-namespace RendererOgre { class RendererOgre; }
-
+namespace LG {
 class UserIO :
 	public OIS::MouseListener,
 	public OIS::KeyListener,
@@ -41,7 +39,7 @@ public:
 	static const int IOTypeMouseButtonDown = 4;	// p1 = button number
 	static const int IOTypeMouseButtonUp = 5;		// p1 = button number
 
-	UserIO(RendererOgre::RendererOgre*);
+	UserIO();
 	~UserIO(void);
 
 	// MouseListener
@@ -59,8 +57,6 @@ public:
 	bool frameEnded(const Ogre::FrameEvent&);
 
 protected:
-	RendererOgre::RendererOgre* m_ro;
-
 	OIS::InputManager* m_inputManager;
 	OIS::Mouse* m_mouse;
 	OIS::Keyboard* m_keyboard;
@@ -70,3 +66,4 @@ protected:
 	void callUserIOCallback(int, int, float, float);
 
 };
+}

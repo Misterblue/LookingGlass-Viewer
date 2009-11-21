@@ -23,7 +23,7 @@
 #include "StdAfx.h"
 #include "AnimSceneNode.h"
 
-namespace AnimSceneNode {
+namespace LG {
 AnimSceneNode::AnimSceneNode() {};
 AnimSceneNode::~AnimSceneNode() {};
 }

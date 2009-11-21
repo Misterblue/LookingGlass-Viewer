@@ -23,10 +23,8 @@
 #pragma once
 
 #include "LGOCommon.h"
-// forward definition
-namespace RendererOgre { class RendererOgre; }
 
-namespace OLMeshTracker {
+namespace LG {
 /*
 NOTE TO THE NEXT PERSON: CODE NOT COMPLETE OR HOOKED INTO MAIN CODE
 This code is started but not complete. The idea is to create a routine that
@@ -36,8 +34,15 @@ done outside the frame rendering thread.
 */
 	class OLMeshTracker {
 	public:
-		OLMeshTracker(RendererOgre::RendererOgre*);
+		OLMeshTracker();
 		~OLMeshTracker();
+
+		static OLMeshTracker* Instance() { 
+			if (LG::OLMeshTracker::m_instance == NULL) {
+				LG::OLMeshTracker::m_instance = new OLMeshTracker();
+			}
+			return LG::OLMeshTracker::m_instance; 
+		}
 
 		void TrackMesh(Ogre::String meshName, Ogre::String meshGroupName, Ogre::String contextEntName, Ogre::String fingerprint);
 		void UnTrackMesh(Ogre::String meshName);
@@ -48,8 +53,10 @@ done outside the frame rendering thread.
 		Ogre::String GetMeshContext(Ogre::String meshName);
 		Ogre::String GetSimilarMesh(Ogre::String fingerprint);
 
+
 	private:
-		RendererOgre::RendererOgre* m_ro;
+		static OLMeshTracker* m_instance;
+
 		Ogre::MeshSerializer* m_meshSerializer;
 		Ogre::String m_cacheDir; 
 	};

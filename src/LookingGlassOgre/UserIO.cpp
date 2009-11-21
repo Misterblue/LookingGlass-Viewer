@@ -26,15 +26,14 @@
 #include "LookingGlassOgre.h"
 #include "RendererOgre.h"
 
-UserIO::UserIO(RendererOgre::RendererOgre* parent) {
-	m_ro = parent;
-
+namespace LG {
+UserIO::UserIO() {
 	size_t windowHnd = 0;
-	Ogre::RenderWindow* theWindow = m_ro->m_window;
+	Ogre::RenderWindow* theWindow = LG::RendererOgre::Instance()->m_window;
 	theWindow->getCustomAttribute("WINDOW", &windowHnd);
 	m_inputManager = OIS::InputManager::createInputSystem(windowHnd);
 
-	m_ro->Log("UserIO: setting up mouse and keyboard");
+	LG::Log("UserIO: setting up mouse and keyboard");
 
 	m_mouse = static_cast<OIS::Mouse*>(m_inputManager->createInputObject(OIS::OISMouse, true));
 	m_mouse->setEventCallback(this);
@@ -45,7 +44,7 @@ UserIO::UserIO(RendererOgre::RendererOgre* parent) {
 	// set initial mouse boundries
 	windowResized();
 
-	m_ro->m_root->addFrameListener(this);
+	LG::RendererOgre::Instance()->m_root->addFrameListener(this);
 }
 
 UserIO::~UserIO(void) {
@@ -63,46 +62,46 @@ UserIO::~UserIO(void) {
 
 // MouseListener
 bool UserIO::mouseMoved(const OIS::MouseEvent &e) {
-	// m_ro->Log("UserIO: Mouse moved");
+	// LG::Log("UserIO: Mouse moved");
 	callUserIOCallback(IOTypeMouseMove, 0, (float)e.state.X.rel, (float)e.state.Y.rel);
 	return true;
 }
 
 bool UserIO::mousePressed(const OIS::MouseEvent &e, OIS::MouseButtonID id) {
-	// m_ro->Log("UserIO: Mouse pressed");
+	// LG::Log("UserIO: Mouse pressed");
 	callUserIOCallback(IOTypeMouseButtonDown, id, 0.0, 0.0);
 	return true;
 }
 
 bool UserIO::mouseReleased(const OIS::MouseEvent &e, OIS::MouseButtonID id) {
-	// m_ro->Log("UserIO: Mouse released");
+	// LG::Log("UserIO: Mouse released");
 	callUserIOCallback(IOTypeMouseButtonUp, id, 0.0, 0.0);
 	return true;
 }
 
 // KeyListener
 bool UserIO::keyPressed(const OIS::KeyEvent &e) {
-	// m_ro->Log("UserIO: key pressed: %d", (int)e.key);
+	// LG::RendererOgre::Instance()->Log("UserIO: key pressed: %d", (int)e.key);
 	callUserIOCallback(IOTypeKeyPressed, e.key, 0.0, 0.0);
 	return true;
 }
 
 bool UserIO::keyReleased(const OIS::KeyEvent &e) {
-	// m_ro->Log("UserIO: key released: %d", (int)e.key);
+	// LG::Log("UserIO: key released: %d", (int)e.key);
 	callUserIOCallback(IOTypeKeyReleased, e.key, 0.0, 0.0);
 	return true;
 }
 
 void UserIO::callUserIOCallback(int type, int param1, float param2, float param3) {
-	if (LookingGlassOgr::userIOCallback != NULL) {
-		(*LookingGlassOgr::userIOCallback)(type, param1, param2, param3);
+	if (LG::userIOCallback != NULL) {
+		(*LG::userIOCallback)(type, param1, param2, param3);
 	}
 }
 
 void UserIO::windowResized() {
 	unsigned int wid, hit, dep;
 	int top, left;
-	m_ro->m_window->getMetrics(wid, hit, dep, left, top);
+	LG::RendererOgre::Instance()->m_window->getMetrics(wid, hit, dep, left, top);
 	const OIS::MouseState& ms = m_mouse->getMouseState();
 	ms.width = wid;
 	ms.height = hit;
@@ -124,3 +123,4 @@ bool UserIO::frameEnded(const Ogre::FrameEvent& evt) {
 }
 // ========== end of Ogre::FrameListener
 
+}

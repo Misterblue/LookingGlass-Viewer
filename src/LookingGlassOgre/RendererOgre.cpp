@@ -31,13 +31,17 @@
 #include "OLArchive.h"
 #include "OLPreloadArchive.h"
 #include "ResourceListeners.h"
+#include "ProcessBetweenFrame.h"
+#include "ProcessAnyTime.h"
 #include "SkyBoxSimple.h"
 #include "SkyBoxSkyX.h"
 #include "VisCalcNull.h"
 #include "VisCalcFrustDist.h"
 #include "VisCalcVariable.h"
 
-namespace RendererOgre {
+namespace LG {
+
+	RendererOgre* RendererOgre::m_instance = NULL;
 
 	RendererOgre::RendererOgre() {
 	}
@@ -62,12 +66,12 @@ namespace RendererOgre {
 	// If we don't want the thread, return false.
 	Ogre::Timer* timeKeeper = new Ogre::Timer();
 	bool RendererOgre::renderingThread() {
-		Log("RendererOgre::renderingThread: LookingGlassOrge: Starting rendering");
+		LG::Log("RendererOgre::renderingThread: LookingGlassOrge: Starting rendering");
 		// m_root->startRendering();
 
 		// new way that tried to control the amount of work between frames to keep
 		//   frame rate up
-		int maxFPS = LookingGlassOgr::GetParameterInt("Renderer.Ogre.FramePerSecMax");
+		int maxFPS = LG::GetParameterInt("Renderer.Ogre.FramePerSecMax");
 		if (maxFPS < 2 || maxFPS > 100) maxFPS = 20;
 		int msPerFrame = 1000 / maxFPS;
 
@@ -77,10 +81,11 @@ namespace RendererOgre {
 		while (m_root->renderOneFrame()) {
 			Ogre::WindowEventUtilities::messagePump();
 			now = timeKeeper->getMilliseconds();
+			/*
 			int remaining = msPerFrame - ((int)(now - timeStartedLastFrame));
 			while (remaining > 10) {
-				if (m_processBetweenFrame->HasWorkItems()) {
-					m_processBetweenFrame->ProcessWorkItems(3);
+				if (LG::ProcessBetweenFrame::Instance()->HasWorkItems()) {
+					LG::ProcessBetweenFrame::Instance()->ProcessWorkItems(3);
 				}
 				else {
 					Sleep(remaining);
@@ -88,12 +93,13 @@ namespace RendererOgre {
 				now = timeKeeper->getMilliseconds();
 				remaining = msPerFrame - ((int)(now - timeStartedLastFrame));
 			}
+			*/
 			int totalMSForLastFrame = (int)(timeKeeper->getMilliseconds() - timeStartedLastFrame);
 			if (totalMSForLastFrame < 0) totalMSForLastFrame = 1;
-			LookingGlassOgr::SetStat(LookingGlassOgr::StatFramesPerSecond, 1000000/totalMSForLastFrame);
+			LG::SetStat(LG::StatFramesPerSecond, 1000000/totalMSForLastFrame);
 			timeStartedLastFrame = timeKeeper->getMilliseconds();
 		}
-		Log("RendererOgre::renderingThread: Completed rendering");
+		LG::Log("RendererOgre::renderingThread: Completed rendering");
 		destroyScene();
 		// for some reason, often after the exit, m_root is not usable
 		// m_root->shutdown();
@@ -138,8 +144,8 @@ namespace RendererOgre {
 		*/
 		int totalMSForLastFrame = (int)(timeKeeper->getMilliseconds() - m_lastFrameTime);
 		if (totalMSForLastFrame <= 0) totalMSForLastFrame = 1;
-		LookingGlassOgr::SetStat(LookingGlassOgr::StatLastFrameMs, totalMSForLastFrame);
-		LookingGlassOgr::SetStat(LookingGlassOgr::StatFramesPerSecond, 1000000/totalMSForLastFrame);
+		LG::SetStat(LG::StatLastFrameMs, totalMSForLastFrame);
+		LG::SetStat(LG::StatFramesPerSecond, 1000000/totalMSForLastFrame);
 		m_lastFrameTime = timeKeeper->getMilliseconds();
 
 		return ret;
@@ -150,7 +156,7 @@ namespace RendererOgre {
 				float dw, float dx, float dy, float dz,
 				float nearClip, float farClip, float aspect) {
 		if (m_camera) {
-			LookingGlassOgr::Log("RendererOgre::UpdateCamera: pos=<%f, %f, %f>", (double)px, (double)py, (double)pz);
+			LG::Log("RendererOgre::UpdateCamera: pos=<%f, %f, %f>", (double)px, (double)py, (double)pz);
 			m_camera->setPosition(px, py, pz);
 			m_desiredCameraOrientation = Ogre::Quaternion(dw, dx, dy, dz);
 			m_desiredCameraOrientationProgress = 0.0;
@@ -188,20 +194,20 @@ namespace RendererOgre {
 	// Do all the setup needed in the Ogre environment: all the basic entities
 	// (camera, lights, ...), all the resource managers and the user input system.
 	void RendererOgre::initialize() {
-		Log("RendererOgre::initialize: ");
+		LG::Log("RendererOgre::initialize: ");
 
 		m_sceneGraphLock = LGLOCK_ALLOCATE_MUTEX("sceneGraph");
 
-		m_cacheDir = LookingGlassOgr::GetParameter("Renderer.Ogre.CacheDir");
-		m_preloadedDir = LookingGlassOgr::GetParameter("Renderer.Ogre.PreLoadedDir");
+		m_cacheDir = LG::GetParameter("Renderer.Ogre.CacheDir");
+		m_preloadedDir = LG::GetParameter("Renderer.Ogre.PreLoadedDir");
 
-		m_defaultTerrainMaterial = LookingGlassOgr::GetParameter("Renderer.Ogre.DefaultTerrainMaterial");
-		m_serializeMeshes = LookingGlassOgr::GetParameterBool("Renderer.Ogre.SerializeMeshes");
+		m_defaultTerrainMaterial = LG::GetParameter("Renderer.Ogre.DefaultTerrainMaterial");
+		m_serializeMeshes = LG::GetParameterBool("Renderer.Ogre.SerializeMeshes");
 
 		m_root = new Ogre::Root(GetParameter("Renderer.Ogre.PluginFilename"));
-		Log("RendererOgre::initialize: after new Ogre::Root()");
+		LG::Log("RendererOgre::initialize: after new Ogre::Root()");
 		// if detail logging is turned off, I don't want Ogre yakking up a storm either
-		if (LookingGlassOgr::debugLogCallback == NULL) {
+		if (LG::debugLogCallback == NULL) {
 			Ogre::LogManager::getSingleton().setLogDetail(Ogre::LL_LOW);
 		}
 
@@ -217,7 +223,7 @@ namespace RendererOgre {
 	        initOgreResources();
 		}
 		catch (char* str) {
-			Log("RendererOgre::initialize: LookingGlassOrge: exception initializing: {0}", str);
+			LG::Log("RendererOgre::initialize: LookingGlassOrge: exception initializing: {0}", str);
 			return;
 		}
 
@@ -228,7 +234,7 @@ namespace RendererOgre {
         createSky();
         createVisibilityProcessor();
         createFrameListener();
-		if (LookingGlassOgr::userIOCallback != NULL) {
+		if (LG::userIOCallback != NULL) {
 	        createInput();
 		}
 
@@ -247,7 +253,7 @@ namespace RendererOgre {
 
 	// Load all the resource locations from the resource configuration file
 	void RendererOgre::loadOgreResources(const char* resourceFile) {
-		Log("RendererOgre::loadOgreResources: ");
+		LG::Log("RendererOgre::loadOgreResources: ");
 		Ogre::String secName, typeName, archName;
 		Ogre::ConfigFile cf;
 		cf.load(resourceFile);
@@ -266,40 +272,39 @@ namespace RendererOgre {
 
 	// Create the resource group and group managers for the LookingGlass Ogre extensions
 	void RendererOgre::createLookingGlassResourceGroups() {
-		Log("RendererOgre::createLookingGlassResourceGroups:");
+		LG::Log("RendererOgre::createLookingGlassResourceGroups:");
 		Ogre::ResourceGroupManager::getSingleton().createResourceGroup(OLResourceGroupName);
 
-		// routines for managing and loading materials
-		m_materialTracker = new OLMaterialTracker::OLMaterialTracker(this);
-		int betweenWork = LookingGlassOgr::GetParameterInt("Renderer.Ogre.BetweenFrame.WorkItems");
-		if (betweenWork == 0) betweenWork = 5000;
-		m_processBetweenFrame = new ProcessBetweenFrame::ProcessBetweenFrame(this, betweenWork);
-		m_meshTracker = new OLMeshTracker::OLMeshTracker(this);
+		// Force the creation of the singleton classes
+		LG::ProcessBetweenFrame::Instance();
+		LG::ProcessAnyTime::Instance();
+		LG::OLMaterialTracker::Instance();
+		LG::OLMeshTracker::Instance();
 
 		// listener to catch references to materials in meshes when they are read in
-		Ogre::MeshManager::getSingleton().setListener(new OLMeshSerializerListener(this));
+		Ogre::MeshManager::getSingleton().setListener(new LG::OLMeshSerializerListener());
 		// Ogre::ScriptCompilerManager::getSingleton().setListener(new OLScriptCompilerListener(this));
 
 		// Create the archive system that will find the predefined meshes/textures
-		Ogre::ArchiveManager::getSingleton().addArchiveFactory(new OLPreloadArchiveFactory() );
-		Log("RendererOgre::createLookingGlassResourceGroups: addResourceLocation %s", m_preloadedDir.c_str());
+		Ogre::ArchiveManager::getSingleton().addArchiveFactory(new LG::OLPreloadArchiveFactory() );
+		LG::Log("RendererOgre::createLookingGlassResourceGroups: addResourceLocation %s", m_preloadedDir.c_str());
 		Ogre::ResourceGroupManager::getSingleton().addResourceLocation(m_preloadedDir,
 						OLPreloadTypeName, OLResourceGroupName, true);
 
 		// Create the archive system that will find our meshes
-		Ogre::ArchiveManager::getSingleton().addArchiveFactory(new OLArchiveFactory() );
-		Log("RendererOgre::createLookingGlassResourceGroups: addResourceLocation %s", m_cacheDir.c_str());
+		Ogre::ArchiveManager::getSingleton().addArchiveFactory(new LG::OLArchiveFactory() );
+		LG::Log("RendererOgre::createLookingGlassResourceGroups: addResourceLocation %s", m_cacheDir.c_str());
 		Ogre::ResourceGroupManager::getSingleton().addResourceLocation(m_cacheDir,
 						OLArchiveTypeName, OLResourceGroupName, true);
 		return;
 	}
 
 	void RendererOgre::configureOgreRenderSystem() {
-		Log("RendererOgre::configureOgreRenderSystem:");
+		LG::Log("RendererOgre::configureOgreRenderSystem:");
 		Ogre::String rsystem = GetParameter("Renderer.Ogre.Renderer");
 		Ogre::RenderSystem* rs = m_root->getRenderSystemByName(rsystem);
 		if (rs == NULL) {
-			Log("RendererOgre::configureOgreRenderingSystem: CANNOT INITIALIZE RENDERING SYSTEM '%s'", rsystem);
+			LG::Log("RendererOgre::configureOgreRenderingSystem: CANNOT INITIALIZE RENDERING SYSTEM '%s'", rsystem);
 			return;
 		}
 		m_root->setRenderSystem(rs);
@@ -307,7 +312,7 @@ namespace RendererOgre {
         rs->setConfigOption("Video Mode", GetParameter("Renderer.Ogre.VideoMode"));
 
 		// Two types of initialization here. Get own window or use a passed window
-		Ogre::String windowHandle = LookingGlassOgr::GetParameter("Renderer.Ogre.ExternalWindow.Handle");
+		Ogre::String windowHandle = LG::GetParameter("Renderer.Ogre.ExternalWindow.Handle");
 		if (windowHandle.length() == 0) {
 			m_window = m_root->initialise(true, GetParameter("Renderer.Ogre.Name"));
 		}
@@ -321,59 +326,59 @@ namespace RendererOgre {
 			// createParams["depthBuffer"] = something;
 			// createParams["parentWindowHandle"] = something;
 			m_window = m_root->createRenderWindow("MAINWINDOW", 
-				LookingGlassOgr::GetParameterInt("Renderer.Ogre.ExternalWindow.Width"),
-				LookingGlassOgr::GetParameterInt("Renderer.Ogre.ExternalWindow.Height"),
+				LG::GetParameterInt("Renderer.Ogre.ExternalWindow.Width"),
+				LG::GetParameterInt("Renderer.Ogre.ExternalWindow.Height"),
 				false, &createParams);
 		}
 	}
 
 	void RendererOgre::initOgreResources() {
-		Log("RendererOgre::initOgreResources");
+		LG::Log("RendererOgre::initOgreResources");
 		Ogre::TextureManager::getSingleton().setDefaultNumMipmaps(
-			LookingGlassOgr::GetParameterInt("Renderer.Ogre.DefaultNumMipmaps"));
+			LG::GetParameterInt("Renderer.Ogre.DefaultNumMipmaps"));
 		Ogre::ResourceGroupManager::getSingleton().initialiseAllResourceGroups();
 	}
 
 	void RendererOgre::createScene() {
-		Log("RendererOgre::createScene");
+		LG::Log("RendererOgre::createScene");
 		try {
 			const char* sceneName = GetParameter("Renderer.Ogre.Name");
 			m_sceneMgr = m_root->createSceneManager(Ogre::ST_EXTERIOR_CLOSE, sceneName);
 			// m_sceneMgr = m_root->createSceneManager(Ogre::ST_GENERIC, sceneName);
 			// ambient has to be adjusted for time of day. Set it initially
 			// m_sceneMgr->setAmbientLight(Ogre::ColourValue(0.5, 0.5, 0.5));
-			SceneAmbientColor = LookingGlassOgr::GetParameterColor("Renderer.Ogre.Ambient.Scene");
-			MaterialAmbientColor = LookingGlassOgr::GetParameterColor("Renderer.Ogre.Ambient.Material");
+			SceneAmbientColor = LG::GetParameterColor("Renderer.Ogre.Ambient.Scene");
+			MaterialAmbientColor = LG::GetParameterColor("Renderer.Ogre.Ambient.Material");
 			m_sceneMgr->setAmbientLight(SceneAmbientColor);
-			const char* shadowName = LookingGlassOgr::GetParameter("Renderer.Ogre.ShadowTechnique");
+			const char* shadowName = LG::GetParameter("Renderer.Ogre.ShadowTechnique");
 			if (stricmp(shadowName, "texture-modulative") == 0) {
 				m_sceneMgr->setShadowTechnique(Ogre::SHADOWTYPE_TEXTURE_MODULATIVE);	// hardest
-				LookingGlassOgr::Log("RendererOgre::createScene: setting shadow to 'texture-modulative'");
+				LG::Log("RendererOgre::createScene: setting shadow to 'texture-modulative'");
 			}
 			if (stricmp(shadowName, "stencil-modulative") == 0) {
 				m_sceneMgr->setShadowTechnique(Ogre::SHADOWTYPE_STENCIL_MODULATIVE);
-				LookingGlassOgr::Log("RendererOgre::createScene: setting shadow to 'stencil-modulative'");
+				LG::Log("RendererOgre::createScene: setting shadow to 'stencil-modulative'");
 			}
 			if (stricmp(shadowName, "texture-additive") == 0) {
 				m_sceneMgr->setShadowTechnique(Ogre::SHADOWTYPE_TEXTURE_ADDITIVE);	// easiest
-				LookingGlassOgr::Log("RendererOgre::createScene: setting shadow to 'texture-additive'");
+				LG::Log("RendererOgre::createScene: setting shadow to 'texture-additive'");
 			}
 			if (stricmp(shadowName, "stencil-additive") == 0) {
 				m_sceneMgr->setShadowTechnique(Ogre::SHADOWTYPE_STENCIL_ADDITIVE);
-				LookingGlassOgr::Log("RendererOgre::createScene: setting shadow to 'stencil-additive'");
+				LG::Log("RendererOgre::createScene: setting shadow to 'stencil-additive'");
 			}
-			int shadowFarDistance = LookingGlassOgr::GetParameterInt("Renderer.Ogre.ShadowFarDistance");
+			int shadowFarDistance = LG::GetParameterInt("Renderer.Ogre.ShadowFarDistance");
 			m_sceneMgr->setShadowFarDistance((float)shadowFarDistance);
 			m_sceneMgr->setShadowColour(Ogre::ColourValue(0.2, 0.2, 0.2));
 		}
 		catch (std::exception e) {
-			Log("RendererOgre::createScene: Exception %s", e.what());
+			LG::Log("RendererOgre::createScene: Exception %s", e.what());
 			return;
 		}
 	}
 
 	void RendererOgre::createCamera() {
-		Log("RendererOgre::createCamera");
+		LG::Log("RendererOgre::createCamera");
 		m_camera = m_sceneMgr->createCamera("MainCamera");
 		m_camera->setPosition(0.0, 0.0, 0.0);
 		m_camera->setDirection(0.0, 0.0, -1.0);
@@ -381,59 +386,61 @@ namespace RendererOgre {
 		m_camera->setFarClipDistance(10000.0);
 		// m_camera->setFarClipDistance(0.0);
 		m_camera->setAutoAspectRatio(true);
-		AssertNonNull(m_camera, "createCamera: m_camera is NULL");
+		if (m_camera == NULL) {
+			LG::Log("RendererOgre::createCamera: CAMERA FAILED TO CREATE");
+		}
 	}
 
 	void RendererOgre::createViewport() {
-		Log("RendererOgre::createViewport");
+		LG::Log("RendererOgre::createViewport");
 		m_viewport = m_window->addViewport(m_camera);
 		m_viewport->setBackgroundColour(Ogre::ColourValue(0.0f, 0.0f, 0.25f));
 		m_camera->setAspectRatio((float)m_viewport->getActualWidth() / (float)m_viewport->getActualHeight());
 	}
 
 	void RendererOgre::createSky() {
-		Log("RendererOgre::createsky");
-		const char* skyName = LookingGlassOgr::GetParameter("Renderer.Ogre.Sky");
+		LG::Log("RendererOgre::createsky");
+		const char* skyName = LG::GetParameter("Renderer.Ogre.Sky");
 		if (stricmp(skyName, "SkyX") == 0) {
-			LookingGlassOgr::Log("RendererOgre::createSky: using SkyBoxSkyX");
-			m_sky = new LGSky::SkyBoxSkyX(this);
+			LG::Log("RendererOgre::createSky: using SkyBoxSkyX");
+			m_sky = new LG::SkyBoxSkyX();
 		}
 		else {
-			LookingGlassOgr::Log("RendererOgre::createSky: using SkyBoxSimple");
-			m_sky = new LGSky::SkyBoxSimple(this);
+			LG::Log("RendererOgre::createSky: using SkyBoxSimple");
+			m_sky = new LG::SkyBoxSimple();
 		}
 		m_sky->Initialize();
 		m_sky->Start();
 	}
 
 	void RendererOgre::createVisibilityProcessor() {
-		Log("RendererOgre::createVisibilityProcessor");
-		const char* visName = LookingGlassOgr::GetParameter("Renderer.Ogre.Visibility.Processor");
+		LG::Log("RendererOgre::createVisibilityProcessor");
+		const char* visName = LG::GetParameter("Renderer.Ogre.Visibility.Processor");
 		if (stricmp(visName, "FrustrumDistance") == 0) {
-			LookingGlassOgr::Log("RendererOgre::createVisibilityProcessor: using VisCalcFrustDist");
-			m_visCalc = new VisCalc::VisCalcFrustDist(this);
+			LG::Log("RendererOgre::createVisibilityProcessor: using VisCalcFrustDist");
+			m_visCalc = new LG::VisCalcFrustDist();
 		}
 		else if (stricmp(visName, "VariableFrustDist") == 0) {
-				LookingGlassOgr::Log("RendererOgre::createVisibilityProcessor: using VisCalcVariable");
-				m_visCalc = new VisCalc::VisCalcVariable(this);
+				LG::Log("RendererOgre::createVisibilityProcessor: using VisCalcVariable");
+				m_visCalc = new LG::VisCalcVariable();
 		}
 		else {
-			LookingGlassOgr::Log("RendererOgre::creteVisibilityProcessor: using VisCalcNull");
-			m_visCalc = new VisCalc::VisCalcNull(this);
+			LG::Log("RendererOgre::creteVisibilityProcessor: using VisCalcNull");
+			m_visCalc = new LG::VisCalcNull();
 		}
 		m_visCalc->Initialize();
 		m_visCalc->Start();
 	}
 
 	void RendererOgre::createFrameListener() {
-		Log("RendererOgre::createFrameListener");
+		LG::Log("RendererOgre::createFrameListener");
 		// this creates two pointers to our base object. 
 		// Might need to manage if we ever get dynamic.
 		m_root->addFrameListener(this);
 	}
 
 	void RendererOgre::createInput() {
-		m_userio = new UserIO(this);
+		m_userio = new UserIO();
 	}
 
 	// ========== Ogre::FrameListener
@@ -449,12 +456,12 @@ namespace RendererOgre {
 	int betweenFrameCounter = 0;
 	bool RendererOgre::frameEnded(const Ogre::FrameEvent& evt) {
 		if (m_window->isClosed()) return false;	// if you close the window we leave
-		LookingGlassOgr::IncStat(LookingGlassOgr::StatTotalFrames);
+		LG::IncStat(LG::StatTotalFrames);
 		betweenFrameCounter++;
-		if (LookingGlassOgr::betweenFramesCallback != NULL) {
+		if (LG::betweenFramesCallback != NULL) {
 			// the C# code uses this for terrain and regions so don't do it often
 			if ((betweenFrameCounter % 10) == 0) {
-				return (*LookingGlassOgr::betweenFramesCallback)();
+				return (*LG::betweenFramesCallback)();
 			}
 		}
 		return true;
@@ -466,7 +473,7 @@ namespace RendererOgre {
 	// BETWEEN FRAME OPERATION
 	void RendererOgre::AddEntity(Ogre::SceneManager* sceneMgr, Ogre::SceneNode* sceneNode,
 							const char* entName, const char* meshName) {
-		// Log("RendererOgre::AddEntity: declare %s, t=%s, g=%s", meshName,
+		// LG::Log("RendererOgre::AddEntity: declare %s, t=%s, g=%s", meshName,
 		// 						"Mesh", meshResourceGroupName);
 		Ogre::ResourceGroupManager::getSingleton().declareResource(meshName,
 								"Mesh", OLResourceGroupName
@@ -527,7 +534,7 @@ namespace RendererOgre {
 					bool updatePosition, float px, float py, float pz, 
 					bool updateScale, float sx, float sy, float sz,
 					bool updateRotation, float ow, float ox, float oy, float oz) {
-		LookingGlassOgr::Log("RendererOgre::UpdateSceneNode: update %s", entName);
+		LG::Log("RendererOgre::UpdateSceneNode: update %s", entName);
 		if (m_sceneMgr->hasSceneNode(entName)) {
 			Ogre::SceneNode* sceneNode = m_sceneMgr->getSceneNode(entName);
 			if (updatePosition) {
@@ -537,13 +544,13 @@ namespace RendererOgre {
 				sceneNode->setScale(sx, sy, sz);
 			}
 			if (updateRotation) {
-				LookingGlassOgr::Log("RendererOgre::UpdateSceneNode: update rotation: w%f, x%f, y%f, z%f", ow, ox, oy, oz);
+				LG::Log("RendererOgre::UpdateSceneNode: update rotation: w%f, x%f, y%f, z%f", ow, ox, oy, oz);
 				sceneNode->setOrientation(ow, ox, oy, oz);
 			}
 			sceneNode->needUpdate(false);
 		}
 		else {
-			LookingGlassOgr::Log("RendererOgre::UpdateSceneNode: entity not found. Did not update entity %s", entName);
+			LG::Log("RendererOgre::UpdateSceneNode: entity not found. Did not update entity %s", entName);
 		}
 		return;
 	}
@@ -564,7 +571,7 @@ namespace RendererOgre {
 		Ogre::ManualObject* mo = m_sceneMgr->createManualObject(manualObjectName);
 		mo->setCastShadows(true);
 		// Ogre::ManualObject* mo = new Ogre::ManualObject(manualObjectName);
-		Log("RendererOgre::CreateMeshResource: Creating mo. f = %d, %s", faces, manualObjectName.c_str());
+		LG::Log("RendererOgre::CreateMeshResource: Creating mo. f = %d, %s", faces, manualObjectName.c_str());
 
 		int iface, iv;
 		const float* fVf;
@@ -575,9 +582,9 @@ namespace RendererOgre {
 			materialName = baseMaterialName + "-" + faceName + ".material";
 			mo->begin(materialName);
 			fVf = fV + fC[0];
-			// Log("RendererOgre::CreateMeshResource: F%d: vertices %d, %d, %d", iface, fC[0], fC[1], fC[2]);
+			// LG::Log("RendererOgre::CreateMeshResource: F%d: vertices %d, %d, %d", iface, fC[0], fC[1], fC[2]);
 			for (iv=0; iv < fC[1]; iv++) {
-				// Log("RendererOgre::CreateMeshResource: %f, %f, %f, %f, %f", fVf[0], fVf[1], fVf[2], fVf[3], fVf[4] );
+				// LG::Log("RendererOgre::CreateMeshResource: %f, %f, %f, %f, %f", fVf[0], fVf[1], fVf[2], fVf[3], fVf[4] );
 				mo->position(fVf[0], fVf[1], fVf[2]);
 				mo->textureCoord(fVf[3], fVf[4]);
 				mo->normal(fVf[5], fVf[6], fVf[7]);
@@ -585,9 +592,9 @@ namespace RendererOgre {
 			}
 			fC += 3;
 			fVf = fV + fC[0];
-			// Log("RendererOgre::CreateMeshResource: F%d: indices %d, %d, %d", iface, fC[0], fC[1], fC[2]);
+			// LG::Log("RendererOgre::CreateMeshResource: F%d: indices %d, %d, %d", iface, fC[0], fC[1], fC[2]);
 			for (iv=0; iv < fC[1]; iv += 3) {
-				// Log("RendererOgre::CreateMeshResource: %f, %f, %f", fVf[0], fVf[1], fVf[2]);
+				// LG::Log("RendererOgre::CreateMeshResource: %f, %f, %f", fVf[0], fVf[1], fVf[2]);
 				mo->triangle((Ogre::uint32)fVf[0], (Ogre::uint32)fVf[1], (Ogre::uint32)fVf[2]);
 				// mo->index((Ogre::uint32)fVf[0]);
 				// mo->index((Ogre::uint32)fVf[1]);
@@ -598,7 +605,7 @@ namespace RendererOgre {
 			mo->end();
 		}
 
-		Log("RendererOgre::CreateMeshResource: converting to mesh: %s", entName.c_str());
+		LG::Log("RendererOgre::CreateMeshResource: converting to mesh: %s", entName.c_str());
 		// I thought I should have to find and unload the old mesh but
 		// these do not the right things and don't know why. Removing comments causes crashes.
 		// if (Ogre::MeshManager::getSingleton().resourceExists(entName)) {
@@ -617,13 +624,13 @@ namespace RendererOgre {
 
 			if (m_serializeMeshes) {
 				// serialize the mesh to the filesystem
-				m_meshTracker->MakePersistant(mesh, entName);
+				LG::OLMeshTracker::Instance()->MakePersistant(mesh, entName);
 			}
 			// you'd think doing  the unload here would be the right thing but it causes crashes
 			// Ogre::MeshManager::getSingleton().unload(entName);
 		}
 		catch (Ogre::Exception &e) {
-			Log("RendererOgre::CreateMeshResource: failure generating mesh: %s", e.getDescription().c_str());
+			LG::Log("RendererOgre::CreateMeshResource: failure generating mesh: %s", e.getDescription().c_str());
 			// This will leave the mesh as the default loading shape
 			// and potentially create an ManualObject leak
 		}
@@ -637,12 +644,12 @@ namespace RendererOgre {
 	void RendererOgre::GenerateLoadingMesh() {
 		Ogre::String loadingMeshName = "LookingGlass/LoadingShape";
 		Ogre::String loadingMaterialName = "LookingGlass/LoadingShape";
-		Ogre::String targetFilename = LookingGlassOgr::GetParameter("Renderer.Ogre.DefaultMeshFilename");
+		Ogre::String targetFilename = LG::GetParameter("Renderer.Ogre.DefaultMeshFilename");
 
 		Ogre::String loadingMeshManualObjectName = "MO/" + loadingMeshName;
 
 		Ogre::ManualObject* mo = m_sceneMgr->createManualObject(loadingMeshManualObjectName);
-		Log("RendererOgre::GenerateLoadingMesh: ");
+		LG::Log("RendererOgre::GenerateLoadingMesh: ");
 
 		mo->begin(loadingMaterialName);
 		// top
@@ -705,7 +712,7 @@ namespace RendererOgre {
 		fC += 1;
 
 		Ogre::MeshPtr manualMesh = Ogre::MeshManager::getSingleton().createManual(manualObjectName, OLResourceGroupName);
-		LookingGlassOgr::Log("RendererOgre::CreateMeshResource2: Creating mo. f = %d, %s", 
+		LG::Log("RendererOgre::CreateMeshResource2: Creating mo. f = %d, %s", 
 				faces, manualMesh->getName().c_str());
 
 			/*
@@ -723,18 +730,18 @@ namespace RendererOgre {
 			faceMesh->vertexData = newVertexData;
 
 			fVf = fV + fC[0];
-			// Log("RendererOgre::CreateMeshResource2: F%d: vertices %d, %d, %d", iface, fC[0], fC[1], fC[2]);
+			// LG::Log("RendererOgre::CreateMeshResource2: F%d: vertices %d, %d, %d", iface, fC[0], fC[1], fC[2]);
 			for (iv=0; iv < fC[1]; iv++) {
-				// Log("RendererOgre::CreateMeshResource2: %f, %f, %f, %f, %f", fVf[0], fVf[1], fVf[2], fVf[3], fVf[4] );
+				// LG::Log("RendererOgre::CreateMeshResource2: %f, %f, %f, %f, %f", fVf[0], fVf[1], fVf[2], fVf[3], fVf[4] );
 				mo->position(fVf[0], fVf[1], fVf[2]);
 				mo->textureCoord(fVf[3], fVf[4]);
 				fVf += fC[2];
 			}
 			fC += 3;
 			fVf = fV + fC[0];
-			// Log("RendererOgre::CreateMeshResource2: F%d: indices %d, %d, %d", iface, fC[0], fC[1], fC[2]);
+			// LG::Log("RendererOgre::CreateMeshResource2: F%d: indices %d, %d, %d", iface, fC[0], fC[1], fC[2]);
 			for (iv=0; iv < fC[1]; iv += 3) {
-				// Log("RendererOgre::CreateMeshResource2: %f, %f, %f", fVf[0], fVf[1], fVf[2]);
+				// LG::Log("RendererOgre::CreateMeshResource2: %f, %f, %f", fVf[0], fVf[1], fVf[2]);
 				mo->index((Ogre::uint32)fVf[0]);
 				mo->index((Ogre::uint32)fVf[1]);
 				mo->index((Ogre::uint32)fVf[2]);
@@ -767,13 +774,13 @@ void RendererOgre::GenTerrainMesh(Ogre::SceneManager* sceneMgr, Ogre::SceneNode*
 		Ogre::MovableObject* attached = node->getAttachedObject(0);
 		if (attached->getMovableType() != "ManualObject") {
             // don't know why this would ever happen but clean out the odd stuff
-            Log("Found extra stuff on terrain scene node");
+            LG::Log("Found extra stuff on terrain scene node");
 			node->detachAllObjects();
 		}
 	}
 	// if there is not a manual object on the node, create a new one
 	if (node->numAttachedObjects() == 0) {
-		Log("GenTerrainMesh: creating terrain ManualObject");
+		LG::Log("GenTerrainMesh: creating terrain ManualObject");
         // if no attached objects, we add our dynamic ManualObject
 		Ogre::ManualObject* mob = sceneMgr->createManualObject("ManualObject/" + node->getName());
 		mob->addQueryFlags(Ogre::SceneManager::WORLD_GEOMETRY_TYPE_MASK);
@@ -826,7 +833,7 @@ void RendererOgre::GenTerrainMesh(Ogre::SceneManager* sceneMgr, Ogre::SceneNode*
 void RendererOgre::AddOceanToRegion(Ogre::SceneManager* sceneMgr, Ogre::SceneNode* regionNode,
 									const float width, const float length, const float waterHeight, const char* wName) {
 	if (sceneMgr == 0) {
-		Log("AddOceanToRegion: passed null scene manager");
+		LG::Log("AddOceanToRegion: passed null scene manager");
 		return;
 	}
 	Ogre::String waterName = wName;
@@ -835,8 +842,8 @@ void RendererOgre::AddOceanToRegion(Ogre::SceneManager* sceneMgr, Ogre::SceneNod
 					*oceanPlane, width, length,
 					2, 2, true,
 					2, 2.0, 2.0, Ogre::Vector3::UNIT_Y);
-	Ogre::String oceanMaterialName = LookingGlassOgr::GetParameter("Renderer.Ogre.OceanMaterialName");
-	Log("AddOceanToRegion: r=%s, h=%f, n=%s, m=%s", 
+	Ogre::String oceanMaterialName = LG::GetParameter("Renderer.Ogre.OceanMaterialName");
+	LG::Log("AddOceanToRegion: r=%s, h=%f, n=%s, m=%s", 
 		regionNode->getName().c_str(), waterHeight, wName, oceanMaterialName.c_str());
 	oceanMesh->getSubMesh(0)->setMaterialName(oceanMaterialName);
 	Ogre::Entity* oceanEntity = sceneMgr->createEntity("WaterEntity/" + waterName, oceanMesh->getName());
@@ -877,7 +884,7 @@ void RendererOgre::MakeParentDir(const Ogre::String filename) {
 	int iResult = _mkdir(dirName.c_str());			// try to make the directory
 	if (iResult != 0) {							// if it couldn't be made
 		if (errno == ENOENT) {					// if it couldn't make because no parents
-			// Log("RendererOgre::MakeParentDir: recursing for %s", dirName.c_str());
+			// LG::Log("RendererOgre::MakeParentDir: recursing for %s", dirName.c_str());
 			MakeParentDir(dirName);				// create the parent directory
 			_mkdir(dirName.c_str());				// make the directory this time
 		}
@@ -887,8 +894,8 @@ void RendererOgre::MakeParentDir(const Ogre::String filename) {
 
 // call out to the main program and make sure we should keep running
 const bool RendererOgre::checkKeepRunning() {
-	if (LookingGlassOgr::checkKeepRunningCallback != NULL) {
-		return (*LookingGlassOgr::checkKeepRunningCallback)();
+	if (LG::checkKeepRunningCallback != NULL) {
+		return (*LG::checkKeepRunningCallback)();
 	}
 	return false;
 }
@@ -896,32 +903,33 @@ const bool RendererOgre::checkKeepRunning() {
 // Routine which calls back into the managed world to fetch a string/value configuration
 // parameter.
 const char* RendererOgre::GetParameter(const char* paramName) {
-	if (LookingGlassOgr::fetchParameterCallback != NULL) {
-		return (*LookingGlassOgr::fetchParameterCallback)(paramName);
+	if (LG::fetchParameterCallback != NULL) {
+		return (*LG::fetchParameterCallback)(paramName);
 	}
 	else {
-		Log("RendererOgre::GetParameter: could not get parameter %s", paramName);
+		LG::Log("RendererOgre::GetParameter: could not get parameter %s", paramName);
 	}
 	return NULL;
 }
 
+/*
 // Print out a message of the pointer thing is null. At least the log will know
 // of the problem
 void RendererOgre::AssertNonNull(void* thing, const char* msg) {
 	if (thing == NULL) {
-		Log(msg);
+		LG::Log(msg);
 	}
 }
 
 // Call back into the managed world to output a log message with formatting
 void RendererOgre::Log(const char* msg, ...) {
 	char buff[1024];
-	if (LookingGlassOgr::debugLogCallback != NULL) {
+	if (LG::debugLogCallback != NULL) {
 		va_list args;
 		va_start(args, msg);
 		vsprintf(buff, msg, args);
 		va_end(args);
-		(*LookingGlassOgr::debugLogCallback)(buff);
+		(*LG::debugLogCallback)(buff);
 	}
 }
 
@@ -945,6 +953,7 @@ void RendererOgre::formatIt(Ogre::String& dst, const char* msg, ...) {
 	dst = buff;
 	return;
 }
+*/
 
 }
 

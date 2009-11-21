@@ -26,7 +26,7 @@
 // forward definition
 namespace RendererOgre { class RendererOgre; }
 
-namespace AnimSceneNode {
+namespace LG {
 	class AnimSceneNode {
 	public:
 		AnimSceneNode();

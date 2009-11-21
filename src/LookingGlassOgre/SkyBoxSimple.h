@@ -25,11 +25,11 @@
 #include "LGOCommon.h"
 #include "SkyBoxBase.h"
 
-namespace LGSky {
+namespace LG {
 
 class SkyBoxSimple : public SkyBoxBase {
 public:
-	SkyBoxSimple(RendererOgre::RendererOgre*);
+	SkyBoxSimple();
 	~SkyBoxSimple();
 
 	void Initialize();
@@ -37,14 +37,11 @@ public:
 	void Stop();
 
 private:
-	RendererOgre::RendererOgre* m_ro;
-
 	// environmental light stuff waiting for the day we have a real sky system
 	Ogre::Vector3 m_sunFocalPoint;	// where the sun is pointing
 	// default if not using some fancy sky system
 	Ogre::Light* m_sun;				// the light that is the sun
 	float m_sunDistance;			// distance sun is from the focal point
 	Ogre::Light* m_moon;			// the light that is the moon
-
 };
 }

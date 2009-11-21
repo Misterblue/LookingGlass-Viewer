@@ -25,11 +25,11 @@
 #include "LGOCommon.h"
 #include "VisCalcFrustDist.h"
 
-namespace VisCalc {
+namespace LG {
 
 class VisCalcVariable : public VisCalcFrustDist {
 public:
-	VisCalcVariable(RendererOgre::RendererOgre*);
+	VisCalcVariable();
 	~VisCalcVariable();
 
 	bool CalculateVisibilityImpl(Ogre::Camera* cam, Ogre::Entity* ent, float dist);

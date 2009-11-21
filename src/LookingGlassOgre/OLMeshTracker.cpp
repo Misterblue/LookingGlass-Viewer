@@ -46,7 +46,10 @@ done outside the frame rendering thread.
 #define MESH_STATE_LOADED 7				// mesh is loaded and being rendered
 #define MESH_STATE_UNLOADED 8			// mesh is unloaded and unrenderable
 
-namespace OLMeshTracker {
+namespace LG {
+
+OLMeshTracker* OLMeshTracker::m_instance = NULL;
+
 typedef struct s_meshInfo {
 	int state;
 	Ogre::String name;
@@ -61,11 +64,10 @@ typedef stdext::hash_map<Ogre::String, MeshInfo>::iterator MeshMapIterator;
 MeshMap* m_meshMap;
 LGLOCK_MUTEX m_mapLock;
 
-OLMeshTracker::OLMeshTracker(RendererOgre::RendererOgre* ro) {
-	m_ro = ro;
+OLMeshTracker::OLMeshTracker() {
 	m_mapLock = LGLOCK_ALLOCATE_MUTEX("OLMeshTracker");
 	m_meshSerializer = NULL;
-	m_cacheDir = LookingGlassOgr::GetParameter("Renderer.Ogre.CacheDir");
+	m_cacheDir = LG::GetParameter("Renderer.Ogre.CacheDir");
 }
 OLMeshTracker::~OLMeshTracker() {
 	LGLOCK_RELEASE_MUTEX(m_mapLock);
@@ -112,7 +114,7 @@ void OLMeshTracker::UnTrackMesh(Ogre::String meshName) {
 void OLMeshTracker::MakeLoaded(Ogre::String meshName, void* callback, void* callbackParam) {
 	/*
 	if (we aren't tracking this mesh) {
-		LookingGlassOgr::RequestResource(meshName.c_str(), contextEntName.c_str(), LookingGlassOgr::ResourceTypeMesh);
+		LG::RequestResource(meshName.c_str(), contextEntName.c_str(), LookingGlassOgr::ResourceTypeMesh);
 		add mesh to tracking map
 		TODO:
 	}
@@ -140,10 +142,10 @@ void OLMeshTracker::MakePersistant(Ogre::String meshName, Ogre::String entName) 
 
 // TODO: make this inline code happen on it's own thread
 void OLMeshTracker::MakePersistant(Ogre::MeshPtr mesh, Ogre::String entName) {
-	Ogre::String targetFilename = m_ro->EntityNameToFilename(entName, "");
+	Ogre::String targetFilename = LG::RendererOgre::Instance()->EntityNameToFilename(entName, "");
 
 	// Make sure the directory exists -- I wish the serializer did this for me
-	m_ro->CreateParentDirectory(targetFilename);
+	LG::RendererOgre::Instance()->CreateParentDirectory(targetFilename);
 	
 	if (m_meshSerializer == NULL) {
 		m_meshSerializer = new Ogre::MeshSerializer();

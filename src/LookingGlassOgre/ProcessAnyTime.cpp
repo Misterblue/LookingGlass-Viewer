@@ -36,23 +36,22 @@ done outside the frame rendering thread.
 #include "RendererOgre.h"
 #include "OLMaterialTracker.h"
 
-namespace ProcessAnyTime {
+namespace LG {
 
-ProcessAnyTime* m_singleton;
-RendererOgre::RendererOgre* m_ro;
+ProcessAnyTime* ProcessAnyTime::m_instance = NULL;
 
 // ====================================================================
 // PrepareMesh
 // Given a meshname, call the prepare routine to get it loaded.
 // Once loaded, we can do the refresh between frame
-class PrepareMeshQc : public GenericQc {
+class PrepareMeshPc : public GenericPc {
 	Ogre::String meshName;
 	Ogre::String meshGroup;
-	PrepareMeshQc(Ogre::String meshN, Ogre::String meshG) {
+	PrepareMeshPc(Ogre::String meshN, Ogre::String meshG) {
 		this->meshName = meshN;
 		this->meshGroup = meshG;
 	}
-	~PrepareMeshQc() {
+	~PrepareMeshPc() {
 		this->meshName.clear();
 		this->meshGroup.clear();
 	}
@@ -73,14 +72,12 @@ class PrepareMeshQc : public GenericQc {
 // ====================================================================
 // Queue of work to do independent of the renderer thread
 // Useful for loading meshes and doing other time expensive operations.
-// To add a between frame operation, you write a subclass of GenericQc like those
+// To add a between frame operation, you write a subclass of GenericPc like those
 // above, write a routine to create and instance of the class and put it in the
 // queue and later, between frames, the Process() routine will be called.
-// The constructors and destructors of the *Qc class handles all the allocation
+// The constructors and destructors of the *Pc class handles all the allocation
 // and deallocation of memory needed to pass the parameters.
-ProcessAnyTime::ProcessAnyTime(RendererOgre::RendererOgre* ro) {
-	m_singleton = this;
-	m_ro = ro;
+ProcessAnyTime::ProcessAnyTime() {
 	m_workItemMutex = LGLOCK_ALLOCATE_MUTEX("ProcessAnyTime");
 	m_modified = false;
 }

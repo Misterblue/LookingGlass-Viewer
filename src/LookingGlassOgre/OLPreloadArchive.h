@@ -25,6 +25,8 @@
 #include "OgreArchive.h"
 #include "OgreArchiveFactory.h"
 
+namespace LG {
+
 class OLPreloadArchive : public Ogre::Archive
 {
 protected:
@@ -98,3 +100,4 @@ public:
   void destroyInstance( Ogre::Archive* arch) { delete arch; }
 };
 
+}

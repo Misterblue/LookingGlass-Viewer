@@ -27,17 +27,23 @@
 #include "UserIO.h"
 #include "OLMaterialTracker.h"
 #include "OLMeshTracker.h"
-#include "ProcessBetweenFrame.h"
 #include "SkyBoxBase.h"
 #include "VisCalcBase.h"
 
-namespace RendererOgre {
+namespace LG {
 
 class RendererOgre : Ogre::FrameListener {
 
 public:
 	RendererOgre(void);
 	~RendererOgre(void);
+
+	static RendererOgre* Instance() { 
+		if (LG::RendererOgre::m_instance == NULL) {
+			LG::RendererOgre::m_instance = new RendererOgre();
+		}
+		return LG::RendererOgre::m_instance; 
+	}
 
 	void initialize();
 	bool renderingThread();
@@ -78,11 +84,6 @@ public:
 	void CreateParentDirectory(const Ogre::String);
 	void MakeParentDir(const Ogre::String);
 
-	// when a material resource is changed, tell Ogre to reload the things that use it
-	OLMaterialTracker::OLMaterialTracker* MaterialTracker() { return m_materialTracker; }
-	ProcessBetweenFrame::ProcessBetweenFrame* ProcessBetweenFrame() { return m_processBetweenFrame; }
-	OLMeshTracker::OLMeshTracker* MeshTracker() { return m_meshTracker; }
-
 	// mutex  that is locked when the scene graph is in use
 	LGLOCK_MUTEX SceneGraphLock() { return m_sceneGraphLock; }
 
@@ -95,10 +96,12 @@ public:
 
 	Ogre::ColourValue SceneAmbientColor;
 	Ogre::ColourValue MaterialAmbientColor;
-	LGSky::SkyBoxBase* m_sky;
-	VisCalc::VisCalcBase* m_visCalc;	// an routine for calculating visibility
+	LG::SkyBoxBase* m_sky;
+	LG::VisCalcBase* m_visCalc;	// an routine for calculating visibility
 
 private:
+	static RendererOgre* m_instance;
+
 	// OGRE INITIALIZATION ROUTINES
     void loadOgreResources(const char*);
     void configureOgreRenderSystem();
@@ -121,11 +124,6 @@ private:
 
 	// USER IO
 	UserIO* m_userio;
-
-	// Renderer Ogre is the keeper of various things that should be Singletons
-	OLMaterialTracker::OLMaterialTracker* m_materialTracker;
-	ProcessBetweenFrame::ProcessBetweenFrame* m_processBetweenFrame;
-	OLMeshTracker::OLMeshTracker* m_meshTracker;
 
 	// Lock for the scene graph. Locked when doing RenderOneFrame.
 	LGLOCK_MUTEX m_sceneGraphLock;

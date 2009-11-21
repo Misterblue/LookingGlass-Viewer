@@ -24,10 +24,7 @@
 
 #include "LGOCommon.h"
 
-// forward definition
-namespace RendererOgre { class RendererOgre; }
-
-namespace LGSky {
+namespace LG {
 
 	// There can be many options for Skyboxes. Any Skybox implementation
 	//   is based on this class which provides the basic interface.

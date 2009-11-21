@@ -26,7 +26,7 @@
 #include "stdafx.h"
 #include "LGLocking.h"
 
-namespace LGLocking {
+namespace LG {
 
 LGLock::LGLock() { }
 LGLock::LGLock(Ogre::String nam) { 
@@ -59,11 +59,11 @@ void LGLock::Unlock() {
 	return;
 }
 
-LGLock* LGLock_Allocate_Mutex(Ogre::String name) {
+LGLock* LGLock::LGLock_Allocate_Mutex(Ogre::String name) {
 	return new LGLock(name);
 }
 
-void LGLock_Release_Lock(LGLock* lock) {
+void LGLock::LGLock_Release_Lock(LGLock* lock) {
 	if (lock != NULL) delete lock;
 }
 

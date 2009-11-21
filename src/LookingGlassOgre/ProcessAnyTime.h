@@ -32,36 +32,43 @@ done outside the frame rendering thread.
 #include "LGOCommon.h"
 #include "LGLocking.h"
 
-// forward definition
-namespace RendererOgre { class RendererOgre; }
-
-namespace ProcessAnyTime {
+namespace LG {
 
 // the generic base class that goes in the list
-class GenericQc {
+class GenericPc {
 public:
 	virtual void Process() {};
-	GenericQc() {
+	GenericPc() {
 	};
-	~GenericQc() {};
+	~GenericPc() {};
 };
 
 class ProcessAnyTime {
 
 public:
-	ProcessAnyTime(RendererOgre::RendererOgre*);
+	ProcessAnyTime();
 	~ProcessAnyTime();
+
+	static ProcessAnyTime* Instance() { 
+		if (LG::ProcessAnyTime::m_instance == NULL) {
+			LG::ProcessAnyTime::m_instance = new ProcessAnyTime();
+		}
+		return LG::ProcessAnyTime::m_instance; 
+	}
 
 	bool HasWorkItems();
 	void ProcessWorkItems(int);
 
+
 private:
+	static ProcessAnyTime* m_instance;
+
 	LGLOCK_MUTEX m_workItemMutex;
 
 	bool m_modified;		// true if it's time to sort the work queue
 
 	// Forward definition
-	void QueueWork(GenericQc*);
+	void QueueWork(GenericPc*);
 };
 
 }

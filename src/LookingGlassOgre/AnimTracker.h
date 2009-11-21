@@ -26,7 +26,7 @@
 // forward definition
 namespace RendererOgre { class RendererOgre; }
 
-namespace AnimTracker {
+namespace LG {
 	class AnimTracker {
 	public:
 		AnimTracker();

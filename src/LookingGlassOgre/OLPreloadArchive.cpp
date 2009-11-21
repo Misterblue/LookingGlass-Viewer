@@ -26,9 +26,10 @@
 #include "LookingGlassOgre.h"
 #include "RendererOgre.h"
 
+namespace LG {
 OLPreloadArchive::OLPreloadArchive( const Ogre::String& name, const Ogre::String& archType )
 			: Ogre::Archive(name, archType) {
-	LookingGlassOgr::Log("OLPreloadArchive creation: n=%s, t=%s", name.c_str(), archType.c_str());
+	LG::Log("OLPreloadArchive creation: n=%s, t=%s", name.c_str(), archType.c_str());
 	m_FSArchive = NULL;
 	return;
 }
@@ -48,11 +49,11 @@ bool OLPreloadArchive::isCaseSensitive(void) const {
 // Loads the archive.
 void OLPreloadArchive::load() {
 	// this is really a wrapper for a filesystem archive
-	LookingGlassOgr::Log("OLPreloadArchive::load(): mName=%s", mName.c_str());
-	m_defaultMeshFilename = LookingGlassOgr::GetParameter("Renderer.Ogre.DefaultMeshFilename");
-	LookingGlassOgr::Log("OLPreloadArchive::load(): DefaultMeshFile=%s", m_defaultMeshFilename.c_str());
-	m_defaultTextureFilename = LookingGlassOgr::GetParameter("Renderer.Ogre.DefaultTextureFilename");
-	LookingGlassOgr::Log("OLPreloadArchive::load(): DefaultTextureFile=%s", m_defaultTextureFilename.c_str());
+	LG::Log("OLPreloadArchive::load(): mName=%s", mName.c_str());
+	m_defaultMeshFilename = LG::GetParameter("Renderer.Ogre.DefaultMeshFilename");
+	LG::Log("OLPreloadArchive::load(): DefaultMeshFile=%s", m_defaultMeshFilename.c_str());
+	m_defaultTextureFilename = LG::GetParameter("Renderer.Ogre.DefaultTextureFilename");
+	LG::Log("OLPreloadArchive::load(): DefaultTextureFile=%s", m_defaultTextureFilename.c_str());
 	m_FSArchive = OGRE_NEW Ogre::FileSystemArchive(mName, "XXOLFilesystem");
 	m_FSArchive->load();
 }
@@ -65,31 +66,31 @@ void OLPreloadArchive::unload() {
 // The preloaded entities are in a filesystem without the grid name at the beginning.
 // This routine strips the grid name of the beginning and looks for the file.
 Ogre::DataStreamPtr OLPreloadArchive::open(const Ogre::String& filename) const {
-	LookingGlassOgr::Log("OLPreloadArchive::open(%s)", filename.c_str());
+	LG::Log("OLPreloadArchive::open(%s)", filename.c_str());
 	Ogre::String entityName = ExtractEntityFromFilename(filename);
 	if (m_FSArchive->exists(entityName)) {
 		return m_FSArchive->open(entityName);
 	}
 	// if the file doesn't exist, we shouldn't have been asked for it
-	LookingGlassOgr::Log("OLPreloadArchive::open(): the entity didn't exist!!!!. '%s'", entityName.c_str());
+	LG::Log("OLPreloadArchive::open(): the entity didn't exist!!!!. '%s'", entityName.c_str());
 	return Ogre::DataStreamPtr(new Ogre::MemoryDataStream(10));
 }
 
 // List all file names in the archive.
 Ogre::StringVectorPtr OLPreloadArchive::list(bool recursive, bool dirs) {
-	LookingGlassOgr::Log("OLPreloadArchive::list()");
+	LG::Log("OLPreloadArchive::list()");
 	return m_FSArchive->list(recursive, dirs);
 }
 
 // List all files in the archive with accompanying information.
 Ogre::FileInfoListPtr OLPreloadArchive::listFileInfo(bool recursive, bool dirs) {
-	LookingGlassOgr::Log("OLPreloadArchive::listFileInfo()");
+	LG::Log("OLPreloadArchive::listFileInfo()");
 	return m_FSArchive->listFileInfo(recursive, dirs);
 }
 
 Ogre::// Find all file or directory names matching a given pattern
 StringVectorPtr OLPreloadArchive::find(const Ogre::String& pattern, bool recursive, bool dirs) {
-	LookingGlassOgr::Log("OLPreloadArchive::find(%s)", pattern.c_str());
+	LG::Log("OLPreloadArchive::find(%s)", pattern.c_str());
 	return m_FSArchive->find(pattern, recursive, dirs);
 }
 
@@ -97,7 +98,7 @@ StringVectorPtr OLPreloadArchive::find(const Ogre::String& pattern, bool recursi
 bool OLPreloadArchive::exists(const Ogre::String& filename) {
 	// Ogre::String entityName = ExtractEntityFromFilename(filename);
 	// bool answer = m_FSArchive->exists(ExtractEntityFromFilename(filename));
-	// LookingGlassOgr::Log("OLPreloadArchive::exists(%s)(%s)(%s)", filename.c_str(), 
+	// LG::Log("OLPreloadArchive::exists(%s)(%s)(%s)", filename.c_str(), 
 	// 	entityName.c_str(), answer ? "exists" : "does not exist");
 	// return answer;
 	return m_FSArchive->exists(ExtractEntityFromFilename(filename));
@@ -120,7 +121,7 @@ const Ogre::String& OLPreloadArchiveFactory::getType(void) const {
 }
 
 Ogre::Archive* OLPreloadArchiveFactory::createInstance( const Ogre::String& name ) {
-	LookingGlassOgr::Log("OLPreloadArchiveFactory::createInstance(%s)", name.c_str());
+	LG::Log("OLPreloadArchiveFactory::createInstance(%s)", name.c_str());
     return OGRE_NEW OLPreloadArchive(name, OLPreloadTypeName);
 }
 
@@ -132,4 +133,5 @@ Ogre::String OLPreloadArchive::ExtractEntityFromFilename(Ogre::String filename) 
 		return filename.substr(pos + 1);
 	}
 	return Ogre::String("");
+}
 }

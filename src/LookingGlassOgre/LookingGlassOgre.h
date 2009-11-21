@@ -26,7 +26,7 @@
 
 #define DLLExport __declspec( dllexport )
 
-namespace LookingGlassOgr {
+namespace LG {
 
 typedef void DebugLogCallback(const char*);
 typedef const char* FetchParameterCallback(const char*);

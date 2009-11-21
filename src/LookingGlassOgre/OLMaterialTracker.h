@@ -24,16 +24,20 @@
 
 #include "LGOCommon.h"
 
-// forward definition
-namespace RendererOgre { class RendererOgre; }
-
-namespace OLMaterialTracker {
+namespace LG {
 
 class OLMaterialTracker : public Ogre::FrameListener {
 
 public:
-	OLMaterialTracker(RendererOgre::RendererOgre*);
+	OLMaterialTracker();
 	~OLMaterialTracker(void);
+
+	static OLMaterialTracker* Instance() { 
+		if (LG::OLMaterialTracker::m_instance == NULL) {
+			LG::OLMaterialTracker::m_instance = new OLMaterialTracker();
+		}
+		return LG::OLMaterialTracker::m_instance; 
+	}
 
 	// A material needs completing. MaterialManager::CreateOrRetrieve() has been
 	// called but the material was created. We check to see if the material file
@@ -91,7 +95,8 @@ public:
 	};
 
 private:
-	RendererOgre::RendererOgre* m_ro;
+	static OLMaterialTracker* m_instance;
+
 	Ogre::String m_defaultTextureName;
 	Ogre::String m_cacheDir;
 	Ogre::MaterialSerializer* m_serializer;

@@ -60,7 +60,9 @@
 // J: =>unloaded
 // X: should never get here
 
-namespace OLMaterialTracker {
+namespace LG {
+
+OLMaterialTracker* OLMaterialTracker::m_instance = NULL;
 
 // queue to hold the names of the materials that were reloaded. At FrameListener time,
 //   go through all the Entities and find the ones that contain this material. If found,
@@ -68,19 +70,18 @@ namespace OLMaterialTracker {
 std::queue<Ogre::String> m_materialsModified;
 std::queue<Ogre::String> m_texturesModified;
 
-OLMaterialTracker::OLMaterialTracker(RendererOgre::RendererOgre* ro) {
-	m_defaultTextureName = LookingGlassOgr::GetParameter("Renderer.Ogre.DefaultTextureResourceName");
-	m_cacheDir = LookingGlassOgr::GetParameter("Renderer.Ogre.CacheDir");
-	m_shouldSerialize = LookingGlassOgr::isTrue(LookingGlassOgr::GetParameter("Renderer.Ogre.SerializeMaterials"));
+OLMaterialTracker::OLMaterialTracker() {
+	m_defaultTextureName = LG::GetParameter("Renderer.Ogre.DefaultTextureResourceName");
+	m_cacheDir = LG::GetParameter("Renderer.Ogre.CacheDir");
+	m_shouldSerialize = LG::isTrue(LG::GetParameter("Renderer.Ogre.SerializeMaterials"));
 
-	m_ro = ro;
-	LookingGlassOgr::GetOgreRoot()->addFrameListener(this);
+	LG::GetOgreRoot()->addFrameListener(this);
 	if (m_shouldSerialize) {
 		m_serializer = new Ogre::MaterialSerializer();
 	}
 
 	// more kludge processing for corrupt data files
-	Ogre::ImageCodec* codec = OGRE_NEW BadImageCodec::BadImageCodec(m_ro);
+	Ogre::ImageCodec* codec = OGRE_NEW LG::BadImageCodec();
 	Ogre::Codec::registerCodec(codec);
 }
 
@@ -110,7 +111,7 @@ void OLMaterialTracker::FabricateMaterial(Ogre::String name, Ogre::MaterialPtr m
 		// and request the real material be constructed
 		MakeMaterialDefault(matPtr);
 		Ogre::Material* mat = matPtr.getPointer();
-		LookingGlassOgr::RequestResource(name.c_str(), name.c_str(), LookingGlassOgr::ResourceTypeMaterial);
+		LG::RequestResource(name.c_str(), name.c_str(), LG::ResourceTypeMaterial);
 	}
 	else {
 		// There is a material file under there somewhere, read the thing in
@@ -123,11 +124,11 @@ void OLMaterialTracker::FabricateMaterial(Ogre::String name, Ogre::MaterialPtr m
 				matPtr->load();
 				// this 'unload' seems to cause problems
 				// matPtr->unload();
-				// LookingGlassOgr::Log("ResourceListeners::processMaterialName: material loaded: %s", stream->getName().c_str());
+				// LG::Log("ResourceListeners::processMaterialName: material loaded: %s", stream->getName().c_str());
 			}
 		}
 		catch (Ogre::Exception& e) {
-			LookingGlassOgr::Log("OLMeshSerializerListener::processMaterialName: error creating material %s: %s", 
+			LG::Log("OLMeshSerializerListener::processMaterialName: error creating material %s: %s", 
 				name.c_str(), e.getDescription().c_str());
 		}
 		stream->close();
@@ -154,21 +155,21 @@ void OLMaterialTracker::MakeMaterialDefault(Ogre::MaterialPtr matPtr) {
 
 // Internal request to refresh a resource
 void OLMaterialTracker::RefreshResource(const Ogre::String& resName, const int rType) {
-	if (rType == LookingGlassOgr::ResourceTypeMesh) {
+	if (rType == LG::ResourceTypeMesh) {
 		Ogre::MeshPtr theMesh = (Ogre::MeshPtr)Ogre::MeshManager::getSingleton().getByName(resName);
 		// unload it and let the renderer decide if it needs to be loaded again
 		// NOTE: unload doesn't work here. We get exceptions if we unload while reload doesn't fail
 		if (!theMesh.isNull()) theMesh->reload();
 	}
-	if (rType == LookingGlassOgr::ResourceTypeMaterial) {
+	if (rType == LG::ResourceTypeMaterial) {
 		// mark it so the work happens later between frames (more queues to manage correctly someday)
 		MarkMaterialModified(resName);
 	}
-	if (rType == LookingGlassOgr::ResourceTypeTexture) {
+	if (rType == LG::ResourceTypeTexture) {
 		Ogre::TextureManager::getSingleton().unload(resName);
 		MarkTextureModified(resName, false);
 	}
-	if (rType == LookingGlassOgr::ResourceTypeTransparentTexture) {
+	if (rType == LG::ResourceTypeTransparentTexture) {
 		Ogre::TextureManager::getSingleton().unload(resName);
 		MarkTextureModified(resName, true);
 	}
@@ -255,7 +256,7 @@ void OLMaterialTracker::GetMeshesToRefreshForMaterials(std::list<Ogre::MeshPtr>*
 void OLMaterialTracker::GetMeshesToRefreshForTexture(std::list<Ogre::MeshPtr>* meshes, const Ogre::String& texName,
 													 bool hasTransparancy) {
 	// only check the Meshs for use of this material
-	LookingGlassOgr::Log("GetMeshesToRefreshForTexture: refresh for %s", texName.c_str());
+	LG::Log("GetMeshesToRefreshForTexture: refresh for %s", texName.c_str());
 	Ogre::ResourceManager::ResourceMapIterator rmi = Ogre::MeshManager::getSingleton().getResourceIterator();
 	while (rmi.hasMoreElements()) {
 		Ogre::MeshPtr oneMesh = rmi.getNext();
@@ -363,8 +364,8 @@ void OLMaterialTracker::CreateMaterialResource(const char* mName, const char* tN
 	// see "Historical Note" on FabricateMaterial
 	// because of the problems of thousands of material files, serialization is optional
 	if (m_shouldSerialize) {
-		Ogre::String filename = m_ro->EntityNameToFilename(materialName, "");
-		m_ro->CreateParentDirectory(filename);
+		Ogre::String filename = LG::RendererOgre::Instance()->EntityNameToFilename(materialName, "");
+		LG::RendererOgre::Instance()->CreateParentDirectory(filename);
 		m_serializer->exportMaterial(matPtr, filename);
 	}
 	// we're getting errors when this load happens if the textures don't already exist
@@ -388,7 +389,7 @@ void OLMaterialTracker::CreateMaterialResource2(const char* mName, const char* t
 	Ogre::Pass* pass = tech->createPass();
 	pass->setLightingEnabled(true);
 	pass->setShininess(parms[CreateMaterialShiny]/256.0);	// origionally a byte
-	pass->setAmbient(m_ro->MaterialAmbientColor);
+	pass->setAmbient(LG::RendererOgre::Instance()->MaterialAmbientColor);
 	pass->setVertexColourTracking(Ogre::TVC_AMBIENT);
 	if (textureName.length() > 0) {
 		Ogre::TextureUnitState* tus = pass->createTextureUnitState(textureName);
@@ -454,8 +455,8 @@ void OLMaterialTracker::CreateMaterialResource2(const char* mName, const char* t
 	// see "Historical Note" on FabricateMaterial
 	// because of the problems of thousands of material files, serialization is optional
 	if (m_shouldSerialize) {
-		Ogre::String filename = m_ro->EntityNameToFilename(materialName, "");
-		m_ro->CreateParentDirectory(filename);
+		Ogre::String filename = LG::RendererOgre::Instance()->EntityNameToFilename(materialName, "");
+		LG::RendererOgre::Instance()->CreateParentDirectory(filename);
 		m_serializer->exportMaterial(matPtr, filename);
 	}
 	// We're getting errors when this load happens if the textures don't already exist

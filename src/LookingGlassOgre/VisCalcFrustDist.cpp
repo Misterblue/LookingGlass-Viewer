@@ -26,11 +26,9 @@
 #include "RendererOgre.h"
 #include "OLMeshTracker.h"
 
-namespace VisCalc { 
+namespace LG { 
 	
-VisCalcFrustDist::VisCalcFrustDist(RendererOgre::RendererOgre* ro) {
-	m_singleton = this;
-	m_ro = ro;
+VisCalcFrustDist::VisCalcFrustDist() {
 }
 
 VisCalcFrustDist::~VisCalcFrustDist() {
@@ -38,29 +36,29 @@ VisCalcFrustDist::~VisCalcFrustDist() {
 
 void VisCalcFrustDist::Initialize() {
 	// visibility culling parameters
-	m_shouldCullMeshes = LookingGlassOgr::GetParameterBool("Renderer.Ogre.Visibility.Cull.Meshes");
-	m_shouldCullTextures = LookingGlassOgr::GetParameterBool("Renderer.Ogre.Visibility.Cull.Textures");
-	m_shouldCullByFrustrum = LookingGlassOgr::GetParameterBool("Renderer.Ogre.Visibility.Cull.Frustrum");
-	m_shouldCullByDistance = LookingGlassOgr::GetParameterBool("Renderer.Ogre.Visibility.Cull.Distance");
-	m_visibilityScaleMaxDistance = LookingGlassOgr::GetParameterFloat("Renderer.Ogre.Visibility.MaxDistance");
-	m_visibilityScaleMinDistance = LookingGlassOgr::GetParameterFloat("Renderer.Ogre.Visibility.MinDistance");
-	m_visibilityScaleOnlyLargeAfter = LookingGlassOgr::GetParameterFloat("Renderer.Ogre.Visibility.OnlyLargeAfter");
-	m_visibilityScaleLargeSize = LookingGlassOgr::GetParameterFloat("Renderer.Ogre.Visibility.Large");
-	LookingGlassOgr::Log("initialize: visibility: min=%f, max=%f, large=%f, largeafter=%f",
+	m_shouldCullMeshes = LG::GetParameterBool("Renderer.Ogre.Visibility.Cull.Meshes");
+	m_shouldCullTextures = LG::GetParameterBool("Renderer.Ogre.Visibility.Cull.Textures");
+	m_shouldCullByFrustrum = LG::GetParameterBool("Renderer.Ogre.Visibility.Cull.Frustrum");
+	m_shouldCullByDistance = LG::GetParameterBool("Renderer.Ogre.Visibility.Cull.Distance");
+	m_visibilityScaleMaxDistance = LG::GetParameterFloat("Renderer.Ogre.Visibility.MaxDistance");
+	m_visibilityScaleMinDistance = LG::GetParameterFloat("Renderer.Ogre.Visibility.MinDistance");
+	m_visibilityScaleOnlyLargeAfter = LG::GetParameterFloat("Renderer.Ogre.Visibility.OnlyLargeAfter");
+	m_visibilityScaleLargeSize = LG::GetParameterFloat("Renderer.Ogre.Visibility.Large");
+	LG::Log("initialize: visibility: min=%f, max=%f, large=%f, largeafter=%f",
 			(double)m_visibilityScaleMinDistance, (double)m_visibilityScaleMaxDistance, 
 			(double)m_visibilityScaleLargeSize, (double)m_visibilityScaleOnlyLargeAfter);
-	LookingGlassOgr::Log("VisCalcFrustDist::Initialize: visibility: cull meshes/textures/frustrum/distance = %s/%s/%s/%s",
+	LG::Log("VisCalcFrustDist::Initialize: visibility: cull meshes/textures/frustrum/distance = %s/%s/%s/%s",
 					m_shouldCullMeshes ? "true" : "false",
 					m_shouldCullTextures ? "true" : "false",
 					m_shouldCullByFrustrum ? "true" : "false",
 					m_shouldCullByDistance ? "true" : "false"
 	);
-	m_meshesReloadedPerFrame = LookingGlassOgr::GetParameterInt("Renderer.Ogre.Visibility.MeshesReloadedPerFrame");
+	m_meshesReloadedPerFrame = LG::GetParameterInt("Renderer.Ogre.Visibility.MeshesReloadedPerFrame");
 	return;
 }
 
 void VisCalcFrustDist::Start() {
-	LookingGlassOgr::GetOgreRoot()->addFrameListener(this);
+	LG::GetOgreRoot()->addFrameListener(this);
 	return;
 }
 
@@ -99,7 +97,7 @@ void VisCalcFrustDist::calculateEntityVisibility() {
 	m_recalculateVisibility = false;
 	visRegions = visChildren = visEntities = visNodes = 0;
 	visVisToVis = visVisToInvis = visInvisToVis = visInvisToInvis = 0;
-	Ogre::SceneNode* nodeRoot = m_ro->m_sceneMgr->getRootSceneNode();
+	Ogre::SceneNode* nodeRoot = LG::RendererOgre::Instance()->m_sceneMgr->getRootSceneNode();
 	if (nodeRoot == NULL) return;
 	// Hanging off the root node will be a node for each 'region'. A region has
 	// terrain and then content nodes
@@ -112,15 +110,15 @@ void VisCalcFrustDist::calculateEntityVisibility() {
 	}
 	if ((visSlowdown-- < 0) || (visVisToInvis != 0) || (visInvisToVis != 0)) {
 		visSlowdown = 30;
-		LookingGlassOgr::Log("calcVisibility: regions=%d, nodes=%d, entities=%d, children=%d",
+		LG::Log("calcVisibility: regions=%d, nodes=%d, entities=%d, children=%d",
 				visRegions, visNodes, visEntities, visChildren);
-		LookingGlassOgr::Log("calcVisibility: vv=%d, vi=%d, iv=%d, ii=%d",
+		LG::Log("calcVisibility: vv=%d, vi=%d, iv=%d, ii=%d",
 				visVisToVis, visVisToInvis, visInvisToVis, visInvisToInvis);
 	}
-	LookingGlassOgr::SetStat(LookingGlassOgr::StatVisibleToVisible, visVisToVis);
-	LookingGlassOgr::SetStat(LookingGlassOgr::StatVisibleToInvisible, visVisToInvis);
-	LookingGlassOgr::SetStat(LookingGlassOgr::StatInvisibleToVisible, visInvisToVis);
-	LookingGlassOgr::SetStat(LookingGlassOgr::StatInvisibleToInvisible, visInvisToInvis);
+	LG::SetStat(LG::StatVisibleToVisible, visVisToVis);
+	LG::SetStat(LG::StatVisibleToInvisible, visVisToInvis);
+	LG::SetStat(LG::StatInvisibleToVisible, visInvisToVis);
+	LG::SetStat(LG::StatInvisibleToInvisible, visInvisToInvis);
 }
 
 // BETWEEN FRAME OPERATION
@@ -137,7 +135,7 @@ void VisCalcFrustDist::calculateEntityVisibility(Ogre::Node* node) {
 	visNodes++;
 	// children taken care of... check fo attached objects to this node
 	Ogre::SceneNode* snode = (Ogre::SceneNode*)node;
-	float snodeDistance = m_ro->m_camera->getPosition().distance(snode->_getWorldAABB().getCenter());
+	float snodeDistance = LG::RendererOgre::Instance()->m_camera->getPosition().distance(snode->_getWorldAABB().getCenter());
 	Ogre::SceneNode::ObjectIterator snodeObjectIterator = snode->getAttachedObjectIterator();
 	while (snodeObjectIterator.hasMoreElements()) {
 		Ogre::MovableObject* snodeObject = snodeObjectIterator.getNext();
@@ -148,7 +146,7 @@ void VisCalcFrustDist::calculateEntityVisibility(Ogre::Node* node) {
 			if ((snodeEntity->getQueryFlags() & Ogre::SceneManager::WORLD_GEOMETRY_TYPE_MASK) == 0) {
 				// computation if it should be visible
 				// Note: this call is overridden by derived classes that do fancier visibility rules
-				bool viz = this->CalculateVisibilityImpl(m_ro->m_camera, snodeEntity, snodeDistance);
+				bool viz = this->CalculateVisibilityImpl(LG::RendererOgre::Instance()->m_camera, snodeEntity, snodeDistance);
 				if (snodeEntity->isVisible()) {
 					// we currently think this object is visible. make sure it should stay that way
 					if (viz) {
@@ -199,7 +197,7 @@ bool VisCalcFrustDist::CalculateVisibilityImpl(Ogre::Camera* cam, Ogre::Entity* 
 
 // Return TRUE if an object of this size should be seen at this distance
 bool VisCalcFrustDist::calculateScaleVisibility(float dist, float siz) {
-	// LookingGlassOgr::Log("calculateScaleVisibility: dist=%f, siz=%f", dist, siz);
+	// LG::Log("calculateScaleVisibility: dist=%f, siz=%f", dist, siz);
 	// if it's farther than max, don't display
 	if (dist >= m_visibilityScaleMaxDistance) return false;
 	// if it's closer than min, display it
@@ -230,10 +228,10 @@ void VisCalcFrustDist::processEntityVisibility() {
 		if (!meshP.isNull()) {
 			if (m_shouldCullMeshes) meshP->load();
 			parentEntity->setVisible(true);
-			LookingGlassOgr::IncStat(LookingGlassOgr::StatCullMeshesLoaded);
+			LG::IncStat(LG::StatCullMeshesLoaded);
 		}
 	}
-	LookingGlassOgr::SetStat(LookingGlassOgr::StatCullMeshesQueuedToLoad, meshesToLoad.size());
+	LG::SetStat(LG::StatCullMeshesQueuedToLoad, meshesToLoad.size());
 	return;
 }
 
@@ -246,7 +244,7 @@ void VisCalcFrustDist::queueMeshLoad(Ogre::Entity* parentEntity, Ogre::MeshPtr m
 	}
 	// add to the load list if not already there (that camera can move around)
 	meshesToLoad.insert(std::pair<Ogre::String, Ogre::Entity*>(meshName, parentEntity));
-	LookingGlassOgr::IncStat(LookingGlassOgr::StatCullMeshesQueuedToLoad);
+	LG::IncStat(LG::StatCullMeshesQueuedToLoad);
 }
 
 // BETWEEN FRAME OPERATION
@@ -282,8 +280,8 @@ void VisCalcFrustDist::unloadTheMesh(Ogre::MeshPtr meshP) {
 							Ogre::String texName = oneTus->getTextureName();
 							// TODO: the same texture gets unloaded multiple times. Is that a bad thing?
 							Ogre::TextureManager::getSingleton().unload(texName);
-							LookingGlassOgr::IncStat(LookingGlassOgr::StatCullTexturesUnloaded);
-							// LookingGlassOgr::Log("unloadTheMesh: unloading texture %s", texName.c_str());
+							LG::IncStat(LG::StatCullTexturesUnloaded);
+							// LG::Log("unloadTheMesh: unloading texture %s", texName.c_str());
 						}
 					}
 				}
@@ -291,9 +289,9 @@ void VisCalcFrustDist::unloadTheMesh(Ogre::MeshPtr meshP) {
 		}
 	}
 	if (m_shouldCullMeshes) {
-		m_ro->MeshTracker()->MakeUnLoaded(meshP->getName(), NULL, NULL);
-		LookingGlassOgr::IncStat(LookingGlassOgr::StatCullMeshesUnloaded);
-		// LookingGlassOgr::Log("unloadTheMesh: unloading mesh %s", mshName.c_str());
+		LG::OLMeshTracker::Instance()->MakeUnLoaded(meshP->getName(), NULL, NULL);
+		LG::IncStat(LG::StatCullMeshesUnloaded);
+		// LG::Log("unloadTheMesh: unloading mesh %s", mshName.c_str());
 	}
 }
 

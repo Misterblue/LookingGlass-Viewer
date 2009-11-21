@@ -25,10 +25,9 @@
 #include "LGOCommon.h"
 #include "LGLocking.h"
 
-// forward definition
-namespace RendererOgre { class RendererOgre; }
+namespace LG {
 
-namespace ProcessBetweenFrame {
+class RendererOgre;	// forward definition
 
 // the generic base class that goes in the list
 class GenericQc {
@@ -49,8 +48,15 @@ public:
 class ProcessBetweenFrame : public Ogre::FrameListener {
 
 public:
-	ProcessBetweenFrame(RendererOgre::RendererOgre*, int workItems);
+	ProcessBetweenFrame();
 	~ProcessBetweenFrame();
+
+	static ProcessBetweenFrame* Instance() { 
+		if (LG::ProcessBetweenFrame::m_instance == NULL) {
+			LG::ProcessBetweenFrame::m_instance = new ProcessBetweenFrame();
+		}
+		return LG::ProcessBetweenFrame::m_instance; 
+	}
 
 	bool HasWorkItems();
 	void ProcessWorkItems(int);
@@ -83,13 +89,18 @@ public:
 
 
 private:
+	static ProcessBetweenFrame* m_instance;
+
 	int m_numWorkItemsToDoBetweenFrames;
 	LGLOCK_MUTEX m_workItemMutex;
-
-	bool m_modified;		// true if it's time to sort the work queue
+	LGLOCK_THREAD m_processingThread;
 
 	// Forward definition
 	void QueueWork(GenericQc*);
+	static void ProcessThreadRoutine();
+
+	static bool m_keepProcessing;	// true if to keep processing on and on
+	bool m_modified;		// true if it's time to sort the work queue
 };
 
 }

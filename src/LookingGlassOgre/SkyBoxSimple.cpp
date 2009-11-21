@@ -24,22 +24,21 @@
 #include "SkyBoxSimple.h"
 #include "RendererOgre.h"
 
-namespace LGSky {
+namespace LG {
 
-SkyBoxSimple::SkyBoxSimple(RendererOgre::RendererOgre* ro) {
-	m_ro = ro;
+SkyBoxSimple::SkyBoxSimple() {
 }
 
 SkyBoxSimple::~SkyBoxSimple() {
 }
 
 void SkyBoxSimple::Initialize() {
-	LookingGlassOgr::Log("DEBUG: LookingGlassOrge: createLight");
+	LG::Log("DEBUG: LookingGlassOrge: createLight");
     // TODO: decide if I should connect  this to a scene node
     //    might make moving and control easier
 	m_sunDistance = 2000.0;
 	m_sunFocalPoint = Ogre::Vector3(128.0, 0.0, 128.0);
-	m_sun = m_ro->m_sceneMgr->createLight("sun");
+	m_sun = LG::RendererOgre::Instance()->m_sceneMgr->createLight("sun");
 	m_sun->setType(Ogre::Light::LT_DIRECTIONAL);	// directional and sun-like
 	m_sun->setDiffuseColour(Ogre::ColourValue::White);
 	m_sun->setPosition(0.0f, 1000.0f, 0.0f);
@@ -52,13 +51,13 @@ void SkyBoxSimple::Initialize() {
 
 	try {
 		// Ogre::String skyboxName = "LookingGlass/CloudyNoonSkyBox";
-		Ogre::String skyboxName = LookingGlassOgr::GetParameter("Renderer.Ogre.SkyboxName");
-		m_ro->m_sceneMgr->setSkyBox(true, skyboxName);
-		LookingGlassOgr::Log("createSky: setting skybox to %s", skyboxName.c_str());
+		Ogre::String skyboxName = LG::GetParameter("Renderer.Ogre.SkyboxName");
+		LG::RendererOgre::Instance()->m_sceneMgr->setSkyBox(true, skyboxName);
+		LG::Log("createSky: setting skybox to %s", skyboxName.c_str());
 	}
 	catch (Ogre::Exception e) {
-		LookingGlassOgr::Log("Failed to set scene skybox");
-		m_ro->m_sceneMgr->setSkyBox(false, "");
+		LG::Log("Failed to set scene skybox");
+		LG::RendererOgre::Instance()->m_sceneMgr->setSkyBox(false, "");
 	}
 }
 

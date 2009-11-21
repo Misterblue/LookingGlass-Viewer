@@ -24,10 +24,7 @@
 
 #include "LGOCommon.h"
 
-// forward definition
-namespace RendererOgre { class RendererOgre; }
-
-namespace VisCalc {
+namespace LG {
 
 class VisCalcBase {
 public:

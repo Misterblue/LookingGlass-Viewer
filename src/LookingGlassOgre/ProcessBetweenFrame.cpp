@@ -30,10 +30,10 @@
 #include "RendererOgre.h"
 #include "OLMaterialTracker.h"
 
-namespace ProcessBetweenFrame {
+namespace LG {
 
-ProcessBetweenFrame* m_singleton;
-RendererOgre::RendererOgre* m_ro;
+ProcessBetweenFrame* ProcessBetweenFrame::m_instance = NULL;
+bool ProcessBetweenFrame::m_keepProcessing = false;
 
 // ====================================================================
 // RefreshResource
@@ -55,7 +55,7 @@ public:
 		this->matName.clear();
 	}
 	void Process() {
-		m_ro->MaterialTracker()->RefreshResource(this->matName.c_str(), this->rType);
+		LG::OLMaterialTracker::Instance()->RefreshResource(this->matName.c_str(), this->rType);
 	}
 };
 
@@ -64,7 +64,7 @@ class CreateMaterialResourceQc : public GenericQc {
 public:
 	Ogre::String matName;
 	Ogre::String texName;
-	float parms[OLMaterialTracker::OLMaterialTracker::CreateMaterialSize];
+	float parms[LG::OLMaterialTracker::CreateMaterialSize];
 	CreateMaterialResourceQc(float prio, Ogre::String uni, 
 					const char* mName, const char* tName, const float* inParms) {
 		// this->priority = prio;
@@ -74,7 +74,7 @@ public:
 		this->uniq = uni;
 		this->matName = Ogre::String(mName);
 		this->texName = Ogre::String(tName);
-		memcpy(this->parms, inParms, OLMaterialTracker::OLMaterialTracker::CreateMaterialSize*sizeof(float));
+		memcpy(this->parms, inParms, LG::OLMaterialTracker::CreateMaterialSize*sizeof(float));
 	}
 	~CreateMaterialResourceQc(void) {
 		this->uniq.clear();
@@ -82,7 +82,7 @@ public:
 		this->texName.clear();
 	}
 	void Process() {
-		m_ro->MaterialTracker()->CreateMaterialResource2(this->matName.c_str(), this->texName.c_str(), this->parms);
+		LG::OLMaterialTracker::Instance()->CreateMaterialResource2(this->matName.c_str(), this->texName.c_str(), this->parms);
 	}
 };
 
@@ -151,17 +151,17 @@ public:
 	}
 	void Process() {
 		int stride = (int)this->matParams[0];
-		m_ro->MaterialTracker()->CreateMaterialResource2(this->matName1.c_str(), this->textureName1.c_str(), &(this->matParams[1 + stride * 0]));
+		LG::OLMaterialTracker::Instance()->CreateMaterialResource2(this->matName1.c_str(), this->textureName1.c_str(), &(this->matParams[1 + stride * 0]));
 		if (!this->matName2.empty())
-			m_ro->MaterialTracker()->CreateMaterialResource2(this->matName2.c_str(), this->textureName2.c_str(), &(this->matParams[1 + stride * 1]));
+			LG::OLMaterialTracker::Instance()->CreateMaterialResource2(this->matName2.c_str(), this->textureName2.c_str(), &(this->matParams[1 + stride * 1]));
 		if (!this->matName3.empty())
-			m_ro->MaterialTracker()->CreateMaterialResource2(this->matName3.c_str(), this->textureName3.c_str(), &(this->matParams[1 + stride * 2]));
+			LG::OLMaterialTracker::Instance()->CreateMaterialResource2(this->matName3.c_str(), this->textureName3.c_str(), &(this->matParams[1 + stride * 2]));
 		if (!this->matName4.empty())
-			m_ro->MaterialTracker()->CreateMaterialResource2(this->matName4.c_str(), this->textureName4.c_str(), &(this->matParams[1 + stride * 3]));
+			LG::OLMaterialTracker::Instance()->CreateMaterialResource2(this->matName4.c_str(), this->textureName4.c_str(), &(this->matParams[1 + stride * 3]));
 		if (!this->matName5.empty())
-			m_ro->MaterialTracker()->CreateMaterialResource2(this->matName5.c_str(), this->textureName5.c_str(), &(this->matParams[1 + stride * 4]));
+			LG::OLMaterialTracker::Instance()->CreateMaterialResource2(this->matName5.c_str(), this->textureName5.c_str(), &(this->matParams[1 + stride * 4]));
 		if (!this->matName6.empty())
-			m_ro->MaterialTracker()->CreateMaterialResource2(this->matName6.c_str(), this->textureName6.c_str(), &(this->matParams[1 + stride * 5]));
+			LG::OLMaterialTracker::Instance()->CreateMaterialResource2(this->matName6.c_str(), this->textureName6.c_str(), &(this->matParams[1 + stride * 5]));
 	}
 };
 
@@ -191,7 +191,7 @@ public:
 		free(this->faceVertices);
 	}
 	void Process() {
-		m_ro->CreateMeshResource(this->meshName.c_str(), this->faceCounts, this->faceVertices);
+		LG::RendererOgre::Instance()->CreateMeshResource(this->meshName.c_str(), this->faceCounts, this->faceVertices);
 	}
 
 	void RecalculatePriority() {
@@ -244,25 +244,25 @@ public:
 		this->meshName.clear();
 	}
 	void Process() {
-		Ogre::SceneNode* node = m_ro->CreateSceneNode(
+		Ogre::SceneNode* node = LG::RendererOgre::Instance()->CreateSceneNode(
 					this->sceneMgr, this->sceneNodeName.c_str(), this->parentNode,
 					this->inheritScale, this->inheritOrientation,
 					this->px, this->py, this->pz,
 					this->sx, this->sy, this->sz,
 					this->ow, this->ox, this->oy, this->oz);
-		m_ro->AddEntity(this->sceneMgr, node, this->entityName.c_str(), this->meshName.c_str());
+		LG::RendererOgre::Instance()->AddEntity(this->sceneMgr, node, this->entityName.c_str(), this->meshName.c_str());
 	}
 	void RecalculatePriority() {
 		Ogre::Vector3 ourLoc = Ogre::Vector3(this->px, this->py, this->pz);
-		this->priority = ourLoc.distance(m_ro->m_camera->getPosition());
+		this->priority = ourLoc.distance(LG::RendererOgre::Instance()->m_camera->getPosition());
 		/*
-		Ogre::Vector3 cameraRelation = m_ro->m_camera->getOrientation() * ourLoc;
+		Ogre::Vector3 cameraRelation = LG::RendererOgre::Instance()->m_camera->getOrientation() * ourLoc;
 		if (cameraRelation.x < 0) {
 			// we're behind the camera
 			this->priority = this->priority + 300.0;
 		}
 		*/
-		if (!m_ro->m_camera->isVisible(Ogre::Sphere(ourLoc, 3.0))) {
+		if (!LG::RendererOgre::Instance()->m_camera->isVisible(Ogre::Sphere(ourLoc, 3.0))) {
 			// we're not visible at the moment so no rush to create us
 			this->priority = this->priority + 500.0;
 		}
@@ -301,7 +301,7 @@ public:
 		this->entName.clear();
 	}
 	void Process() {
-		m_ro->UpdateSceneNode(this->entName.c_str(),
+		LG::RendererOgre::Instance()->UpdateSceneNode(this->entName.c_str(),
 					this->setPosition, this->px, this->py, this->pz,
 					this->setScale, this->sx, this->sy, this->sz,
 					this->setRotation, this->ow, this->ox, this->oy, this->oz);
@@ -317,20 +317,24 @@ std::list<GenericQc*> m_betweenFrameWork;
 // queue and later, between frames, the Process() routine will be called.
 // The constructors and destructors of the *Qc class handles all the allocation
 // and deallocation of memory needed to pass the parameters.
-ProcessBetweenFrame::ProcessBetweenFrame(RendererOgre::RendererOgre* ro, int workItems) {
-	m_singleton = this;
-	m_ro = ro;
+ProcessBetweenFrame::ProcessBetweenFrame() {
+	int betweenWork = LG::GetParameterInt("Renderer.Ogre.BetweenFrame.WorkItems");
+	if (betweenWork == 0) betweenWork = 5000;
+	m_numWorkItemsToDoBetweenFrames = betweenWork;
+
 	m_workItemMutex = LGLOCK_ALLOCATE_MUTEX("ProcessBetweenFrames");
 	// this is the number of work items to do when between two frames
-	m_numWorkItemsToDoBetweenFrames = workItems;
 	m_modified = false;
 	// link into the renderer.
-	LookingGlassOgr::GetOgreRoot()->addFrameListener(this);
+	LG::GetOgreRoot()->addFrameListener(this);
+	// m_processingThread = LGLOCK_ALLOCATE_THREAD(&ProcessThreadRoutine);
+	LG::ProcessBetweenFrame::m_keepProcessing = true;
 }
 
 ProcessBetweenFrame::~ProcessBetweenFrame() {
 	LGLOCK_RELEASE_MUTEX(m_workItemMutex);
-	LookingGlassOgr::GetOgreRoot()->removeFrameListener(this);
+	LG::GetOgreRoot()->removeFrameListener(this);
+	m_keepProcessing = false;
 }
 
 // ====================================================================
@@ -338,16 +342,16 @@ ProcessBetweenFrame::~ProcessBetweenFrame() {
 void ProcessBetweenFrame::RefreshResource(float priority, char* resourceName, int rType) {
 	RefreshResourceQc* rrq = new RefreshResourceQc(priority, resourceName, resourceName, rType);
 	QueueWork((GenericQc*)rrq);
-	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameWorkItems);
-	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameRefreshResource);
+	LG::IncStat(LG::StatBetweenFrameWorkItems);
+	LG::IncStat(LG::StatBetweenFrameRefreshResource);
 }
 
 void ProcessBetweenFrame::CreateMaterialResource2(float priority, 
 			  const char* matName, const char* texName, const float* parms) {
 	CreateMaterialResourceQc* cmrq = new CreateMaterialResourceQc(priority, matName, matName, texName, parms);
 	QueueWork((GenericQc*)cmrq);
-	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameWorkItems);
-	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameCreateMaterialResource);
+	LG::IncStat(LG::StatBetweenFrameWorkItems);
+	LG::IncStat(LG::StatBetweenFrameCreateMaterialResource);
 }
 void ProcessBetweenFrame::CreateMaterialResource6(float priority, const char* uniq,
 			const char* matName1, const char* matName2, const char* matName3, 
@@ -360,16 +364,16 @@ void ProcessBetweenFrame::CreateMaterialResource6(float priority, const char* un
 			textureName1, textureName2, textureName3, textureName4, textureName5, textureName6, 
 			parms);
 	QueueWork((GenericQc*)cmr6q);
-	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameWorkItems);
-	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameCreateMaterialResource);
+	LG::IncStat(LG::StatBetweenFrameWorkItems);
+	LG::IncStat(LG::StatBetweenFrameCreateMaterialResource);
 }
 
 void ProcessBetweenFrame::CreateMeshResource(float priority, 
 				 const char* meshName, const int* faceCounts, const float* faceVertices) {
 	CreateMeshResourceQc* cmrq = new CreateMeshResourceQc(priority, meshName, meshName, faceCounts, faceVertices);
 	QueueWork((GenericQc*)cmrq);
-	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameWorkItems);
-	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameCreateMeshResource);
+	LG::IncStat(LG::StatBetweenFrameWorkItems);
+	LG::IncStat(LG::StatBetweenFrameCreateMeshResource);
 }
 
 void ProcessBetweenFrame::CreateMeshSceneNode(float priority,
@@ -393,8 +397,8 @@ void ProcessBetweenFrame::CreateMeshSceneNode(float priority,
 					sx, sy, sz,
 					ow, ox, oy, oz);
 	QueueWork((GenericQc*)csnq);
-	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameWorkItems);
-	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameCreateMeshSceneNode);
+	LG::IncStat(LG::StatBetweenFrameWorkItems);
+	LG::IncStat(LG::StatBetweenFrameCreateMeshSceneNode);
 }
 
 void ProcessBetweenFrame::UpdateSceneNode(float priority, char* entName,
@@ -407,8 +411,8 @@ void ProcessBetweenFrame::UpdateSceneNode(float priority, char* entName,
 					setScale, sx, sy, sz,
 					setRotation, ow, ox, oy, oz);
 	QueueWork((GenericQc*)usnq);
-	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameWorkItems);
-	LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameUpdateSceneNode);
+	LG::IncStat(LG::StatBetweenFrameWorkItems);
+	LG::IncStat(LG::StatBetweenFrameUpdateSceneNode);
 }
 
 // ====================================================================
@@ -428,6 +432,16 @@ bool ProcessBetweenFrame::frameEnded(const Ogre::FrameEvent& evt) {
 	return true;
 }
 
+// static routine to get the thread. Loop around doing work.
+void ProcessBetweenFrame::ProcessThreadRoutine() {
+	while (LG::ProcessBetweenFrame::m_keepProcessing) {
+		LGLOCK_LOCK(LG::RendererOgre::Instance()->SceneGraphLock());
+		LG::ProcessBetweenFrame::Instance()->ProcessWorkItems(100);
+		LGLOCK_UNLOCK(LG::RendererOgre::Instance()->SceneGraphLock());
+	}
+	return;
+}
+
 // Add the work itemt to the work list
 void ProcessBetweenFrame::QueueWork(GenericQc* wi) {
 	LGLOCK_LOCK(m_workItemMutex);
@@ -439,7 +453,7 @@ void ProcessBetweenFrame::QueueWork(GenericQc* wi) {
 			if (li._Ptr->_Myval->uniq.length() != 0) {
 				if (wi->uniq == li._Ptr->_Myval->uniq) {
 					m_betweenFrameWork.erase(li,li);
-					LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameDiscardedDups);
+					LG::IncStat(LG::StatBetweenFrameDiscardedDups);
 				}
 			}
 		}
@@ -484,8 +498,8 @@ void ProcessBetweenFrame::ProcessWorkItems(int numToProcess) {
 		GenericQc* workGeneric = (GenericQc*)m_betweenFrameWork.front();
 		m_betweenFrameWork.pop_front();
 		LGLOCK_UNLOCK(m_workItemMutex);
-		LookingGlassOgr::SetStat(LookingGlassOgr::StatBetweenFrameWorkItems, m_betweenFrameWork.size());
-		LookingGlassOgr::IncStat(LookingGlassOgr::StatBetweenFrameTotalProcessed);
+		LG::SetStat(LG::StatBetweenFrameWorkItems, m_betweenFrameWork.size());
+		LG::IncStat(LG::StatBetweenFrameTotalProcessed);
 		workGeneric->Process();
 		loopCost -= workGeneric->cost;
 		delete(workGeneric);

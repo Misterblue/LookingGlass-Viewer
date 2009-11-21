@@ -26,9 +26,11 @@
 #include "LookingGlassOgre.h"
 #include "RendererOgre.h"
 
+namespace LG {
+
 OLArchive::OLArchive( const Ogre::String& name, const Ogre::String& archType )
 			: Ogre::Archive(name, archType) {
-	LookingGlassOgr::Log("OLArchive creation: n=%s, t=%s", name.c_str(), archType.c_str());
+	LG::Log("OLArchive creation: n=%s, t=%s", name.c_str(), archType.c_str());
 	m_FSArchive = NULL;
 	return;
 }
@@ -48,11 +50,11 @@ bool OLArchive::isCaseSensitive(void) const {
 // Loads the archive.
 void OLArchive::load() {
 	// this is really a wrapper for a filesystem archive
-	LookingGlassOgr::Log("OLArchive::load(): mName=%s", mName.c_str());
-	m_defaultMeshFilename = LookingGlassOgr::GetParameter("Renderer.Ogre.DefaultMeshFilename");
-	LookingGlassOgr::Log("OLArchive::load(): DefaultMeshFile=%s", m_defaultMeshFilename.c_str());
-	m_defaultTextureFilename = LookingGlassOgr::GetParameter("Renderer.Ogre.DefaultTextureFilename");
-	LookingGlassOgr::Log("OLArchive::load(): DefaultTextureFile=%s", m_defaultTextureFilename.c_str());
+	LG::Log("OLArchive::load(): mName=%s", mName.c_str());
+	m_defaultMeshFilename = LG::GetParameter("Renderer.Ogre.DefaultMeshFilename");
+	LG::Log("OLArchive::load(): DefaultMeshFile=%s", m_defaultMeshFilename.c_str());
+	m_defaultTextureFilename = LG::GetParameter("Renderer.Ogre.DefaultTextureFilename");
+	LG::Log("OLArchive::load(): DefaultTextureFile=%s", m_defaultTextureFilename.c_str());
 	m_FSArchive = OGRE_NEW Ogre::FileSystemArchive(mName, "XXOLFilesystem");
 	m_FSArchive->load();
 }
@@ -64,7 +66,7 @@ void OLArchive::unload() {
 
 // Open a stream on a given file. 
 Ogre::DataStreamPtr OLArchive::open(const Ogre::String& filename) const {
-	// LookingGlassOgr::Log("OLArchive::open(%s)", filename.c_str());
+	// LG::Log("OLArchive::open(%s)", filename.c_str());
 	if (m_FSArchive->exists(filename)) {
 		return m_FSArchive->open(filename);
 	}
@@ -72,42 +74,42 @@ Ogre::DataStreamPtr OLArchive::open(const Ogre::String& filename) const {
 	try {
 		Ogre::MemoryDataStream* renamed = 0;
 		switch (ExtractResourceTypeFromName(filename)) {
-			case LookingGlassOgr::ResourceTypeMaterial:
+			case LG::ResourceTypeMaterial:
 				// we don't do materials, these are handled at a higher level if they don't exist.
 				// Return an empty stream
-				LookingGlassOgr::Log("OLArchive::open(): returning empty stream for material %s", filename.c_str());
+				LG::Log("OLArchive::open(): returning empty stream for material %s", filename.c_str());
 				return Ogre::DataStreamPtr();
-			case LookingGlassOgr::ResourceTypeMesh:
-				LookingGlassOgr::RequestResource(filename.c_str(), filename.c_str(), LookingGlassOgr::ResourceTypeMesh);
+			case LG::ResourceTypeMesh:
+				LG::RequestResource(filename.c_str(), filename.c_str(), LG::ResourceTypeMesh);
 				return m_FSArchive->open(m_defaultMeshFilename);
-			case LookingGlassOgr::ResourceTypeTexture:
-				LookingGlassOgr::RequestResource(filename.c_str(), filename.c_str(), LookingGlassOgr::ResourceTypeTexture);
+			case LG::ResourceTypeTexture:
+				LG::RequestResource(filename.c_str(), filename.c_str(), LG::ResourceTypeTexture);
 				return m_FSArchive->open(m_defaultTextureFilename);
 		}
 	}
 	catch (char* e) {
-		LookingGlassOgr::Log("OLArchive::open(): default shape not found: %s", e);
+		LG::Log("OLArchive::open(): default shape not found: %s", e);
 	}
 	return Ogre::DataStreamPtr(new Ogre::MemoryDataStream(10));
 }
 
 // List all file names in the archive.
 Ogre::StringVectorPtr OLArchive::list(bool recursive, bool dirs) {
-	LookingGlassOgr::Log("OLArchive::list()");
+	LG::Log("OLArchive::list()");
 	// return m_FSArchive->list(recursive, dirs);
 	return Ogre::StringVectorPtr(new Ogre::StringVector());
 }
 
 // List all files in the archive with accompanying information.
 Ogre::FileInfoListPtr OLArchive::listFileInfo(bool recursive, bool dirs) {
-	LookingGlassOgr::Log("OLArchive::listFileInfo()");
+	LG::Log("OLArchive::listFileInfo()");
 	// return m_FSArchive->listFileInfo(recursive, dirs);
 	return Ogre::FileInfoListPtr(new Ogre::FileInfoList());
 }
 
 Ogre::// Find all file or directory names matching a given pattern
 StringVectorPtr OLArchive::find(const Ogre::String& pattern, bool recursive, bool dirs) {
-	LookingGlassOgr::Log("OLArchive::find(%s)", pattern.c_str());
+	LG::Log("OLArchive::find(%s)", pattern.c_str());
 	// return m_FSArchive->find(pattern, recursive, dirs);
 	return Ogre::StringVectorPtr(new Ogre::StringVector());
 }
@@ -116,18 +118,18 @@ StringVectorPtr OLArchive::find(const Ogre::String& pattern, bool recursive, boo
 bool OLArchive::exists(const Ogre::String& filename) {
 	return true;
 	/*
-	// LookingGlassOgr::Log("OLArchive::exists(%s)", filename.c_str());
+	// LG::Log("OLArchive::exists(%s)", filename.c_str());
 	if (m_FSArchive->exists(filename)) {
 		return true;
 	}
 	// it isn't in the cache so we have to request it. Figure out what to request
 	int rType = ExtractResourceTypeFromName(filename);
-	if (rType != LookingGlassOgr::ResourceTypeUnknown) {
+	if (rType != LG::ResourceTypeUnknown) {
 		// we don't have an asset context, fake things by just passing the name twice
-		LookingGlassOgr::RequestResource(filename.c_str(), filename.c_str(), rType);
+		LG::RequestResource(filename.c_str(), filename.c_str(), rType);
 		return true;
 	}
-	LookingGlassOgr::Log("OLArchive::exists. It does not exist");
+	LG::Log("OLArchive::exists. It does not exist");
 	return false;
 	*/
 }
@@ -149,26 +151,27 @@ const Ogre::String& OLArchiveFactory::getType(void) const {
 }
 
 Ogre::Archive* OLArchiveFactory::createInstance( const Ogre::String& name ) {
-	LookingGlassOgr::Log("OLArchiveFactory::createInstance(%s)", name.c_str());
+	LG::Log("OLArchiveFactory::createInstance(%s)", name.c_str());
     return OGRE_NEW OLArchive(name, OLArchiveTypeName);
 }
 
 //From the filename, figure out what type of resource it is. We use the file extension
 // but we also always return 'texture' for unknown types because they will be .png, .jpg, etc
 int OLArchive::ExtractResourceTypeFromName(Ogre::String resourceName) const {
-	int ret = LookingGlassOgr::ResourceTypeUnknown;
+	int ret = LG::ResourceTypeUnknown;
 	if (resourceName.size() > 5
 			&& resourceName.substr(resourceName.size()-5, 5) == ".mesh") {
-		ret = LookingGlassOgr::ResourceTypeMesh;
+		ret = LG::ResourceTypeMesh;
 	}
 	else {
 		if (resourceName.size() > 9
 				&& resourceName.substr(resourceName.size()-9, 9) == ".material") {
-			ret = LookingGlassOgr::ResourceTypeMaterial;
+			ret = LG::ResourceTypeMaterial;
 		}
 		else {
-			ret = LookingGlassOgr::ResourceTypeTexture;
+			ret = LG::ResourceTypeTexture;
 		}
 	}
 	return ret;
+}
 }

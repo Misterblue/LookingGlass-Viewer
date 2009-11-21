@@ -30,17 +30,14 @@
 // The problem is that the image file exists but we can't read it. Usually means
 // a corrupted file.
 
-// forward definition
-namespace RendererOgre { class RendererOgre; }
-
-namespace BadImageCodec {
+namespace LG {
 
 #define BIC_EXTENSION "zzz"
 
 class BadImageCodec : public Ogre::ImageCodec
 {
 public:
-	BadImageCodec(RendererOgre::RendererOgre*);
+	BadImageCodec();
 	~BadImageCodec(void) { };
 
 	// called to create and register this codec
@@ -56,7 +53,6 @@ public:
 	Ogre::Codec::DecodeResult decode(Ogre::DataStreamPtr&) const;
 
 private:
-	RendererOgre::RendererOgre* m_ro;
 };
 
 }

@@ -34,7 +34,7 @@
 #include "boost/thread/condition.hpp"
 #endif
 
-namespace LGLocking {
+namespace LG {
 
 	// Lock wrapper. The usage pattern is:
 	// ...
@@ -63,6 +63,9 @@ public:
 	void NotifyOne();
 	void NotifyAll();
 
+	static LGLock* LGLock_Allocate_Mutex(Ogre::String);
+	static void LGLock_Release_Lock(LGLock*);
+
 #ifdef LGLOCK_PTHREADS
 #endif
 #ifdef LGLOCK_BOOST
@@ -73,16 +76,14 @@ public:
 private:
 
 };
-
-extern LGLock* LGLock_Allocate_Mutex(Ogre::String name);
-extern void LGLock_Release_Lock(LGLock* lock);
+}
 
 // USE THESE DEFINES IN YOUR CODE
 // This will allow the underlying implementation to be changed easily
-#define LGLOCK_ALLOCATE_MUTEX(name) LGLocking::LGLock_Allocate_Mutex(name)
-#define LGLOCK_RELEASE_MUTEX(mutex) LGLocking::LGLock_Release_Lock(mutex)
+#define LGLOCK_ALLOCATE_MUTEX(name) LG::LGLock::LGLock_Allocate_Mutex(name)
+#define LGLOCK_RELEASE_MUTEX(mutex) LG::LGLock::LGLock_Release_Lock(mutex)
 
-#define LGLOCK_MUTEX LGLocking::LGLock*
+#define LGLOCK_MUTEX LG::LGLock*
 #define LGLOCK_LOCK(mutex) (mutex)->Lock()
 #define LGLOCK_UNLOCK(mutex) (mutex)->Unlock()
 
@@ -97,7 +98,5 @@ extern void LGLock_Release_Lock(LGLock* lock);
 #endif
 
 #define LGLOCK_THREAD boost::thread
-#define LGLOCK_ALLOCATE_THREAD(func) new boost::thread(boost::function0<void>(func));
-#define LGLOCK_RELEASE_THREAD(thread) delete thread;
-
-}
+#define LGLOCK_ALLOCATE_THREAD(func) boost::thread(func);
+#define LGLOCK_RELEASE_THREAD(thread) ;

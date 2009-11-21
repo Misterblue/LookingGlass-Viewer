@@ -25,16 +25,15 @@
 #include "LookingGlassOgre.h"
 #include "RendererOgre.h"
 
-namespace BadImageCodec {
+namespace LG {
 
-BadImageCodec::BadImageCodec(RendererOgre::RendererOgre* ro) {
-	m_ro = ro;
+BadImageCodec::BadImageCodec() {
 }
 
 // code used to start this up.
 void BadImageCodec::startup() {
 	/*
-	Ogre::ImageCodec* codec = OGRE_NEW BadImageCodec(m_ro);
+	Ogre::ImageCodec* codec = OGRE_NEW BadImageCodec();
 	Ogre::Codec::registerCodec(codec);
 	*/
 }
@@ -49,13 +48,13 @@ Ogre::String BadImageCodec::magicNumberToFileExt(const char*, size_t) const {
 
 // functions we need to subclass Ogre::ImageCodec
 Ogre::DataStreamPtr BadImageCodec::code(Ogre::MemoryDataStreamPtr& , Ogre::Codec::CodecDataPtr&) const {
-	LookingGlassOgr::Log("BadImageCodec::code: Attempt to code in the bad codec");
+	LG::Log("BadImageCodec::code: Attempt to code in the bad codec");
 	return Ogre::DataStreamPtr();
 }
 
 // functions we need to subclass Ogre::ImageCodec
 void BadImageCodec::codeToFile(Ogre::MemoryDataStreamPtr&, const Ogre::String&, Ogre::Codec::CodecDataPtr&) const {
-	LookingGlassOgr::Log("BadImageCodec::codeToFile: Attempt to code in the bad codec");
+	LG::Log("BadImageCodec::codeToFile: Attempt to code in the bad codec");
 	return;
 }
 
@@ -64,17 +63,17 @@ void BadImageCodec::codeToFile(Ogre::MemoryDataStreamPtr&, const Ogre::String&, 
 // TODO: figure out how to get back to the corrupt file and blow it away and get a new request sent.
 // TODO: This is code the could be replaced with fetching a "Corrupt texture" file
 Ogre::Codec::DecodeResult BadImageCodec::decode(Ogre::DataStreamPtr& dstrm) const {
-	LookingGlassOgr::Log("BadImageCodec::decode: CORRUPT FILE!!! %s", dstrm->getName().c_str());
+	LG::Log("BadImageCodec::decode: CORRUPT FILE!!! %s", dstrm->getName().c_str());
 
 	// dstrm->getName() gets the entity name. Request a reload of the texture.
-	Ogre::String fullFilename = m_ro->EntityNameToFilename(dstrm->getName(), "");
-	LookingGlassOgr::Log("BadImageCodec::decode: filename = %s", fullFilename.c_str());
+	Ogre::String fullFilename = LG::RendererOgre::Instance()->EntityNameToFilename(dstrm->getName(), "");
+	LG::Log("BadImageCodec::decode: filename = %s", fullFilename.c_str());
 	// For some reason this doesn't delete. Because it's busy?
 	// Because we can't delete the bad file, asking for new doesn't work (it already exists)
 	if (remove(fullFilename.c_str()) != 0) {
-		LookingGlassOgr::Log("BadImageCodec::decode: error removing file");
+		LG::Log("BadImageCodec::decode: error removing file");
 	}
-	// LookingGlassOgr::RequestResource(dstrm->getName().c_str(), dstrm->getName().c_str(), LookingGlassOgr::ResourceTypeTexture);
+	// LG::RequestResource(dstrm->getName().c_str(), dstrm->getName().c_str(), LG::ResourceTypeTexture);
 
 	// for the moment, put something in it's place
 	ImageCodec::ImageData * imgData = OGRE_NEW ImageCodec::ImageData();

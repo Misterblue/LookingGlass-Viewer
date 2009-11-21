@@ -24,10 +24,9 @@
 #include "SkyBoxSkyX.h"
 #include "RendererOgre.h"
 
-namespace LGSky {
+namespace LG {
 
-SkyBoxSkyX::SkyBoxSkyX(RendererOgre::RendererOgre* ro) {
-	m_ro = ro;
+SkyBoxSkyX::SkyBoxSkyX() {
 }
 
 SkyBoxSkyX::~SkyBoxSkyX() {
@@ -35,7 +34,7 @@ SkyBoxSkyX::~SkyBoxSkyX() {
 
 void SkyBoxSkyX::Initialize() {
 	// Create SkyX
-	m_SkyX = new SkyX::SkyX(m_ro->m_sceneMgr, m_ro->m_camera);
+	m_SkyX = new SkyX::SkyX(LG::RendererOgre::Instance()->m_sceneMgr, LG::RendererOgre::Instance()->m_camera);
 	m_SkyX->create();
 }
 
@@ -67,17 +66,17 @@ void SkyBoxSkyX::Start() {
 		0.01		// volumetric displacement
 		));
 
-	m_sun = m_ro->m_sceneMgr->createLight("sun");
+	m_sun = LG::RendererOgre::Instance()->m_sceneMgr->createLight("sun");
 	m_sun->setType(Ogre::Light::LT_DIRECTIONAL);	// directional and sun-like
-	m_sun->setDiffuseColour(LookingGlassOgr::GetParameterColor("Renderer.Ogre.Sun.Color"));
+	m_sun->setDiffuseColour(LG::GetParameterColor("Renderer.Ogre.Sun.Color"));
 	m_sun->setCastShadows(true);
 
-	m_moon = m_ro->m_sceneMgr->createLight("moon");
+	m_moon = LG::RendererOgre::Instance()->m_sceneMgr->createLight("moon");
 	m_moon->setType(Ogre::Light::LT_DIRECTIONAL);	// directional and sun-like
-	m_moon->setDiffuseColour(Ogre::ColourValue(LookingGlassOgr::GetParameterColor("Renderer.Ogre.Moon.Color")));
+	m_moon->setDiffuseColour(Ogre::ColourValue(LG::GetParameterColor("Renderer.Ogre.Moon.Color")));
 	m_moon->setCastShadows(true);
 
-	if (LookingGlassOgr::GetParameterBool("Renderer.Ogre.SkyX.LightingHDR")) {
+	if (LG::GetParameterBool("Renderer.Ogre.SkyX.LightingHDR")) {
 		m_SkyX->setLightingMode(m_SkyX->LM_HDR);
 	}
 	else {
@@ -92,12 +91,12 @@ void SkyBoxSkyX::Start() {
 	m_SkyX->getAtmosphereManager()->setOptions(SkyXOptions);
 
 	// Add frame listener
-	m_ro->m_root->addFrameListener(this);
+	LG::RendererOgre::Instance()->m_root->addFrameListener(this);
 
 }
 
 void SkyBoxSkyX::Stop() {
-	m_ro->m_root->removeFrameListener(this);
+	LG::RendererOgre::Instance()->m_root->removeFrameListener(this);
 	if (m_SkyX != 0) {
 		delete m_SkyX;
 		m_SkyX = 0;
@@ -114,14 +113,14 @@ bool SkyBoxSkyX::frameRenderingQueued(const Ogre::FrameEvent &e) {
 /*
 		// Check camera height
 		Ogre::RaySceneQuery * raySceneQuery = 
-			m_ro->mSceneMgr->
+			LG::RendererOgre::Instance()->mSceneMgr->
 			     createRayQuery(Ogre::Ray(mCamera->getPosition() + Ogre::Vector3(0,1000000,0), 
 				                Vector3::NEGATIVE_UNIT_Y));
 		Ogre::RaySceneQueryResult& qryResult = raySceneQuery->execute();
         Ogre::RaySceneQueryResult::iterator i = qryResult.begin();
         if (i != qryResult.end() && i->worldFragment) {
-			if (m_ro->mCamera->getDerivedPosition().y < i->worldFragment->singleIntersection.y + 30) {
-                m_ro->mCamera-> setPosition(mCamera->getPosition().x, 
+			if (LG::RendererOgre::Instance()->mCamera->getDerivedPosition().y < i->worldFragment->singleIntersection.y + 30) {
+                LG::RendererOgre::Instance()->mCamera-> setPosition(mCamera->getPosition().x, 
                                  i->worldFragment->singleIntersection.y + 30, 
                                  mCamera->getPosition().z);
 			}

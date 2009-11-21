@@ -25,12 +25,14 @@
 #include "LGOCommon.h"
 #include "VisCalcBase.h"
 
-namespace VisCalc {
+namespace LG {
+
+class RendererOgre;	// forward definition
 
 class VisCalcFrustDist : public VisCalcBase , public Ogre::FrameListener {
 
 public:
-	VisCalcFrustDist(RendererOgre::RendererOgre*);
+	VisCalcFrustDist();
 	~VisCalcFrustDist();
 
 	void Initialize();
@@ -47,9 +49,6 @@ public:
 	bool frameEnded(const Ogre::FrameEvent &e);
 
 protected:
-	RendererOgre::RendererOgre* m_ro;
-	VisCalcFrustDist* m_singleton;
-
 	void calculateEntityVisibility();
 	void calculateEntityVisibility(Ogre::Node*);
 	bool calculateScaleVisibility(float, float);

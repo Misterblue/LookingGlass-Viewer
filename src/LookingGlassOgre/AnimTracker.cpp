@@ -23,7 +23,7 @@
 #include "StdAfx.h"
 #include "AnimTracker.h"
 
-namespace AnimTracker {
+namespace LG {
 AnimTracker::AnimTracker() {};
 AnimTracker::~AnimTracker() {};
 }

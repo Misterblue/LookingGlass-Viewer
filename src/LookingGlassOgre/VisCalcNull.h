@@ -26,15 +26,15 @@
 #include "VisCalcBase.h"
 
 // forward definition
-namespace RendererOgre { class RendererOgre; }
+namespace LG { class RendererOgre; }
 
-namespace VisCalc {
+namespace LG {
 
 // A null routine to hold the place of a real visibility calculation if we can't find it
 class VisCalcNull : public VisCalcBase {
 
 public:
-	VisCalcNull(RendererOgre::RendererOgre* ro) { return; };
+	VisCalcNull() { return; };
 	~VisCalcNull() { return; };
 
 	void Initialize() { return; };
