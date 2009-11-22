@@ -23,10 +23,11 @@
 #pragma once
 
 #include "LGOCommon.h"
+#include "SingletonInstance.h"
 
 namespace LG {
 
-class OLMaterialTracker : public Ogre::FrameListener {
+class OLMaterialTracker : public Ogre::FrameListener, public SingletonInstance {
 
 public:
 	OLMaterialTracker();
@@ -38,6 +39,9 @@ public:
 		}
 		return LG::OLMaterialTracker::m_instance; 
 	}
+
+	// SingletonInstance.Shutdown()
+	void Shutdown();
 
 	// A material needs completing. MaterialManager::CreateOrRetrieve() has been
 	// called but the material was created. We check to see if the material file

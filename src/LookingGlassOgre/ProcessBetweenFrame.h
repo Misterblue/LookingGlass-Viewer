@@ -24,6 +24,7 @@
 
 #include "LGOCommon.h"
 #include "LGLocking.h"
+#include "SingletonInstance.h"
 
 namespace LG {
 
@@ -45,7 +46,7 @@ public:
 	~GenericQc() {};
 };
 
-class ProcessBetweenFrame : public Ogre::FrameListener {
+class ProcessBetweenFrame : public Ogre::FrameListener, public SingletonInstance {
 
 public:
 	ProcessBetweenFrame();
@@ -57,6 +58,9 @@ public:
 		}
 		return LG::ProcessBetweenFrame::m_instance; 
 	}
+
+	// SingletonInstance.Shutdown();
+	void Shutdown();
 
 	bool HasWorkItems();
 	void ProcessWorkItems(int);

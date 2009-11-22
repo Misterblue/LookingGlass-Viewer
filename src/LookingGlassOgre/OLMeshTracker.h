@@ -23,6 +23,7 @@
 #pragma once
 
 #include "LGOCommon.h"
+#include "SingletonInstance.h"
 
 namespace LG {
 /*
@@ -32,17 +33,21 @@ tracks meshes and their state (loaded, unloaded, ...) with the goal of allowing
 the actual file access part of a mesh load (the call to mesh->prepare()) be
 done outside the frame rendering thread.
 */
-	class OLMeshTracker {
+	class OLMeshTracker : public SingletonInstance {
 	public:
 		OLMeshTracker();
 		~OLMeshTracker();
 
+		// SingletonInstance.Instance();
 		static OLMeshTracker* Instance() { 
 			if (LG::OLMeshTracker::m_instance == NULL) {
 				LG::OLMeshTracker::m_instance = new OLMeshTracker();
 			}
 			return LG::OLMeshTracker::m_instance; 
 		}
+
+		// SingletonInstance.Shutdown()
+		void Shutdown();
 
 		void TrackMesh(Ogre::String meshName, Ogre::String meshGroupName, Ogre::String contextEntName, Ogre::String fingerprint);
 		void UnTrackMesh(Ogre::String meshName);

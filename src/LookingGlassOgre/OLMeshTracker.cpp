@@ -73,6 +73,11 @@ OLMeshTracker::~OLMeshTracker() {
 	LGLOCK_RELEASE_MUTEX(m_mapLock);
 }
 
+// SingletonInstance.Shutdown()
+void OLMeshTracker::Shutdown() {
+	return;
+}
+
 // we have complete information about the mesh. Add or update the table info
 void OLMeshTracker::TrackMesh(Ogre::String meshNameP, Ogre::String meshGroupP, Ogre::String contextEntNameP, Ogre::String fingerprintP) {
 	MeshInfo* meshToTrack;

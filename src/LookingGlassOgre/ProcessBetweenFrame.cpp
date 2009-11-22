@@ -335,6 +335,11 @@ ProcessBetweenFrame::~ProcessBetweenFrame() {
 	m_keepProcessing = false;
 }
 
+// SingletonInstance.Shutdown()
+void ProcessBetweenFrame::Shutdown() {
+	return;
+}
+
 // ====================================================================
 // refresh a resource
 void ProcessBetweenFrame::RefreshResource(float priority, char* resourceName, int rType) {

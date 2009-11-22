@@ -91,6 +91,11 @@ ProcessAnyTime::~ProcessAnyTime() {
 	LGLOCK_RELEASE_MUTEX(m_workQueueMutex);
 }
 
+void ProcessAnyTime::Shutdown() {
+	// this will cause the threads to exit
+	m_keepProcessing = false;
+}
+
 // static routine to get the thread. Loop around doing work.
 void ProcessAnyTime::ProcessThreadRoutine() {
 	while (LG::ProcessAnyTime::Instance()->m_keepProcessing) {

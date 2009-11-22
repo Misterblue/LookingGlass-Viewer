@@ -361,6 +361,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SingletonInstance.h"
+				>
+			</File>
+			<File
 				RelativePath=".\SkyBoxBase.h"
 				>
 			</File>

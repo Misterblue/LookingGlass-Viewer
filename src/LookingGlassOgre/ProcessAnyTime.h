@@ -31,6 +31,7 @@ done outside the frame rendering thread.
 */
 #include "LGOCommon.h"
 #include "LGLocking.h"
+#include "SingletonInstance.h"
 
 namespace LG {
 
@@ -51,7 +52,7 @@ public:
 	~GenericPc() {};
 };
 
-class ProcessAnyTime {
+class ProcessAnyTime : public SingletonInstance {
 
 public:
 	ProcessAnyTime();
@@ -63,6 +64,9 @@ public:
 		}
 		return LG::ProcessAnyTime::m_instance; 
 	}
+
+	// SingletonInstance.Shutdown();
+	void Shutdown();
 
 	bool HasWorkItems();
 	void ProcessWorkItems(int);

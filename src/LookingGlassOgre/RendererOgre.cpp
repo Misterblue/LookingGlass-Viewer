@@ -148,6 +148,10 @@ namespace LG {
 		LG::SetStat(LG::StatFramesPerSecond, 1000000/totalMSForLastFrame);
 		m_lastFrameTime = timeKeeper->getMilliseconds();
 
+		if (!ret) {
+			// if renderOneFrame returns false, it means we're going down
+		}
+
 		return ret;
 	}
 
@@ -204,7 +208,7 @@ namespace LG {
 		m_defaultTerrainMaterial = LG::GetParameter("Renderer.Ogre.DefaultTerrainMaterial");
 		m_serializeMeshes = LG::GetParameterBool("Renderer.Ogre.SerializeMeshes");
 
-		m_root = new Ogre::Root(GetParameter("Renderer.Ogre.PluginFilename"));
+		m_root = new Ogre::Root(LG::GetParameter("Renderer.Ogre.PluginFilename"));
 		LG::Log("RendererOgre::initialize: after new Ogre::Root()");
 		// if detail logging is turned off, I don't want Ogre yakking up a storm either
 		if (LG::debugLogCallback == NULL) {
@@ -213,7 +217,7 @@ namespace LG {
 
 		try {
 			// load the resource info from the Ogre config files
-			loadOgreResources(GetParameter("Renderer.Ogre.ResourcesFilename"));
+			loadOgreResources(LG::GetParameter("Renderer.Ogre.ResourcesFilename"));
 			// set up the render system (window, size, OS connection, ...)
 	        configureOgreRenderSystem();
 
@@ -301,7 +305,7 @@ namespace LG {
 
 	void RendererOgre::configureOgreRenderSystem() {
 		LG::Log("RendererOgre::configureOgreRenderSystem:");
-		Ogre::String rsystem = GetParameter("Renderer.Ogre.Renderer");
+		Ogre::String rsystem = LG::GetParameter("Renderer.Ogre.Renderer");
 		Ogre::RenderSystem* rs = m_root->getRenderSystemByName(rsystem);
 		if (rs == NULL) {
 			LG::Log("RendererOgre::configureOgreRenderingSystem: CANNOT INITIALIZE RENDERING SYSTEM '%s'", rsystem);
@@ -309,7 +313,7 @@ namespace LG {
 		}
 		m_root->setRenderSystem(rs);
         rs->setConfigOption("Full Screen", "No");
-        rs->setConfigOption("Video Mode", GetParameter("Renderer.Ogre.VideoMode"));
+		rs->setConfigOption("Video Mode", LG::GetParameter("Renderer.Ogre.VideoMode"));
 
 		// I am running the background thread
 		Ogre::ResourceBackgroundQueue::getSingleton().setStartBackgroundThread(false);
@@ -317,13 +321,13 @@ namespace LG {
 		// Two types of initialization here. Get own window or use a passed window
 		Ogre::String windowHandle = LG::GetParameter("Renderer.Ogre.ExternalWindow.Handle");
 		if (windowHandle.length() == 0) {
-			m_window = m_root->initialise(true, GetParameter("Renderer.Ogre.Name"));
+			m_window = m_root->initialise(true, LG::GetParameter("Renderer.Ogre.Name"));
 		}
 		else {
 			m_window = m_root->initialise(false);
 			Ogre::NameValuePairList createParams;
 			createParams["externalWindowHandle"] = windowHandle;
-			createParams["title"] = GetParameter("Renderer.Ogre.Name");
+			createParams["title"] = LG::GetParameter("Renderer.Ogre.Name");
 			// createParams["left"] = something;
 			// createParams["right"] = something;
 			// createParams["depthBuffer"] = something;
@@ -347,7 +351,7 @@ namespace LG {
 	void RendererOgre::createScene() {
 		LG::Log("RendererOgre::createScene");
 		try {
-			const char* sceneName = GetParameter("Renderer.Ogre.Name");
+			const char* sceneName = LG::GetParameter("Renderer.Ogre.Name");
 			m_sceneMgr = m_root->createSceneManager(Ogre::ST_EXTERIOR_CLOSE, sceneName);
 			// m_sceneMgr = m_root->createSceneManager(Ogre::ST_GENERIC, sceneName);
 			// ambient has to be adjusted for time of day. Set it initially
@@ -898,6 +902,7 @@ void RendererOgre::MakeParentDir(const Ogre::String filename) {
 	return;
 }
 
+/*
 // call out to the main program and make sure we should keep running
 const bool RendererOgre::checkKeepRunning() {
 	if (LG::checkKeepRunningCallback != NULL) {
@@ -918,7 +923,6 @@ const char* RendererOgre::GetParameter(const char* paramName) {
 	return NULL;
 }
 
-/*
 // Print out a message of the pointer thing is null. At least the log will know
 // of the problem
 void RendererOgre::AssertNonNull(void* thing, const char* msg) {

@@ -88,6 +88,11 @@ OLMaterialTracker::OLMaterialTracker() {
 OLMaterialTracker::~OLMaterialTracker() {
 }
 
+// SingletonInstance.Shutdown
+void OLMaterialTracker::Shutdown() {
+	return;
+}
+
 // We have been passed a material that needs to be filled in. We try to read it in from
 // the file. If the file is not there, we fill it with the default texture and request
 // the loading of the real material. When that real material is loaded, someone will call
