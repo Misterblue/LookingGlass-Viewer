@@ -25,7 +25,6 @@
 "Renderer.Ogre.Visibility.OnlyLargeAfter": "80",
 "Renderer.Ogre.Visibility.Large": "8",
 "Renderer.Ogre.Visibility.Cull.Frustrum": "false",
-"Renderer.Ogre.ForceMeshRebuild": "true",
 // currently only works with Direct3D9
 // "Renderer.Ogre.Sky": "SkyX",
 // "Renderer.Ogre.Ambient.Scene": "<0.5,0.5,0.5>",

@@ -215,7 +215,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "Write out materials to files (replace with DB someday)");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.SerializeMeshes", "true",
                     "Write out meshes to files");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.ForceMeshRebuild", "true",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.ForceMeshRebuild", "false",
                     "True if to force the generation a mesh when first rendered (don't rely on cache)");
 
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Sky", "Default",
