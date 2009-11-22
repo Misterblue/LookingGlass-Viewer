@@ -332,6 +332,8 @@ namespace LG {
 				LG::GetParameterInt("Renderer.Ogre.ExternalWindow.Width"),
 				LG::GetParameterInt("Renderer.Ogre.ExternalWindow.Height"),
 				false, &createParams);
+
+			Ogre::ResourceBackgroundQueue::getSingleton().initialise();
 		}
 	}
 

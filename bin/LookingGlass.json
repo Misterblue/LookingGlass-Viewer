@@ -11,7 +11,7 @@
 
 // ====================================================
 // "Viewer.Parameters": "xx",
-"ViewerWindow.FramesPerSec": "15",
+"ViewerWindow.FramesPerSec": "25",
 
 // ====================================================
 "Renderer.Ogre.Renderer": "OpenGL Rendering Subsystem",
