@@ -67,4 +67,14 @@ void LGLock::LGLock_Release_Lock(LGLock* lock) {
 	if (lock != NULL) delete lock;
 }
 
+#ifdef LGLOCK_BOOST
+void LGLock::LGLock_Sleep(int ms) {
+	boost::xtime xt;
+	boost::xtime_get(&xt, boost::TIME_UTC);
+	xt.sec += ms;
+
+	boost::thread::sleep(xt);
+}
+#endif
+
 }

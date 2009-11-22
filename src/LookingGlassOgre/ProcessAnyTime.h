@@ -74,12 +74,14 @@ private:
 	static ProcessAnyTime* m_instance;
 
 	LGLOCK_THREAD m_processingThread;
+	LGLOCK_THREAD m_backgroundThread;
 	std::list<GenericPc*> m_work;
 
 	bool m_modified;		// true if it's time to sort the work queue
 
 	// forward references
 	static void ProcessThreadRoutine();
+	static void ProcessBackgroundLoading();
 	void QueueWork(GenericPc*);
 };
 

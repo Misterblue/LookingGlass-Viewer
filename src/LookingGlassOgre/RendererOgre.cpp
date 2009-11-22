@@ -311,6 +311,9 @@ namespace LG {
         rs->setConfigOption("Full Screen", "No");
         rs->setConfigOption("Video Mode", GetParameter("Renderer.Ogre.VideoMode"));
 
+		// I am running the background thread
+		Ogre::ResourceBackgroundQueue::getSingleton().setStartBackgroundThread(false);
+
 		// Two types of initialization here. Get own window or use a passed window
 		Ogre::String windowHandle = LG::GetParameter("Renderer.Ogre.ExternalWindow.Handle");
 		if (windowHandle.length() == 0) {
@@ -624,6 +627,7 @@ namespace LG {
 
 			if (m_serializeMeshes) {
 				// serialize the mesh to the filesystem
+				mesh->setBackgroundLoaded(true);
 				LG::OLMeshTracker::Instance()->MakePersistant(mesh, entName);
 			}
 			// you'd think doing  the unload here would be the right thing but it causes crashes

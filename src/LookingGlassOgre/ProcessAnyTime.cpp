@@ -81,6 +81,7 @@ ProcessAnyTime::ProcessAnyTime() {
 	m_workQueueMutex = LGLOCK_ALLOCATE_MUTEX("ProcessAnyTime");
 	// not enabled yet
 	// m_processingThread = LGLOCK_ALLOCATE_THREAD(&ProcessThreadRoutine);
+	m_backgroundThread = LGLOCK_ALLOCATE_THREAD(&ProcessBackgroundLoading);
 	m_keepProcessing = true;
 	m_modified = false;
 }
@@ -101,6 +102,17 @@ void ProcessAnyTime::ProcessThreadRoutine() {
 		LGLOCK_UNLOCK(LG::ProcessAnyTime::Instance()->m_workQueueMutex);
 	}
 	return;
+}
+
+// routine that does  the ogre background loading. Kludge that it is here but a  test
+void ProcessAnyTime::ProcessBackgroundLoading() {
+	Ogre::ResourceBackgroundQueue::getSingleton()._initThread();
+	while (LG::ProcessAnyTime::Instance()->m_keepProcessing) {
+		if (!Ogre::ResourceBackgroundQueue::getSingleton()._doNextQueuedBackgroundProcess()) {
+			// queue is empty, wait a little
+			LGLOCK_SLEEP(100);
+		}
+	}
 }
 
 

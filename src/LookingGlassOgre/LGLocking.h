@@ -65,6 +65,7 @@ public:
 
 	static LGLock* LGLock_Allocate_Mutex(Ogre::String);
 	static void LGLock_Release_Lock(LGLock*);
+	static void LGLock_Sleep(int);
 
 #ifdef LGLOCK_PTHREADS
 #endif
@@ -91,12 +92,15 @@ private:
 #define LGLOCK_WAIT(mutex) (mutex)->m_condition->wait(*((mutex)->m_mutex));
 #define LGLOCK_NOTIFY_ONE(mutex) (mutex)->m_condition->notify_one();
 #define LGLOCK_NOTIFY_ALL(mutex) (mutex)->m_condition->notify_all();
+#define LGLOCK_SLEEP(ms) LG::LGLock::LGLock_Sleep(ms);
 #else
 #define LGLOCK_WAIT(mutex) (mutex)->Wait((mutex)->m_mutex);
 #define LGLOCK_NOTIFY_ONE(mutex) (mutex)->NotifyOne();
 #define LGLOCK_NOTIFY_ALL(mutex) (mutex)->NotifyAll();
+#define LGLOCK_SLEEP 
 #endif
 
 #define LGLOCK_THREAD boost::thread
 #define LGLOCK_ALLOCATE_THREAD(func) boost::thread(func);
 #define LGLOCK_RELEASE_THREAD(thread) ;
+
