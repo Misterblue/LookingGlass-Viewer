@@ -120,10 +120,10 @@ namespace LG {
 		unsigned long now = timeKeeper->getMilliseconds();
 		unsigned long timeStartedLastFrame = timeKeeper->getMilliseconds();
 		if (m_root != NULL) {
-			LGLOCK_LOCK(m_sceneGraphLock);
+			// LGLOCK_LOCK(m_sceneGraphLock);
 			ret = m_root->renderOneFrame();
-			LGLOCK_UNLOCK(m_sceneGraphLock);
-			LGLOCK_NOTIFY_ALL(m_sceneGraphLock);
+			// LGLOCK_UNLOCK(m_sceneGraphLock);
+			// LGLOCK_NOTIFY_ALL(m_sceneGraphLock);
 			if (pump) Ogre::WindowEventUtilities::messagePump();
 		}
 
