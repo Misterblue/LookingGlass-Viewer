@@ -79,7 +79,8 @@ class PrepareMeshPc : public GenericPc {
 // and deallocation of memory needed to pass the parameters.
 ProcessAnyTime::ProcessAnyTime() {
 	m_workQueueMutex = LGLOCK_ALLOCATE_MUTEX("ProcessAnyTime");
-	m_processingThread = LGLOCK_ALLOCATE_THREAD(&ProcessThreadRoutine);
+	// not enabled yet
+	// m_processingThread = LGLOCK_ALLOCATE_THREAD(&ProcessThreadRoutine);
 	m_keepProcessing = true;
 	m_modified = false;
 }
