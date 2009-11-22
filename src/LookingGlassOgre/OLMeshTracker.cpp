@@ -111,16 +111,43 @@ void OLMeshTracker::UnTrackMesh(Ogre::String meshName) {
 // we schedule a refresh resource to add the mesh to the scene.
 // Callback called when mesh loaded. Called on between frame thread and passed the Param
 // as the only parameter. If 'callback' NULL, nothing is done;
-void OLMeshTracker::MakeLoaded(Ogre::String meshName, void* callback, void* callbackParam) {
-	/*
-	if (we aren't tracking this mesh) {
-		LG::RequestResource(meshName.c_str(), contextEntName.c_str(), LookingGlassOgr::ResourceTypeMesh);
-		add mesh to tracking map
-		TODO:
+void OLMeshTracker::MakeLoaded(Ogre::String meshName, void(*callback)(void*), void* callbackParam) {
+	MeshInfo* meshInfo;
+	bool shouldCallback = false;
+	LGLOCK_LOCK(m_mapLock);
+	MeshMapIterator meshI = m_meshMap->find(meshName);
+	if (meshI == m_meshMap->end()) {
+		// mesh not found, request the mesh and track what we know
+		// LG::RequestResource(meshName.c_str(), contextEntName.c_str(), LookingGlassOgr::ResourceTypeMesh);
+		// add mesh to tracking map
+		// TODO:
+		return;
 	}
-	*/
-	if (callback != NULL) {
-		// *callback(callbackParam);
+	meshInfo = &(meshI->second);
+	switch (meshInfo->state) {
+		case MESH_STATE_UNKNOWN:
+		case MESH_STATE_UNLOADED:
+			// load the mesh
+		case MESH_STATE_REQUESTING:
+			// mesh is being requested and will be loaded later
+			break;
+		case MESH_STATE_BEING_SERIALIZED:
+		case MESH_STATE_BEING_PREPARED:
+		case MESH_STATE_PREPARED:
+		case MESH_STATE_LOADED:
+			// mesh is already loaded
+			shouldCallback = true;
+			break;
+		case MESH_STATE_SERIALIZE_THEN_UNLOAD:
+			// asked for load after we'd been asked to unload. For get  the unload
+			meshInfo->state = MESH_STATE_BEING_SERIALIZED;
+			shouldCallback = true;
+			break;
+	}
+	LGLOCK_UNLOCK(m_mapLock);
+
+	if (shouldCallback && callback != NULL) {
+		callback(callbackParam);
 	}
 }
 
@@ -128,10 +155,10 @@ void OLMeshTracker::MakeLoaded(Ogre::String meshName, void* callback, void* call
 // TODO: replace this inline code with something that happens on a different thread
 // Callback called when mesh unloaded. Called on between frame thread and passed the Param
 // as the only parameter. If 'callback' NULL, nothing is done;
-void OLMeshTracker::MakeUnLoaded(Ogre::String meshName, void* callback, void* callbackParam) {
+void OLMeshTracker::MakeUnLoaded(Ogre::String meshName, void(*callback)(void*), void* callbackParam) {
 	Ogre::MeshManager::getSingleton().unload(meshName);
 	if (callback != NULL) {
-		// *callback(callbackParam);
+		callback(callbackParam);
 	}
 }
 

@@ -86,8 +86,8 @@ public class Viewer : ModuleBase, IViewProvider {
         ModuleParams.AddDefaultParameter(m_moduleName + ".Camera.RotationSpeed", "0.100", "Degrees to rotate camera");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Camera.ServerFar", "300.0", "Far distance sent to server");
 
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Camera.BehindAgent", "1.0", "Distance camera is behind agent");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Camera.AboveAgent", "1.00", "Distance camera is above agent (combined with behind)");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Camera.BehindAgent", "2.0", "Distance camera is behind agent");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Camera.AboveAgent", "2.00", "Distance camera is above agent (combined with behind)");
 
         // m_EntitySlot = EntityBase.AddAdditionSubsystem("VIEWER");        // used by anyone?
     }

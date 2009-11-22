@@ -71,6 +71,9 @@ static const int StatBetweenFrameDiscardedDups = 21;
 static const int StatTotalFrames = 18;
 static const int StatFramesPerSecond = 19;
 static const int StatLastFrameMs = 20;
+static const int StatProcessAnyTimeDiscardedDups = 22;
+static const int StatProcessAnyTimeWorkItems = 23;
+static const int StatProcessAnyTimeTotalProcessed = 24;
 
 #define OLArchiveTypeName "OLFileSystem"
 #define OLPreloadTypeName "OLPreloadFileSystem"

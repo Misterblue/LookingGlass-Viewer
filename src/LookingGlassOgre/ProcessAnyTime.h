@@ -37,8 +37,16 @@ namespace LG {
 // the generic base class that goes in the list
 class GenericPc {
 public:
+public:
+	float priority;
+	int cost;
+	Ogre::String uniq;
 	virtual void Process() {};
+	virtual void RecalculatePriority() {};
 	GenericPc() {
+		priority = 100;
+		cost = 50;
+		uniq.clear();
 	};
 	~GenericPc() {};
 };
@@ -59,15 +67,19 @@ public:
 	bool HasWorkItems();
 	void ProcessWorkItems(int);
 
+	LGLOCK_MUTEX m_workQueueMutex;
+	bool m_keepProcessing;
 
 private:
 	static ProcessAnyTime* m_instance;
 
-	LGLOCK_MUTEX m_workItemMutex;
+	LGLOCK_THREAD m_processingThread;
+	std::list<GenericPc*> m_work;
 
 	bool m_modified;		// true if it's time to sort the work queue
 
-	// Forward definition
+	// forward references
+	static void ProcessThreadRoutine();
 	void QueueWork(GenericPc*);
 };
 

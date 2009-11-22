@@ -189,7 +189,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.LL.EarlyMaterialCreate", "false",
                     "Create materials while creating mesh rather than waiting");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.LL.DefaultAvatarMesh", 
-                    "Preload/00000000-0000-2222-3333-112200000001.mesh",
+                    "Preload/00000000-0000-2222-3333-112200000001",
                     "Entity name of mesh to use for avatars");
 
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.BetweenFrame.WorkItems", "1000",
@@ -215,7 +215,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "Write out materials to files (replace with DB someday)");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.SerializeMeshes", "true",
                     "Write out meshes to files");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.ForceMeshRebuild", "false",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.ForceMeshRebuild", "true",
                     "True if to force the generation a mesh when first rendered (don't rely on cache)");
 
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Sky", "Default",
@@ -489,6 +489,10 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     // ==========================================================================
     // IModule.Stop()
     override public void Stop() {
+        if (m_userInterface != null) {
+            m_userInterface.Dispose();
+            m_userInterface = null;
+        }
         return;
     }
 

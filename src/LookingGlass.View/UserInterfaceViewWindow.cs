@@ -108,5 +108,13 @@ public class UserInterfaceViewWindow : ModuleBase, IUserInterfaceProvider  {
         return false;
     }
     #endregion IUserInterfaceProvider
+
+    public void Dispose() {
+        if (m_ui != null) {
+            m_ui.Dispose();
+            m_ui = null;
+        }
+        return;
+    }
 }
 }

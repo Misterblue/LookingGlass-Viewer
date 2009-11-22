@@ -308,8 +308,6 @@ public:
 	}
 };
 
-std::list<GenericQc*> m_betweenFrameWork;
-
 // ====================================================================
 // Queue of work to do between frames.
 // To add a between frame operation, you write a subclass of GenericQc like those
@@ -433,9 +431,16 @@ bool ProcessBetweenFrame::frameEnded(const Ogre::FrameEvent& evt) {
 }
 
 // static routine to get the thread. Loop around doing work.
+// NOTE: THIS DOESN'T WORK
+// The problem is that the OpenGL operations have to happen on the main
+//  thread so all these between frame operations cannot be done by this
+//  thread. Someday test DirectX
 void ProcessBetweenFrame::ProcessThreadRoutine() {
 	while (LG::ProcessBetweenFrame::m_keepProcessing) {
 		LGLOCK_LOCK(LG::RendererOgre::Instance()->SceneGraphLock());
+		if (!LG::ProcessBetweenFrame::Instance()->HasWorkItems()) {
+			LGLOCK_WAIT(LG::RendererOgre::Instance()->SceneGraphLock());
+		}
 		LG::ProcessBetweenFrame::Instance()->ProcessWorkItems(100);
 		LGLOCK_UNLOCK(LG::RendererOgre::Instance()->SceneGraphLock());
 	}

@@ -88,7 +88,7 @@ private:
 #define LGLOCK_UNLOCK(mutex) (mutex)->Unlock()
 
 #ifdef LGLOCK_BOOST
-#define LGLOCK_WAIT(mutex) (mutex)->m_condition(mutex)->Wait((mutex)->m_mutex);
+#define LGLOCK_WAIT(mutex) (mutex)->m_condition->wait(*((mutex)->m_mutex));
 #define LGLOCK_NOTIFY_ONE(mutex) (mutex)->m_condition->notify_one();
 #define LGLOCK_NOTIFY_ALL(mutex) (mutex)->m_condition->notify_all();
 #else

@@ -87,19 +87,21 @@ public:
 					bool setScale, float sx, float sy, float sz,
 					bool setRotation, float ow, float ox, float oy, float oz);
 
+	LGLOCK_MUTEX m_workItemMutex;
+	static bool m_keepProcessing;	// true if to keep processing on and on
 
 private:
 	static ProcessBetweenFrame* m_instance;
 
 	int m_numWorkItemsToDoBetweenFrames;
-	LGLOCK_MUTEX m_workItemMutex;
+	std::list<GenericQc*> m_betweenFrameWork;
+
 	LGLOCK_THREAD m_processingThread;
 
 	// Forward definition
 	void QueueWork(GenericQc*);
 	static void ProcessThreadRoutine();
 
-	static bool m_keepProcessing;	// true if to keep processing on and on
 	bool m_modified;		// true if it's time to sort the work queue
 };
 

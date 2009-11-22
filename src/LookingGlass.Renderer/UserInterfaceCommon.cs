@@ -88,7 +88,7 @@ public class UserInterfaceCommon : IUserInterfaceProvider {
     }
     private int m_keyRepeatMs = 333;
     public int KeyRepeatMs { get { return m_keyRepeatMs; } }
-    public System.Threading.Timer m_repeatTimer;
+    public System.Threading.Timer m_repeatTimer = null;
     public int m_repeatKey;    // the raw key code that is being repeated
 
     BasicWorkQueue m_workQueue;
@@ -96,6 +96,13 @@ public class UserInterfaceCommon : IUserInterfaceProvider {
     public UserInterfaceCommon() {
         m_workQueue = new BasicWorkQueue("UserInterfaceCommon");
         m_repeatTimer = new System.Threading.Timer(OnRepeatTimer); 
+    }
+
+    public void Dispose() {
+        if (m_repeatTimer != null) {
+            m_repeatTimer.Dispose();
+            m_repeatTimer = null;
+        }
     }
 
     // I need the hooks to the lowest levels
@@ -275,5 +282,6 @@ public class UserInterfaceCommon : IUserInterfaceProvider {
             if (!updown && ((m_lastButtons & MouseButtons.Middle) != 0)) m_lastButtons ^= MouseButtons.Middle;
         }
     }
+
 }
 }

@@ -322,7 +322,8 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
             m_client.Settings.ALWAYS_REQUEST_PARCEL_DWELL = false;
             m_client.Settings.USE_INTERPOLATION_TIMER = false;  // don't need the library helping
             m_client.Settings.SEND_AGENT_UPDATES = true;
-            m_client.Self.Movement.AutoResetControls = true;   // I will do the key repeat operations
+            m_client.Self.Movement.AutoResetControls = false;
+            m_client.Self.Movement.UpdateInterval = 100;
             m_client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = false;
             m_client.Settings.USE_ASSET_CACHE = false;
             m_client.Settings.PIPELINE_REQUEST_TIMEOUT = 120 * 1000;

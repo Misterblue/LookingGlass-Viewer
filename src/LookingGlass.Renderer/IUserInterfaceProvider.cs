@@ -71,7 +71,7 @@ namespace LookingGlass.Renderer {
         Button7
     };
 
-    public interface IUserInterfaceProvider {
+    public interface IUserInterfaceProvider : IDisposable {
         // =======================================================
         // INPUT CONTROL
         event UserInterfaceKeypressCallback OnUserInterfaceKeypress;
@@ -91,5 +91,7 @@ namespace LookingGlass.Renderer {
         void ReceiveUserIO(ReceiveUserIOInputEventTypeCode type, int param1, float param2, float param3);
         // kludge that tells the renderer that this IO system needs low level interfaces
         bool NeedsRendererLinkage();
+
+        void Dispose();
     }
 }

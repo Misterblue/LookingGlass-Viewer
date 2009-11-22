@@ -127,7 +127,7 @@ public class RendererOgreLL : IWorldRenderConv {
         IEntityAvatar av = null;
         if (ent.TryGet<IEntityAvatar>(out av)) {
             // this is an avatar
-            ri.basicObject = new EntityNameLL(m_defaultAvatarMesh);
+            ri.basicObject = EntityNameOgre.ConvertToOgreMeshName(new EntityName(m_defaultAvatarMesh));
             ri.parentEntity = null;
             ri.rotation = av.Heading;
             ri.position = av.RelativePosition;

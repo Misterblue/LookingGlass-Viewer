@@ -86,5 +86,9 @@ public class UserInterfaceNull : IUserInterfaceProvider {
         // don't hook me up with the low level stuff
         return false;
     }
+
+    public void Dispose() {
+        return;
+    }
 }
 }

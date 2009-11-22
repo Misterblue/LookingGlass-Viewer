@@ -78,21 +78,75 @@ class PrepareMeshPc : public GenericPc {
 // The constructors and destructors of the *Pc class handles all the allocation
 // and deallocation of memory needed to pass the parameters.
 ProcessAnyTime::ProcessAnyTime() {
-	m_workItemMutex = LGLOCK_ALLOCATE_MUTEX("ProcessAnyTime");
+	m_workQueueMutex = LGLOCK_ALLOCATE_MUTEX("ProcessAnyTime");
+	m_processingThread = LGLOCK_ALLOCATE_THREAD(&ProcessThreadRoutine);
+	m_keepProcessing = true;
 	m_modified = false;
 }
 
 ProcessAnyTime::~ProcessAnyTime() {
-	LGLOCK_RELEASE_MUTEX(m_workItemMutex);
+	m_keepProcessing = false;
+	LGLOCK_RELEASE_MUTEX(m_workQueueMutex);
 }
+
+// static routine to get the thread. Loop around doing work.
+void ProcessAnyTime::ProcessThreadRoutine() {
+	while (LG::ProcessAnyTime::Instance()->m_keepProcessing) {
+		LGLOCK_LOCK(LG::ProcessAnyTime::Instance()->m_workQueueMutex);
+		if (!LG::ProcessAnyTime::Instance()->HasWorkItems()) {
+			LGLOCK_WAIT(LG::ProcessAnyTime::Instance()->m_workQueueMutex);
+		}
+		LG::ProcessAnyTime::Instance()->ProcessWorkItems(100);
+		LGLOCK_UNLOCK(LG::ProcessAnyTime::Instance()->m_workQueueMutex);
+	}
+	return;
+}
+
 
 bool ProcessAnyTime::HasWorkItems(){
 	// TODO:
 	return false;
 }
 
+// Add the work itemt to the work list
+void ProcessAnyTime::QueueWork(GenericPc* wi) {
+	LGLOCK_LOCK(m_workQueueMutex);
+	// Check to see if uniq is specified and remove any duplicates
+	if (wi->uniq.length() != 0) {
+		// There will be duplicate requests for things. If we already have a request, delete the old
+		std::list<GenericPc*>::iterator li;
+		for (li = m_work.begin(); li != m_work.end(); li++) {
+			if (li._Ptr->_Myval->uniq.length() != 0) {
+				if (wi->uniq == li._Ptr->_Myval->uniq) {
+					m_work.erase(li,li);
+					LG::IncStat(LG::StatProcessAnyTimeDiscardedDups);
+				}
+			}
+		}
+	}
+	m_work.push_back(wi);
+	m_modified = true;
+	LGLOCK_UNLOCK(m_workQueueMutex);
+	LGLOCK_NOTIFY_ONE(m_workQueueMutex);
+}
+
 void ProcessAnyTime::ProcessWorkItems(int amountOfWorkToDo) {
-	// TODO:
+	// This sort is intended to put the highest priority (ones with lowest numbers) at
+	//   the front of the list for processing first.
+	// TODO: figure out why uncommenting this line causes exceptions
+	int loopCost = amountOfWorkToDo;
+	while (!m_work.empty() && (m_work.size() > 2000 || (loopCost > 0) ) ) {
+		LGLOCK_LOCK(m_workQueueMutex);
+		GenericPc* workGeneric = (GenericPc*)m_work.front();
+		m_work.pop_front();
+		LGLOCK_UNLOCK(m_workQueueMutex);
+		LG::SetStat(LG::StatProcessAnyTimeWorkItems, m_work.size());
+		LG::IncStat(LG::StatProcessAnyTimeTotalProcessed);
+		workGeneric->Process();
+		loopCost -= workGeneric->cost;
+		delete(workGeneric);
+	}
+	return;
 }
 
 }

@@ -178,6 +178,13 @@ public class UserInterfaceOgre : IModule, IUserInterfaceProvider {
     }
     #endregion IUserInterfaceProvider
 
+    public void Dispose() {
+        if (m_ui != null) {
+            m_ui.Dispose();
+            m_ui = null;
+        }
+    }
+
     // the key codes as they come from OIS
     public enum OISKeyCode {
 		KC_UNASSIGNED  = 0x00,

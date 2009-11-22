@@ -33,14 +33,19 @@ static class Ogr {
     public const int StatBetweenFrameTotalProcessed = 16;
     public const int StatBetweenFrameUnknownProcess = 17;
     public const int StatBetweenFrameDiscardedDups = 21;
+    // general process work thread
+    public const int StatProcessAnyTimeWorkItems = 23;
+    public const int StatProcessAnyTimeTotalProcessed = 24;
+    public const int StatProcessAnyTimeDiscardedDups = 22;
     // material processing queues
     public const int StatMaterialUpdatesRemaining = 0;
     // misc info
     public const int StatTotalFrames = 18;
     public const int StatFramesPerSec = 19;
     public const int StatLastFrameMs = 20;
+
     // the number of stat values (oversized for a fudge factor)
-    public const int StatSize = 30;
+    public const int StatSize = 40;
 
     // =============================================================================
     // Call from the Ogre C++ code back into  the managed code.

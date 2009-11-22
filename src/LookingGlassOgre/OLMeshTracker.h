@@ -46,8 +46,8 @@ done outside the frame rendering thread.
 
 		void TrackMesh(Ogre::String meshName, Ogre::String meshGroupName, Ogre::String contextEntName, Ogre::String fingerprint);
 		void UnTrackMesh(Ogre::String meshName);
-		void MakeLoaded(Ogre::String meshName, void* callback, void* callbackParam);
-		void MakeUnLoaded(Ogre::String meshName, void* callback, void* callbackParam);
+		void MakeLoaded(Ogre::String meshName, void(*callback)(void*), void* callbackParam);
+		void MakeUnLoaded(Ogre::String meshName, void(*callback)(void*), void* callbackParam);
 		void MakePersistant(Ogre::String meshName, Ogre::String entName);
 		void MakePersistant(Ogre::MeshPtr mesh, Ogre::String entName);
 		Ogre::String GetMeshContext(Ogre::String meshName);
