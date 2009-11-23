@@ -76,7 +76,7 @@ public:
 			char* textureName1, char* textureName2, char* textureName3, 
 			char* textureName4, char* textureName5, char* textureName6, 
 			const float* parms);
-	void CreateMeshResource(float, const char*, const int*, const float*);
+	void CreateMeshResource(float, const char*, const char*, const int*, const float*);
 	void CreateMeshSceneNode(float,  Ogre::SceneManager* sceneMgr, 
 					char* sceneNodeName, 
 					Ogre::SceneNode* parentNode,

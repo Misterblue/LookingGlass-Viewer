@@ -191,7 +191,7 @@ public class RendererOgreLL : IWorldRenderConv {
     /// <param name="sMgr">the scene manager receiving  the mesh</param>
     /// <param name="ent">The entity the mesh is coming from</param>
     /// <param name="meshName">The name the mesh should take</param>
-    public bool CreateMeshResource(float priority, IEntity ent, string meshName) {
+    public bool CreateMeshResource(float priority, IEntity ent, string meshName, EntityName contextEntity) {
         LLEntityPhysical llent;
         OMV.Primitive prim;
 
@@ -366,6 +366,10 @@ public class RendererOgreLL : IWorldRenderConv {
                     CreateMaterialResource6X(priority, ent, prim, mesh.Faces.Count);
                 }
 
+                // We were passed a 'context' entity. Create a scene node name to pass to
+                // Ogre. If the scene node is not found, nothing bad happens.
+                string contextSceneNode = EntityNameOgre.ConvertToOgreSceneNodeName(contextEntity);
+
                 m_log.Log(LogLevel.DRENDERDETAIL, "RenderOgreLL: "
                     + ent.Name
                     + " f=" + mesh.Faces.Count.ToString()
@@ -374,7 +378,7 @@ public class RendererOgreLL : IWorldRenderConv {
                     + " vi=" + vertI
                     );
                 // Now create the mesh
-                Ogr.CreateMeshResourceBF(priority, meshName, faceCounts, faceVertices);
+                Ogr.CreateMeshResourceBF(priority, meshName, contextSceneNode, faceCounts, faceVertices);
             }
         }
         return true;

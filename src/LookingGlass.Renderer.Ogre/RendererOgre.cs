@@ -654,7 +654,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
 
                     // create the mesh we know we need
                     if (m_shouldForceMeshRebuild) {
-                        RequestMesh(m_ent.Name.Name, entMeshName.Name);
+                        RequestMesh(m_ent.Name, entMeshName.Name);
                     }
                 }
                 catch (Exception e) {
@@ -682,7 +682,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
 
                 EntityName entMeshName = (EntityName)m_ri.basicObject;
                 m_log.Log(LogLevel.DRENDERDETAIL, "DoRenderLater: entity has scenenode. Rebuilding mesh: {0}", entMeshName);
-                RequestMesh(m_ent.Name.Name, entMeshName.Name);
+                RequestMesh(m_ent.Name, entMeshName.Name);
             }
         }
         return true;
@@ -933,7 +933,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         switch (resourceType) {
             case Ogr.ResourceTypeMesh:
                 m_statMeshesRequested.Event();
-                RequestMesh(resourceContext, resourceName);
+                RequestMesh(new EntityName(resourceContext), resourceName);
                 break;
             case Ogr.ResourceTypeMaterial:
                 m_statMaterialsRequested.Event();
@@ -948,7 +948,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         return;
     }
 
-    private void RequestMesh(string contextEntity, string meshName) {
+    private void RequestMesh(EntityName contextEntity, string meshName) {
         m_log.Log(LogLevel.DRENDERDETAIL, "Request for mesh " + meshName);
         Object[] meshLaterParams = { meshName, contextEntity };
         m_workQueueReqMesh.DoLater(RequestMeshLater, (object)meshLaterParams);
@@ -959,7 +959,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     private bool RequestMeshLater(DoLaterBase qInstance, Object parm) {
         Object[] lparams = (Object[])parm;
         string m_meshName = (string)lparams[0];
-        string m_contextEntityName = (string)lparams[1];
+        EntityName m_contextEntityName = (EntityName)lparams[1];
         try {
             // type information is at the end of the name. remove if there
             EntityName eName = EntityNameOgre.ConvertOgreResourceToEntityName(m_meshName);
@@ -974,7 +974,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             // Create mesh resource. In this case its most likely a .mesh file in the cache
             // The actual mesh creation is queued and done later between frames
             float priority = CalculateInterestOrder(ent);
-            if (!RendererOgre.GetWorldRenderConv(ent).CreateMeshResource(priority, ent, m_meshName)) {
+            if (!RendererOgre.GetWorldRenderConv(ent).CreateMeshResource(priority, ent, m_meshName, m_contextEntityName)) {
                 // we need to wait until some resource exists before we can complete this creation
                 return false;
             }

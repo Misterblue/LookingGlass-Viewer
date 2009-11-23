@@ -132,6 +132,7 @@ static class Ogr {
     [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
     public static extern void CreateMeshResourceBF(float pri, 
                             [MarshalAs(UnmanagedType.LPStr)]string resourceName,
+                            [MarshalAs(UnmanagedType.LPStr)]string contextSceneNode,
                             [MarshalAs(UnmanagedType.LPArray)] int[] faceCounts, 
                             [MarshalAs(UnmanagedType.LPArray)] float[] faceVertices);
     [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]

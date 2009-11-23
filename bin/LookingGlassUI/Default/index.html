@@ -104,6 +104,7 @@ function SendLoginRequest() {
 // One of the sections is viewer statistics. Poll for the data.
 var statTimerHandle;
 var graphFPS;
+var lastFPS = 10;
 var xxThru = 0;
 function TimerDataStuff() {
     statTimerHandle = setTimeout('TimerStatDisplay()', 2000);
@@ -130,7 +131,10 @@ function TimerStatDisplay() {
                     graphFPS.Format = {type:'bar', width:'auto',height:'20px'};
                                 
                 }
-                graphFPS.AddPoint(data['framespersecond']['value']);
+                var thisFPS = data['framespersecond']['value'];
+                if (thisFPS > (lastFPS * 2)) thisFPS = lastFPS * 2;
+                lastFPS = (lastFPS + thisFPS) / 2;
+                graphFPS.AddPoint(thisFPS);
                 graphFPS.UpdateDisplay('#LGOgreStats-framespersecond-Display');
             }
         });

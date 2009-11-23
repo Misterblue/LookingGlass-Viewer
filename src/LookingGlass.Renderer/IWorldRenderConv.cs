@@ -60,7 +60,7 @@ public interface IWorldRenderConv {
     /// </summary>
     /// <param name="ent"></param>
     /// <returns>false if we need to wait for resources before completing mesh creation</returns>
-    bool CreateMeshResource(float priority, IEntity ent, string meshName);
+    bool CreateMeshResource(float priority, IEntity ent, string meshName, EntityName contextEntityName);
 
     /// <summary>
     /// If doing material creation post processing, this causes the mesh resource to

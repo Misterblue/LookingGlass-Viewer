@@ -169,16 +169,34 @@ public:
 class CreateMeshResourceQc : public GenericQc {
 public:
 	Ogre::String meshName;
+	Ogre::String contextSceneNodeName;
+	float px;
+	float py;
+	float pz;
 	int* faceCounts;
 	float* faceVertices;
 	float origPriority;
 	CreateMeshResourceQc(float prio, Ogre::String uni, 
-					const char* mName, const int* faceC, const float* faceV) {
+					const char* mName, const char* contextSN, const int* faceC, const float* faceV) {
+		Ogre::SceneNode* contextSceneNode;
+
 		this->priority = prio;
 		this->origPriority = prio;
 		this->cost = 100;
 		this->uniq = uni;
 		this->meshName = Ogre::String(mName);
+		this->contextSceneNodeName = Ogre::String(contextSN);
+		if (LG::RendererOgre::Instance()->m_sceneMgr->hasSceneNode(contextSN)) {
+			contextSceneNode = LG::RendererOgre::Instance()->m_sceneMgr->getSceneNode(contextSN);
+			px = contextSceneNode->getPosition().x;
+			py = contextSceneNode->getPosition().y;
+			pz = contextSceneNode->getPosition().z;
+		}
+		else {
+			px = 10.0;
+			py = 10.0;
+			pz = 10.0;
+		}
 		this->faceCounts = (int*)malloc((*faceC) * sizeof(int));
 		memcpy(this->faceCounts, faceC, (*faceC) * sizeof(int));
 		this->faceVertices = (float*)malloc((*faceV) * sizeof(float));
@@ -195,6 +213,21 @@ public:
 	}
 
 	void RecalculatePriority() {
+		Ogre::Vector3 ourLoc = Ogre::Vector3(this->px, this->py, this->pz);
+		// this->priority = ourLoc.distance(LG::RendererOgre::Instance()->m_camera->getPosition());
+		// for the moment use orig priority until camera is in local coordinates
+		this->priority = this->origPriority;
+		/*
+		Ogre::Vector3 cameraRelation = LG::RendererOgre::Instance()->m_camera->getOrientation() * ourLoc;
+		if (cameraRelation.x < 0) {
+			// we're behind the camera
+			this->priority = this->priority + 300.0;
+		}
+		*/
+		if (!LG::RendererOgre::Instance()->m_camera->isVisible(Ogre::Sphere(ourLoc, 3.0))) {
+			// we're not visible at the moment so no rush to create us
+			this->priority = this->priority + 500.0;
+		}
 		return;
 	}
 };
@@ -254,7 +287,9 @@ public:
 	}
 	void RecalculatePriority() {
 		Ogre::Vector3 ourLoc = Ogre::Vector3(this->px, this->py, this->pz);
-		this->priority = ourLoc.distance(LG::RendererOgre::Instance()->m_camera->getPosition());
+		// this->priority = ourLoc.distance(LG::RendererOgre::Instance()->m_camera->getPosition());
+		// for the moment use orig priority until camera is local coordinates
+		this->priority = this->origPriority;
 		/*
 		Ogre::Vector3 cameraRelation = LG::RendererOgre::Instance()->m_camera->getOrientation() * ourLoc;
 		if (cameraRelation.x < 0) {
@@ -285,7 +320,7 @@ public:
 					bool setPosition, float px, float py, float pz,
 					bool setScale, float sx, float sy, float sz,
 					bool setRotation, float ow, float ox, float oy, float oz) {
-		this->priority = prio;	// EXPERIMENTAL: do refreshes last 
+		this->priority = prio;
 		this->cost = 10;
 		this->uniq = uni;
 		this->entName = Ogre::String(entName);
@@ -343,16 +378,20 @@ void ProcessBetweenFrame::Shutdown() {
 // ====================================================================
 // refresh a resource
 void ProcessBetweenFrame::RefreshResource(float priority, char* resourceName, int rType) {
+	LGLOCK_LOCK(m_workItemMutex);
 	RefreshResourceQc* rrq = new RefreshResourceQc(priority, resourceName, resourceName, rType);
 	QueueWork((GenericQc*)rrq);
+	LGLOCK_UNLOCK(m_workItemMutex);
 	LG::IncStat(LG::StatBetweenFrameWorkItems);
 	LG::IncStat(LG::StatBetweenFrameRefreshResource);
 }
 
 void ProcessBetweenFrame::CreateMaterialResource2(float priority, 
 			  const char* matName, const char* texName, const float* parms) {
+	LGLOCK_LOCK(m_workItemMutex);
 	CreateMaterialResourceQc* cmrq = new CreateMaterialResourceQc(priority, matName, matName, texName, parms);
 	QueueWork((GenericQc*)cmrq);
+	LGLOCK_UNLOCK(m_workItemMutex);
 	LG::IncStat(LG::StatBetweenFrameWorkItems);
 	LG::IncStat(LG::StatBetweenFrameCreateMaterialResource);
 }
@@ -362,19 +401,24 @@ void ProcessBetweenFrame::CreateMaterialResource6(float priority, const char* un
 			char* textureName1, char* textureName2, char* textureName3, 
 			char* textureName4, char* textureName5, char* textureName6, 
 			const float* parms) {
+	LGLOCK_LOCK(m_workItemMutex);
 	CreateMaterialResource6Qc* cmr6q = new CreateMaterialResource6Qc(priority, uniq, 
 			matName1, matName2, matName3, matName4, matName5, matName6, 
 			textureName1, textureName2, textureName3, textureName4, textureName5, textureName6, 
 			parms);
 	QueueWork((GenericQc*)cmr6q);
+	LGLOCK_UNLOCK(m_workItemMutex);
 	LG::IncStat(LG::StatBetweenFrameWorkItems);
 	LG::IncStat(LG::StatBetweenFrameCreateMaterialResource);
 }
 
 void ProcessBetweenFrame::CreateMeshResource(float priority, 
-				 const char* meshName, const int* faceCounts, const float* faceVertices) {
-	CreateMeshResourceQc* cmrq = new CreateMeshResourceQc(priority, meshName, meshName, faceCounts, faceVertices);
+				 const char* meshName, const char* contextSceneNode,
+				 const int* faceCounts, const float* faceVertices) {
+	LGLOCK_LOCK(m_workItemMutex);
+	CreateMeshResourceQc* cmrq = new CreateMeshResourceQc(priority, meshName, meshName, contextSceneNode, faceCounts, faceVertices);
 	QueueWork((GenericQc*)cmrq);
+	LGLOCK_UNLOCK(m_workItemMutex);
 	LG::IncStat(LG::StatBetweenFrameWorkItems);
 	LG::IncStat(LG::StatBetweenFrameCreateMeshResource);
 }
@@ -389,6 +433,7 @@ void ProcessBetweenFrame::CreateMeshSceneNode(float priority,
 					float px, float py, float pz,
 					float sx, float sy, float sz,
 					float ow, float ox, float oy, float oz) {
+	LGLOCK_LOCK(m_workItemMutex);
 	CreateMeshSceneNodeQc* csnq = new CreateMeshSceneNodeQc(priority, sceneNodeName, 
 					sceneMgr, 
 					sceneNodeName,
@@ -400,6 +445,7 @@ void ProcessBetweenFrame::CreateMeshSceneNode(float priority,
 					sx, sy, sz,
 					ow, ox, oy, oz);
 	QueueWork((GenericQc*)csnq);
+	LGLOCK_UNLOCK(m_workItemMutex);
 	LG::IncStat(LG::StatBetweenFrameWorkItems);
 	LG::IncStat(LG::StatBetweenFrameCreateMeshSceneNode);
 }
@@ -408,12 +454,14 @@ void ProcessBetweenFrame::UpdateSceneNode(float priority, char* entName,
 					bool setPosition, float px, float py, float pz,
 					bool setScale, float sx, float sy, float sz,
 					bool setRotation, float ow, float ox, float oy, float oz) {
+	LGLOCK_LOCK(m_workItemMutex);
 	UpdateSceneNodeQc* usnq = new UpdateSceneNodeQc(priority, entName,
 					entName,
 					setPosition, px, py, pz,
 					setScale, sx, sy, sz,
 					setRotation, ow, ox, oy, oz);
 	QueueWork((GenericQc*)usnq);
+	LGLOCK_UNLOCK(m_workItemMutex);
 	LG::IncStat(LG::StatBetweenFrameWorkItems);
 	LG::IncStat(LG::StatBetweenFrameUpdateSceneNode);
 }
@@ -454,7 +502,6 @@ void ProcessBetweenFrame::ProcessThreadRoutine() {
 
 // Add the work itemt to the work list
 void ProcessBetweenFrame::QueueWork(GenericQc* wi) {
-	LGLOCK_LOCK(m_workItemMutex);
 	// Check to see if uniq is specified and remove any duplicates
 	if (wi->uniq.length() != 0) {
 		// There will be duplicate requests for things. If we already have a request, delete the old
@@ -470,7 +517,6 @@ void ProcessBetweenFrame::QueueWork(GenericQc* wi) {
 	}
 	m_betweenFrameWork.push_back(wi);
 	m_modified = true;
-	LGLOCK_UNLOCK(m_workItemMutex);
 }
 
 // return true if there is still work to do
@@ -503,7 +549,7 @@ void ProcessBetweenFrame::ProcessWorkItems(int numToProcess) {
 		m_modified = false;
 	}
 	int loopCost = numToProcess;
-	while (!m_betweenFrameWork.empty() && (m_betweenFrameWork.size() > 6000 || (loopCost > 0) ) ) {
+	while (!m_betweenFrameWork.empty() && (loopCost > 0) ) {
 		LGLOCK_LOCK(m_workItemMutex);
 		GenericQc* workGeneric = (GenericQc*)m_betweenFrameWork.front();
 		m_betweenFrameWork.pop_front();

@@ -102,8 +102,9 @@ extern "C" DLLExport void RefreshResourceBF(float pri, int rType, char* resource
 extern "C" DLLExport void CreateMeshResource(const char* meshName, const int* faceCounts, const float* faceVertices) {
 	LG::RendererOgre::Instance()->CreateMeshResource(meshName, faceCounts, faceVertices);
 }
-extern "C" DLLExport void CreateMeshResourceBF(float pri, const char* meshName, const int* faceCounts, const float* faceVertices) {
-	LG::ProcessBetweenFrame::Instance()->CreateMeshResource(pri, meshName, faceCounts, faceVertices);
+extern "C" DLLExport void CreateMeshResourceBF(float pri, const char* meshName, char* contextSceneNode, 
+											   const int* faceCounts, const float* faceVertices) {
+	LG::ProcessBetweenFrame::Instance()->CreateMeshResource(pri, meshName, contextSceneNode, faceCounts, faceVertices);
 }
 extern "C" DLLExport void CreateMaterialResource(const char* matName, char* textureName,
 		 const float colorR, const float colorG, const float colorB, const float colorA,
