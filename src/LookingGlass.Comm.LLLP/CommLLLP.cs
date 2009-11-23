@@ -280,9 +280,12 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         ModuleParams.AddDefaultParameter(ModuleName + ".Texture.MaxRequests", 
                     "4",
                     "Maximum number of outstanding textures requests");
-        ModuleParams.AddDefaultParameter(ModuleName + ".Settings.MultipleSims", 
+        ModuleParams.AddDefaultParameter(ModuleName + ".Settings.MultipleSims",
                     "false",
-                    "Whether to enable multiple sims");
+                    "Wether to connect to multiple sims");
+        ModuleParams.AddDefaultParameter(ModuleName + ".Settings.MovementUpdateInterval", 
+                    "100",
+                    "Milliseconds between movement messages sent to server");
 
         // This is not the right place for this but there is no World.LL module
         ModuleParams.AddDefaultParameter("World.LL.Agent.PreMoveAvatar", 
@@ -323,7 +326,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
             m_client.Settings.USE_INTERPOLATION_TIMER = false;  // don't need the library helping
             m_client.Settings.SEND_AGENT_UPDATES = true;
             m_client.Self.Movement.AutoResetControls = false;
-            m_client.Self.Movement.UpdateInterval = 100;
+            m_client.Self.Movement.UpdateInterval = ModuleParams.ParamInt(ModuleName + ".Settings.MovementUpdateInterval");
             m_client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = false;
             m_client.Settings.USE_ASSET_CACHE = false;
             m_client.Settings.PIPELINE_REQUEST_TIMEOUT = 120 * 1000;

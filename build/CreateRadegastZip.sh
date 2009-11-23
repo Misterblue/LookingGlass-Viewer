@@ -12,40 +12,39 @@ rm -rf "$TEMPDIR"
 rm -f "$FILELIST"
 
 cat > "$FILELIST" << EOLIST
-CSJ2K.dll
-Grids.json
-LookingGlass.Comm.LLLP.dll
+LookingGlass.exe
 LookingGlass.Comm.dll
+LookingGlass.Comm.LLLP.dll
 LookingGlass.Framework.dll
 LookingGlass.Framework.dll.log4net
 LookingGlass.Radegast.dll
-LookingGlass.Renderer.Ogre.dll
 LookingGlass.Renderer.dll
+LookingGlass.Renderer.Ogre.dll
 LookingGlass.Rest.dll
 LookingGlass.View.dll
 LookingGlass.World.LL.dll
 LookingGlass.World.dll
-LookingGlass.exe
-LookingGlass.json
 LookingGlassOgre.dll
-LookingGlassOgre.lib
-OgreMain.dll
+PrimMesher.dll
+RadegastLookingGlass.json
+RadegastModules.json
+msvcr90.dll
+SkyX.dll
+openjpeg-dotnet.dll
+Grids.json
 OIS.dll
 OgreGUIRenderer.dll
+OgreMain.dll
 Plugin_BSPSceneManager.dll
 Plugin_CgProgramManager.dll
 Plugin_OctreeSceneManager.dll
 Plugin_OctreeZone.dll
 Plugin_PCZSceneManager.dll
 Plugin_ParticleFX.dll
-Plugins.cfg
-PrimMesher.dll
-RadegastLookingGlass.json
+cg.dll
 RenderSystem_Direct3D9.dll
 RenderSystem_GL.dll
-SkyX.dll
-cg.dll
-msvcr90.dll
+Plugins.cfg
 resources.cfg
 EOLIST
 
@@ -67,7 +66,7 @@ zip -qr "../RadegastLookingGlass-$DATE.zip" *
 #find . -type f | bzip2 -c - > "../RadegastLookingGlass-$DATE.bz2"
 
 cd ..
-rm -rf "$TEMPDIR"
+#rm -rf "$TEMPDIR"
 rm -f "$FILELIST"
 
 

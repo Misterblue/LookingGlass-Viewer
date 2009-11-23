@@ -211,169 +211,171 @@ public class RendererOgreLL : IWorldRenderConv {
         // meshes. Since a large number of prims are cubes, they can share the face vertices
         // and thus reduce the total number of Ogre's vertices stored.
         // At the moment, CheckStandardMeshType returns false so we don't do anything special yet
-        if (CheckStandardMeshType(prim, out meshType, out meshFaces)) {
-            m_log.Log(LogLevel.DBADERROR, "CreateMeshResource: not implemented Standard Type");
-            /*
-            // while we're in the neighborhood, we can create the materials
-            if (m_buildMaterialsAtMeshCreationTime) {
-                for (int j = 0; j < meshFaces; j++) {
-                    CreateMaterialResource2(ent, prim, EntityNameOgre.ConvertToOgreMaterialNameX(ent.Name, j), j);
-                }
-            }
-
-            Ogr.CreateStandardMeshResource(meshName, meshType);
-             */
-        }
-        else {
-            OMVR.FacetedMesh mesh;
-            try {
-
-                if (prim.Sculpt != null) {
-                    // looks like it's a sculpty. Do it that way
-                    EntityNameLL textureEnt = EntityNameLL.ConvertTextureWorldIDToEntityName(ent.AssetContext, prim.Sculpt.SculptTexture);
-                    System.Drawing.Bitmap textureBitmap = ent.AssetContext.GetTexture(textureEnt);
-                    if (textureBitmap == null) {
-                        m_log.Log(LogLevel.DRENDERDETAIL, "CreateMeshResource: waiting for texture for sculpty {0}", ent.Name.Name);
-                        // Don't have the texture now so ask for the texture to be loaded.
-                        // Note that we ignore the callback and let the work queue requeing get us back here
-                        ent.AssetContext.DoTextureLoad(textureEnt, AssetContextBase.AssetType.SculptieTexture, 
-                            delegate(string name, bool trans) { return; });
-                        // This will cause the work queue to requeue the mesh creation and call us
-                        //   back later to retry creating the mesh
-                        return false;
-                    }
-                    m_log.Log(LogLevel.DRENDERDETAIL, "CreateMeshResource: mesherizing scuplty {0}", ent.Name.Name);
-                    // mesh = m_meshMaker.GenerateSculptMesh(textureBitmap, prim, OMVR.DetailLevel.Highest);
-                    mesh = m_meshMaker.GenerateSculptMesh(textureBitmap, prim, OMVR.DetailLevel.Medium);
-                    if (mesh.Faces.Count > 10) {
-                        m_log.Log(LogLevel.DBADERROR, "CreateMeshResource: mesh has {0} faces!!!!", mesh.Faces.Count);
-                    }
-                    textureBitmap.Dispose();
-                }
-                else {
-                    // we really should use Low for boxes, med for most things and high for megaprim curves
-                    // OMVR.DetailLevel meshDetail = OMVR.DetailLevel.High;
-                    OMVR.DetailLevel meshDetail = OMVR.DetailLevel.Medium;
-                    if (prim.Type == OMV.PrimType.Box) {
-                        meshDetail = OMVR.DetailLevel.Low;
-                        // m_log.Log(LogLevel.DRENDERDETAIL, "CreateMeshResource: Low detail for {0}", ent.Name.Name);
-                    }
-                    mesh = m_meshMaker.GenerateFacetedMesh(prim, meshDetail);
-                    if (mesh.Faces.Count > 10) {
-                        m_log.Log(LogLevel.DBADERROR, "CreateMeshResource: mesh has {0} faces!!!!", mesh.Faces.Count);
+        lock (ent) {
+            if (CheckStandardMeshType(prim, out meshType, out meshFaces)) {
+                m_log.Log(LogLevel.DBADERROR, "CreateMeshResource: not implemented Standard Type");
+                /*
+                // while we're in the neighborhood, we can create the materials
+                if (m_buildMaterialsAtMeshCreationTime) {
+                    for (int j = 0; j < meshFaces; j++) {
+                        CreateMaterialResource2(ent, prim, EntityNameOgre.ConvertToOgreMaterialNameX(ent.Name, j), j);
                     }
                 }
+
+                Ogr.CreateStandardMeshResource(meshName, meshType);
+                 */
             }
-            catch (Exception e) {
-                m_log.Log(LogLevel.DRENDERDETAIL, "CreateMeshResource: failed mesh generate for {0}: {1}", 
-                    ent.Name.Name, e.ToString());
-                throw e;
-            }
-
-            // we have the face data. We package this up into a few big arrays to pass them
-            //   to the real renderer.
-
-            // we pass two one-dimensional arrays of floating point numbers over to the
-            // unmanaged code. The first array contains:
-            //   faceCounts[0] = total number of int's in this array (for alloc and freeing in Ogre)
-            //   faceCounts[1] = number of faces
-            //   faceCounts[2] = offset in second array for beginning of vertex info for face 1
-            //   faceCounts[3] = number of vertices for face 1
-            //   faceCounts[4] = stride for vertex info for face 1 (= 8)
-            //   faceCounts[5] = offset in second array for beginning of indices info for face 1
-            //   faceCounts[6] = number of indices for face 1
-            //   faceCounts[7] = stride for indices (= 3)
-            //   faceCounts[8] = offset in second array for beginning of vertex info for face 2
-            //   faceCounts[9] = number of vertices for face 2
-            //   faceCounts[10] = stride for vertex info for face 2 (= 8)
-            //   etc
-            // The second array contains the vertex info in the order:
-            //   v.X, v.Y, v.Z, t.X, t.Y, n.X, n.Y, n.Z
-            // this is repeated for each vertex
-            // This is followed by the list of indices listed as i.X, i.Y, i.Z
-
-            const int faceCountsStride = 6;
-            const int verticesStride = 8;
-            const int indicesStride = 3;
-            // calculate how many floating point numbers we're pushing over
-            int[] faceCounts = new int[mesh.Faces.Count * faceCountsStride + 2];
-            faceCounts[0] = faceCounts.Length;
-            faceCounts[1] = mesh.Faces.Count;
-            int totalVertices = 0;
-            for (int j = 0; j < mesh.Faces.Count; j++) {
-                OMVR.Face face = mesh.Faces[j];
-                int faceBase = j * faceCountsStride + 2;
-                // m_log.Log(LogLevel.DRENDERDETAIL, "Mesh F" + j.ToString() + ":"
-                //     + " vcnt=" + face.Vertices.Count.ToString()
-                //     + " icnt=" + face.Indices.Count.ToString());
-                faceCounts[faceBase + 0] = totalVertices;
-                faceCounts[faceBase + 1] = face.Vertices.Count;
-                faceCounts[faceBase + 2] = verticesStride;
-                totalVertices += face.Vertices.Count * verticesStride;
-                faceCounts[faceBase + 3] = totalVertices;
-                faceCounts[faceBase + 4] = face.Indices.Count;
-                faceCounts[faceBase + 5] = indicesStride;
-                totalVertices += face.Indices.Count;
-            }
-
-            float[] faceVertices = new float[totalVertices+2];
-            faceVertices[0] = faceVertices.Length;
-            int vertI = 1;
-            for (int j = 0; j < mesh.Faces.Count; j++) {
-                OMVR.Face face = mesh.Faces[j];
-
-                // Texture transform for this face
-                OMV.Primitive.TextureEntryFace teFace = face.TextureFace;
+            else {
+                OMVR.FacetedMesh mesh;
                 try {
-                    if ((teFace != null) && !m_useRendererTextureScaling) {
-                        m_meshMaker.TransformTexCoords(face.Vertices, face.Center, teFace);
+
+                    if (prim.Sculpt != null) {
+                        // looks like it's a sculpty. Do it that way
+                        EntityNameLL textureEnt = EntityNameLL.ConvertTextureWorldIDToEntityName(ent.AssetContext, prim.Sculpt.SculptTexture);
+                        System.Drawing.Bitmap textureBitmap = ent.AssetContext.GetTexture(textureEnt);
+                        if (textureBitmap == null) {
+                            m_log.Log(LogLevel.DRENDERDETAIL, "CreateMeshResource: waiting for texture for sculpty {0}", ent.Name.Name);
+                            // Don't have the texture now so ask for the texture to be loaded.
+                            // Note that we ignore the callback and let the work queue requeing get us back here
+                            ent.AssetContext.DoTextureLoad(textureEnt, AssetContextBase.AssetType.SculptieTexture, 
+                                delegate(string name, bool trans) { return; });
+                            // This will cause the work queue to requeue the mesh creation and call us
+                            //   back later to retry creating the mesh
+                            return false;
+                        }
+                        m_log.Log(LogLevel.DRENDERDETAIL, "CreateMeshResource: mesherizing scuplty {0}", ent.Name.Name);
+                        // mesh = m_meshMaker.GenerateSculptMesh(textureBitmap, prim, OMVR.DetailLevel.Highest);
+                        mesh = m_meshMaker.GenerateSculptMesh(textureBitmap, prim, OMVR.DetailLevel.Medium);
+                        if (mesh.Faces.Count > 10) {
+                            m_log.Log(LogLevel.DBADERROR, "CreateMeshResource: mesh has {0} faces!!!!", mesh.Faces.Count);
+                        }
+                        textureBitmap.Dispose();
+                    }
+                    else {
+                        // we really should use Low for boxes, med for most things and high for megaprim curves
+                        // OMVR.DetailLevel meshDetail = OMVR.DetailLevel.High;
+                        OMVR.DetailLevel meshDetail = OMVR.DetailLevel.Medium;
+                        if (prim.Type == OMV.PrimType.Box) {
+                            meshDetail = OMVR.DetailLevel.Low;
+                            // m_log.Log(LogLevel.DRENDERDETAIL, "CreateMeshResource: Low detail for {0}", ent.Name.Name);
+                        }
+                        mesh = m_meshMaker.GenerateFacetedMesh(prim, meshDetail);
+                        if (mesh.Faces.Count > 10) {
+                            m_log.Log(LogLevel.DBADERROR, "CreateMeshResource: mesh has {0} faces!!!!", mesh.Faces.Count);
+                        }
                     }
                 }
-                catch {
-                    m_log.Log(LogLevel.DBADERROR, "RenderOgreLL.CreateMeshResource:"
-                        + " more faces in mesh than in prim:"
-                        + " ent=" + ent.Name
-                        + ", face=" + j.ToString()
+                catch (Exception e) {
+                    m_log.Log(LogLevel.DRENDERDETAIL, "CreateMeshResource: failed mesh generate for {0}: {1}", 
+                        ent.Name.Name, e.ToString());
+                    throw e;
+                }
+
+                // we have the face data. We package this up into a few big arrays to pass them
+                //   to the real renderer.
+
+                // we pass two one-dimensional arrays of floating point numbers over to the
+                // unmanaged code. The first array contains:
+                //   faceCounts[0] = total number of int's in this array (for alloc and freeing in Ogre)
+                //   faceCounts[1] = number of faces
+                //   faceCounts[2] = offset in second array for beginning of vertex info for face 1
+                //   faceCounts[3] = number of vertices for face 1
+                //   faceCounts[4] = stride for vertex info for face 1 (= 8)
+                //   faceCounts[5] = offset in second array for beginning of indices info for face 1
+                //   faceCounts[6] = number of indices for face 1
+                //   faceCounts[7] = stride for indices (= 3)
+                //   faceCounts[8] = offset in second array for beginning of vertex info for face 2
+                //   faceCounts[9] = number of vertices for face 2
+                //   faceCounts[10] = stride for vertex info for face 2 (= 8)
+                //   etc
+                // The second array contains the vertex info in the order:
+                //   v.X, v.Y, v.Z, t.X, t.Y, n.X, n.Y, n.Z
+                // this is repeated for each vertex
+                // This is followed by the list of indices listed as i.X, i.Y, i.Z
+
+                const int faceCountsStride = 6;
+                const int verticesStride = 8;
+                const int indicesStride = 3;
+                // calculate how many floating point numbers we're pushing over
+                int[] faceCounts = new int[mesh.Faces.Count * faceCountsStride + 2];
+                faceCounts[0] = faceCounts.Length;
+                faceCounts[1] = mesh.Faces.Count;
+                int totalVertices = 0;
+                for (int j = 0; j < mesh.Faces.Count; j++) {
+                    OMVR.Face face = mesh.Faces[j];
+                    int faceBase = j * faceCountsStride + 2;
+                    // m_log.Log(LogLevel.DRENDERDETAIL, "Mesh F" + j.ToString() + ":"
+                    //     + " vcnt=" + face.Vertices.Count.ToString()
+                    //     + " icnt=" + face.Indices.Count.ToString());
+                    faceCounts[faceBase + 0] = totalVertices;
+                    faceCounts[faceBase + 1] = face.Vertices.Count;
+                    faceCounts[faceBase + 2] = verticesStride;
+                    totalVertices += face.Vertices.Count * verticesStride;
+                    faceCounts[faceBase + 3] = totalVertices;
+                    faceCounts[faceBase + 4] = face.Indices.Count;
+                    faceCounts[faceBase + 5] = indicesStride;
+                    totalVertices += face.Indices.Count;
+                }
+
+                float[] faceVertices = new float[totalVertices+2];
+                faceVertices[0] = faceVertices.Length;
+                int vertI = 1;
+                for (int j = 0; j < mesh.Faces.Count; j++) {
+                    OMVR.Face face = mesh.Faces[j];
+
+                    // Texture transform for this face
+                    OMV.Primitive.TextureEntryFace teFace = face.TextureFace;
+                    try {
+                        if ((teFace != null) && !m_useRendererTextureScaling) {
+                            m_meshMaker.TransformTexCoords(face.Vertices, face.Center, teFace);
+                        }
+                    }
+                    catch {
+                        m_log.Log(LogLevel.DBADERROR, "RenderOgreLL.CreateMeshResource:"
+                            + " more faces in mesh than in prim:"
+                            + " ent=" + ent.Name
+                            + ", face=" + j.ToString()
+                        );
+                    }
+
+                    // Vertices for this face
+                    for (int k = 0; k < face.Vertices.Count; k++) {
+                        OMVR.Vertex thisVert = face.Vertices[k];
+                        // m_log.Log(LogLevel.DRENDERDETAIL, "CreateMesh: vertices: p={0}, t={1}, n={2}",
+                        //     thisVert.Position.ToString(), thisVert.TexCoord.ToString(), thisVert.Normal.ToString());
+                        faceVertices[vertI + 0] = thisVert.Position.X;
+                        faceVertices[vertI + 1] = thisVert.Position.Y;
+                        faceVertices[vertI + 2] = thisVert.Position.Z;
+                        faceVertices[vertI + 3] = thisVert.TexCoord.X;
+                        faceVertices[vertI + 4] = thisVert.TexCoord.Y;
+                        faceVertices[vertI + 5] = thisVert.Normal.X;
+                        faceVertices[vertI + 6] = thisVert.Normal.Y;
+                        faceVertices[vertI + 7] = thisVert.Normal.Z;
+                        vertI += verticesStride;
+                    }
+                    for (int k = 0; k < face.Indices.Count; k += 3) {
+                        faceVertices[vertI + 0] = face.Indices[k + 0];
+                        faceVertices[vertI + 1] = face.Indices[k + 1];
+                        faceVertices[vertI + 2] = face.Indices[k + 2];
+                        vertI += indicesStride;
+                    }
+                }
+
+                // while we're in the neighborhood, we can create the materials
+                if (m_buildMaterialsAtMeshCreationTime) {
+                    CreateMaterialResource6X(priority, ent, prim, mesh.Faces.Count);
+                }
+
+                m_log.Log(LogLevel.DRENDERDETAIL, "RenderOgreLL: "
+                    + ent.Name
+                    + " f=" + mesh.Faces.Count.ToString()
+                    + " fcs=" + faceCounts.Length
+                    + " fs=" + faceVertices.Length
+                    + " vi=" + vertI
                     );
-                }
-
-                // Vertices for this face
-                for (int k = 0; k < face.Vertices.Count; k++) {
-                    OMVR.Vertex thisVert = face.Vertices[k];
-                    // m_log.Log(LogLevel.DRENDERDETAIL, "CreateMesh: vertices: p={0}, t={1}, n={2}",
-                    //     thisVert.Position.ToString(), thisVert.TexCoord.ToString(), thisVert.Normal.ToString());
-                    faceVertices[vertI + 0] = thisVert.Position.X;
-                    faceVertices[vertI + 1] = thisVert.Position.Y;
-                    faceVertices[vertI + 2] = thisVert.Position.Z;
-                    faceVertices[vertI + 3] = thisVert.TexCoord.X;
-                    faceVertices[vertI + 4] = thisVert.TexCoord.Y;
-                    faceVertices[vertI + 5] = thisVert.Normal.X;
-                    faceVertices[vertI + 6] = thisVert.Normal.Y;
-                    faceVertices[vertI + 7] = thisVert.Normal.Z;
-                    vertI += verticesStride;
-                }
-                for (int k = 0; k < face.Indices.Count; k += 3) {
-                    faceVertices[vertI + 0] = face.Indices[k + 0];
-                    faceVertices[vertI + 1] = face.Indices[k + 1];
-                    faceVertices[vertI + 2] = face.Indices[k + 2];
-                    vertI += indicesStride;
-                }
+                // Now create the mesh
+                Ogr.CreateMeshResourceBF(priority, meshName, faceCounts, faceVertices);
             }
-
-            // while we're in the neighborhood, we can create the materials
-            if (m_buildMaterialsAtMeshCreationTime) {
-                CreateMaterialResource6X(priority, ent, prim, mesh.Faces.Count);
-            }
-
-            m_log.Log(LogLevel.DRENDERDETAIL, "RenderOgreLL: "
-                + ent.Name
-                + " f=" + mesh.Faces.Count.ToString()
-                + " fcs=" + faceCounts.Length
-                + " fs=" + faceVertices.Length
-                + " vi=" + vertI
-                );
-            // Now create the mesh
-            Ogr.CreateMeshResourceBF(priority, meshName, faceCounts, faceVertices);
         }
         return true;
     }
