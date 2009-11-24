@@ -37,7 +37,7 @@ public partial class ViewWindow : Form {
     private ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
 
     private LookingGlassBase m_lgb;
-    private Panel m_renderPanel;
+    // private Panel m_renderPanel;
     private IRenderProvider m_renderer;
     private System.Threading.Timer m_refreshTimer;
     private int m_framesPerSec;

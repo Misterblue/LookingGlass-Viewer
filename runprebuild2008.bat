@@ -4,6 +4,7 @@
 ::
 :: Command Line Options:
 :: (none)            - create solution/project files and create compile.bat file to build solution
+:: debug             - create debug version of compile.bat
 :: msbuild           - Create project files, compile solution
 :: msbuild runtests  - create project files, compile solution, run unit tests
 :: msbuild docs      - create project files, compile solution, build API documentation
@@ -23,12 +24,23 @@ echo ##########################################
 ::    from prebuild.xml configuration file
 bin\Prebuild.exe /target vs2008
 
-:: build compile.bat file based on command line parameters
 echo @echo off > compile.bat
-if(.%1)==(.) echo C:\WINDOWS\Microsoft.NET\Framework\v3.5\msbuild LookingGlass.sln >> compile.bat
+
+:: default build is to build release
+if(.%1)==(.) echo echo ==== COMPILE BEGIN ==== >> compile.bat
+if(.%1)==(.) echo %SystemRoot%\Microsoft.NET\Framework\v3.5\MSBuild.exe /p:Configuration=Release LookingGlass.sln >> compile.bat
+if(.%1)==(.) echo IF ERRORLEVEL 1 GOTO FAIL >> compile.bat
 if(.%1)==(.) echo cd src\LookingGlassOgre >> compile.bat
-if(.%1)==(.) echo C:\WINDOWS\Microsoft.NET\Framework\v3.5\msbuild LookingGlassOgre.sln >> compile.bat
+if(.%1)==(.) echo %SystemRoot%\Microsoft.NET\Framework\v3.5\MSBuild.exe /p:Configuration=Release LookingGlassOgre.sln >> compile.bat
+if(.%1)==(.) echo IF ERRORLEVEL 1 GOTO FAIL >> compile.bat
 if(.%1)==(.) echo cd ..\.. >> compile.bat
+
+:: build compile.bat file based on command line parameters
+if(.%1)==(.debug) echo C:\WINDOWS\Microsoft.NET\Framework\v3.5\msbuild LookingGlass.sln >> compile.bat
+if(.%1)==(.debug) echo %SystemRoot%\Microsoft.NET\Framework\v3.5\MSBuild.exe /p:Configuration=Release LookingGlass.sln >> compile.bat
+if(.%1)==(.debug) echo cd src\LookingGlassOgre >> compile.bat
+if(.%1)==(.debug) echo C:\WINDOWS\Microsoft.NET\Framework\v3.5\msbuild LookingGlassOgre.sln >> compile.bat
+if(.%1)==(.debug) echo cd ..\.. >> compile.bat
 
 if(.%1)==(.msbuild) echo echo ==== COMPILE BEGIN ==== >> compile.bat
 if(.%1)==(.msbuild) echo %SystemRoot%\Microsoft.NET\Framework\v3.5\MSBuild.exe /p:Configuration=Release LookingGlass.sln >> compile.bat

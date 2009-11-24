@@ -20,7 +20,7 @@
 // Shadow technique: none, texture-modulative, stencil-modulative, texture-additive, stencil-additive
 "Renderer.Ogre.ShadowTechnique": "none",
 // "Renderer.Ogre.ShadowTechnique": "texture-additive",
-"Renderer.Ogre.Visibility.MaxDistance": "400",
+"Renderer.Ogre.Visibility.MaxDistance": "200",
 "Renderer.Ogre.Visibility.MinDistance": "30",
 "Renderer.Ogre.Visibility.OnlyLargeAfter": "80",
 "Renderer.Ogre.Visibility.Large": "8",

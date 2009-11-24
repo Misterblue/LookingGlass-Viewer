@@ -66,7 +66,7 @@ public class AssetFetcher {
         public OMV.UUID ID;
         public string Filename;
         public int QueueTime;
-        public int RequestTime;
+        // public int RequestTime;
         public OMV.AssetType Type;
         public AssetFetcherCompletionCallback DoneCall;
     };
