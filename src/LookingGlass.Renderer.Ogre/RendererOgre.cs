@@ -933,7 +933,10 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         switch (resourceType) {
             case Ogr.ResourceTypeMesh:
                 m_statMeshesRequested.Event();
-                RequestMesh(new EntityName(resourceContext), resourceName);
+                // if we are forcing mesh creation this should 1) never happen and 2) been take care of elsewhere
+                if (!m_shouldForceMeshRebuild) {
+                    RequestMesh(new EntityName(resourceContext), resourceName);
+                }
                 break;
             case Ogr.ResourceTypeMaterial:
                 m_statMaterialsRequested.Event();

@@ -275,7 +275,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         ModuleParams.AddDefaultParameter(ModuleName + ".Assets.NoTextureFilename", 
                     Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "./LookingGlassResources/NoTexture.png"),
                     "Filename of texture to display when we can't get the real texture");
-        ModuleParams.AddDefaultParameter(ModuleName + ".Assets.ConvertPNG", "true",
+        ModuleParams.AddDefaultParameter(ModuleName + ".Assets.ConvertPNG", "false",
                     "whether to convert incoming JPEG2000 files to PNG files in the cache");
         ModuleParams.AddDefaultParameter(ModuleName + ".Texture.MaxRequests", 
                     "4",
