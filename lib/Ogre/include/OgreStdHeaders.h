@@ -44,8 +44,13 @@
 #       include <ext/hash_set>
 #   endif
 #else
-#   include <hash_set>
-#   include <hash_map>
+#   if (OGRE_COMPILER == OGRE_COMPILER_MSVC) && !defined(STLPORT) && OGRE_COMP_VER >= 1600 // VC++ 10.0
+#    	include <unordered_map>
+#    	include <unordered_set>
+#	else
+#   	include <hash_set>
+#   	include <hash_map>
+#	endif
 #endif 
 
 // STL algorithms & functions
@@ -105,6 +110,7 @@ extern "C" {
 #	include <boost/thread/recursive_mutex.hpp>
 #	include <boost/thread/condition.hpp>
 #	include <boost/thread/thread.hpp>
+#	include <boost/function.hpp>
 #endif
 
 #if defined ( OGRE_GCC_VISIBILITY )

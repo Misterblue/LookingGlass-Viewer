@@ -106,7 +106,7 @@ void VisCalcFrustDist::calculateEntityVisibility() {
 		visRegions++;
 		Ogre::Node* nodeRegion = rootChildIterator.getNext();
 		// a region node has the nodes of its contents.
-		calculateEntityVisibility(nodeRegion);
+		calculateEntityVisibility(nodeRegion, nodeRegion);
 	}
 	if ((visSlowdown-- < 0) || (visVisToInvis != 0) || (visInvisToVis != 0)) {
 		visSlowdown = 30;
@@ -122,20 +122,23 @@ void VisCalcFrustDist::calculateEntityVisibility() {
 }
 
 // BETWEEN FRAME OPERATION
-void VisCalcFrustDist::calculateEntityVisibility(Ogre::Node* node) {
+void VisCalcFrustDist::calculateEntityVisibility(Ogre::Node* regionNode, Ogre::Node* node) {
 	if (node->numChildren() > 0) {
 		// if node has more children nodes, visit them recursivily
 		Ogre::SceneNode::ChildNodeIterator nodeChildIterator = node->getChildIterator();
 		while (nodeChildIterator.hasMoreElements()) {
 			Ogre::Node* nodeChild = nodeChildIterator.getNext();
-			calculateEntityVisibility(nodeChild);
+			calculateEntityVisibility(regionNode, nodeChild);
 			visChildren++;
 		}
 	}
 	visNodes++;
 	// children taken care of... check fo attached objects to this node
 	Ogre::SceneNode* snode = (Ogre::SceneNode*)node;
-	float snodeDistance = LG::RendererOgre::Instance()->m_camera->getPosition().distance(snode->_getWorldAABB().getCenter());
+	// the camera needs to be made relative to the region
+	Ogre::Vector3 relCameraPos = LG::RendererOgre::Instance()->m_camera->getPosition() - regionNode->getPosition();
+	// float snodeDistance = LG::RendererOgre::Instance()->m_camera->getPosition().distance(snode->_getWorldAABB().getCenter());
+	float snodeDistance = relCameraPos.distance(snode->getPosition());
 	Ogre::SceneNode::ObjectIterator snodeObjectIterator = snode->getAttachedObjectIterator();
 	while (snodeObjectIterator.hasMoreElements()) {
 		Ogre::MovableObject* snodeObject = snodeObjectIterator.getNext();
@@ -146,15 +149,23 @@ void VisCalcFrustDist::calculateEntityVisibility(Ogre::Node* node) {
 			if ((snodeEntity->getQueryFlags() & Ogre::SceneManager::WORLD_GEOMETRY_TYPE_MASK) == 0) {
 				// computation if it should be visible
 				// Note: this call is overridden by derived classes that do fancier visibility rules
-				bool viz = this->CalculateVisibilityImpl(LG::RendererOgre::Instance()->m_camera, snodeEntity, snodeDistance);
+				bool shouldBeVisible = this->CalculateVisibilityImpl(LG::RendererOgre::Instance()->m_camera, snodeEntity, snodeDistance);
 				if (snodeEntity->isVisible()) {
 					// we currently think this object is visible. make sure it should stay that way
-					if (viz) {
+					if (shouldBeVisible) {
 						// it should stay visible
 						visVisToVis++;
 					}
 					else {
-						// not visible any more... make invisible nad unload it
+						// not visible any more... make invisible nad unload it`
+						Ogre::Vector3 cPos = LG::RendererOgre::Instance()->m_camera->getPosition();
+						Ogre::Vector3 rPos = regionNode->getPosition();
+						Ogre::Vector3 sPos = snode->getPosition();
+						LG::Log("VisToInVis: cPos=<%f,%f,%f>, rPos=<%f,%f,%f>, sPos=<%f,%f,%f>, d=%f", 
+								cPos.x, cPos.y, cPos.z, 
+								rPos.x, rPos.y, rPos.z, 
+								sPos.x, sPos.y, sPos.z, 
+								snodeDistance);
 						snodeEntity->setVisible(false);
 						visVisToInvis++;
 						if (!snodeEntity->getMesh().isNull()) {
@@ -165,7 +176,7 @@ void VisCalcFrustDist::calculateEntityVisibility(Ogre::Node* node) {
 				else {
 					// the entity currently thinks it's not visible.
 					// check to see if it should be visible by checking a fake bounding box
-					if (viz) {
+					if (shouldBeVisible) {
 						// it should become visible again
 						if (!snodeEntity->getMesh().isNull()) {
 							queueMeshLoad(snodeEntity, snodeEntity->getMesh());

@@ -142,10 +142,11 @@ void OLMaterialTracker::FabricateMaterial(Ogre::String name, Ogre::MaterialPtr m
 	return;
 }
 // Clean out the passed material and build up a new one that is just the default
+Ogre::Material* m_defaultMaterial = 0;
 void OLMaterialTracker::MakeMaterialDefault(Ogre::MaterialPtr matPtr) {
 	Ogre::Material* mat = matPtr.getPointer();
 	mat->unload();
-	mat->removeAllTechniques();
+	// mat->removeAllTechniques();
 	Ogre::Technique* tech = mat->createTechnique();
 	Ogre::Pass* pass = tech->createPass();
 	pass->setShininess(0.0f);
@@ -155,7 +156,9 @@ void OLMaterialTracker::MakeMaterialDefault(Ogre::MaterialPtr matPtr) {
 	pass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
 	// pass->createTextureUnitState(m_defaultTextureName);	// we need a resolvable texture filename
 
+#if OGRE_THREAD_SUPPORT != 1
 	mat->load();
+#endif
 }
 
 // Internal request to refresh a resource

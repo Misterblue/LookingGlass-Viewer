@@ -223,11 +223,13 @@ namespace LG {
 
 			// setup our special resource groups for meshes and materials
 			createLookingGlassResourceGroups();
+			LG::Log("RendererOgre::initialize: successfully initialized resource groups");
 			// turn on the resource system
 	        initOgreResources();
+			LG::Log("RendererOgre::initialize: successfully initialized ogre resources");
 		}
 		catch (char* str) {
-			LG::Log("RendererOgre::initialize: LookingGlassOrge: exception initializing: {0}", str);
+			LG::Log("RendererOgre::initialize: LookingGlassOrge: exception initializing: %s", str);
 			return;
 		}
 
@@ -300,6 +302,7 @@ namespace LG {
 		LG::Log("RendererOgre::createLookingGlassResourceGroups: addResourceLocation %s", m_cacheDir.c_str());
 		Ogre::ResourceGroupManager::getSingleton().addResourceLocation(m_cacheDir,
 						OLArchiveTypeName, OLResourceGroupName, true);
+		LG::Log("RendererOgre::createLookingGlassResourceGroups: all resource archives added");
 		return;
 	}
 
@@ -628,12 +631,11 @@ namespace LG {
 			m_sceneMgr->destroyManualObject(mo);
 			mo = 0;
 
-			// mesh->buildEdgeList();
 			// mesh->generateLodLevels(m_lodDistances, Ogre::ProgressiveMesh::VertexReductionQuota::VRQ_PROPORTIONAL, 0.25f);
 
 			if (m_serializeMeshes) {
 				// serialize the mesh to the filesystem
-				mesh->setBackgroundLoaded(true);
+				// mesh->setBackgroundLoaded(true);
 				LG::OLMeshTracker::Instance()->MakePersistant(mesh, entName);
 			}
 			// you'd think doing  the unload here would be the right thing but it causes crashes

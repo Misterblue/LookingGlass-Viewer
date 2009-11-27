@@ -75,6 +75,13 @@ namespace Ogre
 		bool operator != ( const Radian& r ) const { return mRad != r.mRad; }
 		bool operator >= ( const Radian& r ) const { return mRad >= r.mRad; }
 		bool operator >  ( const Radian& r ) const { return mRad >  r.mRad; }
+
+		inline _OgreExport friend std::ostream& operator <<
+			( std::ostream& o, const Radian& v )
+		{
+			o << "Radian(" << v.valueRadians() << ")";
+			return o;
+		}
 	};
 
     /** Wrapper class which indicates a given angle value is in Degrees.
@@ -119,6 +126,13 @@ namespace Ogre
 		bool operator != ( const Degree& d ) const { return mDeg != d.mDeg; }
 		bool operator >= ( const Degree& d ) const { return mDeg >= d.mDeg; }
 		bool operator >  ( const Degree& d ) const { return mDeg >  d.mDeg; }
+
+		inline _OgreExport friend std::ostream& operator <<
+			( std::ostream& o, const Degree& v )
+		{
+			o << "Degree(" << v.valueDegrees() << ")";
+			return o;
+		}
 	};
 
     /** Wrapper class which identifies a value as the currently default angle 
@@ -549,6 +563,9 @@ namespace Ogre
 
 		static Matrix4 makeViewMatrix(const Vector3& position, const Quaternion& orientation, 
 			const Matrix4* reflectMatrix = 0);
+
+		/** Get a bounding radius value from a bounding box. */
+		static Real boundingRadiusFromAABB(const AxisAlignedBox& aabb);
 
 
 

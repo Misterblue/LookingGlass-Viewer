@@ -69,7 +69,7 @@ public:
 	void Shutdown();
 
 	bool HasWorkItems();
-	void ProcessWorkItems(int);
+	void RemoveWorkItem(Ogre::String);
 
 	LGLOCK_MUTEX m_workQueueMutex;
 	bool m_keepProcessing;
@@ -82,6 +82,8 @@ private:
 	std::list<GenericPc*> m_work;
 
 	bool m_modified;		// true if it's time to sort the work queue
+
+	void ProcessWorkItems(int);
 
 	// forward references
 	static void ProcessThreadRoutine();

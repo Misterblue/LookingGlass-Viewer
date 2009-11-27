@@ -50,7 +50,7 @@ public:
 
 protected:
 	void calculateEntityVisibility();
-	void calculateEntityVisibility(Ogre::Node*);
+	void calculateEntityVisibility(Ogre::Node*, Ogre::Node*);
 	bool calculateScaleVisibility(float, float);
 
 	void processEntityVisibility();

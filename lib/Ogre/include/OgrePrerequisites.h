@@ -100,7 +100,7 @@ namespace Ogre {
     // Define ogre version
     #define OGRE_VERSION_MAJOR 1
     #define OGRE_VERSION_MINOR 6
-    #define OGRE_VERSION_PATCH 2
+    #define OGRE_VERSION_PATCH 4
 	#define OGRE_VERSION_SUFFIX ""
     #define OGRE_VERSION_NAME "Shoggoth"
 
@@ -130,7 +130,10 @@ namespace Ogre {
 	#    endif
     #else
     #   if OGRE_COMPILER == OGRE_COMPILER_MSVC
-    #       if OGRE_COMP_VER > 1300 && !defined(_STLP_MSVC)
+    #       if OGRE_COMP_VER >= 1600 // VC++ 10.0
+	#			define HashMap ::std::tr1::unordered_map
+	#           define HashSet ::std::tr1::unordered_set
+	#		elif OGRE_COMP_VER > 1300 && !defined(_STLP_MSVC)
     #           define HashMap ::stdext::hash_map
 	#           define HashSet ::stdext::hash_set
     #       else

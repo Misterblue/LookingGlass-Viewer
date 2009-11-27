@@ -56,7 +56,9 @@ void OLArchive::load() {
 	m_defaultTextureFilename = LG::GetParameter("Renderer.Ogre.DefaultTextureFilename");
 	LG::Log("OLArchive::load(): DefaultTextureFile=%s", m_defaultTextureFilename.c_str());
 	m_FSArchive = OGRE_NEW Ogre::FileSystemArchive(mName, "XXOLFilesystem");
+	LG::Log("OLArchive::load(): loading FSArchive");
 	m_FSArchive->load();
+	LG::Log("OLArchive::load(): completed loading FSArchive");
 }
 
 // Unloads the archive.
@@ -96,22 +98,22 @@ Ogre::DataStreamPtr OLArchive::open(const Ogre::String& filename) const {
 // List all file names in the archive.
 Ogre::StringVectorPtr OLArchive::list(bool recursive, bool dirs) {
 	LG::Log("OLArchive::list()");
-	// return m_FSArchive->list(recursive, dirs);
-	return Ogre::StringVectorPtr(new Ogre::StringVector());
+	return m_FSArchive->list(recursive, dirs);
+	// return Ogre::StringVectorPtr(new Ogre::StringVector());
 }
 
 // List all files in the archive with accompanying information.
 Ogre::FileInfoListPtr OLArchive::listFileInfo(bool recursive, bool dirs) {
 	LG::Log("OLArchive::listFileInfo()");
-	// return m_FSArchive->listFileInfo(recursive, dirs);
-	return Ogre::FileInfoListPtr(new Ogre::FileInfoList());
+	return m_FSArchive->listFileInfo(recursive, dirs);
+	// return Ogre::FileInfoListPtr(new Ogre::FileInfoList());
 }
 
 Ogre::// Find all file or directory names matching a given pattern
 StringVectorPtr OLArchive::find(const Ogre::String& pattern, bool recursive, bool dirs) {
 	LG::Log("OLArchive::find(%s)", pattern.c_str());
-	// return m_FSArchive->find(pattern, recursive, dirs);
-	return Ogre::StringVectorPtr(new Ogre::StringVector());
+	return m_FSArchive->find(pattern, recursive, dirs);
+	// return Ogre::StringVectorPtr(new Ogre::StringVector());
 }
 
 // Find out if the named file exists (note: fully qualified filename required) */

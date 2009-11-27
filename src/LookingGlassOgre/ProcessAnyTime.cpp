@@ -81,7 +81,7 @@ ProcessAnyTime::ProcessAnyTime() {
 	m_workQueueMutex = LGLOCK_ALLOCATE_MUTEX("ProcessAnyTime");
 	// not enabled yet
 	// m_processingThread = LGLOCK_ALLOCATE_THREAD(&ProcessThreadRoutine);
-	m_backgroundThread = LGLOCK_ALLOCATE_THREAD(&ProcessBackgroundLoading);
+	// m_backgroundThread = LGLOCK_ALLOCATE_THREAD(&ProcessBackgroundLoading);
 	m_keepProcessing = true;
 	m_modified = false;
 }
