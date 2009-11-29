@@ -195,7 +195,7 @@ void VisCalcFrustDist::calculateEntityVisibility(Ogre::Node* regionNode, Ogre::N
 
 // Overloadable function that asks if, given this camera and entity, is the entity visible
 // Allows this class to be subclassed and just extend this one visibility calcuation
-bool VisCalcFrustDist::CalculateVisibilityImpl(Ogre::Camera* cam, Ogre::Entity* ent, float entDistance) {
+bool VisCalcFrustDist::CalculateVisibilityImpl(LG::LGCamera* cam, Ogre::Entity* ent, float entDistance) {
 	float snodeEntitySize = ent->getBoundingRadius() * 2;
 	bool frust = m_shouldCullByFrustrum && cam->isVisible(ent->getWorldBoundingBox());
 	bool dist = m_shouldCullByDistance && calculateScaleVisibility(entDistance, snodeEntitySize);

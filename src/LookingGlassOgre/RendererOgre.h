@@ -24,6 +24,7 @@
 
 #include "LGOCommon.h"
 #include "LGLocking.h"
+#include "LGCamera.h"
 #include "UserIO.h"
 #include "OLMaterialTracker.h"
 #include "OLMeshTracker.h"
@@ -58,7 +59,7 @@ public:
 	Ogre::Root* m_root;				// the root of all Ogre's stuff
 	Ogre::RenderWindow* m_window;	// the window we're rendering in
 	Ogre::SceneManager* m_sceneMgr;	// the overall scene manager
-	Ogre::Camera* m_camera;			// handle to the camera
+	LG::LGCamera* m_camera;			// handle to the camera
 	Ogre::Viewport* m_viewport;		// viewport the camera is using
 
 	// update objects anvironment routines

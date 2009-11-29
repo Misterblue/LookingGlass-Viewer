@@ -391,23 +391,14 @@ namespace LG {
 
 	void RendererOgre::createCamera() {
 		LG::Log("RendererOgre::createCamera");
-		m_camera = m_sceneMgr->createCamera("MainCamera");
-		m_camera->setPosition(0.0, 0.0, 0.0);
-		m_camera->setDirection(0.0, 0.0, -1.0);
-		m_camera->setNearClipDistance(2.0);
-		m_camera->setFarClipDistance(10000.0);
-		// m_camera->setFarClipDistance(0.0);
-		m_camera->setAutoAspectRatio(true);
-		if (m_camera == NULL) {
-			LG::Log("RendererOgre::createCamera: CAMERA FAILED TO CREATE");
-		}
+		m_camera = new LG::LGCamera("MainCamera", m_sceneMgr);
 	}
 
 	void RendererOgre::createViewport() {
 		LG::Log("RendererOgre::createViewport");
-		m_viewport = m_window->addViewport(m_camera);
+		m_viewport = m_window->addViewport(m_camera->Cam);
 		m_viewport->setBackgroundColour(Ogre::ColourValue(0.0f, 0.0f, 0.25f));
-		m_camera->setAspectRatio((float)m_viewport->getActualWidth() / (float)m_viewport->getActualHeight());
+		m_camera->Cam->setAspectRatio((float)m_viewport->getActualWidth() / (float)m_viewport->getActualHeight());
 	}
 
 	void RendererOgre::createSky() {

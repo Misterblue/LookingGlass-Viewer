@@ -216,6 +216,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\LGCamera.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\LGLocking.cpp"
 				>
 			</File>
@@ -311,6 +315,10 @@
 			</File>
 			<File
 				RelativePath=".\BadImageCodec.h"
+				>
+			</File>
+			<File
+				RelativePath=".\LGCamera.h"
 				>
 			</File>
 			<File

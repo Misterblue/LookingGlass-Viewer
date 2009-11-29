@@ -34,7 +34,7 @@ SkyBoxSkyX::~SkyBoxSkyX() {
 
 void SkyBoxSkyX::Initialize() {
 	// Create SkyX
-	m_SkyX = new SkyX::SkyX(LG::RendererOgre::Instance()->m_sceneMgr, LG::RendererOgre::Instance()->m_camera);
+	m_SkyX = new SkyX::SkyX(LG::RendererOgre::Instance()->m_sceneMgr, LG::RendererOgre::Instance()->m_camera->Cam);
 	m_SkyX->create();
 }
 

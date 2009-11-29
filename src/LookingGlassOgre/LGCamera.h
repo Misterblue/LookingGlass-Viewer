@@ -21,18 +21,39 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #pragma once
-
 #include "LGOCommon.h"
-#include "VisCalcFrustDist.h"
 
 namespace LG {
 
-class VisCalcVariable : public VisCalcFrustDist {
-public:
-	VisCalcVariable();
-	~VisCalcVariable();
+	// Container for teh camera that hides all the armature stuff and where the
+	// position and orientation are really hidden.
+	class LGCamera {
+	public:
+		LGCamera(Ogre::String nam, Ogre::SceneManager* mgr);
+		~LGCamera();
 
-	bool CalculateVisibilityImpl(LG::LGCamera* cam, Ogre::Entity* ent, float dist);
+		void setOrientation(Ogre::Quaternion qq);
+		void setOrientation(float ww, float xx, float yy, float zz);
+		Ogre::Quaternion getOrientation();
 
-};
+		void setPosition(float, float, float);
+		void setPosition(Ogre::Vector3 vv);
+		Ogre::Vector3 getPosition();
+
+		bool isVisible(const Ogre::AxisAlignedBox&);
+		bool isVisible(const Ogre::Sphere&);
+
+		float getNearClipDistance();
+		void setNearClipDistance(float);
+		float getFarClipDistance();
+		void setFarClipDistance(float);
+
+		void CreateCameraArmature(const char* cameraSceneNodeName, float px, float py, float pz,
+					float sx, float sy, float sz, float ow, float ox, float oy, float oz);
+
+		Ogre::Camera* Cam;
+	private:
+		Ogre::SceneNode* CamSceneNode;		// handle to the top camera scene node
+		Ogre::SceneNode* CamSceneNode2;		// handle to the one above camera scene node
+	};
 }

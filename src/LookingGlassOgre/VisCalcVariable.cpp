@@ -35,7 +35,7 @@ VisCalcVariable::VisCalcVariable() : VisCalcFrustDist() {
 VisCalcVariable::~VisCalcVariable() {
 }
 
-bool VisCalcVariable::CalculateVisibilityImpl(Ogre::Camera* cam, Ogre::Entity* ent, float dist) {
+bool VisCalcVariable::CalculateVisibilityImpl(LG::LGCamera* cam, Ogre::Entity* ent, float dist) {
 	bool ret = true;
 	if (this->m_shouldCullByDistance) {
 		float snodeEntitySize = ent->getBoundingRadius() * 2;

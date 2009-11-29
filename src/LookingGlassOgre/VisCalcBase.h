@@ -23,6 +23,7 @@
 #pragma once
 
 #include "LGOCommon.h"
+#include "LGCamera.h"
 
 namespace LG {
 
@@ -42,7 +43,7 @@ public:
 	virtual void RecalculateVisibility() {};
 
 	// internal function that returns true of the entity should be displayed
-	virtual bool CalculateVisibilityImpl(Ogre::Camera* cam, Ogre::Entity* ent, float) { return true; }
+	virtual bool CalculateVisibilityImpl(LG::LGCamera* cam, Ogre::Entity* ent, float) { return true; }
 
 };
 
