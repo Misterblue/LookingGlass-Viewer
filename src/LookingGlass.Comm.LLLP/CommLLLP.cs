@@ -420,8 +420,10 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
 
     // ICommProvider.Disconnect()
     public virtual bool Disconnect() {
+        m_log.Log(LogLevel.DCOMMDETAIL, "Disconnect request -- logout and disconnect");
         m_shouldBeLoggedIn = false;
-        m_log.Log(LogLevel.DCOMMDETAIL, "Should not be logged in");
+        m_isLoggingOut = true;
+        m_client.Network.Shutdown(OpenMetaverse.NetworkManager.DisconnectType.ClientInitiated);
         return true;
     }
 
@@ -451,6 +453,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
 
             Thread.Sleep(1*1000);
         }
+        m_log.Log(LogLevel.DCOMM, "KeepLoggingIn: exiting keep loggin in thread");
     }
 
     public void StartLogin() {
@@ -736,11 +739,6 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         // special update for the agent so it knows there is new info from the network
         // The real logic to push the update through happens in the IEntityAvatar.Update()
         if (updatedEntity != null) {
-            int thisHashCode = args.Prim.GetHashCode();
-            if (thisHashCode != updatedEntity.LastEntityHashCode) {
-                updateFlags |= UpdateCodes.FullUpdate;
-                updatedEntity.LastEntityHashCode = thisHashCode;
-            }
             if (updatedEntity == this.MainAgent.AssociatedAvatar) {
                 this.MainAgent.DataUpdate(updateFlags);
             }

@@ -679,6 +679,16 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                         loadParams[1] = (Object)m_ri;
                     }
                 }
+                // Find a handle to the parent for this node
+                string parentSceneNodeName = null;
+                if (m_ri.parentEntity != null) {
+                    // this entity has a parent entity. create scene node off his
+                    IEntity parentEnt = m_ri.parentEntity;
+                    parentSceneNodeName = EntityNameOgre.ConvertToOgreSceneNodeName(parentEnt.Name);
+                }
+                else {
+                    parentSceneNodeName = EntityNameOgre.ConvertToOgreSceneNodeName(m_ent.RegionContext.Name);
+                }
 
                 EntityName entMeshName = (EntityName)m_ri.basicObject;
                 m_log.Log(LogLevel.DRENDERDETAIL, "DoRenderLater: entity has scenenode. Rebuilding mesh: {0}", entMeshName);
@@ -731,7 +741,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             if ((what & UpdateCodes.ParentID) != 0) {
                 // prim was detached or attached. Rerender if not the first update
                 m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: parentID changed");
-                DoRenderQueued(ent);
+                if (!fullUpdate) DoRenderQueued(ent);
                 fullUpdate = true;
             }
             if ((what & UpdateCodes.Material) != 0) {
@@ -742,7 +752,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             if ((what & (UpdateCodes.PrimFlags | UpdateCodes.PrimData)) != 0) {
                 // the prim parameters were changed. Re-render if this is not the new creation request
                 m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: prim data changed");
-                DoRenderQueued(ent);
+                if (!fullUpdate) DoRenderQueued(ent);
                 fullUpdate = true;
             }
             if ((what & UpdateCodes.Textures) != 0) {
