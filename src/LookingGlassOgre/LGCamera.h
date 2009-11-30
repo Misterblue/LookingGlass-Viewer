@@ -48,6 +48,8 @@ namespace LG {
 		float getFarClipDistance();
 		void setFarClipDistance(float);
 
+		float getDistanceFromCamera(Ogre::Node* , Ogre::Vector3);
+
 		void CreateCameraArmature(const char* cameraSceneNodeName, float px, float py, float pz,
 					float sx, float sy, float sz, float ow, float ox, float oy, float oz);
 

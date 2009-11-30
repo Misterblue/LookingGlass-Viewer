@@ -136,9 +136,10 @@ void VisCalcFrustDist::calculateEntityVisibility(Ogre::Node* regionNode, Ogre::N
 	// children taken care of... check fo attached objects to this node
 	Ogre::SceneNode* snode = (Ogre::SceneNode*)node;
 	// the camera needs to be made relative to the region
-	Ogre::Vector3 relCameraPos = LG::RendererOgre::Instance()->m_camera->getPosition() - regionNode->getPosition();
+	// Ogre::Vector3 relCameraPos = LG::RendererOgre::Instance()->m_camera->getPosition() - regionNode->getPosition();
 	// float snodeDistance = LG::RendererOgre::Instance()->m_camera->getPosition().distance(snode->_getWorldAABB().getCenter());
-	float snodeDistance = relCameraPos.distance(snode->getPosition());
+	// float snodeDistance = relCameraPos.distance(snode->getPosition());
+	float snodeDistance = LG::RendererOgre::Instance()->m_camera->getDistanceFromCamera(regionNode, snode->getPosition());
 	Ogre::SceneNode::ObjectIterator snodeObjectIterator = snode->getAttachedObjectIterator();
 	while (snodeObjectIterator.hasMoreElements()) {
 		Ogre::MovableObject* snodeObject = snodeObjectIterator.getNext();

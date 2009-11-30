@@ -186,6 +186,7 @@ public:
 		this->uniq = uni;
 		this->meshName = Ogre::String(mName);
 		this->contextSceneNodeName = Ogre::String(contextSN);
+		// if there is a context node, use that to get the location of the mesh for later reprioritization
 		if (LG::RendererOgre::Instance()->m_sceneMgr->hasSceneNode(contextSN)) {
 			contextSceneNode = LG::RendererOgre::Instance()->m_sceneMgr->getSceneNode(contextSN);
 			px = contextSceneNode->getPosition().x;

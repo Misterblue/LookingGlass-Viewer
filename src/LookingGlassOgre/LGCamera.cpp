@@ -78,6 +78,28 @@ Ogre::Vector3 LGCamera::getPosition() {
 	return Ogre::Vector3();
 }
 
+// The region and the camera are in funny Ogre global address (neg z for instance).
+// Here we hide all that funnyness by localizing the camera address then calculating
+// that distance from the passed region localized address.
+float LGCamera::getDistanceFromCamera(Ogre::Node* regionNode, Ogre::Vector3 otherLoc) {
+	// convert global, unaligned camera coords to region local coords
+	Ogre::Vector3 localizedCamPos = Cam->getPosition() - regionNode->getPosition();
+	// KLUDGE!!: since  the camera is unrotated compared to the terrain, its coordinates
+	//    need tweeding before use. Someday make the camera in local coordinates.
+	localizedCamPos = Ogre::Vector3( localizedCamPos.x, -localizedCamPos.z, localizedCamPos.y);
+	float dist = localizedCamPos.distance(otherLoc);
+	if (dist < 0) dist = -dist;
+	/* this routine is called too many times for it to normally output messages
+	LG::Log("LGCamera::getDistanceFromCamera: camPos=<%f, %f, %f>", 
+			(double)camPos.x, (double)camPos.y, (double)camPos.z);
+	LG::Log("LGCamera::getDistanceFromCamera: rPos=<%f, %f, %f>", 
+			(double)regionNode->getPosition().x, (double)regionNode->getPosition().y, (double)regionNode->getPosition().z);
+	LG::Log("LGCamera::getDistanceFromCamera: lcamPos=<%f, %f, %f>, d=%f", 
+			(double)localizedCamPos.x, (double)localizedCamPos.y, (double)localizedCamPos.z, (double)dist);
+	*/
+	return dist;
+}
+
 bool LGCamera::isVisible(const Ogre::AxisAlignedBox& aab) {
 	if (Cam) return Cam->isVisible(aab);
 	return false;
