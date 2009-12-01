@@ -282,10 +282,13 @@ namespace LG {
 		Ogre::ResourceGroupManager::getSingleton().createResourceGroup(OLResourceGroupName);
 
 		// Force the creation of the singleton classes
+		// The singleton classes might create threads so let the render system know that's coming
+		m_root->getRenderSystem()->preExtraThreadsStarted();
 		LG::ProcessBetweenFrame::Instance();
 		LG::ProcessAnyTime::Instance();
 		LG::OLMaterialTracker::Instance();
 		LG::OLMeshTracker::Instance();
+		m_root->getRenderSystem()->postExtraThreadsStarted();
 
 		// listener to catch references to materials in meshes when they are read in
 		Ogre::MeshManager::getSingleton().setListener(new LG::OLMeshSerializerListener());
