@@ -94,6 +94,7 @@ void OLMeshTracker::TrackMesh(Ogre::String meshNameP, Ogre::String meshGroupP, O
 		meshToTrack->name = meshNameP;
 		m_meshMap->insert(MeshMapPair(meshNameP, *meshToTrack));
 		meshToTrack->state = MESH_STATE_UNKNOWN;
+		// if you change the above lines, visit their duplicate in MakeLoaded and MakeUnloaded
 	}
 	else {
 		// already tracking
@@ -126,18 +127,22 @@ void OLMeshTracker::MakeLoaded(Ogre::String meshName, void(*callback)(void*), vo
 	LGLOCK_LOCK(m_mapLock);
 	MeshMapIterator meshI = m_meshMap->find(meshName);
 	if (meshI == m_meshMap->end()) {
-		// mesh not found, request the mesh and track what we know
-		// LG::RequestResource(meshName.c_str(), contextEntName.c_str(), LookingGlassOgr::ResourceTypeMesh);
-		// add mesh to tracking map
-		// TODO:
-		return;
+		// mesh not found.
+		// When meshes are loaded off the disk, this is the first we hear about them.
+		// Create a tracking entry
+		meshInfo = (MeshInfo*)malloc(sizeof(MeshInfo));
+		meshInfo->name = meshName;
+		m_meshMap->insert(MeshMapPair(meshName, *meshInfo));
+		meshInfo->state = MESH_STATE_UNKNOWN;
 	}
-	meshInfo = &(meshI->second);
+	else {
+		meshInfo = &(meshI->second);
+	}
 	switch (meshInfo->state) {
 		case MESH_STATE_UNKNOWN:
 		case MESH_STATE_UNLOADED:
 			// load the mesh
-			meshInfo->state = MESH_STATE_REQUESTING;
+			meshInfo->state = MESH_STATE_BEING_PREPARED;
 			meshInfo->ticket = Ogre::ResourceBackgroundQueue::getSingleton().load("mesh", 
 					meshInfo->name, meshInfo->groupName, false, NULL, NULL, this);
 			meshInfo->callback = callback;
@@ -176,8 +181,51 @@ void OLMeshTracker::operationCompleted(Ogre::BackgroundProcessTicket ticket, con
 // Callback called when mesh unloaded. Called on between frame thread and passed the Param
 // as the only parameter. If 'callback' NULL, nothing is done;
 void OLMeshTracker::MakeUnLoaded(Ogre::String meshName, void(*callback)(void*), void* callbackParam) {
-	Ogre::MeshManager::getSingleton().unload(meshName);
-	if (callback != NULL) {
+	MeshInfo* meshInfo;
+	bool shouldCallback = false;
+	LGLOCK_LOCK(m_mapLock);
+	MeshMapIterator meshI = m_meshMap->find(meshName);
+	if (meshI == m_meshMap->end()) {
+		// mesh not found.
+		// When meshes are loaded off the disk, this is the first we hear about them.
+		// Create a tracking entry
+		meshInfo = (MeshInfo*)malloc(sizeof(MeshInfo));
+		meshInfo->name = meshName;
+		m_meshMap->insert(MeshMapPair(meshName, *meshInfo));
+		meshInfo->state = MESH_STATE_LOADED;
+	}
+	else {
+		meshInfo = &(meshI->second);
+	}
+	switch (meshInfo->state) {
+		case MESH_STATE_UNKNOWN:
+		case MESH_STATE_UNLOADED:
+			// already unloaded. nothing to do
+			shouldCallback = true;
+			break;
+		case MESH_STATE_REQUESTING:
+			// being requested. the material is not here to unload
+			break;
+		case MESH_STATE_BEING_SERIALIZED:
+			meshInfo->state = MESH_STATE_SERIALIZE_THEN_UNLOAD;
+			break;
+		case MESH_STATE_BEING_PREPARED:
+		case MESH_STATE_PREPARED:
+			// The mesh is in the prepare queue.
+			// Remove from prepare queue and it will stay unloaded
+			shouldCallback = true;
+			break;
+		case MESH_STATE_LOADED:
+			// TODO: background unload
+			Ogre::MeshManager::getSingleton().unload(meshName);
+			shouldCallback = true;
+			break;
+		case MESH_STATE_SERIALIZE_THEN_UNLOAD:
+			// TODO
+			break;
+	}
+	LGLOCK_UNLOCK(m_mapLock);
+	if (shouldCallback && callback != NULL) {
 		callback(callbackParam);
 	}
 }
