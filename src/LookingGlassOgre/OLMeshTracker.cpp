@@ -56,6 +56,10 @@ typedef struct s_meshInfo {
 	Ogre::String groupName;
 	Ogre::String contextEntityName;
 	Ogre::String fingerprint;
+	Ogre::BackgroundProcessTicket ticket;
+	void* callback;
+	void* callbackParam;
+
 } MeshInfo;
 
 typedef stdext::hash_map<Ogre::String, MeshInfo> MeshMap;
@@ -133,6 +137,11 @@ void OLMeshTracker::MakeLoaded(Ogre::String meshName, void(*callback)(void*), vo
 		case MESH_STATE_UNKNOWN:
 		case MESH_STATE_UNLOADED:
 			// load the mesh
+			meshInfo->state = MESH_STATE_REQUESTING;
+			meshInfo->ticket = Ogre::ResourceBackgroundQueue::getSingleton().load("mesh", 
+					meshInfo->name, meshInfo->groupName, false, NULL, NULL, this);
+			meshInfo->callback = callback;
+			meshInfo->callbackParam = callbackParam;
 		case MESH_STATE_REQUESTING:
 			// mesh is being requested and will be loaded later
 			break;
@@ -154,6 +163,12 @@ void OLMeshTracker::MakeLoaded(Ogre::String meshName, void(*callback)(void*), vo
 	if (shouldCallback && callback != NULL) {
 		callback(callbackParam);
 	}
+}
+
+void OLMeshTracker::operationCompleted(Ogre::BackgroundProcessTicket ticket, const Ogre::BackgroundProcessResult& result) {
+	// search the list for the mesh info block
+
+	return;
 }
 
 // Make the mesh unloaded. Schedule the unload operation on our own thread

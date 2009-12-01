@@ -24,6 +24,7 @@
 
 #include "LGOCommon.h"
 #include "SingletonInstance.h"
+#include "OgreResourceBackgroundQueue.h"
 
 namespace LG {
 /*
@@ -33,7 +34,7 @@ tracks meshes and their state (loaded, unloaded, ...) with the goal of allowing
 the actual file access part of a mesh load (the call to mesh->prepare()) be
 done outside the frame rendering thread.
 */
-	class OLMeshTracker : public SingletonInstance {
+	class OLMeshTracker : public SingletonInstance, Ogre::ResourceBackgroundQueue::Listener {
 	public:
 		OLMeshTracker();
 		~OLMeshTracker();
@@ -57,6 +58,10 @@ done outside the frame rendering thread.
 		void MakePersistant(Ogre::MeshPtr mesh, Ogre::String entName);
 		Ogre::String GetMeshContext(Ogre::String meshName);
 		Ogre::String GetSimilarMesh(Ogre::String fingerprint);
+
+		// ResourceBackgroundQueue::Listener
+		void operationCompleted(Ogre::BackgroundProcessTicket ticket, const Ogre::BackgroundProcessResult& result);
+		// void operationCompletedInThread(BackgroundProcessTicket ticket, const BackgroundProcessResult& result) {}
 
 
 	private:

@@ -238,6 +238,7 @@ void VisCalcFrustDist::processEntityVisibility() {
 		meshesToLoad.erase(intr);
 		Ogre::MeshPtr meshP = Ogre::MeshManager::getSingleton().getByName(meshName);
 		if (!meshP.isNull()) {
+			// LG::OLMeshTracker::Instance()->MakeLoaded(meshP->getName(), SetVis, parentEntity);
 			if (m_shouldCullMeshes) meshP->load();
 			parentEntity->setVisible(true);
 			LG::IncStat(LG::StatCullMeshesLoaded);
@@ -245,6 +246,11 @@ void VisCalcFrustDist::processEntityVisibility() {
 	}
 	LG::SetStat(LG::StatCullMeshesQueuedToLoad, meshesToLoad.size());
 	return;
+}
+
+// used as a callback to set the visible property after the mesh is loaded
+void VisCalcFrustDist::SetVis(Ogre::Entity* parent) {
+	parent->setVisible(true);
 }
 
 void VisCalcFrustDist::queueMeshLoad(Ogre::Entity* parentEntity, Ogre::MeshPtr meshP) {

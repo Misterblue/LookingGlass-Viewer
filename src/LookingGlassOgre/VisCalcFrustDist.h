@@ -52,6 +52,7 @@ protected:
 	void calculateEntityVisibility();
 	void calculateEntityVisibility(Ogre::Node*, Ogre::Node*);
 	bool calculateScaleVisibility(float, float);
+	void SetVis(Ogre::Entity*);
 
 	void processEntityVisibility();
 	void queueMeshLoad(Ogre::Entity*, Ogre::MeshPtr);
