@@ -50,28 +50,15 @@ namespace LG {
 
 OLMeshTracker* OLMeshTracker::m_instance = NULL;
 
-typedef struct s_meshInfo {
-	int state;
-	Ogre::String name;
-	Ogre::String groupName;
-	Ogre::String contextEntityName;
-	Ogre::String fingerprint;
-	Ogre::BackgroundProcessTicket ticket;
-	void* callback;
-	void* callbackParam;
-
-} MeshInfo;
-
-typedef stdext::hash_map<Ogre::String, MeshInfo> MeshMap;
-typedef std::pair<Ogre::String, MeshInfo> MeshMapPair;
-typedef stdext::hash_map<Ogre::String, MeshInfo>::iterator MeshMapIterator;
-MeshMap* m_meshMap;
 LGLOCK_MUTEX m_mapLock;
 
 OLMeshTracker::OLMeshTracker() {
 	m_mapLock = LGLOCK_ALLOCATE_MUTEX("OLMeshTracker");
 	m_meshSerializer = NULL;
 	m_cacheDir = LG::GetParameter("Renderer.Ogre.CacheDir");
+	m_meshesToLoad = new HashedQueueNamedList(LG::StatMeshTrackerLoadQueued);
+	m_meshesToUnload = new HashedQueueNamedList(LG::StatMeshTrackerUnloadQueued);
+	m_meshesToSerialize = new HashedQueueNamedList(LG::StatMeshTrackerSerializedQueued);
 }
 OLMeshTracker::~OLMeshTracker() {
 	LGLOCK_RELEASE_MUTEX(m_mapLock);
@@ -82,161 +69,92 @@ void OLMeshTracker::Shutdown() {
 	return;
 }
 
-// we have complete information about the mesh. Add or update the table info
-void OLMeshTracker::TrackMesh(Ogre::String meshNameP, Ogre::String meshGroupP, Ogre::String contextEntNameP, Ogre::String fingerprintP) {
-	MeshInfo* meshToTrack;
-	LGLOCK_LOCK(m_mapLock);
-	// Look in tracking list to see if are already tracking mesh. 
-	MeshMapIterator meshI = m_meshMap->find(meshNameP);
-	if (meshI == m_meshMap->end()) {
-		// not tracking. Add a new entry
-		meshToTrack = (MeshInfo*)malloc(sizeof(MeshInfo));
-		meshToTrack->name = meshNameP;
-		m_meshMap->insert(MeshMapPair(meshNameP, *meshToTrack));
-		meshToTrack->state = MESH_STATE_UNKNOWN;
-		// if you change the above lines, visit their duplicate in MakeLoaded and MakeUnloaded
+// ===============================================================================
+class MakeLoadedQm : public GenericQm {
+public:
+	Ogre::String meshName;
+	Ogre::String contextEntity;
+	MakeLoadedQm(float prio, Ogre::String uni, 
+				Ogre::String meshNam Ogre::String contextEnt, Ogre::String stringParm, Ogre::Entity* entityParam)
+		this->priority = prio
+		this->cost = 0;
+		this->uniq = uni;
+		this->meshName = meshNam;
+		this->contextEntity = contextEnt;
+		this->stringParam = strintParm;
+		this->entityParam = entityParm;
+		this->texName = Ogre::String(tName);
+		memcpy(this->parms, inParms, LG::OLMaterialTracker::CreateMaterialSize*sizeof(float));
 	}
-	else {
-		// already tracking
-		meshToTrack = &(meshI->second);
+	~CreateMaterialResourceQc(void) {
+		this->uniq.clear();
+		this->matName.clear();
+		this->texName.clear();
 	}
-	// update the tracking information
-	meshToTrack->groupName = meshGroupP;
-	meshToTrack->contextEntityName = contextEntNameP;
-	meshToTrack->fingerprint = fingerprintP;
-	LGLOCK_UNLOCK(m_mapLock);
-
-	// TODO:
-	Ogre::MeshPtr meshEnt = (Ogre::MeshPtr)Ogre::MeshManager::getSingleton().getByName(meshNameP);
-	if (meshEnt.isNull()) {
-		// huh?
+	void Process() {
+		LG::OLMaterialTracker::Instance()->CreateMaterialResource2(this->matName.c_str(), this->texName.c_str(), this->parms);
 	}
-
-}
-void OLMeshTracker::UnTrackMesh(Ogre::String meshName) {
-}
-
+};
+// ===============================================================================
 // Make the mesh loaded. We find the mesh entry and check if it's loaded. If not
 // we do the prepare operation (file IO) on our own thread. Once the IO is complete,
 // we schedule a refresh resource to add the mesh to the scene.
 // Callback called when mesh loaded. Called on between frame thread and passed the Param
 // as the only parameter. If 'callback' NULL, nothing is done;
-void OLMeshTracker::MakeLoaded(Ogre::String meshName, void(*callback)(void*), void* callbackParam) {
-	MeshInfo* meshInfo;
-	bool shouldCallback = false;
+void OLMeshTracker::MakeLoaded(Ogre::String meshName, Ogre::String contextEntity, Ogre::String stringParam, Ogre::Entity* entityParam) {
 	LGLOCK_LOCK(m_mapLock);
-	MeshMapIterator meshI = m_meshMap->find(meshName);
-	if (meshI == m_meshMap->end()) {
-		// mesh not found.
-		// When meshes are loaded off the disk, this is the first we hear about them.
-		// Create a tracking entry
-		meshInfo = (MeshInfo*)malloc(sizeof(MeshInfo));
-		meshInfo->name = meshName;
-		m_meshMap->insert(MeshMapPair(meshName, *meshInfo));
-		meshInfo->state = MESH_STATE_UNKNOWN;
+	// check to see if in unloaded list, if so, remove it and claim success
+	GenericQm* unloadEntry = m_meshesToUnload(meshName);
+	if (unloadEntry != NULL) {
+		unloadEntry->Abort();
+		delete unloadEntry;
 	}
-	else {
-		meshInfo = &(meshI->second);
-	}
-	switch (meshInfo->state) {
-		case MESH_STATE_UNKNOWN:
-		case MESH_STATE_UNLOADED:
-			// load the mesh
-			meshInfo->state = MESH_STATE_BEING_PREPARED;
-			meshInfo->ticket = Ogre::ResourceBackgroundQueue::getSingleton().load("mesh", 
-					meshInfo->name, meshInfo->groupName, false, NULL, NULL, this);
-			meshInfo->callback = callback;
-			meshInfo->callbackParam = callbackParam;
-		case MESH_STATE_REQUESTING:
-			// mesh is being requested and will be loaded later
-			break;
-		case MESH_STATE_BEING_SERIALIZED:
-		case MESH_STATE_BEING_PREPARED:
-		case MESH_STATE_PREPARED:
-		case MESH_STATE_LOADED:
-			// mesh is already loaded
-			shouldCallback = true;
-			break;
-		case MESH_STATE_SERIALIZE_THEN_UNLOAD:
-			// asked for load after we'd been asked to unload. For get  the unload
-			meshInfo->state = MESH_STATE_BEING_SERIALIZED;
-			shouldCallback = true;
-			break;
-	}
+	// add this to the loading list
+	MakeLoadedQm* mlq = new MakeLoadedQm(meshName, contextEntity, stringParam, entityParam);
+	m_meshesToLoad.AddLast(mlq);
 	LGLOCK_UNLOCK(m_mapLock);
-
-	if (shouldCallback && callback != NULL) {
-		callback(callbackParam);
-	}
-}
-
-void OLMeshTracker::operationCompleted(Ogre::BackgroundProcessTicket ticket, const Ogre::BackgroundProcessResult& result) {
-	// search the list for the mesh info block
-
-	return;
 }
 
 // Make the mesh unloaded. Schedule the unload operation on our own thread
-// TODO: replace this inline code with something that happens on a different thread
-// Callback called when mesh unloaded. Called on between frame thread and passed the Param
-// as the only parameter. If 'callback' NULL, nothing is done;
-void OLMeshTracker::MakeUnLoaded(Ogre::String meshName, void(*callback)(void*), void* callbackParam) {
-	MeshInfo* meshInfo;
-	bool shouldCallback = false;
+// unloads are quick
+void OLMeshTracker::MakeUnLoaded(Ogre::String meshName, Ogre::String stringParam, Ogre::Entity* entityParam) {
 	LGLOCK_LOCK(m_mapLock);
-	MeshMapIterator meshI = m_meshMap->find(meshName);
-	if (meshI == m_meshMap->end()) {
-		// mesh not found.
-		// When meshes are loaded off the disk, this is the first we hear about them.
-		// Create a tracking entry
-		meshInfo = (MeshInfo*)malloc(sizeof(MeshInfo));
-		meshInfo->name = meshName;
-		m_meshMap->insert(MeshMapPair(meshName, *meshInfo));
-		meshInfo->state = MESH_STATE_LOADED;
+	// see if in the loading list. Remove if  there.
+	GenericQm* loadEntry = m_meshesToLoad(meshName);
+	if (loadEntry != NULL) {
+		loadEntry->Abort();
+		delete loadEntry;
+	}
+	// see if in the serialize list. Mark for unload if it's there
+	GenericQm* serialEntry = m_meshesToSerialize(meshName);
+	if (serialEntry != NULL) {
+		serialEntry->stringParam = "unload";
 	}
 	else {
-		meshInfo = &(meshI->second);
-	}
-	switch (meshInfo->state) {
-		case MESH_STATE_UNKNOWN:
-		case MESH_STATE_UNLOADED:
-			// already unloaded. nothing to do
-			shouldCallback = true;
-			break;
-		case MESH_STATE_REQUESTING:
-			// being requested. the material is not here to unload
-			break;
-		case MESH_STATE_BEING_SERIALIZED:
-			meshInfo->state = MESH_STATE_SERIALIZE_THEN_UNLOAD;
-			break;
-		case MESH_STATE_BEING_PREPARED:
-		case MESH_STATE_PREPARED:
-			// The mesh is in the prepare queue.
-			// Remove from prepare queue and it will stay unloaded
-			shouldCallback = true;
-			break;
-		case MESH_STATE_LOADED:
-			// TODO: background unload
-			Ogre::MeshManager::getSingleton().unload(meshName);
-			shouldCallback = true;
-			break;
-		case MESH_STATE_SERIALIZE_THEN_UNLOAD:
-			// TODO
-			break;
+		Ogre::MeshManager::getSingleton().unload(meshName);
 	}
 	LGLOCK_UNLOCK(m_mapLock);
-	if (shouldCallback && callback != NULL) {
-		callback(callbackParam);
-	}
 }
 
 // Serialize the mesh to it's file on our own thread.
-void OLMeshTracker::MakePersistant(Ogre::String meshName, Ogre::String entName) {
-	MakePersistant((Ogre::MeshPtr)Ogre::MeshManager::getSingleton().getByName(meshName), entName);
+void OLMeshTracker::MakePersistant(Ogre::String meshName, Ogre::String entName, Ogre::String stringParam, Ogre::Entity* entityParam) {
+	MakePersistant((Ogre::MeshPtr)Ogre::MeshManager::getSingleton().getByName(meshName), entName, stringParam, entityParam);
 }
 
 // TODO: make this inline code happen on it's own thread
-void OLMeshTracker::MakePersistant(Ogre::MeshPtr mesh, Ogre::String entName) {
+void OLMeshTracker::MakePersistant(Ogre::MeshPtr mesh, Ogre::String entName, Ogre::String stringParam, Ogre::Entity* entityParam) {
+	LGLOCK_LOCK(m_mapLock);
+	// check to see if in unloaded list, if so, remove it and claim success
+	GenericQm* unloadEntry = m_meshesToUnload(meshName);
+	if (unloadEntry != NULL) {
+		unloadEntry->Abort();
+		delete unloadEntry;
+	}
+	MakeSerializedQm* msq = new MakeSerializedQm(meshName, contextEntity, stringParam, entityParam);
+	m_meshesToSerialize.AddLast(msq);
+	LGLOCK_UNLOCK(m_mapLock);
+
+/*
 	Ogre::String targetFilename = LG::RendererOgre::Instance()->EntityNameToFilename(entName, "");
 
 	// Make sure the directory exists -- I wish the serializer did this for me
@@ -246,15 +164,8 @@ void OLMeshTracker::MakePersistant(Ogre::MeshPtr mesh, Ogre::String entName) {
 		m_meshSerializer = new Ogre::MeshSerializer();
 	}
 	m_meshSerializer->exportMesh(mesh.getPointer(), targetFilename);
-}
+*/
 
-
-Ogre::String OLMeshTracker::GetMeshContext(Ogre::String meshName) {
-	return Ogre::String();
 }
-Ogre::String OLMeshTracker::GetSimilarMesh(Ogre::String fingerprint) {
-	return Ogre::String();
-}
-
 
 }

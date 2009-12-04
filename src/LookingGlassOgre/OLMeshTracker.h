@@ -34,40 +34,127 @@ tracks meshes and their state (loaded, unloaded, ...) with the goal of allowing
 the actual file access part of a mesh load (the call to mesh->prepare()) be
 done outside the frame rendering thread.
 */
-	class OLMeshTracker : public SingletonInstance, Ogre::ResourceBackgroundQueue::Listener {
-	public:
-		OLMeshTracker();
-		~OLMeshTracker();
-
-		// SingletonInstance.Instance();
-		static OLMeshTracker* Instance() { 
-			if (LG::OLMeshTracker::m_instance == NULL) {
-				LG::OLMeshTracker::m_instance = new OLMeshTracker();
-			}
-			return LG::OLMeshTracker::m_instance; 
-		}
-
-		// SingletonInstance.Shutdown()
-		void Shutdown();
-
-		void TrackMesh(Ogre::String meshName, Ogre::String meshGroupName, Ogre::String contextEntName, Ogre::String fingerprint);
-		void UnTrackMesh(Ogre::String meshName);
-		void MakeLoaded(Ogre::String meshName, void(*callback)(void*), void* callbackParam);
-		void MakeUnLoaded(Ogre::String meshName, void(*callback)(void*), void* callbackParam);
-		void MakePersistant(Ogre::String meshName, Ogre::String entName);
-		void MakePersistant(Ogre::MeshPtr mesh, Ogre::String entName);
-		Ogre::String GetMeshContext(Ogre::String meshName);
-		Ogre::String GetSimilarMesh(Ogre::String fingerprint);
-
-		// ResourceBackgroundQueue::Listener
-		void operationCompleted(Ogre::BackgroundProcessTicket ticket, const Ogre::BackgroundProcessResult& result);
-		// void operationCompletedInThread(BackgroundProcessTicket ticket, const BackgroundProcessResult& result) {}
-
-
-	private:
-		static OLMeshTracker* m_instance;
-
-		Ogre::MeshSerializer* m_meshSerializer;
-		Ogre::String m_cacheDir; 
+// the generic base class that goes in the list
+class GenericQm {
+public:
+	float priority;
+	Ogre::String uniq;
+	Ogre::String stringParam;
+	Ogre::Entity* entityParam;
+	virtual void Process() {};
+	virtual void Abort() {};
+	virtual void RecalculatePriority() {};
+	GenericQm() {
+		priority = 100;
+		uniq.clear();
 	};
+	~GenericQm() {};
+};
+
+// ===================================================================
+class MeshQueueNamedList {
+public:
+	MeshQueueNamedList(int statIndex) {
+		m_statIndex = statIndex;
+		m_queueLength = 0;
+	}
+	~MeshQueueNamedList() {
+	}
+
+	GenericQm* Find(Ogre::String nam) {
+		GenericQm* ret = NULL;
+		stdext::hash_map<Ogre::String, GenericQm*>::iterator intr;
+		intr = m_hashMap.find(nam);
+		if (intr != m_hashMap.end()) {
+			ret = intr->second;
+		}
+		return ret;
+	}
+	bool isEmpty() {
+		return m_hashMap.empty();
+	}
+	void Remove(GenericQm* mi) {
+		Remove(mi->name);
+	}
+	void Remove(Ogre::String nam) {
+		stdext::hash_map<Ogre::String, GenericQm*>::iterator intr;
+		intr = m_hashMap.find(nam);
+		if (intr != m_hashMap.end()) {
+			m_hashMap.erase(intr);
+			m_queueLength--;
+			LG::SetStat(m_statIndex, m_queueLength);
+		}
+	}
+	void AddLast(GenericQm* mi) {
+		m_hashMap.insert(std::pair<Ogre::String, GenericQm*>(mi->name, mi));
+		m_queueLength++;
+		LG::SetStat(m_statIndex, m_queueLength);
+	}
+	GenericQm* GetFirst() {
+		stdext::hash_map<Ogre::String, GenericQm*>::iterator intr;
+		intr = m_hashMap.begin();
+		if (intr != m_hashMap.end()) {
+			m_hashMap.erase(intr);
+			m_queueLength--;
+			LG::SetStat(m_statIndex, m_queueLength);
+			return intr->second;
+		}
+		m_queueLength = 0;
+		LG::SetStat(m_statIndex, m_queueLength);
+		return NULL;
+	}
+private:
+	stdext::hash_map<Ogre::String, GenericQm*> m_hashMap;
+	int m_statIndex;
+	int m_queueLength;
+};
+
+// ===================================================================
+class OLMeshTracker : public SingletonInstance {
+public:
+	OLMeshTracker();
+	~OLMeshTracker();
+
+	// SingletonInstance.Instance();
+	static OLMeshTracker* Instance() { 
+		if (LG::OLMeshTracker::m_instance == NULL) {
+			LG::OLMeshTracker::m_instance = new OLMeshTracker();
+		}
+		return LG::OLMeshTracker::m_instance; 
+	}
+
+	// SingletonInstance.Shutdown()
+	void Shutdown();
+
+	void MakeLoaded(Ogre::String meshName, Ogre::String, Ogre::String, Ogre::Entity*);
+	void MakeUnLoaded(Ogre::String meshName, Ogre::String, Ogre::Entity*);
+	void MakePersistant(Ogre::String meshName, Ogre::String entName, Ogre::String, Ogre::Entity*);
+	void MakePersistant(Ogre::MeshPtr mesh, Ogre::String entName, Ogre::String, Ogre::Entity*);
+
+private:
+	static OLMeshTracker* m_instance;
+
+	Ogre::MeshSerializer* m_meshSerializer;
+	Ogre::String m_cacheDir; 
+
+	typedef struct s_meshInfo {
+		Ogre::String name;
+		Ogre::String groupName;
+		Ogre::String contextEntityName;
+		Ogre::String fingerprint;
+		Ogre::Entity* entityCallbackParam;
+		Ogre::String stringCallbackParam;
+	} MeshInfo;
+
+
+	HashedQueueNamedList* m_meshesToLoad;
+	HashedQueueNamedList* m_meshesToUnLoad;
+	HashedQueueNamedList* m_meshesToSerialize;
+
+	/*
+	stdext::hash_map<Ogre::String, MeshInfo*> meshesToLoad;
+	stdext::hash_map<Ogre::String, MeshInfo*> meshesToUnload;
+	stdext::hash_map<Ogre::String, MeshInfo*> meshesToSerialize;
+	*/
+};
 }

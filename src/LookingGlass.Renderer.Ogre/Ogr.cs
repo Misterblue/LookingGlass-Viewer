@@ -39,6 +39,10 @@ static class Ogr {
     public const int StatProcessAnyTimeDiscardedDups = 22;
     // material processing queues
     public const int StatMaterialUpdatesRemaining = 0;
+    // mesh processing queues
+    public const int StatMeshTrackerLoadQueued = 25;
+    public const int StatMeshTrackerUnloadQueued = 26;
+    public const int StatMeshTrackerSerializedQueued = 27;
     // misc info
     public const int StatTotalFrames = 18;
     public const int StatFramesPerSec = 19;

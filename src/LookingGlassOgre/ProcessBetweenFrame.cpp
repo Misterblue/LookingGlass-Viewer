@@ -43,7 +43,6 @@ public:
 	Ogre::String matName;
 	int rType;
 	RefreshResourceQc(float prio, Ogre::String uni, char* resourceName, int rTyp) {
-		// this->priority = prio + 300.0;	// EXPERIMENTAL: do refreshes last
 		this->priority = prio;
 		this->cost = 20;
 		this->uniq = uni;

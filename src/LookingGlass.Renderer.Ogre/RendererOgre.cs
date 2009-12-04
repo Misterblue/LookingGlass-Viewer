@@ -361,6 +361,16 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         m_ogreStats.Add("MaterialUpdatesRemaining", delegate(string xx) {
                 return new OMVSD.OSDString(m_ogreStatsPinned[Ogr.StatMaterialUpdatesRemaining].ToString()); },
                 "Number of material updates waiting");
+        // mesh processing queues
+        m_ogreStats.Add("MeshTrackerLoadQueued", delegate(string xx) {
+                return new OMVSD.OSDString(m_ogreStatsPinned[Ogr.StatMeshTrackerLoadQueued].ToString()); },
+                "Number of mesh loads queued");
+        m_ogreStats.Add("MeshTrackerUnloadQueued", delegate(string xx) {
+                return new OMVSD.OSDString(m_ogreStatsPinned[Ogr.StatMeshTrackerUnloadQueued].ToString()); },
+                "Number of mesh unloads queued");
+        m_ogreStats.Add("MeshTrackerSerializedQueued", delegate(string xx) {
+                return new OMVSD.OSDString(m_ogreStatsPinned[Ogr.StatMeshTrackerSerializedQueued].ToString()); },
+                "Number of mesh serializations queued");
 
         // make the values accessable from outside
         m_ogreStatsHandler = new RestHandler("/stats/" + m_moduleName + "/ogreStats", m_ogreStats);

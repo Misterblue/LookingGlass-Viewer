@@ -74,6 +74,9 @@ static const int StatLastFrameMs = 20;
 static const int StatProcessAnyTimeDiscardedDups = 22;
 static const int StatProcessAnyTimeWorkItems = 23;
 static const int StatProcessAnyTimeTotalProcessed = 24;
+static const int StatMeshTrackerLoadQueued = 25;
+static const int StatMeshTrackerUnloadQueued = 26;
+static const int StatMeshTrackerSerializedQueued = 27;
 
 #define OLArchiveTypeName "OLFileSystem"
 #define OLPreloadTypeName "OLPreloadFileSystem"
