@@ -471,12 +471,12 @@ void ProcessBetweenFrame::UpdateSceneNode(float priority, char* entName,
 int currentCost;
 bool ProcessBetweenFrame::frameEnded(const Ogre::FrameEvent& evt) {
 	// currentCost = m_numWorkItemsToDoBetweenFrames;
-	if (evt.timeSinceLastFrame < 0.5) {
-		currentCost = currentCost * 2;
+	if (evt.timeSinceLastFrame < 0.25) {
+		currentCost = currentCost + 50;
 		if (currentCost > m_numWorkItemsToDoBetweenFrames) currentCost = m_numWorkItemsToDoBetweenFrames;
 	}
 	else {
-		currentCost = currentCost / 2;
+		currentCost = currentCost - 50;
 	}
 	if (currentCost < 100) currentCost = 100;
 	ProcessWorkItems(currentCost);

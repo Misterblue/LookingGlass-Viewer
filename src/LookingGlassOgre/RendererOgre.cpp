@@ -295,7 +295,7 @@ namespace LG {
 #if OGRE_THREAD_SUPPORT > 0
 		while (!LGLOCK_THREADS_AREINITIALIZED) {
 			// wait for any initializing threads to do their thing before doing post...
-			LGLOCK_SLEEP(50);
+			LGLOCK_SLEEP(1);
 		}
 		m_root->getRenderSystem()->postExtraThreadsStarted();
 #endif

@@ -40,6 +40,7 @@ done outside the frame rendering thread.
 class GenericQm {
 public:
 	float priority;
+	int cost;
 	Ogre::String uniq;			// the unique used to find the entity
 	Ogre::String stringParam;
 	Ogre::Entity* entityParam;
@@ -48,6 +49,7 @@ public:
 	virtual void RecalculatePriority() {};
 	GenericQm() {
 		priority = 100;
+		cost = 10;
 	};
 	~GenericQm() {};
 };
@@ -162,7 +164,7 @@ private:
 #endif
 
 // ===================================================================
-class OLMeshTracker : public SingletonInstance {
+class OLMeshTracker : public SingletonInstance, public Ogre::FrameListener {
 public:
 	OLMeshTracker();
 	~OLMeshTracker();
@@ -176,7 +178,10 @@ public:
 	}
 	bool KeepProcessing;	// true if to keep processing on and on
 	LGLOCK_MUTEX MeshTrackerLock;
+	void ProcessWorkItems(int);
 
+	// Ogre::FrameListener
+	bool frameEnded(const Ogre::FrameEvent&);
 
 	Ogre::MeshSerializer* MeshSerializer;
 

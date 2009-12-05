@@ -115,7 +115,7 @@ void ProcessAnyTime::ProcessBackgroundLoading() {
 	while (LG::ProcessAnyTime::Instance()->m_keepProcessing) {
 		if (!Ogre::ResourceBackgroundQueue::getSingleton()._doNextQueuedBackgroundProcess()) {
 			// queue is empty, wait a little
-			LGLOCK_SLEEP(100);
+			LGLOCK_SLEEP(1);
 		}
 	}
 }

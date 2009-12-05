@@ -57,12 +57,12 @@ OLMeshTracker::OLMeshTracker() {
 	m_meshesToUnload = new MeshWorkQueue("MeshesToUnload", LG::StatMeshTrackerUnloadQueued);
 	m_meshesToSerialize = new MeshWorkQueue("MeshesToSerialize", LG::StatMeshTrackerSerializedQueued);
 	MeshSerializer = new Ogre::MeshSerializer();
-#if OGRE_THREAD_SUPPORT > 0
-	LGLOCK_THREAD_INITIALIZING;
-	m_processingThread = LGLOCK_ALLOCATE_THREAD(&ProcessThreadRoutine);
-#else
+// #if OGRE_THREAD_SUPPORT > 0
+// 	LGLOCK_THREAD_INITIALIZING;
+// 	m_processingThread = LGLOCK_ALLOCATE_THREAD(&ProcessThreadRoutine);
+// #else
 	LG::GetOgreRoot()->addFrameListener(this);
-#endif
+// #endif
 	LG::OLMeshTracker::KeepProcessing = true;
 }
 OLMeshTracker::~OLMeshTracker() {
@@ -76,8 +76,14 @@ void OLMeshTracker::Shutdown() {
 	return;
 }
 
+// ====================================================================
+// we're between frames, on our own thread so we can do the work without locking
+bool OLMeshTracker::frameEnded(const Ogre::FrameEvent& evt) {
+	ProcessWorkItems(100);
+	return true;
+}
+
 void OLMeshTracker::ProcessThreadRoutine() {
-	GenericQm* operate;
 	// Ogre needs to know about our thrread context
 	LG::Log("OLMeshTracker::ProcessThreadRoutine: Registering mesh tracker thread with render system");
 	try {
@@ -87,10 +93,24 @@ void OLMeshTracker::ProcessThreadRoutine() {
 		LG::Log("OLMeshTracker::ProcessThreadRoutine: thread register threw: %s", e.getDescription().c_str());
 	}
 	LGLOCK_THREAD_INITIALIZED;
+
 	LG::OLMeshTracker* inst = LG::OLMeshTracker::Instance();
 	while (inst->KeepProcessing) {
-		operate = NULL;
 		LGLOCK_LOCK(inst->MeshTrackerLock);
+		if (inst->m_meshesToLoad->isEmpty() && inst->m_meshesToUnload->isEmpty() && inst->m_meshesToSerialize->isEmpty()) {
+			LGLOCK_WAIT(inst->MeshTrackerLock);
+		}
+		inst->ProcessWorkItems(100);
+		LGLOCK_UNLOCK(inst->MeshTrackerLock);
+	}
+}
+
+void OLMeshTracker::ProcessWorkItems(int totalCost) {
+	int runningCost = totalCost;
+	GenericQm* operate;
+	LG::OLMeshTracker* inst = LG::OLMeshTracker::Instance();
+	while (runningCost > 0) {
+		operate = NULL;
 		// get an work entry from one of the lists
 		if (!inst->m_meshesToLoad->isEmpty()) {
 			operate = inst->m_meshesToLoad->GetFirst();
@@ -105,16 +125,14 @@ void OLMeshTracker::ProcessThreadRoutine() {
 				}
 			}
 		}
-		// if there is no work, wait for it
-		if (operate == NULL) {
-			LGLOCK_WAIT(inst->MeshTrackerLock);
-			operate = NULL;
-		}
-		// unlock the list before doing any work
-		LGLOCK_UNLOCK(inst->MeshTrackerLock);
 		if (operate != NULL) {
 			operate->Process();
+			runningCost -= operate->cost;
 			delete(operate);
+		}
+		else {
+			// nothing more to do, bail
+			runningCost = 0;
 		}
 	}
 	return;
