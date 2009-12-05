@@ -13,6 +13,7 @@ static class Ogr {
     public const int ResourceTypeTransparentTexture = 4;  // texture with some transparancy
 
     // offsets into statistics block
+    // Numbers coorespond to numbers in LookingGlassOgre/LookingGlassOgre.h
     // culling and visibility
     public const int StatVisibleToVisible = 2;
     public const int StatInvisibleToVisible = 3;

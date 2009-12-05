@@ -90,6 +90,7 @@ static const int StatMeshTrackerSerializedQueued = 27;
 // Utility functions
 extern void SetStat(int, int);
 extern void IncStat(int);
+extern void DecStat(int);
 extern void AssertNonNull(void*, const char*);
 extern const bool isTrue(const char*);
 extern void Log(const char*, ...);

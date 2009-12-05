@@ -24,7 +24,9 @@
 
 #include "LGOCommon.h"
 #include "SingletonInstance.h"
+#include "LookingGlassOgre.h"
 #include "OgreResourceBackgroundQueue.h"
+#include "LGLocking.h"
 
 namespace LG {
 /*
@@ -38,7 +40,7 @@ done outside the frame rendering thread.
 class GenericQm {
 public:
 	float priority;
-	Ogre::String uniq;
+	Ogre::String uniq;			// the unique used to find the entity
 	Ogre::String stringParam;
 	Ogre::Entity* entityParam;
 	virtual void Process() {};
@@ -46,68 +48,118 @@ public:
 	virtual void RecalculatePriority() {};
 	GenericQm() {
 		priority = 100;
-		uniq.clear();
 	};
 	~GenericQm() {};
 };
 
 // ===================================================================
-class MeshQueueNamedList {
+#ifdef MTUSEHASHEDLIST
+class MeshWorkQueue {
 public:
-	MeshQueueNamedList(int statIndex) {
+	MeshWorkQueue(Ogre::String nam, int statIndex) {
+		m_queueName = nam;
 		m_statIndex = statIndex;
 		m_queueLength = 0;
 	}
-	~MeshQueueNamedList() {
+	~MeshWorkQueue() {
 	}
 
 	GenericQm* Find(Ogre::String nam) {
 		GenericQm* ret = NULL;
-		stdext::hash_map<Ogre::String, GenericQm*>::iterator intr;
-		intr = m_hashMap.find(nam);
-		if (intr != m_hashMap.end()) {
+		stdext::hash_map<Ogre::String, GenericQm*>::const_iterator intr;
+		intr = m_workQueue.find(nam);
+		if (intr != m_workQueue.end()) {
 			ret = intr->second;
 		}
 		return ret;
 	}
 	bool isEmpty() {
-		return m_hashMap.empty();
-	}
-	void Remove(GenericQm* mi) {
-		Remove(mi->name);
+		return m_workQueue.empty();
 	}
 	void Remove(Ogre::String nam) {
 		stdext::hash_map<Ogre::String, GenericQm*>::iterator intr;
-		intr = m_hashMap.find(nam);
-		if (intr != m_hashMap.end()) {
-			m_hashMap.erase(intr);
+		intr = m_workQueue.find(nam);
+		if (intr != m_workQueue.end()) {
+			m_workQueue.erase(intr);
 			m_queueLength--;
-			LG::SetStat(m_statIndex, m_queueLength);
+			// LG::DecStat(m_statIndex);
 		}
 	}
-	void AddLast(GenericQm* mi) {
-		m_hashMap.insert(std::pair<Ogre::String, GenericQm*>(mi->name, mi));
+	void AddLast(GenericQm* gq) {
+		m_workQueue.insert(std::pair<Ogre::String, GenericQm*>(gq->uniq, gq));
 		m_queueLength++;
-		LG::SetStat(m_statIndex, m_queueLength);
+		LG::IncStat(m_statIndex);
 	}
 	GenericQm* GetFirst() {
+		GenericQm* ret = NULL;
 		stdext::hash_map<Ogre::String, GenericQm*>::iterator intr;
-		intr = m_hashMap.begin();
-		if (intr != m_hashMap.end()) {
-			m_hashMap.erase(intr);
+		intr = m_workQueue.begin();
+		if (intr != m_workQueue.end()) {
+			ret = intr->second;
+			m_workQueue.erase(intr);
 			m_queueLength--;
-			LG::SetStat(m_statIndex, m_queueLength);
-			return intr->second;
+			// LG::DecStat(m_statIndex);
 		}
-		m_queueLength = 0;
-		LG::SetStat(m_statIndex, m_queueLength);
-		return NULL;
+		else {
+			m_queueLength = 0;
+		}
+		return ret;
 	}
 private:
-	stdext::hash_map<Ogre::String, GenericQm*> m_hashMap;
+	stdext::hash_map<Ogre::String, GenericQm*> m_workQueue;
+	int m_statIndex;
+	Ogre::String m_queueName;
+	int m_queueLength;
+};
+#else
+class MeshWorkQueue {
+public:
+	MeshWorkQueue(Ogre::String nam, int statIndex) {
+		m_queueName = nam;
+		m_statIndex = statIndex;
+	}
+	~MeshWorkQueue() {
+	}
+	GenericQm* Find(Ogre::String nam) {
+		GenericQm* ret = NULL;
+		std::list<GenericQm*>::iterator li;
+		for (li = m_workQueue.begin(); li != m_workQueue.end(); li++) {
+			if (nam == li._Ptr->_Myval->uniq) {
+				ret = li._Ptr->_Myval;
+				break;
+			}
+		}
+		return ret;
+	}
+	bool isEmpty() {
+		return m_workQueue.empty();
+	}
+	void Remove(Ogre::String nam) {
+		std::list<GenericQm*>::iterator li;
+		for (li = m_workQueue.begin(); li != m_workQueue.end(); li++) {
+			if (nam == li._Ptr->_Myval->uniq) {
+				m_workQueue.erase(li);
+				break;
+			}
+		}
+	}
+	void AddLast(GenericQm* gq) {
+		m_workQueue.push_back(gq);
+		LG::IncStat(m_statIndex);
+	}
+	GenericQm* GetFirst() {
+		GenericQm* ret = m_workQueue.front();
+		m_workQueue.pop_front();
+		return ret;
+	}
+private:
+	Ogre::String m_queueName;
+	std::list<GenericQm*> m_workQueue;
 	int m_statIndex;
 	int m_queueLength;
 };
+
+#endif
 
 // ===================================================================
 class OLMeshTracker : public SingletonInstance {
@@ -122,6 +174,11 @@ public:
 		}
 		return LG::OLMeshTracker::m_instance; 
 	}
+	bool KeepProcessing;	// true if to keep processing on and on
+	LGLOCK_MUTEX MeshTrackerLock;
+
+
+	Ogre::MeshSerializer* MeshSerializer;
 
 	// SingletonInstance.Shutdown()
 	void Shutdown();
@@ -129,27 +186,18 @@ public:
 	void MakeLoaded(Ogre::String meshName, Ogre::String, Ogre::String, Ogre::Entity*);
 	void MakeUnLoaded(Ogre::String meshName, Ogre::String, Ogre::Entity*);
 	void MakePersistant(Ogre::String meshName, Ogre::String entName, Ogre::String, Ogre::Entity*);
-	void MakePersistant(Ogre::MeshPtr mesh, Ogre::String entName, Ogre::String, Ogre::Entity*);
 
 private:
 	static OLMeshTracker* m_instance;
 
-	Ogre::MeshSerializer* m_meshSerializer;
+	LGLOCK_THREAD m_processingThread;
+	static void ProcessThreadRoutine();
+
 	Ogre::String m_cacheDir; 
 
-	typedef struct s_meshInfo {
-		Ogre::String name;
-		Ogre::String groupName;
-		Ogre::String contextEntityName;
-		Ogre::String fingerprint;
-		Ogre::Entity* entityCallbackParam;
-		Ogre::String stringCallbackParam;
-	} MeshInfo;
-
-
-	HashedQueueNamedList* m_meshesToLoad;
-	HashedQueueNamedList* m_meshesToUnLoad;
-	HashedQueueNamedList* m_meshesToSerialize;
+	MeshWorkQueue* m_meshesToLoad;
+	MeshWorkQueue* m_meshesToUnload;
+	MeshWorkQueue* m_meshesToSerialize;
 
 	/*
 	stdext::hash_map<Ogre::String, MeshInfo*> meshesToLoad;

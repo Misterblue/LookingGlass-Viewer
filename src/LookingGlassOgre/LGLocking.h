@@ -75,8 +75,10 @@ public:
 	boost::condition* m_condition;
 #endif
 private:
-
 };
+
+extern int LGLockingThreadInitializeCount;
+
 }
 
 // USE THESE DEFINES IN YOUR CODE
@@ -103,4 +105,10 @@ private:
 #define LGLOCK_THREAD boost::thread
 #define LGLOCK_ALLOCATE_THREAD(func) boost::thread(func);
 #define LGLOCK_RELEASE_THREAD(thread) ;
+
+// Kludge to keep track of the number of threads being intialized and to
+//   know when they are all initialized
+#define LGLOCK_THREAD_INITIALIZING (LG::LGLockingThreadInitializeCount++)
+#define LGLOCK_THREAD_INITIALIZED (LG::LGLockingThreadInitializeCount--)
+#define LGLOCK_THREADS_AREINITIALIZED (LG::LGLockingThreadInitializeCount == 0)
 

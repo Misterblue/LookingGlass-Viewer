@@ -236,13 +236,13 @@ void VisCalcFrustDist::processEntityVisibility() {
 		Ogre::String meshName = intr->first;
 		Ogre::Entity* parentEntity = intr->second;
 		meshesToLoad.erase(intr);
-		Ogre::MeshPtr meshP = Ogre::MeshManager::getSingleton().getByName(meshName);
-		if (!meshP.isNull()) {
-			// LG::OLMeshTracker::Instance()->MakeLoaded(meshP->getName(), SetVis, parentEntity);
-			if (m_shouldCullMeshes) meshP->load();
-			parentEntity->setVisible(true);
+		// Ogre::MeshPtr meshP = Ogre::MeshManager::getSingleton().getByName(meshName);
+		// if (!meshP.isNull()) {
+			if (m_shouldCullMeshes) LG::OLMeshTracker::Instance()->MakeLoaded(meshName, Ogre::String(""), Ogre::String(""), parentEntity);
+			// if (m_shouldCullMeshes) meshP->load();
+			// parentEntity->setVisible(true);
 			LG::IncStat(LG::StatCullMeshesLoaded);
-		}
+		// }
 	}
 	LG::SetStat(LG::StatCullMeshesQueuedToLoad, meshesToLoad.size());
 	return;
@@ -307,7 +307,7 @@ void VisCalcFrustDist::unloadTheMesh(Ogre::MeshPtr meshP) {
 		}
 	}
 	if (m_shouldCullMeshes) {
-		LG::OLMeshTracker::Instance()->MakeUnLoaded(meshP->getName(), NULL, NULL);
+		LG::OLMeshTracker::Instance()->MakeUnLoaded(meshP->getName(), Ogre::String(), NULL);
 		LG::IncStat(LG::StatCullMeshesUnloaded);
 		// LG::Log("unloadTheMesh: unloading mesh %s", mshName.c_str());
 	}

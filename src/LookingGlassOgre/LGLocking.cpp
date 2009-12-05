@@ -28,6 +28,8 @@
 
 namespace LG {
 
+int LGLockingThreadInitializeCount = 0;
+
 LGLock::LGLock() { }
 LGLock::LGLock(Ogre::String nam) { 
 	Name = nam;

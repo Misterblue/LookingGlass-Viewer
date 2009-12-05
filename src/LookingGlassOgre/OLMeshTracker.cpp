@@ -50,122 +50,204 @@ namespace LG {
 
 OLMeshTracker* OLMeshTracker::m_instance = NULL;
 
-LGLOCK_MUTEX m_mapLock;
-
 OLMeshTracker::OLMeshTracker() {
-	m_mapLock = LGLOCK_ALLOCATE_MUTEX("OLMeshTracker");
-	m_meshSerializer = NULL;
+	MeshTrackerLock = LGLOCK_ALLOCATE_MUTEX("OLMeshTracker");
 	m_cacheDir = LG::GetParameter("Renderer.Ogre.CacheDir");
-	m_meshesToLoad = new HashedQueueNamedList(LG::StatMeshTrackerLoadQueued);
-	m_meshesToUnload = new HashedQueueNamedList(LG::StatMeshTrackerUnloadQueued);
-	m_meshesToSerialize = new HashedQueueNamedList(LG::StatMeshTrackerSerializedQueued);
+	m_meshesToLoad = new MeshWorkQueue("MeshesToLoad", LG::StatMeshTrackerLoadQueued);
+	m_meshesToUnload = new MeshWorkQueue("MeshesToUnload", LG::StatMeshTrackerUnloadQueued);
+	m_meshesToSerialize = new MeshWorkQueue("MeshesToSerialize", LG::StatMeshTrackerSerializedQueued);
+	MeshSerializer = new Ogre::MeshSerializer();
+#if OGRE_THREAD_SUPPORT > 0
+	LGLOCK_THREAD_INITIALIZING;
+	m_processingThread = LGLOCK_ALLOCATE_THREAD(&ProcessThreadRoutine);
+#else
+	LG::GetOgreRoot()->addFrameListener(this);
+#endif
+	LG::OLMeshTracker::KeepProcessing = true;
 }
 OLMeshTracker::~OLMeshTracker() {
-	LGLOCK_RELEASE_MUTEX(m_mapLock);
+	this->KeepProcessing = false;
+	LGLOCK_RELEASE_MUTEX(MeshTrackerLock);
 }
 
 // SingletonInstance.Shutdown()
 void OLMeshTracker::Shutdown() {
+	this->KeepProcessing = false;
+	return;
+}
+
+void OLMeshTracker::ProcessThreadRoutine() {
+	GenericQm* operate;
+	// Ogre needs to know about our thrread context
+	LG::Log("OLMeshTracker::ProcessThreadRoutine: Registering mesh tracker thread with render system");
+	try {
+		LG::RendererOgre::Instance()->m_root->getRenderSystem()->registerThread();
+	}
+	catch (Ogre::Exception e) {
+		LG::Log("OLMeshTracker::ProcessThreadRoutine: thread register threw: %s", e.getDescription().c_str());
+	}
+	LGLOCK_THREAD_INITIALIZED;
+	LG::OLMeshTracker* inst = LG::OLMeshTracker::Instance();
+	while (inst->KeepProcessing) {
+		operate = NULL;
+		LGLOCK_LOCK(inst->MeshTrackerLock);
+		// get an work entry from one of the lists
+		if (!inst->m_meshesToLoad->isEmpty()) {
+			operate = inst->m_meshesToLoad->GetFirst();
+		}
+		else {
+			if (!inst->m_meshesToUnload->isEmpty()) {
+				operate = inst->m_meshesToUnload->GetFirst();
+			}
+			else {
+				if (!inst->m_meshesToSerialize->isEmpty()) {
+					operate = inst->m_meshesToSerialize->GetFirst();
+				}
+			}
+		}
+		// if there is no work, wait for it
+		if (operate == NULL) {
+			LGLOCK_WAIT(inst->MeshTrackerLock);
+			operate = NULL;
+		}
+		// unlock the list before doing any work
+		LGLOCK_UNLOCK(inst->MeshTrackerLock);
+		if (operate != NULL) {
+			operate->Process();
+			delete(operate);
+		}
+	}
 	return;
 }
 
 // ===============================================================================
-class MakeLoadedQm : public GenericQm {
+class MakeMeshLoadedQm : public GenericQm {
 public:
 	Ogre::String meshName;
 	Ogre::String contextEntity;
-	MakeLoadedQm(float prio, Ogre::String uni, 
-				Ogre::String meshNam Ogre::String contextEnt, Ogre::String stringParm, Ogre::Entity* entityParam)
-		this->priority = prio
-		this->cost = 0;
-		this->uniq = uni;
+	MakeMeshLoadedQm(float prio, Ogre::String meshNam, Ogre::String contextEnt, 
+					Ogre::String stringParm, Ogre::Entity* entityParm) {
+		this->priority = prio;
 		this->meshName = meshNam;
+		this->uniq = meshNam;
 		this->contextEntity = contextEnt;
-		this->stringParam = strintParm;
+		this->stringParam = stringParm;
 		this->entityParam = entityParm;
-		this->texName = Ogre::String(tName);
-		memcpy(this->parms, inParms, LG::OLMaterialTracker::CreateMaterialSize*sizeof(float));
 	}
-	~CreateMaterialResourceQc(void) {
+	~MakeMeshLoadedQm(void) {
+		this->meshName.clear();
 		this->uniq.clear();
-		this->matName.clear();
-		this->texName.clear();
+		this->contextEntity.clear();
+		this->stringParam.clear();
 	}
 	void Process() {
-		LG::OLMaterialTracker::Instance()->CreateMaterialResource2(this->matName.c_str(), this->texName.c_str(), this->parms);
+		LG::Log("OLMeshTracker::MakeLoadedQm: loading: %s", meshName.c_str());
+		Ogre::MeshManager::getSingleton().load(this->meshName, this->stringParam);
+		if (this->entityParam != NULL) {
+			this->entityParam->setVisible(true);
+		}
 	}
 };
+
 // ===============================================================================
-// Make the mesh loaded. We find the mesh entry and check if it's loaded. If not
+class MakeMeshSerializedQm : public GenericQm {
+public:
+	Ogre::String meshName;
+	Ogre::String contextEntity;
+	MakeMeshSerializedQm(float prio, Ogre::String meshNam, Ogre::String contextEnt, 
+					Ogre::String stringParm, Ogre::Entity* entityParm) {
+		this->priority = prio;
+		this->meshName = meshNam;
+		this->uniq = meshNam;
+		this->contextEntity = contextEnt;
+		this->stringParam = stringParm;
+		this->entityParam = entityParm;
+	}
+	~MakeMeshSerializedQm(void) {
+		this->meshName.clear();
+		this->uniq.clear();
+		this->contextEntity.clear();
+		this->stringParam.clear();
+	}
+	void Process() {
+		Ogre::String targetFilename = LG::RendererOgre::Instance()->EntityNameToFilename(this->meshName, Ogre::String(""));
+
+		// Make sure the directory exists -- I wish the serializer did this for me
+		LG::RendererOgre::Instance()->CreateParentDirectory(targetFilename);
+		LG::Log("OLMeshTracker::MakePersistant: persistance to %s", targetFilename.c_str());
+		
+		Ogre::MeshPtr meshHandle = (Ogre::MeshPtr)Ogre::MeshManager::getSingleton().getByName(meshName);
+		LG::OLMeshTracker::Instance()->MeshSerializer->exportMesh(meshHandle.getPointer(), targetFilename);
+		if (this->stringParam == "unload") {
+			LG::Log("OLMeshTracker::MakePersistant: queuing unload after persistance");
+			// if we're supposed to unload after serializing, schedule that to happen
+			LG::OLMeshTracker::Instance()->MakeUnLoaded(this->meshName, Ogre::String(), NULL);
+		}
+	}
+};
+
+// ===============================================================================
+// Make the mesh loaded. 
+// Make sure the mesh we're loading is not in the unloading list.
+// 'stringParam' is the group name for the mesh. If the entity pointer is non-NULL
+// we do a 'setVisible(true)' on it once the mesh is loaded.
 // we do the prepare operation (file IO) on our own thread. Once the IO is complete,
 // we schedule a refresh resource to add the mesh to the scene.
-// Callback called when mesh loaded. Called on between frame thread and passed the Param
-// as the only parameter. If 'callback' NULL, nothing is done;
 void OLMeshTracker::MakeLoaded(Ogre::String meshName, Ogre::String contextEntity, Ogre::String stringParam, Ogre::Entity* entityParam) {
-	LGLOCK_LOCK(m_mapLock);
+	LGLOCK_LOCK(MeshTrackerLock);
 	// check to see if in unloaded list, if so, remove it and claim success
-	GenericQm* unloadEntry = m_meshesToUnload(meshName);
+	GenericQm* unloadEntry = m_meshesToUnload->Find(meshName);
 	if (unloadEntry != NULL) {
 		unloadEntry->Abort();
-		delete unloadEntry;
+		m_meshesToUnload->Remove(meshName);
+		LG::Log("OLMeshTracker::MakeLoaded: removing one from unload list: %s", meshName.c_str());
 	}
 	// add this to the loading list
-	MakeLoadedQm* mlq = new MakeLoadedQm(meshName, contextEntity, stringParam, entityParam);
-	m_meshesToLoad.AddLast(mlq);
-	LGLOCK_UNLOCK(m_mapLock);
+	LG::Log("OLMeshTracker::MakeLoaded: queuing loading: %s", meshName.c_str());
+	MakeMeshLoadedQm* mmlq = new MakeMeshLoadedQm(10, meshName, contextEntity, stringParam, entityParam);
+	m_meshesToLoad->AddLast(mmlq);
+	LGLOCK_UNLOCK(MeshTrackerLock);
+	LGLOCK_NOTIFY_ALL(MeshTrackerLock);
 }
 
+// ===============================================================================
 // Make the mesh unloaded. Schedule the unload operation on our own thread
 // unloads are quick
 void OLMeshTracker::MakeUnLoaded(Ogre::String meshName, Ogre::String stringParam, Ogre::Entity* entityParam) {
-	LGLOCK_LOCK(m_mapLock);
+	LGLOCK_LOCK(MeshTrackerLock);
 	// see if in the loading list. Remove if  there.
-	GenericQm* loadEntry = m_meshesToLoad(meshName);
+	GenericQm* loadEntry = m_meshesToLoad->Find(meshName);
 	if (loadEntry != NULL) {
 		loadEntry->Abort();
-		delete loadEntry;
+		m_meshesToLoad->Remove(meshName);
 	}
 	// see if in the serialize list. Mark for unload if it's there
-	GenericQm* serialEntry = m_meshesToSerialize(meshName);
+	GenericQm* serialEntry = m_meshesToSerialize->Find(meshName);
 	if (serialEntry != NULL) {
 		serialEntry->stringParam = "unload";
 	}
 	else {
 		Ogre::MeshManager::getSingleton().unload(meshName);
 	}
-	LGLOCK_UNLOCK(m_mapLock);
+	LGLOCK_UNLOCK(MeshTrackerLock);
 }
 
+// ===============================================================================
 // Serialize the mesh to it's file on our own thread.
-void OLMeshTracker::MakePersistant(Ogre::String meshName, Ogre::String entName, Ogre::String stringParam, Ogre::Entity* entityParam) {
-	MakePersistant((Ogre::MeshPtr)Ogre::MeshManager::getSingleton().getByName(meshName), entName, stringParam, entityParam);
-}
-
-// TODO: make this inline code happen on it's own thread
-void OLMeshTracker::MakePersistant(Ogre::MeshPtr mesh, Ogre::String entName, Ogre::String stringParam, Ogre::Entity* entityParam) {
-	LGLOCK_LOCK(m_mapLock);
+void OLMeshTracker::MakePersistant(Ogre::String meshName, Ogre::String entName, Ogre::String stringParm, Ogre::Entity* entityParm) {
+	LGLOCK_LOCK(MeshTrackerLock);
 	// check to see if in unloaded list, if so, remove it and claim success
-	GenericQm* unloadEntry = m_meshesToUnload(meshName);
+	GenericQm* unloadEntry = m_meshesToUnload->Find(meshName);
 	if (unloadEntry != NULL) {
+		LG::Log("OLMeshTracker::MakePersistant: removing one from unload list: %s", meshName.c_str());
 		unloadEntry->Abort();
-		delete unloadEntry;
+		m_meshesToUnload->Remove(meshName);
 	}
-	MakeSerializedQm* msq = new MakeSerializedQm(meshName, contextEntity, stringParam, entityParam);
-	m_meshesToSerialize.AddLast(msq);
-	LGLOCK_UNLOCK(m_mapLock);
-
-/*
-	Ogre::String targetFilename = LG::RendererOgre::Instance()->EntityNameToFilename(entName, "");
-
-	// Make sure the directory exists -- I wish the serializer did this for me
-	LG::RendererOgre::Instance()->CreateParentDirectory(targetFilename);
-	
-	if (m_meshSerializer == NULL) {
-		m_meshSerializer = new Ogre::MeshSerializer();
-	}
-	m_meshSerializer->exportMesh(mesh.getPointer(), targetFilename);
-*/
-
+	LG::Log("OLMeshTracker::MakePersistant: queuing persistance for %s", meshName.c_str());
+	MakeMeshSerializedQm* msq = new MakeMeshSerializedQm(10, meshName, entName, stringParm, entityParm);
+	m_meshesToSerialize->AddLast(msq);
+	LGLOCK_UNLOCK(MeshTrackerLock);
+	LGLOCK_NOTIFY_ALL(MeshTrackerLock);
 }
 
 }

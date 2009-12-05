@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <sys/stat.h>
+#include "LGLocking.h"
 #include "RendererOgre.h"
 #include "LookingGlassOgre.h"
 #include "OLArchive.h"
@@ -283,12 +284,21 @@ namespace LG {
 
 		// Force the creation of the singleton classes
 		// The singleton classes might create threads so let the render system know that's coming
+#if OGRE_THREAD_SUPPORT > 0
+		LG::Log("RendererOgre::createLookingGlassResourceGroups: THREAD SUPPORT ON = %d", OGRE_THREAD_SUPPORT);
 		m_root->getRenderSystem()->preExtraThreadsStarted();
+#endif
 		LG::ProcessBetweenFrame::Instance();
 		LG::ProcessAnyTime::Instance();
 		LG::OLMaterialTracker::Instance();
 		LG::OLMeshTracker::Instance();
+#if OGRE_THREAD_SUPPORT > 0
+		while (!LGLOCK_THREADS_AREINITIALIZED) {
+			// wait for any initializing threads to do their thing before doing post...
+			LGLOCK_SLEEP(50);
+		}
 		m_root->getRenderSystem()->postExtraThreadsStarted();
+#endif
 
 		// listener to catch references to materials in meshes when they are read in
 		Ogre::MeshManager::getSingleton().setListener(new LG::OLMeshSerializerListener());
@@ -566,7 +576,7 @@ namespace LG {
 	// same spot as the resource looker-upper will look to find it when the mesh is reloaded.
 	// BETWEEN FRAME OPERATION
 	void RendererOgre::CreateMeshResource(const char* eName, const int faceCounts[], const float faceVertices[]) {
-		Ogre::String entName = eName;
+		Ogre::String entName = Ogre::String(eName);
 		Ogre::String manualObjectName = "MO/" + entName;
 		Ogre::String baseMaterialName = entName;
 		const int* fC = &faceCounts[1];
@@ -629,8 +639,15 @@ namespace LG {
 
 			if (m_serializeMeshes) {
 				// serialize the mesh to the filesystem
-				// mesh->setBackgroundLoaded(true);
-				LG::OLMeshTracker::Instance()->MakePersistant(mesh, entName);
+				LG::OLMeshTracker::Instance()->MakePersistant(mesh->getName(), entName, Ogre::String(), NULL);
+				/*
+				Ogre::String targetFilename = LG::RendererOgre::Instance()->EntityNameToFilename(mesh->getName(), "");
+
+				// Make sure the directory exists -- I wish the serializer did this for me
+				LG::RendererOgre::Instance()->CreateParentDirectory(targetFilename);
+				
+				LG::OLMeshTracker::Instance()->MeshSerializer->exportMesh(mesh.getPointer(), targetFilename);
+				*/
 			}
 			// you'd think doing  the unload here would be the right thing but it causes crashes
 			// Ogre::MeshManager::getSingleton().unload(entName);
