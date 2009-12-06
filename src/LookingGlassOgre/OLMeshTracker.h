@@ -84,13 +84,14 @@ public:
 		if (intr != m_workQueue.end()) {
 			m_workQueue.erase(intr);
 			m_queueLength--;
-			// LG::DecStat(m_statIndex);
+			LG::SetStat(m_statIndex, m_queueLength);
 		}
 	}
 	void AddLast(GenericQm* gq) {
 		m_workQueue.insert(std::pair<Ogre::String, GenericQm*>(gq->uniq, gq));
 		m_queueLength++;
-		LG::IncStat(m_statIndex);
+		LG::IncStat(LG::StatMeshTrackerTotalQueued);
+		LG::SetStat(m_statIndex, m_queueLength);
 	}
 	GenericQm* GetFirst() {
 		GenericQm* ret = NULL;
@@ -100,7 +101,7 @@ public:
 			ret = intr->second;
 			m_workQueue.erase(intr);
 			m_queueLength--;
-			// LG::DecStat(m_statIndex);
+			LG::SetStat(m_statIndex, m_queueLength);
 		}
 		else {
 			m_queueLength = 0;
@@ -144,14 +145,17 @@ public:
 				break;
 			}
 		}
+		LG::SetStat(m_statIndex, m_workQueue.size());
 	}
 	void AddLast(GenericQm* gq) {
 		m_workQueue.push_back(gq);
-		LG::IncStat(m_statIndex);
+		LG::IncStat(LG::StatMeshTrackerTotalQueued);
+		LG::SetStat(m_statIndex, m_workQueue.size());
 	}
 	GenericQm* GetFirst() {
 		GenericQm* ret = m_workQueue.front();
 		m_workQueue.pop_front();
+		LG::SetStat(m_statIndex, m_workQueue.size());
 		return ret;
 	}
 private:

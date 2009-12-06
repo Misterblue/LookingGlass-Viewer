@@ -44,7 +44,7 @@ public:
 	int rType;
 	RefreshResourceQc(float prio, Ogre::String uni, char* resourceName, int rTyp) {
 		this->priority = prio;
-		this->cost = 20;
+		this->cost = 40;
 		this->uniq = uni;
 		this->matName = Ogre::String(resourceName);
 		this->rType = rTyp;
@@ -321,7 +321,7 @@ public:
 					bool setScale, float sx, float sy, float sz,
 					bool setRotation, float ow, float ox, float oy, float oz) {
 		this->priority = prio;
-		this->cost = 10;
+		this->cost = 3;
 		this->uniq = uni;
 		this->entName = Ogre::String(entName);
 		this->setPosition = setPosition;
@@ -470,7 +470,8 @@ void ProcessBetweenFrame::UpdateSceneNode(float priority, char* entName,
 // we're between frames, on our own thread so we can do the work without locking
 int currentCost;
 bool ProcessBetweenFrame::frameEnded(const Ogre::FrameEvent& evt) {
-	// currentCost = m_numWorkItemsToDoBetweenFrames;
+	currentCost = m_numWorkItemsToDoBetweenFrames;
+	/*
 	if (evt.timeSinceLastFrame < 0.25) {
 		currentCost = currentCost + 50;
 		if (currentCost > m_numWorkItemsToDoBetweenFrames) currentCost = m_numWorkItemsToDoBetweenFrames;
@@ -479,6 +480,7 @@ bool ProcessBetweenFrame::frameEnded(const Ogre::FrameEvent& evt) {
 		currentCost = currentCost - 50;
 	}
 	if (currentCost < 100) currentCost = 100;
+	*/
 	ProcessWorkItems(currentCost);
 	return true;
 }

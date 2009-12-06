@@ -44,6 +44,7 @@ static class Ogr {
     public const int StatMeshTrackerLoadQueued = 25;
     public const int StatMeshTrackerUnloadQueued = 26;
     public const int StatMeshTrackerSerializedQueued = 27;
+    public const int StatMeshTrackerTotalQueued = 28;
     // misc info
     public const int StatTotalFrames = 18;
     public const int StatFramesPerSec = 19;

@@ -1,7 +1,7 @@
 {
 // Uncomment this if you like lots of debug output
-// "Log.FilterLevel": "2147483647",	// 0x7fffffff: log everything
-"Log.FilterLevel": "5592405",	// 0x555555: log info messages
+"Log.FilterLevel": "2147483647",	// 0x7fffffff: log everything
+// "Log.FilterLevel": "5592405",	// 0x555555: log info messages
 // "Log.FilterLevel": "1073744896",	// 0x40000c00: RENDER and RENDERDETAIL
 // "Log.FilterLevel": "1073938432",	// 0x40030000: UPDATE and UPDATEDETAIL
 
@@ -14,8 +14,8 @@
 "ViewerWindow.FramesPerSec": "15",
 
 // ====================================================
-"Renderer.Ogre.Renderer": "OpenGL Rendering Subsystem",
-// "Renderer.Ogre.Renderer": "Direct3D9 Rendering Subsystem",
+// "Renderer.Ogre.Renderer": "OpenGL Rendering Subsystem",
+"Renderer.Ogre.Renderer": "Direct3D9 Rendering Subsystem",
 "Renderer.Ogre.VideoMode": "800 x 600@ 32-bit colour",
 // Shadow technique: none, texture-modulative, stencil-modulative, texture-additive, stencil-additive
 "Renderer.Ogre.ShadowTechnique": "none",
@@ -26,7 +26,7 @@
 "Renderer.Ogre.Visibility.Large": "8",
 "Renderer.Ogre.Visibility.Cull.Distance": "true",
 "Renderer.Ogre.Visibility.Cull.Frustrum": "false",
-"Renderer.Ogre.Visibility.Cull.Textures": "true",
+"Renderer.Ogre.Visibility.Cull.Textures": "false",
 // currently only works with Direct3D9
 // "Renderer.Ogre.Sky": "SkyX",
 // "Renderer.Ogre.Ambient.Scene": "<0.5,0.5,0.5>",
@@ -35,7 +35,7 @@
 // ====================================================
 "Comm.Texture.MaxRequests": "4",
 "Comm.Settings.MultipleSims": "true",
-"Comm.Assets.ConvertPNG": "true",
+"Comm.Assets.ConvertPNG": "false",
 
 // ====================================================
 "ParameterWithoutAComma": "Last"

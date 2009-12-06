@@ -77,6 +77,7 @@ static const int StatProcessAnyTimeTotalProcessed = 24;
 static const int StatMeshTrackerLoadQueued = 25;
 static const int StatMeshTrackerUnloadQueued = 26;
 static const int StatMeshTrackerSerializedQueued = 27;
+static const int StatMeshTrackerTotalQueued = 28;
 
 #define OLArchiveTypeName "OLFileSystem"
 #define OLPreloadTypeName "OLPreloadFileSystem"

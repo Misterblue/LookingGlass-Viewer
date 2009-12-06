@@ -371,6 +371,9 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         m_ogreStats.Add("MeshTrackerSerializedQueued", delegate(string xx) {
                 return new OMVSD.OSDString(m_ogreStatsPinned[Ogr.StatMeshTrackerSerializedQueued].ToString()); },
                 "Number of mesh serializations queued");
+        m_ogreStats.Add("MeshTrackerTotalQueued", delegate(string xx) {
+                return new OMVSD.OSDString(m_ogreStatsPinned[Ogr.StatMeshTrackerTotalQueued].ToString()); },
+                "Total mesh tracker requests queued");
 
         // make the values accessable from outside
         m_ogreStatsHandler = new RestHandler("/stats/" + m_moduleName + "/ogreStats", m_ogreStats);
