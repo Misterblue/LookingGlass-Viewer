@@ -627,7 +627,7 @@ namespace LG {
 		// if (Ogre::MeshManager::getSingleton().resourceExists(entName)) {
 		// 	Ogre::MeshManager::getSingleton().unload(entName);
 		// 	Ogre::MeshManager::getSingleton().remove(entName);
-		// }
+		// 
 		try {
 			// Ogre::MeshManager::getSingleton().load(entName);
 			Ogre::MeshPtr mesh = mo->convertToMesh(entName , OLResourceGroupName);
@@ -639,15 +639,13 @@ namespace LG {
 
 			if (m_serializeMeshes) {
 				// serialize the mesh to the filesystem
-				LG::OLMeshTracker::Instance()->MakePersistant(mesh->getName(), entName, Ogre::String(), NULL);
-				/*
+				// LG::OLMeshTracker::Instance()->MakePersistant(mesh->getName(), entName, Ogre::String(), NULL);
 				Ogre::String targetFilename = LG::RendererOgre::Instance()->EntityNameToFilename(mesh->getName(), "");
 
 				// Make sure the directory exists -- I wish the serializer did this for me
 				LG::RendererOgre::Instance()->CreateParentDirectory(targetFilename);
 				
 				LG::OLMeshTracker::Instance()->MeshSerializer->exportMesh(mesh.getPointer(), targetFilename);
-				*/
 			}
 			// you'd think doing  the unload here would be the right thing but it causes crashes
 			// Ogre::MeshManager::getSingleton().unload(entName);

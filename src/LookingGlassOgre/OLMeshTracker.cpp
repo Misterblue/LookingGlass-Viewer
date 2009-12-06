@@ -57,12 +57,13 @@ OLMeshTracker::OLMeshTracker() {
 	m_meshesToUnload = new MeshWorkQueue("MeshesToUnload", LG::StatMeshTrackerUnloadQueued);
 	m_meshesToSerialize = new MeshWorkQueue("MeshesToSerialize", LG::StatMeshTrackerSerializedQueued);
 	MeshSerializer = new Ogre::MeshSerializer();
-// #if OGRE_THREAD_SUPPORT > 0
-// 	LGLOCK_THREAD_INITIALIZING;
-// 	m_processingThread = LGLOCK_ALLOCATE_THREAD(&ProcessThreadRoutine);
-// #else
+	// for the moment, don't try to use an extra thread
+#if OGRE_THREAD_SUPPORT > 0
+	LGLOCK_THREAD_INITIALIZING;
+	m_processingThread = LGLOCK_ALLOCATE_THREAD(&ProcessThreadRoutine);
+#else
 	LG::GetOgreRoot()->addFrameListener(this);
-// #endif
+#endif
 	LG::OLMeshTracker::KeepProcessing = true;
 }
 OLMeshTracker::~OLMeshTracker() {
