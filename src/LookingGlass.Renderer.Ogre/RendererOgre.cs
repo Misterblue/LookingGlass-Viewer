@@ -1023,10 +1023,21 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     /// </summary>
     /// <param name="contextEntity"></param>
     /// <param name="matName"></param>
+    private Dictionary<string, int> m_rememberMats = new Dictionary<string, int>();
+    private int m_matRememberTime = 20000;
     private void RequestMaterial(string contextEntity, string matName) {
         m_log.Log(LogLevel.DRENDERDETAIL, "Request for material " + matName);
         EntityNameOgre entName = EntityNameOgre.ConvertOgreResourceToEntityName(contextEntity);
         // remember all the materials we created. This could be a problem when regions are unloaded
+        if (m_rememberMats.ContainsKey(entName.Name)) {
+            if (m_rememberMats[entName.Name] > Utilities.TickCount()) {
+                return;
+            }
+            m_rememberMats[entName.Name] = Utilities.TickCount() + m_matRememberTime;
+        }
+        else {
+            m_rememberMats.Add(entName.Name, Utilities.TickCount() + m_matRememberTime);
+        }
         Object[] materialParameters = { entName, matName };
         m_workQueueReqMaterial.DoLater(RequestMaterialLater, materialParameters);
         return;
@@ -1040,7 +1051,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         try {
             IEntity ent;
             if (World.World.Instance.TryGetEntity(m_entName, out ent)) {
-                // LogManager.Log.Log(LogLevel.DRENDERDETAIL, "RequestMaterialLater.DoIt(): converting {0}", entName);
+                LogManager.Log.Log(LogLevel.DRENDERDETAIL, "RequestMaterialLater.DoIt(): converting {0}", m_entName);
                 if (RendererOgre.GetWorldRenderConv(ent) == null) {
                     // the rendering context is not set up. Odd but not fatal
                     // try again later

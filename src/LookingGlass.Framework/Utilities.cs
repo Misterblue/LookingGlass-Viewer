@@ -80,5 +80,15 @@ public class Utilities {
         return newAppDir;
     }
 
+    public static int TickCountMask = 0x3fffffff;
+    public static int TickCount() {
+        return System.Environment.TickCount & TickCountMask;
+    }
+    public static int TickCountSubtract(int prev) {
+        int ret = TickCount() - prev;
+        if (ret < 0) ret += TickCountMask + 1;
+        return ret;
+    }
+
 }
 }

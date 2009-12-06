@@ -574,6 +574,7 @@ public class RendererOgreLL : IWorldRenderConv {
                 pBase += (int)textureParams[0];
             }
         }
+        m_log.Log(LogLevel.DRENDERDETAIL, "CreateMaterialResource6X: materials for {0}", ent.Name);
         Ogr.CreateMaterialResource6BF(prio, materialNames[0],
             materialNames[0], materialNames[1], materialNames[2], materialNames[3], materialNames[4], materialNames[5],
             textureOgreNames[0], textureOgreNames[1], textureOgreNames[2], textureOgreNames[3], textureOgreNames[4], textureOgreNames[5],
