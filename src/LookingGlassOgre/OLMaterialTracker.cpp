@@ -102,6 +102,9 @@ void OLMaterialTracker::Shutdown() {
 // but rebuilds it from the prim information. This works for LLLP. The  third try will
 // use a DB to store the material information so it can be recreated.
 // We check to see if the material file exists which it never will.
+// typedef stdext::hash_map<Ogre::String, unsigned long> RequestedMaterialHashMap;
+// RequestedMaterialHashMap requestedMaterials;
+// Ogre::Timer* materialTimeKeeper = new Ogre::Timer();
 void OLMaterialTracker::FabricateMaterial(Ogre::String name, Ogre::MaterialPtr matPtr) {
 	// Try to get the stream to load the material from.
 	Ogre::DataStreamPtr stream;
@@ -113,10 +116,26 @@ void OLMaterialTracker::FabricateMaterial(Ogre::String name, Ogre::MaterialPtr m
 	}
 	if (stream.isNull()) {
 		// if the underlying material doesn't exist, return the default material
-		// and request the real material be constructed
 		MakeMaterialDefault(matPtr);
-		Ogre::Material* mat = matPtr.getPointer();
+		// and request the real material be constructed
 		LG::RequestResource(name.c_str(), name.c_str(), LG::ResourceTypeMaterial);
+		/*
+		unsigned long now = materialTimeKeeper->getMilliseconds();
+		RequestedMaterialHashMap::iterator intr = requestedMaterials.find(name);
+		if (intr == requestedMaterials.end()) {
+			// we haven't seen this material before. Remember and request
+			requestedMaterials.insert(std::pair<Ogre::String,unsigned long>(name, now));
+			LG::RequestResource(name.c_str(), name.c_str(), LG::ResourceTypeMaterial);
+		}
+		else {
+			// see if it's been 20 seconds since we asked for this material
+			if ((intr->second + 20000) > now) {
+				// been a while. Reset timer and ask for the material
+				intr->second = now;
+				LG::RequestResource(name.c_str(), name.c_str(), LG::ResourceTypeMaterial);
+			}
+		}
+		*/
 	}
 	else {
 		// There is a material file under there somewhere, read the thing in
@@ -207,7 +226,7 @@ void OLMaterialTracker::MarkTextureModified(const Ogre::String materialName, boo
 // between frames, if there were material modified, refresh their containing entities
 bool OLMaterialTracker::frameEnded(const Ogre::FrameEvent&) {
 	Ogre::String matName;
-	std::list<Ogre::MeshPtr> m_meshesToChange;
+	MeshPtrHashMap m_meshesToChange;
 	int cnt = 10;
 	while ((m_materialsModified.size() > 0) && (--cnt > 0)) {
 		matName = m_materialsModified.front();
@@ -232,7 +251,7 @@ bool OLMaterialTracker::frameEnded(const Ogre::FrameEvent&) {
 
 
 // find all the meshes that use the material given and add it to a list of meshes
-void OLMaterialTracker::GetMeshesToRefreshForMaterials(std::list<Ogre::MeshPtr>* meshes, const Ogre::String& matName) {
+void OLMaterialTracker::GetMeshesToRefreshForMaterials(MeshPtrHashMap* meshes, const Ogre::String& matName) {
 	// only check the Meshs for use of this material
 	Ogre::ResourceManager::ResourceMapIterator rmi = Ogre::MeshManager::getSingleton().getResourceIterator();
 	while (rmi.hasMoreElements()) {
@@ -243,15 +262,8 @@ void OLMaterialTracker::GetMeshesToRefreshForMaterials(std::list<Ogre::MeshPtr>*
 			if (oneSubMesh->getMaterialName() == matName) {
 				// this mesh uses the material
 				// we sometimes get multiple materials for one mesh -- just reload once
-				std::list<Ogre::MeshPtr>::iterator ii = meshes->begin(); 
-				while (ii != meshes->end()) {
-					if (ii->getPointer()->getName() == oneMesh->getName()) {
-						break;
-					}
-					ii++;
-				}
-				if (ii == meshes->end()) {
-					meshes->push_front(oneMesh);
+				if (meshes->find(oneMesh->getName()) == meshes->end()) {
+					meshes->insert(std::pair<Ogre::String, Ogre::MeshPtr>(oneMesh->getName(), oneMesh));
 				}
 				break;
 			}
@@ -261,7 +273,7 @@ void OLMaterialTracker::GetMeshesToRefreshForMaterials(std::list<Ogre::MeshPtr>*
 
 // find all the meshes that use the texture and add it to a list of meshes
 // TODO: figure out of just reloading the resource group is faster
-void OLMaterialTracker::GetMeshesToRefreshForTexture(std::list<Ogre::MeshPtr>* meshes, const Ogre::String& texName,
+void OLMaterialTracker::GetMeshesToRefreshForTexture(MeshPtrHashMap* meshes, const Ogre::String& texName,
 													 bool hasTransparancy) {
 	// only check the Meshs for use of this material
 	LG::Log("GetMeshesToRefreshForTexture: refresh for %s", texName.c_str());
@@ -295,15 +307,8 @@ void OLMaterialTracker::GetMeshesToRefreshForTexture(std::list<Ogre::MeshPtr>* m
 								}
 								// this mesh uses the material
 								// we sometimes get multiple materials for one mesh -- just reload once
-								std::list<Ogre::MeshPtr>::iterator ii = meshes->begin(); 
-								while (ii != meshes->end()) {
-									if (ii->getPointer()->getName() == oneMesh->getName()) {
-										break;
-									}
-									ii++;
-								}
-								if (ii == meshes->end()) {
-									meshes->push_front(oneMesh);
+								if (meshes->find(oneMesh->getName()) == meshes->end()) {
+									meshes->insert(	std::pair<Ogre::String, Ogre::MeshPtr>(oneMesh->getName(), oneMesh));
 								}
 								break;
 							}
@@ -317,10 +322,10 @@ void OLMaterialTracker::GetMeshesToRefreshForTexture(std::list<Ogre::MeshPtr>* m
 
 // given a list of meshes, reload them
 // Does not modify the list passed
-void OLMaterialTracker::ReloadMeshes(std::list<Ogre::MeshPtr>* meshes) {
+void OLMaterialTracker::ReloadMeshes(MeshPtrHashMap* meshes) {
 	if (!meshes->empty()) {
-		for (std::list<Ogre::MeshPtr>::iterator ii = meshes->begin(); ii != meshes->end(); ii++) {
-			ii->getPointer()->reload();
+		for (MeshPtrHashMap::const_iterator ii = meshes->begin(); ii != meshes->end(); ii++) {
+			ii->second->reload();
 		}
 	}
 }

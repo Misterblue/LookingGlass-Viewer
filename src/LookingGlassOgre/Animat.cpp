@@ -21,9 +21,12 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "StdAfx.h"
+#include "Animat.h"
 #include "AnimTracker.h"
 
 namespace LG {
+
 Animat::Animat() {};
 Animat::~Animat() {};
+
 }
