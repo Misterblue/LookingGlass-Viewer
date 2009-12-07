@@ -27,6 +27,7 @@ using System.Net;
 using System.Reflection;
 using System.Text;
 using LookingGlass;
+using LookingGlass.Framework;
 using LookingGlass.Framework.Logging;
 using LookingGlass.Framework.Modules;
 using LookingGlass.Framework.Parameters;
@@ -56,7 +57,7 @@ namespace LookingGlass.Rest {
     /// where 'service' is the name of teh service and 'xxx' is whatever it wants.
     /// These implement GET and POST operations of JSON formatted data.
     /// </summary>
-public class RestManager : ModuleBase, HttpServer.ILogWriter {
+public class RestManager : ModuleBase, IInstance<RestManager>, HttpServer.ILogWriter {
     private ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
 
     protected HttpServer.HttpListener m_Server;
