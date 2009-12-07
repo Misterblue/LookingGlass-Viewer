@@ -54,9 +54,10 @@ public:
 
 	// called to get all the meshes that need to be reloaded for materials
 	// just addes to the passed list
-	void GetMeshesToRefreshForMaterials(std::list<Ogre::MeshPtr>*, const Ogre::String&);
-	void GetMeshesToRefreshForTexture(std::list<Ogre::MeshPtr>*, const Ogre::String&, bool);
-	void ReloadMeshes(std::list<Ogre::MeshPtr>*);
+	typedef stdext::hash_map<Ogre::String, Ogre::MeshPtr> MeshPtrHashMap;
+	void GetMeshesToRefreshForMaterials(MeshPtrHashMap*, const Ogre::String&);
+	void GetMeshesToRefreshForTexture(MeshPtrHashMap*, const Ogre::String&, bool);
+	void ReloadMeshes(MeshPtrHashMap*);
 
 	// refresh the material of specified type
 	void RefreshResource(const Ogre::String&, const int);

@@ -25,6 +25,8 @@
 #include "AnimTracker.h"
 
 namespace LG {
+
 Animat::Animat() {};
 Animat::~Animat() {};
+
 }
