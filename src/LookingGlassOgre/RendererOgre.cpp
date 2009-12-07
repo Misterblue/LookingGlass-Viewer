@@ -34,6 +34,8 @@
 #include "ResourceListeners.h"
 #include "ProcessBetweenFrame.h"
 #include "ProcessAnyTime.h"
+#include "ShadowBase.h"
+#include "ShadowSimple.h"
 #include "SkyBoxSimple.h"
 #include "SkyBoxSkyX.h"
 #include "VisCalcNull.h"
@@ -376,25 +378,12 @@ namespace LG {
 			MaterialAmbientColor = LG::GetParameterColor("Renderer.Ogre.Ambient.Material");
 			m_sceneMgr->setAmbientLight(SceneAmbientColor);
 			const char* shadowName = LG::GetParameter("Renderer.Ogre.ShadowTechnique");
-			if (stricmp(shadowName, "texture-modulative") == 0) {
-				m_sceneMgr->setShadowTechnique(Ogre::SHADOWTYPE_TEXTURE_MODULATIVE);	// hardest
-				LG::Log("RendererOgre::createScene: setting shadow to 'texture-modulative'");
+			if (strlen(shadowName) == 0 || stricmp(shadowName, "none") == 0) {
+				this->Shadow = new ShadowBase();
 			}
-			if (stricmp(shadowName, "stencil-modulative") == 0) {
-				m_sceneMgr->setShadowTechnique(Ogre::SHADOWTYPE_STENCIL_MODULATIVE);
-				LG::Log("RendererOgre::createScene: setting shadow to 'stencil-modulative'");
+			else {
+				this->Shadow = new ShadowSimple(shadowName);
 			}
-			if (stricmp(shadowName, "texture-additive") == 0) {
-				m_sceneMgr->setShadowTechnique(Ogre::SHADOWTYPE_TEXTURE_ADDITIVE);	// easiest
-				LG::Log("RendererOgre::createScene: setting shadow to 'texture-additive'");
-			}
-			if (stricmp(shadowName, "stencil-additive") == 0) {
-				m_sceneMgr->setShadowTechnique(Ogre::SHADOWTYPE_STENCIL_ADDITIVE);
-				LG::Log("RendererOgre::createScene: setting shadow to 'stencil-additive'");
-			}
-			int shadowFarDistance = LG::GetParameterInt("Renderer.Ogre.ShadowFarDistance");
-			m_sceneMgr->setShadowFarDistance((float)shadowFarDistance);
-			m_sceneMgr->setShadowColour(Ogre::ColourValue(0.2, 0.2, 0.2));
 		}
 		catch (std::exception e) {
 			LG::Log("RendererOgre::createScene: Exception %s", e.what());
@@ -499,8 +488,7 @@ namespace LG {
 			// it's not scenery
 			ent->removeQueryFlags(Ogre::SceneManager::WORLD_GEOMETRY_TYPE_MASK);	
 			// Ogre::MovableObject* ent = sceneMgr->createEntity(entName, Ogre::SceneManager::PT_SPHERE);	// DEBUG
-			// this should somehow be settable
-			ent->setCastShadows(true);
+			Shadow->AddCasterShadow(ent);
 			sceneNode->attachObject(ent);
 			m_visCalc->RecalculateVisibility();
 		}
@@ -634,6 +622,7 @@ namespace LG {
 			mo->clear();
 			m_sceneMgr->destroyManualObject(mo);
 			mo = 0;
+			mesh->buildEdgeList();
 
 			// mesh->generateLodLevels(m_lodDistances, Ogre::ProgressiveMesh::VertexReductionQuota::VRQ_PROPORTIONAL, 0.25f);
 

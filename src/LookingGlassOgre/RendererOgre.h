@@ -29,6 +29,7 @@
 #include "OLMaterialTracker.h"
 #include "OLMeshTracker.h"
 #include "SkyBoxBase.h"
+#include "ShadowBase.h"
 #include "VisCalcBase.h"
 
 namespace LG {
@@ -99,6 +100,7 @@ public:
 	Ogre::ColourValue MaterialAmbientColor;
 	LG::SkyBoxBase* m_sky;
 	LG::VisCalcBase* m_visCalc;	// an routine for calculating visibility
+	LG::ShadowBase* Shadow;
 
 private:
 	static RendererOgre* m_instance;

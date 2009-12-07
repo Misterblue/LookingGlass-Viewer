@@ -264,6 +264,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ShadowSimple.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\SkyBoxSimple.cpp"
 				>
 			</File>
@@ -375,6 +379,14 @@
 			</File>
 			<File
 				RelativePath=".\ResourceListeners.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ShadowBase.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ShadowSimple.h"
 				>
 			</File>
 			<File

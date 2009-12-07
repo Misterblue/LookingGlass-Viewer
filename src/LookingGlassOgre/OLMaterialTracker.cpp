@@ -172,6 +172,7 @@ void OLMaterialTracker::MakeMaterialDefault(Ogre::MaterialPtr matPtr) {
 	pass->setDiffuse(0.582f, 0.5703f, 0.7578f, 0.7f); // blue gray from girl's shirt
 	pass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
 	// pass->createTextureUnitState(m_defaultTextureName);	// we need a resolvable texture filename
+	LG::RendererOgre::Instance()->Shadow->AddReceiverShadow(mat);
 
 #if OGRE_THREAD_SUPPORT != 1
 	mat->load();
@@ -395,7 +396,7 @@ void OLMaterialTracker::CreateMaterialResource2(const char* mName, const char* t
 
 	mat->unload();
 	mat->removeAllTechniques();
-	mat->setReceiveShadows(true);
+	LG::RendererOgre::Instance()->Shadow->AddReceiverShadow(mat);
 	Ogre::Technique* tech = mat->createTechnique();
 	Ogre::Pass* pass = tech->createPass();
 	pass->setLightingEnabled(true);
