@@ -102,9 +102,9 @@ void OLMaterialTracker::Shutdown() {
 // but rebuilds it from the prim information. This works for LLLP. The  third try will
 // use a DB to store the material information so it can be recreated.
 // We check to see if the material file exists which it never will.
-// typedef stdext::hash_map<Ogre::String, unsigned long> RequestedMaterialHashMap;
-// RequestedMaterialHashMap requestedMaterials;
-// Ogre::Timer* materialTimeKeeper = new Ogre::Timer();
+typedef stdext::hash_map<Ogre::String, unsigned long> RequestedMaterialHashMap;
+RequestedMaterialHashMap requestedMaterials;
+Ogre::Timer* materialTimeKeeper = new Ogre::Timer();
 void OLMaterialTracker::FabricateMaterial(Ogre::String name, Ogre::MaterialPtr matPtr) {
 	// Try to get the stream to load the material from.
 	Ogre::DataStreamPtr stream;
@@ -118,8 +118,7 @@ void OLMaterialTracker::FabricateMaterial(Ogre::String name, Ogre::MaterialPtr m
 		// if the underlying material doesn't exist, return the default material
 		MakeMaterialDefault(matPtr);
 		// and request the real material be constructed
-		LG::RequestResource(name.c_str(), name.c_str(), LG::ResourceTypeMaterial);
-		/*
+		// LG::RequestResource(name.c_str(), name.c_str(), LG::ResourceTypeMaterial);
 		unsigned long now = materialTimeKeeper->getMilliseconds();
 		RequestedMaterialHashMap::iterator intr = requestedMaterials.find(name);
 		if (intr == requestedMaterials.end()) {
@@ -135,7 +134,6 @@ void OLMaterialTracker::FabricateMaterial(Ogre::String name, Ogre::MaterialPtr m
 				LG::RequestResource(name.c_str(), name.c_str(), LG::ResourceTypeMaterial);
 			}
 		}
-		*/
 	}
 	else {
 		// There is a material file under there somewhere, read the thing in
