@@ -256,6 +256,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Region.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\RegionTracker.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\RendererOgre.cpp"
 				>
 			</File>
@@ -367,6 +375,14 @@
 			</File>
 			<File
 				RelativePath=".\ProcessBetweenFrame.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Region.h"
+				>
+			</File>
+			<File
+				RelativePath=".\RegionTracker.h"
 				>
 			</File>
 			<File

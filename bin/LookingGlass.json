@@ -14,11 +14,11 @@
 "ViewerWindow.FramesPerSec": "15",
 
 // ====================================================
-// "Renderer.Ogre.Renderer": "OpenGL Rendering Subsystem",
-"Renderer.Ogre.Renderer": "Direct3D9 Rendering Subsystem",
+"Renderer.Ogre.Renderer": "OpenGL Rendering Subsystem",
+// "Renderer.Ogre.Renderer": "Direct3D9 Rendering Subsystem",
 "Renderer.Ogre.VideoMode": "800 x 600@ 32-bit colour",
 // Shadow technique: none, texture-modulative, stencil-modulative, texture-additive, stencil-additive
-"Renderer.Ogre.ShadowTechnique": "none",
+"Renderer.Ogre.ShadowTechnique": "texture-additive",
 // "Renderer.Ogre.ShadowTechnique": "texture-additive",
 "Renderer.Ogre.Visibility.MaxDistance": "400",
 "Renderer.Ogre.Visibility.MinDistance": "30",

@@ -79,6 +79,13 @@ static const int StatMeshTrackerUnloadQueued = 26;
 static const int StatMeshTrackerSerializedQueued = 27;
 static const int StatMeshTrackerTotalQueued = 28;
 
+typedef enum {
+	RegionRezCodeHigh,
+	RegionRezCodeMed,
+	RegionRezCodeLow,
+	RegionRezCodeVeryLow,
+} RegionRezCode;
+
 #define OLArchiveTypeName "OLFileSystem"
 #define OLPreloadTypeName "OLPreloadFileSystem"
 #define OLResourceGroupName "OLResource"
