@@ -113,7 +113,7 @@ public class LoadWorldObjects {
         });
         // this happens outside the avatar list lock
         foreach (OMV.Avatar av in avatarsToNew) {
-            worldComm.Objects_AvatarUpdate(netComm, new OMV.AvatarUpdateEventArgs(sim, av, 0));
+            worldComm.Objects_AvatarUpdate(netComm, new OMV.AvatarUpdateEventArgs(sim, av, 0, true));
         }
     }
 
@@ -125,7 +125,7 @@ public class LoadWorldObjects {
         });
         foreach (OMV.Primitive prim in primsToNew) {
             // TODO: how can we tell if this prim might be an attachment?
-            worldComm.Objects_ObjectUpdate(netComm, new OpenMetaverse.PrimEventArgs(sim, prim, 0, false));
+            worldComm.Objects_ObjectUpdate(netComm, new OpenMetaverse.PrimEventArgs(sim, prim, 0, true, false));
         }
     }
 
