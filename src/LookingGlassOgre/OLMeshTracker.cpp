@@ -57,6 +57,7 @@ OLMeshTracker::OLMeshTracker() {
 	m_meshesToUnload = new MeshWorkQueue("MeshesToUnload", LG::StatMeshTrackerUnloadQueued);
 	m_meshesToSerialize = new MeshWorkQueue("MeshesToSerialize", LG::StatMeshTrackerSerializedQueued);
 	MeshSerializer = new Ogre::MeshSerializer();
+	m_meshTimeKeeper = new Ogre::Timer();
 	// for the moment, don't try to use an extra thread
 #if OGRE_THREAD_SUPPORT > 0
 	LGLOCK_THREAD_INITIALIZING;
@@ -204,6 +205,27 @@ public:
 		}
 	}
 };
+
+// ===============================================================================
+// Called from the filesystem when it is discovered that there is not a mesh file.
+// Suppress multiple requests for the same mesh.
+void OLMeshTracker::RequestMesh(Ogre::String meshName, Ogre::String context) {
+	unsigned long now = m_meshTimeKeeper->getMilliseconds();
+	RequestedMeshHashMap::iterator intr = m_requestedMeshes.find(meshName);
+	if (intr == m_requestedMeshes.end()) {
+		// we haven't seen this material before. Remember and request
+		m_requestedMeshes.insert(std::pair<Ogre::String,unsigned long>(meshName, now));
+		LG::RequestResource(meshName.c_str(), context.c_str(), LG::ResourceTypeMesh);
+	}
+	else {
+		// see if it's been 2 seconds since we asked for this material
+		if ((intr->second + 2000) > now) {
+			// been a while. Reset timer and ask for the material
+			intr->second = now;
+			LG::RequestResource(meshName.c_str(), context.c_str(), LG::ResourceTypeMesh);
+		}
+	}
+}
 
 // ===============================================================================
 // Make the mesh loaded. 

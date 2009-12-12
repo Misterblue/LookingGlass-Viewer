@@ -27,7 +27,7 @@ using LookingGlass.Framework.Logging;
 using OMV = OpenMetaverse;
 
 namespace LookingGlass.World {
-public abstract class RegionContextBase : EntityBase, IRegionContext, IDisposable {
+public abstract class RegionContextBase : EntityBase, IRegionContext, IDisposable, IEntityCollection {
     protected ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
 
     #region Events
@@ -60,6 +60,7 @@ public abstract class RegionContextBase : EntityBase, IRegionContext, IDisposabl
         m_regionState = new RegionState();
         m_regionStateChangedCallback = new RegionStateChangedCallback(State_OnChange);
         State.OnStateChanged += m_regionStateChangedCallback;
+        this.RegisterInterface<IEntityCollection>(this);
     }
 
     private void State_OnChange(RegionStateCode newState) {
@@ -175,6 +176,12 @@ public abstract class RegionContextBase : EntityBase, IRegionContext, IDisposabl
 
     public IEntity FindEntity(Predicate<IEntity> pred) {
         return m_entityDictionary.FindValue(pred);
+    }
+
+    public void ForEach(Action<IEntity> act) {
+        lock (m_entityDictionary) {
+            m_entityDictionary.ForEach(act);
+        }
     }
     #endregion ENTITY MANAGEMENT
 

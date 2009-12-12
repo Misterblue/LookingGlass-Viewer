@@ -21,11 +21,57 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "StdAfx.h"
+#include "RendererOgre.h"
+#include "Region.h"
 #include "RegionTracker.h"
 
 namespace LG {
 
+RegionTracker* RegionTracker::m_instance = NULL;
+
 RegionTracker::RegionTracker() {};
 RegionTracker::~RegionTracker() {};
 
+// Add a region to the regions being tracked.
+// This creates the tracking Region instance, creates a scene node for the region
+// and adds scene nodes to the region for the terrain and water.
+// BETWEEN FRAME OPERATION
+void RegionTracker::AddRegion(const char* regionSceneName,
+							  double globalX, double globalY, double globalZ,
+							  const float sizeX, const float sizeY, const float waterHeight) {
+	Ogre::String regionSceneNodeName = Ogre::String(regionSceneName);
+	// if already have defn for region, return
+	LG::Log("RegionTracker::AddRegion: adding region %s", regionSceneName);
+	Region* regn = FindRegion(regionSceneNodeName);
+	if (regn != NULL) {
+		return;
+	}
+	// create Region class
+	regn = new Region();
+	regn->Name = regionSceneNodeName;
+	m_regions.insert(std::pair<Ogre::String, Region*>(regionSceneNodeName, regn));
+	regn->Init(globalX, globalY, globalZ, sizeX, sizeY, waterHeight);
 }
+
+Region* RegionTracker::FindRegion(Ogre::String nam) {
+	RegionHashMap::iterator intr = m_regions.find(nam);
+	if (intr == m_regions.end()) {
+		return NULL;
+	}
+	return intr->second;
+}
+
+void RegionTracker::UpdateTerrain(const char* regnName, const int width, const int length, const float* hm) {
+	Ogre::String regionName = Ogre::String(regnName);
+	Region* regn = FindRegion(regionName);
+	if (regn != NULL) {
+		regn->UpdateTerrain(width, length, hm);
+	}
+	else {
+		LG::Log("RegionTracker::UpdateTerrain: region not found so terrain not updated: %s", regnName);
+	}
+}
+
+}
+
+

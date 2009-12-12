@@ -532,10 +532,12 @@ bool XXCompareElements(const GenericQc* e1, const GenericQc* e2) {
 }
 
 int repriorityCount = 10;
+Ogre::Timer* betweenFrameTimeKeeper = new Ogre::Timer();
 void ProcessBetweenFrame::ProcessWorkItems(int numToProcess) {
+	unsigned long startTime = betweenFrameTimeKeeper->getMilliseconds();
+	unsigned long endTime = startTime + 200;
 	// This sort is intended to put the highest priority (ones with lowest numbers) at
 	//   the front of the list for processing first.
-	// TODO: figure out why uncommenting this line causes exceptions
 	if (m_modified) {
 		LGLOCK_LOCK(m_workItemMutex);
 		if (repriorityCount-- < 0) {
@@ -545,13 +547,14 @@ void ProcessBetweenFrame::ProcessWorkItems(int numToProcess) {
 			for (li = m_betweenFrameWork.begin(); li != m_betweenFrameWork.end(); li++) {
 				li._Ptr->_Myval->RecalculatePriority();
 			}
+			m_betweenFrameWork.sort(XXCompareElements);
 		}
-		m_betweenFrameWork.sort(XXCompareElements);
 		LGLOCK_UNLOCK(m_workItemMutex);
 		m_modified = false;
 	}
 	int loopCost = numToProcess;
-	while (!m_betweenFrameWork.empty() && (loopCost > 0) ) {
+	// while (!m_betweenFrameWork.empty() && (loopCost > 0) && (betweenFrameTimeKeeper->getMilliseconds() < endTime) ) {
+	while (!m_betweenFrameWork.empty() && (betweenFrameTimeKeeper->getMilliseconds() < endTime) ) {
 		LGLOCK_LOCK(m_workItemMutex);
 		GenericQc* workGeneric = (GenericQc*)m_betweenFrameWork.front();
 		m_betweenFrameWork.pop_front();

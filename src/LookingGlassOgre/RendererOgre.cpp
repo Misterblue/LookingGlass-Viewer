@@ -31,6 +31,7 @@
 #include "LookingGlassOgre.h"
 #include "OLArchive.h"
 #include "OLPreloadArchive.h"
+#include "RegionTracker.h"
 #include "ResourceListeners.h"
 #include "ProcessBetweenFrame.h"
 #include "ProcessAnyTime.h"
@@ -67,7 +68,7 @@ namespace LG {
 	// The frame rate is capped and sleeps are inserted to return control to
 	// the windowing system when the max frame rate is reached.
 	// If we don't want the thread, return false.
-	Ogre::Timer* timeKeeper = new Ogre::Timer();
+	Ogre::Timer* rendererTimeKeeper = new Ogre::Timer();
 	bool RendererOgre::renderingThread() {
 		LG::Log("RendererOgre::renderingThread: LookingGlassOrge: Starting rendering");
 		// m_root->startRendering();
@@ -78,12 +79,12 @@ namespace LG {
 		if (maxFPS < 2 || maxFPS > 100) maxFPS = 20;
 		int msPerFrame = 1000 / maxFPS;
 
-		unsigned long now = timeKeeper->getMilliseconds();
-		unsigned long timeStartedLastFrame = timeKeeper->getMilliseconds();
+		unsigned long now = rendererTimeKeeper->getMilliseconds();
+		unsigned long timeStartedLastFrame = rendererTimeKeeper->getMilliseconds();
 
 		while (m_root->renderOneFrame()) {
 			Ogre::WindowEventUtilities::messagePump();
-			now = timeKeeper->getMilliseconds();
+			now = rendererTimeKeeper->getMilliseconds();
 			/*
 			int remaining = msPerFrame - ((int)(now - timeStartedLastFrame));
 			while (remaining > 10) {
@@ -93,14 +94,14 @@ namespace LG {
 				else {
 					Sleep(remaining);
 				}
-				now = timeKeeper->getMilliseconds();
+				now = rendererTimeKeeper->getMilliseconds();
 				remaining = msPerFrame - ((int)(now - timeStartedLastFrame));
 			}
 			*/
-			int totalMSForLastFrame = (int)(timeKeeper->getMilliseconds() - timeStartedLastFrame);
+			int totalMSForLastFrame = (int)(rendererTimeKeeper->getMilliseconds() - timeStartedLastFrame);
 			if (totalMSForLastFrame < 0) totalMSForLastFrame = 1;
 			LG::SetStat(LG::StatFramesPerSecond, 1000000/totalMSForLastFrame);
-			timeStartedLastFrame = timeKeeper->getMilliseconds();
+			timeStartedLastFrame = rendererTimeKeeper->getMilliseconds();
 		}
 		LG::Log("RendererOgre::renderingThread: Completed rendering");
 		destroyScene();
@@ -120,8 +121,8 @@ namespace LG {
 	unsigned long m_lastFrameTime;
 	bool RendererOgre::renderOneFrame(bool pump, int len) {
 		bool ret = true;
-		unsigned long now = timeKeeper->getMilliseconds();
-		unsigned long timeStartedLastFrame = timeKeeper->getMilliseconds();
+		unsigned long now = rendererTimeKeeper->getMilliseconds();
+		unsigned long timeStartedLastFrame = rendererTimeKeeper->getMilliseconds();
 		if (m_root != NULL) {
 			// LGLOCK_LOCK(m_sceneGraphLock);
 			ret = m_root->renderOneFrame();
@@ -141,15 +142,15 @@ namespace LG {
 			else {
 				break;
 			}
-			now = timeKeeper->getMilliseconds();
+			now = rendererTimeKeeper->getMilliseconds();
 			remaining = len - ((int)(now - timeStartedLastFrame));
 		}
 		*/
-		int totalMSForLastFrame = (int)(timeKeeper->getMilliseconds() - m_lastFrameTime);
+		int totalMSForLastFrame = (int)(rendererTimeKeeper->getMilliseconds() - m_lastFrameTime);
 		if (totalMSForLastFrame <= 0) totalMSForLastFrame = 1;
 		LG::SetStat(LG::StatLastFrameMs, totalMSForLastFrame);
 		LG::SetStat(LG::StatFramesPerSecond, 1000000/totalMSForLastFrame);
-		m_lastFrameTime = timeKeeper->getMilliseconds();
+		m_lastFrameTime = rendererTimeKeeper->getMilliseconds();
 
 		if (!ret) {
 			// if renderOneFrame returns false, it means we're going down
@@ -208,7 +209,6 @@ namespace LG {
 		m_cacheDir = LG::GetParameter("Renderer.Ogre.CacheDir");
 		m_preloadedDir = LG::GetParameter("Renderer.Ogre.PreLoadedDir");
 
-		m_defaultTerrainMaterial = LG::GetParameter("Renderer.Ogre.DefaultTerrainMaterial");
 		m_serializeMeshes = LG::GetParameterBool("Renderer.Ogre.SerializeMeshes");
 
 		m_root = new Ogre::Root(LG::GetParameter("Renderer.Ogre.PluginFilename"));
@@ -294,6 +294,7 @@ namespace LG {
 		LG::ProcessAnyTime::Instance();
 		LG::OLMaterialTracker::Instance();
 		LG::OLMeshTracker::Instance();
+		LG::RegionTracker::Instance();
 #if OGRE_THREAD_SUPPORT > 0
 		while (!LGLOCK_THREADS_AREINITIALIZED) {
 			// wait for any initializing threads to do their thing before doing post...
@@ -496,6 +497,17 @@ namespace LG {
 			// we presume this is because the entity already exists
 		}
 		return;
+	}
+
+	// BETWEEN FRAME OPERATION
+	Ogre::SceneNode* RendererOgre::CreateSceneNode(const char* nodeName,
+					Ogre::SceneNode* parentNode,
+					bool inheritScale, bool inheritOrientation,
+					float px, float py, float pz,
+					float sx, float sy, float sz,
+					float ow, float ox, float oy, float oz) {
+		return CreateSceneNode(this->m_sceneMgr, nodeName, parentNode,
+				inheritScale, inheritOrientation, px, py, pz, sx, sy, sz, ow, ox ,oy, oz);
 	}
 
 	// BETWEEN FRAME OPERATION
@@ -770,103 +782,6 @@ namespace LG {
 		return;
 	}
 
-// Given a scene node for a terrain, find the manual object on that scene node and
-// update the manual object with the heightmap passed. If  there is no manual object on
-// the scene node, remove all it's attachments and add the manual object.
-// The heightmap is passed in a 1D array ordered by width rows (for(width) {for(length) {hm[w,l]}})
-// This must be called between frames since it touches the scene graph
-// BETWEEN FRAME OPERATION
-void RendererOgre::GenTerrainMesh(Ogre::SceneManager* sceneMgr, Ogre::SceneNode* node, 
-								  const int hmWidth, const int hmLength, const float* hm) {
-
-	// Find the movable object attached to the scene node. If not found remove all.
-	if (node->numAttachedObjects() > 0) {
-		Ogre::MovableObject* attached = node->getAttachedObject(0);
-		if (attached->getMovableType() != "ManualObject") {
-            // don't know why this would ever happen but clean out the odd stuff
-            LG::Log("Found extra stuff on terrain scene node");
-			node->detachAllObjects();
-		}
-	}
-	// if there is not a manual object on the node, create a new one
-	if (node->numAttachedObjects() == 0) {
-		LG::Log("GenTerrainMesh: creating terrain ManualObject");
-        // if no attached objects, we add our dynamic ManualObject
-		Ogre::ManualObject* mob = sceneMgr->createManualObject("ManualObject/" + node->getName());
-		mob->addQueryFlags(Ogre::SceneManager::WORLD_GEOMETRY_TYPE_MASK);
-		mob->setDynamic(true);
-		mob->setCastShadows(true);
-		mob->setVisible(true);
-		mob->setQueryFlags(Ogre::SceneManager::WORLD_GEOMETRY_TYPE_MASK);
-		node->attachObject(mob);
-		m_visCalc->RecalculateVisibility();
-	}
-
-	Ogre::ManualObject* mo = (Ogre::ManualObject*)node->getAttachedObject(0);
-
-	// stuff our heightmap information into the dynamic manual object
-	mo->estimateVertexCount(hmWidth * hmLength);
-	mo->estimateIndexCount(hmWidth * hmLength * 6);
-
-	if (mo->getNumSections() == 0) {
-		mo->begin(m_defaultTerrainMaterial);	// if first time
-	}
-	else {
-		mo->beginUpdate(0);					// we've been here before
-	}
-
-	int loc = 0;
-	for (int xx = 0; xx < hmWidth; xx++) {
-		for (int yy = 0; yy < hmLength; yy++) {
-			mo->position(xx, yy, hm[loc++]);
-			mo->textureCoord((float)xx / (float)hmWidth, (float)yy / (float)hmLength);
-			mo->normal(0.0, 1.0, 0.0);	// always up (for the moment)
-		}
-	}
-
-	for (int px = 0; px < hmLength-1; px++) {
-		for (int py = 0; py < hmWidth-1; py++) {
-			mo->quad(px      + py       * hmWidth,
-					 px      + (py + 1) * hmWidth,
-					(px + 1) + (py + 1) * hmWidth,
-					(px + 1) + py       * hmWidth
-					 );
-		}
-	}
-
-	mo->end();
-
-	return;
-}
-
-// BETWEEN FRAME OPERATION
-void RendererOgre::AddOceanToRegion(Ogre::SceneManager* sceneMgr, Ogre::SceneNode* regionNode,
-									const float width, const float length, const float waterHeight, const char* wName) {
-	if (sceneMgr == 0) {
-		LG::Log("AddOceanToRegion: passed null scene manager");
-		return;
-	}
-	Ogre::String waterName = wName;
-	Ogre::Plane* oceanPlane = new Ogre::Plane(0.0, 0.0, 1.0, 0);
-	Ogre::MeshPtr oceanMesh = Ogre::MeshManager::getSingleton().createPlane(waterName, OLResourceGroupName, 
-					*oceanPlane, width, length,
-					2, 2, true,
-					2, 2.0, 2.0, Ogre::Vector3::UNIT_Y);
-	Ogre::String oceanMaterialName = LG::GetParameter("Renderer.Ogre.OceanMaterialName");
-	LG::Log("AddOceanToRegion: r=%s, h=%f, n=%s, m=%s", 
-		regionNode->getName().c_str(), waterHeight, wName, oceanMaterialName.c_str());
-	oceanMesh->getSubMesh(0)->setMaterialName(oceanMaterialName);
-	Ogre::Entity* oceanEntity = sceneMgr->createEntity("WaterEntity/" + waterName, oceanMesh->getName());
-	oceanEntity->addQueryFlags(Ogre::SceneManager::WORLD_GEOMETRY_TYPE_MASK);
-	oceanEntity->setCastShadows(false);
-	Ogre::SceneNode* oceanNode = regionNode->createChildSceneNode("WaterSceneNode/" + waterName);
-	oceanNode->setInheritOrientation(true);
-	oceanNode->setInheritScale(false);
-	oceanNode->translate(width/2.0, length/2.0, waterHeight);
-	oceanNode->attachObject(oceanEntity);
-	m_visCalc->RecalculateVisibility();
-	return;
-}
 
 // ============= UTILITY ROUTINES
 Ogre::String RendererOgre::EntityNameToFilename(const Ogre::String entName, const Ogre::String suffix) {

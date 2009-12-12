@@ -68,6 +68,10 @@ public:
 	void AdvanceCamera(const Ogre::FrameEvent&);
 
 	void AddEntity(Ogre::SceneManager*, Ogre::SceneNode*, const char*, const char*);
+	Ogre::SceneNode* RendererOgre::CreateSceneNode(const char* nodeName,
+					Ogre::SceneNode* parentNode, bool inheritScale, bool inheritOrientation,
+					float px, float py, float pz, float sx, float sy, float sz,
+					float ow, float ox, float oy, float oz);
 	Ogre::SceneNode* RendererOgre::CreateSceneNode(Ogre::SceneManager* sceneMgr, const char* nodeName,
 					Ogre::SceneNode* parentNode, bool inheritScale, bool inheritOrientation,
 					float px, float py, float pz, float sx, float sy, float sz,
@@ -78,8 +82,6 @@ public:
 					bool updateRotation, float ow, float ox, float oy, float oz);
 	void CreateMeshResource(const char*, const int[], const float[]);
 	void CreateMeshResource2(const char*, const int[], const float[]);	// experimental
-	void GenTerrainMesh(Ogre::SceneManager*, Ogre::SceneNode*, const int, const int, const float*);
-	void AddOceanToRegion(Ogre::SceneManager* , Ogre::SceneNode* , const float, const float, const float, const char*);
 	
 	// Resource groups
 	Ogre::String EntityNameToFilename(const Ogre::String, const Ogre::String);
@@ -133,7 +135,6 @@ private:
 
 	Ogre::String m_cacheDir; 
 	Ogre::String m_preloadedDir; 
-	Ogre::String m_defaultTerrainMaterial; 
 	bool m_serializeMeshes;
 
 	Ogre::Quaternion m_desiredCameraOrientation;

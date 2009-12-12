@@ -589,6 +589,7 @@ public class RendererOgreLL : IWorldRenderConv {
     /// <param name="sMgr"></param>
     /// <param name="rcontext"></param>
     public void MapRegionIntoView(float priority, Object sMgr, IRegionContext rcontext) {
+        /*
         OgreSceneMgr m_sceneMgr = (OgreSceneMgr)sMgr;
         if (rcontext is LLRegionContext) {
             // a SL compatible region
@@ -631,6 +632,7 @@ public class RendererOgreLL : IWorldRenderConv {
                 }
             }
         }
+         */
         return;
     }
 }

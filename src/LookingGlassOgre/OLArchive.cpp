@@ -82,7 +82,8 @@ Ogre::DataStreamPtr OLArchive::open(const Ogre::String& filename) const {
 				LG::Log("OLArchive::open(): returning empty stream for material %s", filename.c_str());
 				return Ogre::DataStreamPtr();
 			case LG::ResourceTypeMesh:
-				LG::RequestResource(filename.c_str(), filename.c_str(), LG::ResourceTypeMesh);
+				LG::OLMeshTracker::Instance()->RequestMesh(filename, filename);
+				// LG::RequestResource(filename.c_str(), filename.c_str(), LG::ResourceTypeMesh);
 				return m_FSArchive->open(m_defaultMeshFilename);
 			case LG::ResourceTypeTexture:
 				LG::RequestResource(filename.c_str(), filename.c_str(), LG::ResourceTypeTexture);

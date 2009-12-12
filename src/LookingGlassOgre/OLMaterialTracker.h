@@ -106,6 +106,10 @@ private:
 	Ogre::String m_cacheDir;
 	Ogre::MaterialSerializer* m_serializer;
 	bool m_shouldSerialize;
+
+	typedef stdext::hash_map<Ogre::String, unsigned long> RequestedMaterialHashMap;
+	RequestedMaterialHashMap m_requestedMaterials;
+	Ogre::Timer* m_materialTimeKeeper;
 };
 
 }

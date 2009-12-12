@@ -1,4 +1,4 @@
-/* Copyright (c) Robert Adams
+﻿/* Copyright (c) 2008 Robert Adams
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *     * Redistributions of source code must retain the above copyright
@@ -20,54 +20,34 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#pragma once
+using System;
+using System.Collections.Generic;
+using System.Text;
 
-#include "LGOCommon.h"
-#include "LookingGlassOgre.h"
+namespace LookingGlass.World {
+    public interface IEntityCollection {
+        void AddEntity(IEntity entity);
 
-namespace LG {
-	class Region {
-	public:
-		Region();
-		~Region();
+        void UpdateEntity(IEntity entity, UpdateCodes detail);
 
-		Ogre::String Name;
+        void RemoveEntity(IEntity entity);
 
-		void Init(double, double, double, float, float, float);
-		void ReleaseRegion();
-		void ChangeRez(RegionRezCode);
-		void SetFocusRegion();
-		bool IsFocusRegion();
-		void AddRegionSceneNode(Ogre::SceneNode*, RegionRezCode);
-		void UpdateTerrain(const int, const int, const float*);
-		void CalculateLocal(double X, double Y, double Z);
+        bool TryGetEntity(ulong lgid, out IEntity ent);
 
-		double GlobalX;
-		double GlobalY;
-		double GlobalZ;
+        bool TryGetEntity(string entName, out IEntity ent);
 
-		float LocalX;
-		float LocalY;
-		float LocalZ;
+        bool TryGetEntity(EntityName entName, out IEntity ent);
 
-		float OceanHeight;
+        /// <summary>
+        /// </summary>
+        /// <param name="localID"></param>
+        /// <param name="ent"></param>
+        /// <param name="createIt"></param>
+        /// <returns>true if we created a new entry</returns>
+        bool TryGetCreateEntity(EntityName entName, out IEntity ent, RegionCreateEntityCallback createIt);
 
-		Ogre::SceneNode* CurrentBaseSceneNode;
-		Ogre::SceneNode* TerrainSceneNode;
-		Ogre::SceneNode* OceanSceneNode;
-		RegionRezCode CurrentRez;
+        IEntity FindEntity(Predicate<IEntity> pred);
 
-	private:
-		Ogre::SceneNode* m_highRezSceneNode;
-		Ogre::SceneNode* m_medRezSceneNode;
-		Ogre::SceneNode* m_lowRezSceneNode;
-		Ogre::SceneNode* m_veryLowRezSceneNode;
-
-		bool m_focusRegion;
-
-		void DisconnectOldRezAndConnectNew(RegionRezCode, Ogre::SceneNode*);
-
-		Ogre::SceneNode* CreateOcean(Ogre::SceneNode* , const float, const float, const float, Ogre::String);
-		Ogre::SceneNode* CreateTerrain(Ogre::SceneNode* , const float, const float, Ogre::String);
-};
+        void ForEach(Action<IEntity> act);
+    }
 }

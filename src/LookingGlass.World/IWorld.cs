@@ -73,6 +73,7 @@ public enum UpdateCodes : uint {
     Sound =           1 << 21,
     Joint =           1 << 22,
     Terrain =         1 << 23,  
+    Focus =           1 << 24, 
     New =             1 << 30,  // a new item
     FullUpdate =      0x0fffffff
 }

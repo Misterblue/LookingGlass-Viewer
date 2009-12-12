@@ -26,6 +26,7 @@
 #include "stdafx.h"
 #include <stdarg.h>
 #include "LookingGlassOgre.h"
+#include "RegionTracker.h"
 #include "RendererOgre.h"
 #include "ProcessBetweenFrame.h"
 
@@ -155,14 +156,15 @@ extern "C" DLLExport void DiagnosticAction(int flag) {
 }
 
 // ================================================================
-extern "C" DLLExport void GenTerrainMesh(Ogre::SceneManager* smgr, Ogre::SceneNode* terrainNode, 
-	 const int width, const int length, const float* heights) {
-		 LG::RendererOgre::Instance()->GenTerrainMesh(smgr, terrainNode, width, length, heights);
+extern "C" DLLExport void AddRegion(const char* regionNodeName, 
+		 double globalX, double globalY, double globalZ,
+		 const float sizeX, const float sizeY, const float waterHeight) {
+	 LG::RegionTracker::Instance()->AddRegion(regionNodeName, 
+		 globalX, globalY, globalZ, sizeX, sizeY, waterHeight);
 }
-extern "C" DLLExport void AddOceanToRegion(Ogre::SceneManager* smgr, Ogre::SceneNode* regionNode, 
-			   const float width, const float length, const float waterHeight, const char* waterName) {
-	LG::RendererOgre::Instance()->AddOceanToRegion(smgr, regionNode, width, length, waterHeight, waterName);
-	return;
+extern "C" DLLExport void UpdateTerrain(const char* regionName, 
+											const int width, const int length, const float* heights) {
+	 LG::RegionTracker::Instance()->UpdateTerrain(regionName, width, length, heights);
 }
 
 // ================================================================

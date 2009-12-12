@@ -845,33 +845,21 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     
     // ==========================================================================
     public void MapRegionIntoView(RegionContextBase rcontext) {
-        lock (rcontext) {
-            // see that the region entity has a converter between world and renderer
-            // TODO: Figure out how to make this dynamic, extendable and runtime
-            if (rcontext.WorldGroup == World.WorldGroupCode.LLWorld) {
-                if (RendererOgre.GetWorldRenderConv(rcontext) == null) {
-                    rcontext.SetAddition(RendererOgre.AddWorldRenderConv, new RendererOgreLL());
-                }
-            }
-        }
-        m_betweenFramesQueue.DoLater(new MapRegionLater(m_sceneMgr, rcontext, m_log));
+        Object[] mapParameters = { rcontext, null };
+        m_betweenFramesQueue.DoLater(100, MapRegionLater, mapParameters);
         return;
     }
 
-    private sealed class MapRegionLater : DoLaterBase {
-        OgreSceneMgr m_sceneMgr;
-        RegionContextBase m_rcontext;
-        ILog m_log;
-        public MapRegionLater(OgreSceneMgr smgr, RegionContextBase rcon, ILog logr) : base() {
-            m_sceneMgr = smgr;
-            m_rcontext = rcon;
-            m_log = logr;
-            this.cost = m_betweenFrameMapRegionCost;
-        }
-        override public bool DoIt() {
-            RendererOgre.GetWorldRenderConv(m_rcontext).MapRegionIntoView(this.priority, m_sceneMgr, m_rcontext);
-            return true;
-        }
+    private bool MapRegionLater(DoLaterBase qInstance, Object parms) {
+        Object[] loadParams = (Object[])parms;
+        RegionContextBase m_rcontext = (RegionContextBase)loadParams[0];
+        m_log.Log(LogLevel.DRENDERDETAIL, "MapRegionIntoView: mapping {0} to {1}",
+                m_rcontext.Name, m_rcontext.GlobalPosition);
+        Ogr.AddRegion(EntityNameOgre.ConvertToOgreSceneNodeName(m_rcontext.Name),
+            m_rcontext.GlobalPosition.X, m_rcontext.GlobalPosition.Y, m_rcontext.GlobalPosition.Z,
+            m_rcontext.Size.X, m_rcontext.Size.Y,
+            m_rcontext.TerrainInfo.WaterHeight);
+        return true;
     }
     
     // ==========================================================================
@@ -881,73 +869,88 @@ public class RendererOgre : ModuleBase, IRenderProvider {
 
     // ==========================================================================
     public void UpdateTerrain(RegionContextBase rcontext) {
-        m_betweenFramesQueue.DoLater(new UpdateTerrainLater(this, m_sceneMgr, rcontext, m_log));
+        Object[] terrainParameters = { rcontext, null };
+        m_betweenFramesQueue.DoLater(100, UpdateTerrainLater, terrainParameters);
         return;
     }
-    private sealed class UpdateTerrainLater : DoLaterBase {
-        RendererOgre m_renderer;
-        OgreSceneMgr m_sceneMgr;
-        RegionContextBase m_rcontext;
-        ILog m_log;
-        public UpdateTerrainLater(RendererOgre renderer, OgreSceneMgr smgr, RegionContextBase rcontext, ILog logr) : base() {
-            m_renderer = renderer;
-            m_sceneMgr = smgr;
-            m_rcontext = rcontext;
-            m_log = logr;
-            this.cost = m_betweenFrameUpdateTerrainCost;
+    private bool UpdateTerrainLater(DoLaterBase qInstance, Object parms) {
+        Object[] loadParams = (Object[])parms;
+        RegionContextBase m_rcontext = (RegionContextBase)loadParams[0];
+
+        m_log.Log(LogLevel.DRENDERDETAIL, "RenderOgre: UpdateTerrain: for region {0}", m_rcontext.Name.Name);
+        try {
+            float[,] hm = m_rcontext.TerrainInfo.HeightMap;
+            int hmWidth = m_rcontext.TerrainInfo.HeightMapWidth;
+            int hmLength = m_rcontext.TerrainInfo.HeightMapLength;
+
+            int loc = 0;
+            float[] passingHM = new float[hmWidth * hmLength];
+            for (int xx = 0; xx < hmWidth; xx++) {
+                for (int yy = 0; yy < hmLength; yy++) {
+                    passingHM[loc++] = hm[xx, yy];
+                }
+            }
+
+            Ogr.UpdateTerrain(EntityNameOgre.ConvertToOgreSceneNodeName(m_rcontext.Name),
+                        hmWidth, hmLength, passingHM);
         }
-        override public bool DoIt() {
-            OgreSceneNode sn;
-            // see if there is a terrain SceneNode already allocated
-            if (RendererOgre.GetTerrainSceneNode(m_rcontext) != null) {
-                sn = RendererOgre.GetTerrainSceneNode(m_rcontext);
+        catch (Exception e) {
+            m_log.Log(LogLevel.DBADERROR, "UpdateTerrainLater: mesh creation failure: " + e.ToString());
+        }
+
+
+            /*
+        OgreSceneNode sn;
+        // see if there is a terrain SceneNode already allocated
+        if (RendererOgre.GetTerrainSceneNode(m_rcontext) != null) {
+            sn = RendererOgre.GetTerrainSceneNode(m_rcontext);
+        }
+        else {
+            OgreSceneNode regionSceneNode = RendererOgre.GetRegionSceneNode(m_rcontext);
+            // no existing scene node, create one
+            if (regionSceneNode == null) {
+                // we have to wait until there is a region root before placing texture
+                m_log.Log(LogLevel.DRENDERDETAIL, "RendererOgre: UpdateTerrain: waiting for region root");
+                return false;
             }
             else {
-                OgreSceneNode regionSceneNode = RendererOgre.GetRegionSceneNode(m_rcontext);
-                // no existing scene node, create one
-                if (regionSceneNode == null) {
-                    // we have to wait until there is a region root before placing texture
-                    m_log.Log(LogLevel.DRENDERDETAIL, "RendererOgre: UpdateTerrain: waiting for region root");
-                    return false;
-                }
-                else {
-                    // m_log.Log(LogLevel.DRENDERDETAIL, "RenderOgre: UpdateTerrain: Using world specific root node");
-                    string terrainNodeName = "Terrain/" + m_rcontext.Name + "/" + OMV.UUID.Random().ToString();
-                    sn = m_sceneMgr.CreateSceneNode(terrainNodeName, regionSceneNode, 
-                                false, true, 
-                                // the terrain is attached to the region node so it's at relative address
-                                0f, 0f, 0f,
-                                // scaling matches the LL to Ogre map
-                                m_renderer.SceneMagnification, m_renderer.SceneMagnification, m_renderer.SceneMagnification,
-                                OMV.Quaternion.Identity.W, OMV.Quaternion.Identity.X,
-                                OMV.Quaternion.Identity.Y, OMV.Quaternion.Identity.Z
-                    );
-                    m_rcontext.SetAddition(RendererOgre.AddTerrainSceneNode, sn);
-                    m_log.Log(LogLevel.DRENDERDETAIL, "Creating terrain " + sn.Name);
-                }
+                // m_log.Log(LogLevel.DRENDERDETAIL, "RenderOgre: UpdateTerrain: Using world specific root node");
+                string terrainNodeName = "Terrain/" + m_rcontext.Name + "/" + OMV.UUID.Random().ToString();
+                sn = m_sceneMgr.CreateSceneNode(terrainNodeName, regionSceneNode, 
+                            false, true, 
+                            // the terrain is attached to the region node so it's at relative address
+                            0f, 0f, 0f,
+                            // scaling matches the LL to Ogre map
+                            this.SceneMagnification, this.SceneMagnification, this.SceneMagnification,
+                            OMV.Quaternion.Identity.W, OMV.Quaternion.Identity.X,
+                            OMV.Quaternion.Identity.Y, OMV.Quaternion.Identity.Z
+                );
+                m_rcontext.SetAddition(RendererOgre.AddTerrainSceneNode, sn);
+                m_log.Log(LogLevel.DRENDERDETAIL, "Creating terrain " + sn.Name);
             }
-
-            try {
-                float[,] hm = m_rcontext.TerrainInfo.HeightMap;
-                int hmWidth = m_rcontext.TerrainInfo.HeightMapWidth;
-                int hmLength = m_rcontext.TerrainInfo.HeightMapLength;
-
-                int loc = 0;
-                float[] passingHM = new float[hmWidth * hmLength];
-                for (int xx = 0; xx < hmWidth; xx++) {
-                    for (int yy = 0; yy < hmLength; yy++) {
-                        passingHM[loc++] = hm[xx, yy];
-                    }
-                }
-
-                Ogr.GenTerrainMesh(m_sceneMgr.BasePtr, sn.BasePtr, hmWidth, hmLength, passingHM);
-            }
-            catch (Exception e) {
-                m_log.Log(LogLevel.DBADERROR, "UpdateTerrainLater: mesh creation failure: " + e.ToString());
-            }
-
-            return true;
         }
+
+        try {
+            float[,] hm = m_rcontext.TerrainInfo.HeightMap;
+            int hmWidth = m_rcontext.TerrainInfo.HeightMapWidth;
+            int hmLength = m_rcontext.TerrainInfo.HeightMapLength;
+
+            int loc = 0;
+            float[] passingHM = new float[hmWidth * hmLength];
+            for (int xx = 0; xx < hmWidth; xx++) {
+                for (int yy = 0; yy < hmLength; yy++) {
+                    passingHM[loc++] = hm[xx, yy];
+                }
+            }
+
+            Ogr.GenTerrainMesh(m_sceneMgr.BasePtr, sn.BasePtr, hmWidth, hmLength, passingHM);
+        }
+        catch (Exception e) {
+            m_log.Log(LogLevel.DBADERROR, "UpdateTerrainLater: mesh creation failure: " + e.ToString());
+        }
+             */
+
+        return true;
     }
     #endregion IRenderProvider
 

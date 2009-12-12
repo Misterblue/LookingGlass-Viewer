@@ -74,6 +74,7 @@ OLMaterialTracker::OLMaterialTracker() {
 	m_defaultTextureName = LG::GetParameter("Renderer.Ogre.DefaultTextureResourceName");
 	m_cacheDir = LG::GetParameter("Renderer.Ogre.CacheDir");
 	m_shouldSerialize = LG::isTrue(LG::GetParameter("Renderer.Ogre.SerializeMaterials"));
+	m_materialTimeKeeper = new Ogre::Timer();
 
 	LG::GetOgreRoot()->addFrameListener(this);
 	if (m_shouldSerialize) {
@@ -102,9 +103,6 @@ void OLMaterialTracker::Shutdown() {
 // but rebuilds it from the prim information. This works for LLLP. The  third try will
 // use a DB to store the material information so it can be recreated.
 // We check to see if the material file exists which it never will.
-typedef stdext::hash_map<Ogre::String, unsigned long> RequestedMaterialHashMap;
-RequestedMaterialHashMap requestedMaterials;
-Ogre::Timer* materialTimeKeeper = new Ogre::Timer();
 void OLMaterialTracker::FabricateMaterial(Ogre::String name, Ogre::MaterialPtr matPtr) {
 	// Try to get the stream to load the material from.
 	Ogre::DataStreamPtr stream;
@@ -119,11 +117,11 @@ void OLMaterialTracker::FabricateMaterial(Ogre::String name, Ogre::MaterialPtr m
 		MakeMaterialDefault(matPtr);
 		// and request the real material be constructed
 		// LG::RequestResource(name.c_str(), name.c_str(), LG::ResourceTypeMaterial);
-		unsigned long now = materialTimeKeeper->getMilliseconds();
-		RequestedMaterialHashMap::iterator intr = requestedMaterials.find(name);
-		if (intr == requestedMaterials.end()) {
+		unsigned long now = m_materialTimeKeeper->getMilliseconds();
+		RequestedMaterialHashMap::iterator intr = m_requestedMaterials.find(name);
+		if (intr == m_requestedMaterials.end()) {
 			// we haven't seen this material before. Remember and request
-			requestedMaterials.insert(std::pair<Ogre::String,unsigned long>(name, now));
+			m_requestedMaterials.insert(std::pair<Ogre::String,unsigned long>(name, now));
 			LG::RequestResource(name.c_str(), name.c_str(), LG::ResourceTypeMaterial);
 		}
 		else {

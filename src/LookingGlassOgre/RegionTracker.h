@@ -23,13 +23,33 @@
 #pragma once
 
 #include "LGOCommon.h"
+#include "SingletonInstance.h"
+#include "Region.h"
 
 namespace LG {
-	class RegionTracker {
-	public:
-		RegionTracker();
-		~RegionTracker();
+class RegionTracker : public SingletonInstance {
+public:
+	RegionTracker();
+	~RegionTracker();
+		
+	// SingletonInstance.Instance();
+	static RegionTracker* Instance() { 
+		if (LG::RegionTracker::m_instance == NULL) {
+			LG::RegionTracker::m_instance = new RegionTracker();
+		}
+		return LG::RegionTracker::m_instance; 
+	}
 
-	private:
+	void AddRegion(const char* rName, double globalX, double globalY, double globalZ, 
+		const float sizeX, const float sizeY, const float oceanHeight);
+	Region* FindRegion(Ogre::String);
+	void UpdateTerrain(const char*, const int, const int, const float*);
+
+private:
+	static RegionTracker* m_instance;
+
+	typedef stdext::hash_map<Ogre::String, Region*> RegionHashMap;
+	RegionHashMap m_regions;
+
 };
 }

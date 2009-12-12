@@ -110,6 +110,9 @@ public partial class RadegastWindow : Form {
         else {
             m_renderer.RenderOneFrame(false, m_frameAllowanceMs);
         }
+        if (!m_lgb.KeepRunning) {
+            this.Close();
+        }
         return;
     }
 

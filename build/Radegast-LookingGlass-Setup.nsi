@@ -2,7 +2,7 @@
 
 ; HM NIS Edit Wizard helper defines
 !define PRODUCT_NAME "LookingGlass"
-!define PRODUCT_VERSION "0.3"
+!define PRODUCT_VERSION "0.3.2"
 !define PRODUCT_PUBLISHER "Robert Adams"
 !define PRODUCT_WEB_SITE "http://lookingglassviewer.org/"
 !define PRODUCT_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\LookingGlass.exe"
@@ -37,7 +37,7 @@
 ; MUI end ------
 
 Name "${PRODUCT_NAME} ${PRODUCT_VERSION}"
-OutFile "LookingGlass-0.3-Radegast-1.12-Setup.exe"
+OutFile "LookingGlass-0.3.2-Radegast-1.12-Setup.exe"
 InstallDir "$PROGRAMFILES\Radegast"
 InstallDirRegKey HKLM "${PRODUCT_DIR_REGKEY}" ""
 ShowInstDetails show

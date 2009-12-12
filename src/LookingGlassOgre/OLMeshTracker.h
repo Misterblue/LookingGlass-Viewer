@@ -192,6 +192,7 @@ public:
 	// SingletonInstance.Shutdown()
 	void Shutdown();
 
+	void RequestMesh(Ogre::String meshName, Ogre::String context);
 	void MakeLoaded(Ogre::String meshName, Ogre::String, Ogre::String, Ogre::Entity*);
 	void MakeUnLoaded(Ogre::String meshName, Ogre::String, Ogre::Entity*);
 	void MakePersistant(Ogre::String meshName, Ogre::String entName, Ogre::String, Ogre::Entity*);
@@ -207,6 +208,10 @@ private:
 	MeshWorkQueue* m_meshesToLoad;
 	MeshWorkQueue* m_meshesToUnload;
 	MeshWorkQueue* m_meshesToSerialize;
+
+	typedef stdext::hash_map<Ogre::String, unsigned long> RequestedMeshHashMap;
+	RequestedMeshHashMap m_requestedMeshes;
+	Ogre::Timer* m_meshTimeKeeper;
 
 	/*
 	stdext::hash_map<Ogre::String, MeshInfo*> meshesToLoad;
