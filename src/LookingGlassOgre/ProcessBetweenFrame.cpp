@@ -387,7 +387,7 @@ public:
 		this->uniq = "";
 		this->regionName = Ogre::String(regionNm);
 		this->width = w; this->length = l;
-		this->heightMap = (float*)malloc(w * l);
+		this->heightMap = (float*)malloc(w * l * sizeof(float));
 		memcpy(this->heightMap, hm, w * l * sizeof(float));
 	}
 	~UpdateTerrainQc(void) {

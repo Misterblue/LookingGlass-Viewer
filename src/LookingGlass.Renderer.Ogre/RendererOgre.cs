@@ -861,11 +861,11 @@ public class RendererOgre : ModuleBase, IRenderProvider {
 
     // ==========================================================================
     public void UpdateTerrain(RegionContextBase rcontext) {
-        m_log.Log(LogLevel.DRENDERDETAIL, "RenderOgre: UpdateTerrain: for region {0}", m_rcontext.Name.Name);
+        m_log.Log(LogLevel.DRENDERDETAIL, "RenderOgre: UpdateTerrain: for region {0}", rcontext.Name.Name);
         try {
-            float[,] hm = m_rcontext.TerrainInfo.HeightMap;
-            int hmWidth = m_rcontext.TerrainInfo.HeightMapWidth;
-            int hmLength = m_rcontext.TerrainInfo.HeightMapLength;
+            float[,] hm = rcontext.TerrainInfo.HeightMap;
+            int hmWidth = rcontext.TerrainInfo.HeightMapWidth;
+            int hmLength = rcontext.TerrainInfo.HeightMapLength;
 
             int loc = 0;
             float[] passingHM = new float[hmWidth * hmLength];
@@ -875,7 +875,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                 }
             }
 
-            Ogr.UpdateTerrainBF(0, EntityNameOgre.ConvertToOgreSceneNodeName(m_rcontext.Name),
+            Ogr.UpdateTerrainBF(0, EntityNameOgre.ConvertToOgreSceneNodeName(rcontext.Name),
                         hmWidth, hmLength, passingHM);
         }
         catch (Exception e) {
@@ -934,7 +934,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         }
              */
 
-        return true;
+        return;
     }
     #endregion IRenderProvider
 
