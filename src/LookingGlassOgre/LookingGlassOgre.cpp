@@ -162,9 +162,19 @@ extern "C" DLLExport void AddRegion(const char* regionNodeName,
 	 LG::RegionTracker::Instance()->AddRegion(regionNodeName, 
 		 globalX, globalY, globalZ, sizeX, sizeY, waterHeight);
 }
+extern "C" DLLExport void AddRegionBF(float prio, const char* regionNodeName, 
+		 double globalX, double globalY, double globalZ,
+		 const float sizeX, const float sizeY, const float waterHeight) {
+	 LG::ProcessBetweenFrame::Instance()->AddRegion(prio, regionNodeName, 
+		 globalX, globalY, globalZ, sizeX, sizeY, waterHeight);
+}
 extern "C" DLLExport void UpdateTerrain(const char* regionName, 
 											const int width, const int length, const float* heights) {
 	 LG::RegionTracker::Instance()->UpdateTerrain(regionName, width, length, heights);
+}
+extern "C" DLLExport void UpdateTerrainBF(float prio, const char* regionName, 
+											const int width, const int length, const float* heights) {
+	 LG::ProcessBetweenFrame::Instance()->UpdateTerrain(prio, regionName, width, length, heights);
 }
 
 // ================================================================

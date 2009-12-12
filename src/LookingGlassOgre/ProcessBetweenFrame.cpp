@@ -29,6 +29,7 @@
 #include "LookingGlassOgre.h"
 #include "RendererOgre.h"
 #include "OLMaterialTracker.h"
+#include "RegionTracker.h"
 
 namespace LG {
 
@@ -344,6 +345,63 @@ public:
 };
 
 // ====================================================================
+class AddRegionQc : public GenericQc {
+public:
+	Ogre::String regionName;
+	double px; double py; double pz;
+	float sizeX; float sizeY;
+	float waterHeight;
+	AddRegionQc(float prio,
+					const char* regionNm,
+					const double gX, const double gY, const double gZ,
+					const float szX, const float szY, const float waterHt) {
+		this->priority = prio;
+		this->cost = 0;
+		this->uniq = "";
+		this->regionName = Ogre::String(regionNm);
+		this->px = gX; this->py = gY; this->pz = gZ;
+		this->sizeX = szX; this->sizeY = szY;
+		this->waterHeight = waterHt;
+	}
+	~AddRegionQc(void) {
+		this->uniq.clear();
+		this->regionName.clear();
+	}
+	void Process() {
+		LG::RegionTracker::Instance()->AddRegion(this->regionName.c_str(),
+			this->px, this->py, this->pz, this->sizeX, this->sizeY, this->waterHeight);
+	}
+};
+
+// ====================================================================
+class UpdateTerrainQc : public GenericQc {
+public:
+	Ogre::String regionName;
+	int width; int length;
+	float* heightMap;
+	UpdateTerrainQc(float prio,
+					const char* regionNm,
+					const int w, const int l, const float* hm) {
+		this->priority = prio;
+		this->cost = 0;
+		this->uniq = "";
+		this->regionName = Ogre::String(regionNm);
+		this->width = w; this->length = l;
+		this->heightMap = (float*)malloc(w * l);
+		memcpy(this->heightMap, hm, w * l * sizeof(float));
+	}
+	~UpdateTerrainQc(void) {
+		this->uniq.clear();
+		this->regionName.clear();
+		free(this->heightMap);
+	}
+	void Process() {
+		LG::RegionTracker::Instance()->UpdateTerrain(this->regionName.c_str(),
+			this->width, this->length, this->heightMap);
+	}
+};
+
+// ====================================================================
 // Queue of work to do between frames.
 // To add a between frame operation, you write a subclass of GenericQc like those
 // above, write a routine to create and instance of the class and put it in the
@@ -464,6 +522,25 @@ void ProcessBetweenFrame::UpdateSceneNode(float priority, char* entName,
 	LGLOCK_UNLOCK(m_workItemMutex);
 	LG::IncStat(LG::StatBetweenFrameWorkItems);
 	LG::IncStat(LG::StatBetweenFrameUpdateSceneNode);
+}
+
+void ProcessBetweenFrame::AddRegion(float priority, const char* rn,
+					const double gx, const double gy, const double gz, 
+					const float sx, const float sy, const float wh) {
+	LGLOCK_LOCK(m_workItemMutex);
+	AddRegionQc* arq = new AddRegionQc(priority, rn, gx, gy, gz, sx, sy, wh);
+	QueueWork((GenericQc*)arq);
+	LGLOCK_UNLOCK(m_workItemMutex);
+	LG::IncStat(LG::StatBetweenFrameWorkItems);
+}
+
+void ProcessBetweenFrame::UpdateTerrain(float priority, const char* rn, 
+										const int w, const int l, const float* ht) {
+	LGLOCK_LOCK(m_workItemMutex);
+	UpdateTerrainQc* utq = new UpdateTerrainQc(priority, rn, w, l, ht);
+	QueueWork((GenericQc*)utq);
+	LGLOCK_UNLOCK(m_workItemMutex);
+	LG::IncStat(LG::StatBetweenFrameWorkItems);
 }
 
 // ====================================================================

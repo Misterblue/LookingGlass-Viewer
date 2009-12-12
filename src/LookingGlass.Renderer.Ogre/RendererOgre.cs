@@ -846,23 +846,14 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     // ==========================================================================
     public void MapRegionIntoView(RegionContextBase rcontext) {
         Object[] mapParameters = { rcontext, null };
-        m_betweenFramesQueue.DoLater(100, MapRegionLater, mapParameters);
+        Ogr.AddRegionBF(0f, EntityNameOgre.ConvertToOgreSceneNodeName(rcontext.Name),
+            // rcontext.GlobalPosition.X, rcontext.GlobalPosition.Z, -rcontext.GlobalPosition.Y,
+            rcontext.GlobalPosition.X, (double)0, -rcontext.GlobalPosition.Y,
+            rcontext.Size.X, rcontext.Size.Y,
+            rcontext.TerrainInfo.WaterHeight);
         return;
     }
 
-    private bool MapRegionLater(DoLaterBase qInstance, Object parms) {
-        Object[] loadParams = (Object[])parms;
-        RegionContextBase m_rcontext = (RegionContextBase)loadParams[0];
-        m_log.Log(LogLevel.DRENDERDETAIL, "MapRegionIntoView: mapping {0} to {1}",
-                m_rcontext.Name, m_rcontext.GlobalPosition);
-        Ogr.AddRegion(EntityNameOgre.ConvertToOgreSceneNodeName(m_rcontext.Name),
-            // m_rcontext.GlobalPosition.X, m_rcontext.GlobalPosition.Z, -m_rcontext.GlobalPosition.Y,
-            m_rcontext.GlobalPosition.X, (double)0, -m_rcontext.GlobalPosition.Y,
-            m_rcontext.Size.X, m_rcontext.Size.Y,
-            m_rcontext.TerrainInfo.WaterHeight);
-        return true;
-    }
-    
     // ==========================================================================
     public RenderableInfo RenderingInfo(IEntity ent) {
         return null;
@@ -870,14 +861,6 @@ public class RendererOgre : ModuleBase, IRenderProvider {
 
     // ==========================================================================
     public void UpdateTerrain(RegionContextBase rcontext) {
-        Object[] terrainParameters = { rcontext, null };
-        m_betweenFramesQueue.DoLater(100, UpdateTerrainLater, terrainParameters);
-        return;
-    }
-    private bool UpdateTerrainLater(DoLaterBase qInstance, Object parms) {
-        Object[] loadParams = (Object[])parms;
-        RegionContextBase m_rcontext = (RegionContextBase)loadParams[0];
-
         m_log.Log(LogLevel.DRENDERDETAIL, "RenderOgre: UpdateTerrain: for region {0}", m_rcontext.Name.Name);
         try {
             float[,] hm = m_rcontext.TerrainInfo.HeightMap;
@@ -892,7 +875,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                 }
             }
 
-            Ogr.UpdateTerrain(EntityNameOgre.ConvertToOgreSceneNodeName(m_rcontext.Name),
+            Ogr.UpdateTerrainBF(0, EntityNameOgre.ConvertToOgreSceneNodeName(m_rcontext.Name),
                         hmWidth, hmLength, passingHM);
         }
         catch (Exception e) {

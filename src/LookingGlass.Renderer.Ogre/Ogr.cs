@@ -216,7 +216,17 @@ static class Ogr {
             float sizeX, float sizeY,
             float waterHeight);
     [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
+    public static extern void AddRegionBF(float prio,
+            [MarshalAs(UnmanagedType.LPStr)]string regionNodeName,
+            double globalX, double globalY, double globalZ,
+            float sizeX, float sizeY,
+            float waterHeight);
+    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
     public static extern void UpdateTerrain([MarshalAs(UnmanagedType.LPStr)]string regionNodeName,
+            int width, int length, [MarshalAs(UnmanagedType.LPArray)] float[] heightmap);
+    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
+    public static extern void UpdateTerrainBF(float prio, 
+            [MarshalAs(UnmanagedType.LPStr)]string regionNodeName,
             int width, int length, [MarshalAs(UnmanagedType.LPArray)] float[] heightmap);
     // ======================================================================
     // SceneNode wrapper

@@ -90,6 +90,9 @@ public:
 					bool setPosition, float px, float py, float pz,
 					bool setScale, float sx, float sy, float sz,
 					bool setRotation, float ow, float ox, float oy, float oz);
+	void AddRegion(float, const char*, const double, const double, const double, 
+					const float, const float, const float);
+	void UpdateTerrain(float, const char*, const int, const int, const float*);
 
 	LGLOCK_MUTEX m_workItemMutex;
 	static bool m_keepProcessing;	// true if to keep processing on and on
