@@ -36,7 +36,7 @@ namespace LG {
 		void setOrientation(float ww, float xx, float yy, float zz);
 		Ogre::Quaternion getOrientation();
 
-		void setPosition(float, float, float);
+		void setPosition(double, double, double);
 		void setPosition(Ogre::Vector3 vv);
 		Ogre::Vector3 getPosition();
 

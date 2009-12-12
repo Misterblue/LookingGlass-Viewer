@@ -825,7 +825,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         m_lastCameraOrientation = orient;
         // note the conversion from LL coordinates (Z up) to Ogre coordinates (Y up)
         OMV.Vector3d pos = cam.GlobalPosition * m_sceneMagnification;
-        Ogr.UpdateCamera((float)pos.X, (float)pos.Z, (float)-pos.Y, 
+        Ogr.UpdateCamera(pos.X, pos.Z, -pos.Y, 
             orient.W, orient.X, orient.Z, -orient.Y,
             1.0f, (float)cam.Far*m_sceneMagnification, 1.0f);
         m_log.Log(LogLevel.DRENDERDETAIL, "UpdateCamera: Camera to p={0}, r={1}", pos, orient);

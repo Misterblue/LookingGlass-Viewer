@@ -64,7 +64,7 @@ public:
 	Ogre::Viewport* m_viewport;		// viewport the camera is using
 
 	// update objects anvironment routines
-	void updateCamera(float, float, float, float, float, float, float, float, float, float);
+	void updateCamera(double, double, double, float, float, float, float, float, float, float);
 	void AdvanceCamera(const Ogre::FrameEvent&);
 
 	void AddEntity(Ogre::SceneManager*, Ogre::SceneNode*, const char*, const char*);

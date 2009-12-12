@@ -65,6 +65,21 @@ public class GridLists {
         m_gridInfo = null;
     }
 
+    public string GridParameter(string gridName, string parm) {
+        CheckInit();
+        string ret = null;
+        try {
+            if (m_gridInfo.HasParameter(gridName)) {
+                OMVSD.OSDMap gInfo = (OMVSD.OSDMap)m_gridInfo.ParamValue(gridName);
+                ret = gInfo[parm].AsString();
+            }
+        }
+        catch {
+            ret = null;
+        }
+        return ret;
+    }
+
     public string GridLoginURI(string gridName) {
         CheckInit();
         string ret = null;

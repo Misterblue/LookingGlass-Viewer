@@ -88,7 +88,7 @@ extern "C" DLLExport void SetStatsBlock(int* sb) {
 }
 // ==========================================================
 // update the camera position with a position and a direction
-extern "C" DLLExport void UpdateCamera(float px, float py, float pz, 
+extern "C" DLLExport void UpdateCamera(double px, double py, double pz, 
 									   float dw, float dx, float dy, float dz,
 									   float nearClip, float farClip, float aspect) {
 	LG::RendererOgre::Instance()->updateCamera(px, py, pz, dw, dx, dy, dz, nearClip, farClip, aspect);

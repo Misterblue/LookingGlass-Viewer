@@ -37,6 +37,7 @@ public enum RegionStateCode : uint {
     LowRez =        1 << 4, // a disconnected region that's here as a low rez representation
     ShuttingDown =  1 << 5, // region is shutting down
     Down =          1 << 6, // disconnected and probably getting freed
+    Focus =         1 << 7, // this is the focus region (with the agent present)
 }
 
 public delegate void RegionStateChangedCallback(RegionStateCode code);

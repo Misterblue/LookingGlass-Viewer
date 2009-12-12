@@ -58,9 +58,9 @@ Ogre::Quaternion LGCamera::getOrientation() {
 	return Ogre::Quaternion();
 }
 
-void LGCamera::setPosition(float xx, float yy, float zz) {
-	LG::Log("LGCamera::setPosition: pos=<%f, %f, %f>", (double)xx, (double)yy, (double)zz);
-	if (Cam) Cam->setPosition(xx, yy, zz);
+void LGCamera::setPosition(double xx, double yy, double zz) {
+	LG::Log("LGCamera::setPosition: pos=<%f, %f, %f>", xx, yy, zz);
+	if (Cam) Cam->setPosition((float)xx, (float)yy, (float)zz);
 	// this->setPosition(Ogre::Vector3(xx, yy, zz));
 }
 void LGCamera::setPosition(Ogre::Vector3 vv) {

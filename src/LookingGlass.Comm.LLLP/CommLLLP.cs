@@ -475,6 +475,10 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
             try {
                 char sep = '/';
                 string[] parts = System.Uri.UnescapeDataString(m_loginSim).ToLower().Split(sep);
+                if (parts.Length > 0) {
+                    // since the name comes in through the web page, spaces get turned into pluses
+                    parts[0] = parts[0].Replace('+', ' ');
+                }
                 if (parts.Length == 1) {
                     // just specifying last or home or just a simulator
                     if (parts[0] == "last" || parts[0] == "home") {

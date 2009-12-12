@@ -40,6 +40,8 @@ public:
 		return LG::RegionTracker::m_instance; 
 	}
 
+	void SetFocusRegion(const char* rName);
+	Region* GetFocusRegion();
 	void AddRegion(const char* rName, double globalX, double globalY, double globalZ, 
 		const float sizeX, const float sizeY, const float oceanHeight);
 	Region* FindRegion(Ogre::String);
@@ -50,6 +52,8 @@ private:
 
 	typedef stdext::hash_map<Ogre::String, Region*> RegionHashMap;
 	RegionHashMap m_regions;
+	Region* m_focusRegion;
+	void RecalculateLocalCoords();
 
 };
 }

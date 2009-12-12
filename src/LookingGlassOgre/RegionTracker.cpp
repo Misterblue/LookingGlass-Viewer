@@ -29,8 +29,11 @@ namespace LG {
 
 RegionTracker* RegionTracker::m_instance = NULL;
 
-RegionTracker::RegionTracker() {};
-RegionTracker::~RegionTracker() {};
+RegionTracker::RegionTracker() {
+	m_focusRegion = NULL;
+}
+RegionTracker::~RegionTracker() {
+}
 
 // Add a region to the regions being tracked.
 // This creates the tracking Region instance, creates a scene node for the region
@@ -51,6 +54,7 @@ void RegionTracker::AddRegion(const char* regionSceneName,
 	regn->Name = regionSceneNodeName;
 	m_regions.insert(std::pair<Ogre::String, Region*>(regionSceneNodeName, regn));
 	regn->Init(globalX, globalY, globalZ, sizeX, sizeY, waterHeight);
+	RecalculateLocalCoords();
 }
 
 Region* RegionTracker::FindRegion(Ogre::String nam) {
@@ -70,6 +74,35 @@ void RegionTracker::UpdateTerrain(const char* regnName, const int width, const i
 	else {
 		LG::Log("RegionTracker::UpdateTerrain: region not found so terrain not updated: %s", regnName);
 	}
+}
+
+// set a focus region and update all region's local coords relative to the focus region
+void RegionTracker::SetFocusRegion(const char* regnName) {
+	Ogre::String regionName = Ogre::String(regnName);
+	Region* regn = FindRegion(regionName);
+	if (regn != NULL) {
+		m_focusRegion = regn;
+		for (RegionHashMap::iterator intr = m_regions.begin(); intr != m_regions.end(); intr++) {
+			Region* otherRegn = intr->second;
+			otherRegn->CalculateLocal(regn->GlobalX, regn->GlobalY, regn->GlobalZ);
+		}
+	}
+}
+
+// recalcualate the local coords based on the focus region
+void RegionTracker::RecalculateLocalCoords() {
+	Region* regn = GetFocusRegion();
+	if (regn != NULL) {
+		for (RegionHashMap::iterator intr = m_regions.begin(); intr != m_regions.end(); intr++) {
+			Region* otherRegn = intr->second;
+			otherRegn->CalculateLocal(regn->GlobalX, regn->GlobalY, regn->GlobalZ);
+		}
+	}
+}
+
+// return focus region or NULL if none
+Region* RegionTracker::GetFocusRegion() {
+	return m_focusRegion;
 }
 
 }

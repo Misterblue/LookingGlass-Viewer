@@ -160,7 +160,7 @@ namespace LG {
 	}
 
 	// Update the camera position given an location and a direction
-	void RendererOgre::updateCamera(float px, float py, float pz, 
+	void RendererOgre::updateCamera(double px, double py, double pz, 
 				float dw, float dx, float dy, float dz,
 				float nearClip, float farClip, float aspect) {
 		if (m_camera) {
@@ -169,7 +169,7 @@ namespace LG {
 			m_desiredCameraOrientation = Ogre::Quaternion(dw, dx, dy, dz);
 			m_desiredCameraOrientationProgress = 0.0;
 			// to do slerped movement, comment the next line and uncomment "XXXX" below
-			m_camera->setOrientation(Ogre::Quaternion(dw, dx, dy, dz));
+			// m_camera->setOrientation(Ogre::Quaternion(dw, dx, dy, dz));
 			if (nearClip != m_camera->getNearClipDistance()) {
 				m_camera->setNearClipDistance(nearClip);
 			}
@@ -193,8 +193,8 @@ namespace LG {
 		if (m_desiredCameraOrientationProgress < 1.0) {
 			Ogre::Quaternion newOrientation = Ogre::Quaternion::Slerp(m_desiredCameraOrientationProgress, 
 				m_camera->getOrientation(), m_desiredCameraOrientation, true);
-			// m_camera->setOrientation(newOrientation); // XXXX
-			// m_visCalc->RecalculateVisibility(); // XXXX
+			m_camera->setOrientation(newOrientation); // XXXX
+			m_visCalc->RecalculateVisibility(); // XXXX
 		}
 	}
 
