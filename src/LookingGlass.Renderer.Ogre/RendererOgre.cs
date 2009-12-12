@@ -856,7 +856,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         m_log.Log(LogLevel.DRENDERDETAIL, "MapRegionIntoView: mapping {0} to {1}",
                 m_rcontext.Name, m_rcontext.GlobalPosition);
         Ogr.AddRegion(EntityNameOgre.ConvertToOgreSceneNodeName(m_rcontext.Name),
-            m_rcontext.GlobalPosition.X, m_rcontext.GlobalPosition.Y, m_rcontext.GlobalPosition.Z,
+            // m_rcontext.GlobalPosition.X, m_rcontext.GlobalPosition.Z, -m_rcontext.GlobalPosition.Y,
+            m_rcontext.GlobalPosition.X, (double)0, -m_rcontext.GlobalPosition.Y,
             m_rcontext.Size.X, m_rcontext.Size.Y,
             m_rcontext.TerrainInfo.WaterHeight);
         return true;

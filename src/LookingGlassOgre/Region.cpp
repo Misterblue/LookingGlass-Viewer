@@ -116,8 +116,8 @@ void Region::Init( double globalX, double globalY, double globalZ, float sizeX, 
 	this->GlobalY = globalY;
 	this->GlobalZ = globalZ;
 	this->LocalX = (float)globalX;
-	this->LocalX = (float)globalX;
-	this->LocalX = (float)globalX;
+	this->LocalY = (float)globalY;
+	this->LocalZ = (float)globalZ;
 	// create scene Node
 	Ogre::Quaternion orient = Ogre::Quaternion(Ogre::Radian(-3.14159265/2.0), Ogre::Vector3(1.0, 0.0, 0.0));
 	Ogre::SceneNode* regionNode = LG::RendererOgre::Instance()->CreateSceneNode(this->Name.c_str(), 

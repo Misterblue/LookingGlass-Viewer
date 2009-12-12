@@ -106,7 +106,7 @@ void VisCalcFrustDist::calculateEntityVisibility() {
 		visRegions++;
 		Ogre::Node* nodeRegion = rootChildIterator.getNext();
 		// a region node has the nodes of its contents.
-		calculateEntityVisibility(nodeRegion, nodeRegion);
+		calculateEntityVisibility(nodeRegion, nodeRegion, true);
 	}
 	if ((visSlowdown-- < 0) || (visVisToInvis != 0) || (visInvisToVis != 0)) {
 		visSlowdown = 30;
@@ -122,13 +122,14 @@ void VisCalcFrustDist::calculateEntityVisibility() {
 }
 
 // BETWEEN FRAME OPERATION
-void VisCalcFrustDist::calculateEntityVisibility(Ogre::Node* regionNode, Ogre::Node* node) {
-	if (node->numChildren() > 0) {
+void VisCalcFrustDist::calculateEntityVisibility(Ogre::Node* regionNode, Ogre::Node* node, bool recurse) {
+	if (recurse && node->numChildren() > 0) {
 		// if node has more children nodes, visit them recursivily
 		Ogre::SceneNode::ChildNodeIterator nodeChildIterator = node->getChildIterator();
 		while (nodeChildIterator.hasMoreElements()) {
 			Ogre::Node* nodeChild = nodeChildIterator.getNext();
-			calculateEntityVisibility(regionNode, nodeChild);
+			// 'false' causes it to not visit sub-children which are included in parent and pos relative to parent
+			calculateEntityVisibility(regionNode, nodeChild, false);
 			visChildren++;
 		}
 	}
@@ -162,9 +163,10 @@ void VisCalcFrustDist::calculateEntityVisibility(Ogre::Node* regionNode, Ogre::N
 						Ogre::Vector3 cPos = LG::RendererOgre::Instance()->m_camera->getPosition();
 						Ogre::Vector3 rPos = regionNode->getPosition();
 						Ogre::Vector3 sPos = snode->getPosition();
-						LG::Log("VisToInVis: cPos=<%f,%f,%f>, rPos=<%f,%f,%f>, sPos=<%f,%f,%f>, d=%f", 
+						LG::Log("VisToInVis: cPos=<%f,%f,%f>, rPos=<%f,%f,%f>, sPos(%s)=<%f,%f,%f>, d=%f", 
 								cPos.x, cPos.y, cPos.z, 
 								rPos.x, rPos.y, rPos.z, 
+								snode->getName().c_str(),
 								sPos.x, sPos.y, sPos.z, 
 								snodeDistance);
 						snodeEntity->setVisible(false);
