@@ -201,20 +201,27 @@ public class LLAgent : IAgent {
                 // LLEntityAvatar.Update
                 //    calls LLEntityBase.Update
                 //        calls EntityBase.Update
+                //            (entity updates percolate up to the entity's container)
                 //            calls RegionContext.UpdateEntity
                 //                calls RegionContextBase.UpdateEntity
                 //                    fires RegionContextBase.OnEntityUpdate
+                //                        (World subscribes to the region entity container to get updates)
                 //                        calls World.Region_OnEntityUpdate
                 //                            fires World.OnEntityUpdate
+                //                                (Viewer subscribes to entity updates to update display)
                 //                                calls Viewer.World_OnEntityUpdate
-                //                                    updates entity's pos and rot
+                //                                    calls Renderer.RenderUpdate
+                //                                        updates entity's pos and rot on screen
                 //    calls World.Instance.UpdateAgent
                 //        fires World.OnAgentUpdate
                 //            calls Viewer.World_OnAgentUpdate
+                //                (the camera follows the agent which just happens to be the avatar)
                 //                calls mainCameraUpdate(with agent pos and rot)
                 //                    fires CameraControl.OnCameraUpdate
+                //                        (camera changes show up on the screen)
                 //                        calls Renderer.UpdateCamera
                 //                            calls into renderer to update view camera position
+                //                        (camera changes are sent to simulator for culling optimizations)
                 //                        calls Viewer.CameraControl_OnCameraUpdate
                 //                            calls LLAgent.UpdateCamera
                 //                                sends camera interest info (pos and rot) to simulator

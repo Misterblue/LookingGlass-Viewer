@@ -24,6 +24,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using OMV = OpenMetaverse;
 
 namespace LookingGlass {
     /// <summary>
@@ -88,6 +89,18 @@ public class Utilities {
         int ret = TickCount() - prev;
         if (ret < 0) ret += TickCountMask + 1;
         return ret;
+    }
+
+    // Rotate a vector by a quaternian
+    public static OMV.Vector3 RotateVector(OMV.Quaternion q, OMV.Vector3 v) {
+		OMV.Vector3 v2, v3;
+        q.Normalize();
+		OMV.Vector3 qv = new OMV.Vector3(q.X, q.Y, q.Z);
+		v2 = OMV.Vector3.Cross(qv, v);
+		v3 = OMV.Vector3.Cross(qv, v2);
+		v2 *= (2.0f * q.W);
+		v3 *= 2.0f;
+		return v + v2 + v3;
     }
 
 }

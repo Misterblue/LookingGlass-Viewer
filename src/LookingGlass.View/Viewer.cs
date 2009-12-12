@@ -86,8 +86,8 @@ public class Viewer : ModuleBase, IViewProvider {
         ModuleParams.AddDefaultParameter(m_moduleName + ".Camera.RotationSpeed", "0.100", "Degrees to rotate camera");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Camera.ServerFar", "300.0", "Far distance sent to server");
 
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Camera.BehindAgent", "2.0", "Distance camera is behind agent");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Camera.AboveAgent", "2.00", "Distance camera is above agent (combined with behind)");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Camera.BehindAgent", "1.0", "Distance camera is behind agent");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Camera.AboveAgent", "1.0", "Distance camera is above agent (combined with behind)");
 
         // m_EntitySlot = EntityBase.AddAdditionSubsystem("VIEWER");        // used by anyone?
     }
@@ -250,15 +250,16 @@ public class Viewer : ModuleBase, IViewProvider {
         if (m_mainCamera != null) {
             if (((Renderer.UserInterface.LastKeyCode & Keys.Control) == 0)
                     && ((Renderer.UserInterface.LastKeyCode & Keys.Alt) != 0)) {
-                m_log.Log(LogLevel.DVIEWDETAIL, "OnMouseMove: CNTL-ALT: ");
+                m_log.Log(LogLevel.DVIEWDETAIL, "OnMouseMove: ALT: ");
             }
+                /*
             else if ( ((Renderer.UserInterface.LastKeyCode & Keys.Control) != 0)
                     && ((Renderer.UserInterface.LastKeyCode & Keys.Alt) != 0) ) {
                 // if ALT+CNTL is held down, movement is on view plain
                 float xMove = x * m_cameraSpeed;
                 float yMove = y * m_cameraSpeed;
                 OMV.Vector3d movement = new OMV.Vector3d( 0, xMove, yMove);
-                m_log.Log(LogLevel.DVIEWDETAIL, "OnMouseMove: ALT: Move camera x={0}, y={1}", xMove, yMove);
+                m_log.Log(LogLevel.DVIEWDETAIL, "OnMouseMove: CNTL-ALT: Move camera x={0}, y={1}", xMove, yMove);
                 m_mainCamera.GlobalPosition -= movement;
             }
             else if ((Renderer.UserInterface.LastKeyCode & Keys.Control) != 0) {
@@ -269,6 +270,7 @@ public class Viewer : ModuleBase, IViewProvider {
                 OMV.Vector3d movement = new OMV.Vector3d( yMove, xMove, 0f);
                 m_mainCamera.GlobalPosition -= movement;
             }
+                 */
             else if ((Renderer.UserInterface.LastMouseButtons & MouseButtons.Left) != 0) {
                     // move the camera around the horizontal (X) and vertical (Z) axis
                     float xMove = (-x * m_cameraRotationSpeed * Constants.DEGREETORADIAN) % Constants.TWOPI;
@@ -354,6 +356,7 @@ public class Viewer : ModuleBase, IViewProvider {
             if (m_cameraMode == CameraMode.TrackingAgent) {
                 if ((agnt != null) && (m_mainCamera != null)) {
                     // vector for camera position behind the avatar
+                    /*
                     // note: coordinates are in LL form: Z up
                     OMV.Vector3 cameraOffset = new OMV.Vector3(-m_agentCameraBehind, 0, m_agentCameraAbove);
                     OMV.Quaternion invertHeading = OMV.Quaternion.Inverse(agnt.Heading);
@@ -365,6 +368,18 @@ public class Viewer : ModuleBase, IViewProvider {
                         cameraOffset.ToString(), cameraBehind.ToString(), 
                         globalOffset.ToString(), agnt.GlobalPosition.ToString());
                     m_mainCamera.Update(agnt.GlobalPosition + globalOffset, agnt.Heading);
+                     */
+                    OMV.Vector3 cameraOffset = new OMV.Vector3(0, m_agentCameraBehind, m_agentCameraAbove);
+                    // world space desired camera location
+                    OMV.Vector3 rotatedOffset = Utilities.RotateVector(agnt.Heading, cameraOffset);
+                    OMV.Vector3d globalRotatedOffset = new OMV.Vector3d(rotatedOffset.X, rotatedOffset.Y, rotatedOffset.Z);
+                    OMV.Vector3d desiredCameraPosition = agnt.GlobalPosition + globalRotatedOffset;
+                    // OMV.Vector3d globalOffet = desiredCameraPosition - m_mainCamera.GlobalPosition();
+
+                    m_log.Log(LogLevel.DVIEWDETAIL, "OnAgentUpdate: offset={0}, goffset={1}, cpos={2}, apos={3}",
+                        cameraOffset, globalRotatedOffset, desiredCameraPosition, agnt.GlobalPosition);
+
+                    m_mainCamera.Update(desiredCameraPosition, agnt.Heading);
                 }
             }
         }
