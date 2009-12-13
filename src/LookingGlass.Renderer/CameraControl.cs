@@ -23,6 +23,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using LookingGlass.World;
 using OMV = OpenMetaverse;
 
 namespace LookingGlass.Renderer {
@@ -33,6 +34,11 @@ public class CameraControl {
 
     public event CameraControlUpdateCallback OnCameraUpdate;
 
+    private IAgent m_associatedAgent;
+    public IAgent AssociatedAgent {
+        get { return m_associatedAgent; }
+        set { m_associatedAgent = value; }
+    }
     public CameraControl() {
         m_heading = new OMV.Quaternion(OMV.Vector3.UnitY, 0f);
         m_globalPosition = new OMV.Vector3d(0d, 20d, 30d);   // World coordinates (Z up)

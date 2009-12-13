@@ -355,6 +355,7 @@ public class Viewer : ModuleBase, IViewProvider {
         if ((what & (UpdateCodes.Rotation | UpdateCodes.Position)) != 0) {
             if (m_cameraMode == CameraMode.TrackingAgent) {
                 if ((agnt != null) && (m_mainCamera != null)) {
+                    m_mainCamera.AssociatedAgent = agnt;
                     // vector for camera position behind the avatar
                     /*
                     // note: coordinates are in LL form: Z up
@@ -369,7 +370,8 @@ public class Viewer : ModuleBase, IViewProvider {
                         globalOffset.ToString(), agnt.GlobalPosition.ToString());
                     m_mainCamera.Update(agnt.GlobalPosition + globalOffset, agnt.Heading);
                      */
-                    OMV.Vector3 cameraOffset = new OMV.Vector3(0, m_agentCameraBehind, m_agentCameraAbove);
+                    // OMV.Vector3 cameraOffset = new OMV.Vector3(0, m_agentCameraBehind, m_agentCameraAbove);
+                    OMV.Vector3 cameraOffset = new OMV.Vector3(m_agentCameraBehind, 0, m_agentCameraAbove);
                     // world space desired camera location
                     OMV.Vector3 rotatedOffset = Utilities.RotateVector(agnt.Heading, cameraOffset);
                     OMV.Vector3d globalRotatedOffset = new OMV.Vector3d(rotatedOffset.X, rotatedOffset.Y, rotatedOffset.Z);

@@ -38,6 +38,7 @@ LGCamera::LGCamera(Ogre::String nam, Ogre::SceneManager* mgr) {
 	if (Cam == NULL) {
 		LG::Log("RendererOgre::createCamera: CAMERA FAILED TO CREATE");
 	}
+	this->m_cameraAttached = false;
 }
 
 LGCamera::~LGCamera() {
@@ -60,12 +61,16 @@ Ogre::Quaternion LGCamera::getOrientation() {
 
 void LGCamera::setPosition(double xx, double yy, double zz) {
 	LG::Log("LGCamera::setPosition: pos=<%f, %f, %f>", xx, yy, zz);
-	if (Cam) Cam->setPosition((float)xx, (float)yy, (float)zz);
+	if (!m_cameraAttached) {
+		if (Cam) Cam->setPosition((float)xx, (float)yy, (float)zz);
+	}
 	// this->setPosition(Ogre::Vector3(xx, yy, zz));
 }
 void LGCamera::setPosition(Ogre::Vector3 vv) {
 	LG::Log("LGCamera::setPosition: pos=<%f, %f, %f>", (double)vv.x, (double)vv.y, (double)vv.z);
-	if (Cam) Cam->setPosition(vv.x, vv.y, vv.z);
+	if (!m_cameraAttached) {
+		if (Cam) Cam->setPosition(vv.x, vv.y, vv.z);
+	}
 	// if (CamSceneNode2) CamSceneNode2->setPosition(vv);
 }
 Ogre::Vector3 LGCamera::getPosition() {
@@ -82,11 +87,18 @@ Ogre::Vector3 LGCamera::getPosition() {
 // Here we hide all that funnyness by localizing the camera address then calculating
 // that distance from the passed region localized address.
 float LGCamera::getDistanceFromCamera(Ogre::Node* regionNode, Ogre::Vector3 otherLoc) {
-	// convert global, unaligned camera coords to region local coords
-	Ogre::Vector3 localizedCamPos = Cam->getPosition() - regionNode->getPosition();
-	// KLUDGE!!: since  the camera is unrotated compared to the terrain, its coordinates
-	//    need tweeding before use. Someday make the camera in local coordinates.
-	localizedCamPos = Ogre::Vector3( localizedCamPos.x, -localizedCamPos.z, localizedCamPos.y);
+	Ogre::Vector3 localizedCamPos;
+	if (m_cameraAttached) {
+		// if camera attached, the coordinates are already local
+		localizedCamPos = Cam->getPosition();
+	}
+	else {
+		// convert global, unaligned camera coords to region local coords
+		localizedCamPos = Cam->getPosition() - regionNode->getPosition();
+		// KLUDGE!!: since  the camera is unrotated compared to the terrain, its coordinates
+		//    need tweeding before use. Someday make the camera in local coordinates.
+		localizedCamPos = Ogre::Vector3( localizedCamPos.x, -localizedCamPos.z, localizedCamPos.y);
+	}
 	float dist = localizedCamPos.distance(otherLoc);
 	if (dist < 0) dist = -dist;
 	/* this routine is called too many times for it to normally output messages
@@ -142,5 +154,26 @@ void LGCamera::CreateCameraArmature(const char* cameraSceneNodeName, float px, f
 	CamSceneNode2->attachObject(Cam);
 	*/
 	return;
+}
+
+// Another attempt to tame the camera.
+// Attache the camera to a scene node that is a child of another scene node. The othere scene node is
+// usually the agent's avatar so the camera will move around behind the avatar.
+bool LGCamera::AttachCamera(const char* parentNodeName, float offsetX, float offsetY, float offsetZ,
+				float ow, float ox, float oy, float oz) {
+		bool ret = false;
+		Ogre::String parentSceneNodeName = Ogre::String(parentNodeName);
+		if (Cam && LG::RendererOgre::Instance()->m_sceneMgr->hasSceneNode(parentSceneNodeName)) {
+			Ogre::SceneNode* parentNode = LG::RendererOgre::Instance()->m_sceneMgr->getSceneNode(Ogre::String(parentSceneNodeName));
+			this->CamSceneNode = parentNode->createChildSceneNode("Camera/" + parentSceneNodeName, Ogre::Vector3(offsetX, offsetY, offsetZ));
+			this->CamSceneNode->attachObject(Cam);
+			m_cameraAttached = true;
+			LG::Log("LGCamera::AttachCamera: camera attached to %s", parentNodeName);
+			ret = true;
+		}
+		else {
+			LG::Log("LGCamera::AttachCamera: could not attach camera to %s", parentNodeName);
+		}
+		return ret;
 }
 }

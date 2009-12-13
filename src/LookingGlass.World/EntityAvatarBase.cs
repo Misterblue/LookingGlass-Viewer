@@ -1,4 +1,4 @@
-/* Copyright (c) Robert Adams
+﻿/* Copyright (c) 2008 Robert Adams
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *     * Redistributions of source code must retain the above copyright
@@ -20,46 +20,18 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#pragma once
-#include "LGOCommon.h"
+using System;
+using System.Collections.Generic;
+using System.Text;
 
-namespace LG {
+namespace LookingGlass.World {
+    public class EntityAvatarBase : EntityBase, IEntityAvatar {
 
-	// Container for teh camera that hides all the armature stuff and where the
-	// position and orientation are really hidden.
-	class LGCamera {
-	public:
-		LGCamera(Ogre::String nam, Ogre::SceneManager* mgr);
-		~LGCamera();
-
-		void setOrientation(Ogre::Quaternion qq);
-		void setOrientation(float ww, float xx, float yy, float zz);
-		Ogre::Quaternion getOrientation();
-
-		void setPosition(double, double, double);
-		void setPosition(Ogre::Vector3 vv);
-		Ogre::Vector3 getPosition();
-
-		bool isVisible(const Ogre::AxisAlignedBox&);
-		bool isVisible(const Ogre::Sphere&);
-
-		float getNearClipDistance();
-		void setNearClipDistance(float);
-		float getFarClipDistance();
-		void setFarClipDistance(float);
-
-		float getDistanceFromCamera(Ogre::Node* , Ogre::Vector3);
-
-		void CreateCameraArmature(const char* cameraSceneNodeName, float px, float py, float pz,
-					float sx, float sy, float sz, float ow, float ox, float oy, float oz);
-		bool AttachCamera(const char* parentNodeName, float offsetX, float offsetY, float offsetZ,
-					float ow, float ox, float oy, float oz);
-
-		Ogre::Camera* Cam;
-	private:
-		Ogre::SceneNode* CamSceneNode;		// handle to the top camera scene node
-		Ogre::SceneNode* CamSceneNode2;		// handle to the one above camera scene node
-
-		bool m_cameraAttached;				// true if camera attached to the avatar
-	};
+        public EntityAvatarBase(RegionContextBase rcontext, AssetContextBase acontext)
+            : base(rcontext, acontext) {
+        }
+            
+        override public void Dispose() {
+        }
+    }
 }

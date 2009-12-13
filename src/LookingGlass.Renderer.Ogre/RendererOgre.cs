@@ -812,7 +812,17 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     /// (Y up).
     /// </summary>
     /// <param name="cam"></param>
+    // private bool haveAttachedCamera = false;
     public void UpdateCamera(CameraControl cam) {
+        /* Historical Note: This is part of code to attach the camera to the avatar. When this was written
+         * the avatar code was not in place so the actual scene node to attach the camera too is problematic.
+         * Fix this when there is an avatar.
+        if (!haveAttachedCamera && cam.AssociatedAgent != null && cam.AssociatedAgent.AssociatedAvatar != null) {
+            m_log.Log(LogLevel.DVIEWDETAIL, "OnAgentUpdate: Attaching camera with {0}", cam.AssociatedAgent.AssociatedAvatar.Name);
+            haveAttachedCamera = Ogr.AttachCamera(cam.AssociatedAgent.AssociatedAvatar.Name.Name, 1.0f, 0.0f, 1.0f, 0f, 0f, 0f, 1f);
+        }
+         */
+        
         // OMV.Quaternion orient = new OMV.Quaternion(OMV.Vector3.UnitX, -Constants.PI / 2)
                     // * new OMV.Quaternion(OMV.Vector3.UnitZ, -Constants.PI / 2)
                     // * cam.Direction;
@@ -828,6 +838,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         Ogr.UpdateCamera(pos.X, pos.Z, -pos.Y, 
             orient.W, orient.X, orient.Z, -orient.Y,
             1.0f, (float)cam.Far*m_sceneMagnification, 1.0f);
+
         m_log.Log(LogLevel.DRENDERDETAIL, "UpdateCamera: Camera to p={0}, r={1}", pos, orient);
         return;
     }
