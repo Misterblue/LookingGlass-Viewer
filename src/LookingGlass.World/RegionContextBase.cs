@@ -61,6 +61,7 @@ public abstract class RegionContextBase : EntityBase, IRegionContext, IDisposabl
         m_regionStateChangedCallback = new RegionStateChangedCallback(State_OnChange);
         State.OnStateChanged += m_regionStateChangedCallback;
         this.RegisterInterface<IEntityCollection>(this);
+        this.RegisterInterface<IRegionContext>(this);
     }
 
     private void State_OnChange(RegionStateCode newState) {

@@ -55,6 +55,8 @@ public sealed class LLRegionContext : RegionContextBase {
 
         // a cache of requested localIDs so we don't ask too often
         m_recentLocalIDRequests = new Dictionary<uint, int>();
+
+        this.RegisterInterface<LLRegionContext>(this);
     }
 
     /// <summary>

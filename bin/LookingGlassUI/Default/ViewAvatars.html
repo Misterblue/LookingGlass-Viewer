@@ -44,7 +44,7 @@ function TimerLoginStuff(firstTime) {
     loginTimerProcessing = true;
     $.ajax({
         type: "GET",
-        url: BASEURL + '/api/LLLP/status/',
+        url: BASEURL + '/api/LLLP/status/?xx=' + Math.floor(Math.random()*999999),
         dataType: 'json',
         timeout: 5000,
         success: function(data, status) {

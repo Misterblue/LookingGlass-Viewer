@@ -32,7 +32,7 @@ using System.Windows.Forms;
 namespace LookingGlass.View {
 public class ControlViews : IControlViewProvider, IModule {
 
-    Form m_avatarView;
+    FormAvatars m_avatarView;
 
 #region IMODULE
     protected string m_moduleName;
@@ -50,26 +50,31 @@ public class ControlViews : IControlViewProvider, IModule {
 
     // IModule.OnLoad
     public virtual void OnLoad(string modName, LookingGlassBase lgbase) {
-        LogManager.Log.Log(LogLevel.DINIT, "ModuleBase.OnLoad()");
+        LogManager.Log.Log(LogLevel.DINIT, "ControlViews.OnLoad()");
         m_moduleName = modName;
         m_lgb = lgbase;
     }
 
     // IModule.AfterAllModulesLoaded
     public virtual bool AfterAllModulesLoaded() {
-        LogManager.Log.Log(LogLevel.DINIT, "ModuleBase.AfterAllModulesLoaded()");
+        LogManager.Log.Log(LogLevel.DINIT, "ControlViews.AfterAllModulesLoaded()");
         return true;
     }
 
     // IModule.Start
     public virtual void Start() {
         m_avatarView = new FormAvatars(LGB);
+        m_avatarView.Initialize();
         m_avatarView.Visible = true;
         return;
     }
 
     // IModule.Stop
     public virtual void Stop() {
+        if (m_avatarView != null) {
+            m_avatarView.Shutdown();
+            m_avatarView = null;
+        }
         return;
     }
 

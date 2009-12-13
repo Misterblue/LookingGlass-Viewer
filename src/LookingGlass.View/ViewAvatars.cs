@@ -20,11 +20,18 @@ namespace LookingGlass.View {
 
             string baseURL = LGB.AppParams.ParamString("RestManager.BaseURL");
             string portNum = LGB.AppParams.ParamString("RestManager.Port");
-            string avatarURL = baseURL + ":" + portNum + "/static/ViewAvatars.html?xx=" + rand.Next(1,99999).ToString();
+            string avatarURL = baseURL + ":" + portNum + "/static/ViewAvatars.html?xx=" + rand.Next(1,999999).ToString();
             this.WindowAvatars.Url = new Uri(avatarURL);
             this.WindowAvatars.ScriptErrorsSuppressed = false;  // DEBUG
             this.WindowAvatars.Refresh();
             this.WindowAvatars.BringToFront();
+        }
+
+        public void Initialize() {
+        }
+
+        public void Shutdown() {
+            this.Close();
         }
     }
 }

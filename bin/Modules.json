@@ -1,44 +1,58 @@
 {
 "Modules": [
+    // The external control and status interface to the viewer
     {   "Assembly": "LookingGlass.Rest.dll",
         "Interface": "LookingGlass.Framework.Modules.IModule",
         "Name": "RestManager",
         "Order": 10
     },
+    // Comm is to LL compatible systems
     {   "Assembly": "LookingGlass.Comm.LLLP.dll",
         "Interface": "LookingGlass.Comm.ICommProvider",
         "Name": "Comm",
         "Order": 20
     },
+    // The world. This doesn't change.
     {   "Assembly": "LookingGlass.World.dll",
         "Interface": "LookingGlass.World.IWorld",
         "Name": "World",
         "Order": 30
     },
+    // Use the standard viewer of  the world
     {   "Assembly": "LookingGlass.View.dll",
         "Interface": "LookingGlass.View.IViewProvider",
         "Name": "Viewer",
         "Order": 40
     },
+    // The user interface used by the 3D view of the world
     {   "Assembly": "LookingGlass.View.dll",
         "Interface": "LookingGlass.Renderer.IUserInterfaceProvider",
         "Name": "WindowUI",
         "Order": 50
     },
+    // Use the Ogre renderer
     {   "Assembly": "LookingGlass.Renderer.Ogre.dll",
         "Interface": "LookingGlass.Renderer.IRenderProvider",
         "Name": "Renderer",
         "Order": 60
     },
+    // The comm provider has a rest interface for logging in, etc
     {   "Assembly": "LookingGlass.Comm.LLLP.dll",
         "Interface": "LookingGlass.Rest.IRestUser",
         "Name": "CommLLLPRest",
         "Order": 70
     },
+    // Multiple dialogs are presented to the user. This manages them.
     {   "Assembly": "LookingGlass.View.dll",
         "Interface": "LookingGlass.View.IControlViewProvider",
         "Name": "ControlView",
         "Order": 80
+    },
+    // Lots of statistics are available. Collect them and make available
+    {   "Assembly": "LookingGlass.View.dll",
+        "Interface": "LookingGlass.View.IEntityTrackerProvider",
+        "Name": "EntityTracker",
+        "Order": 90
     }
 ],
 
@@ -55,6 +69,9 @@
 
 // The login REST interface needs to find  the comm system
 "CommLLLPRest.Comm.Name": "Comm",
+
+// The entity trackers needs to know where to track the entities
+"EntityTracker.World.Name": "World",
 
 // ====================================================
 "ParameterWithoutAComma2": "Last"
