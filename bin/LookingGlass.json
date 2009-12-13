@@ -1,7 +1,7 @@
 {
 // Uncomment this if you like lots of debug output
-"Log.FilterLevel": "2147483647",	// 0x7fffffff: log everything
-// "Log.FilterLevel": "5592405",	// 0x555555: log info messages
+// "Log.FilterLevel": "2147483647",	// 0x7fffffff: log everything
+"Log.FilterLevel": "5592405",	// 0x555555: log info messages
 // "Log.FilterLevel": "1073744896",	// 0x40000c00: RENDER and RENDERDETAIL
 // "Log.FilterLevel": "1073938432",	// 0x40030000: UPDATE and UPDATEDETAIL
 
@@ -32,9 +32,8 @@
 // "Renderer.Ogre.Ambient.Material": "<0.4,0.4,0.4>",
 
 // ====================================================
-"Comm.Texture.MaxRequests": "4",
+"Comm.Texture.MaxRequests": "6",
 "Comm.Settings.MultipleSims": "false",
-"Comm.Assets.ConvertPNG": "true",
 
 // ====================================================
 "ParameterWithoutAComma": "Last"

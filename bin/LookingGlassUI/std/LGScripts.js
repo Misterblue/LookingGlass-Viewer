@@ -156,10 +156,10 @@ TrendData.prototype.formatParms =
      width: 'auto',      // 'auto' or any css width spec
      height: 'auto',     // 'auto' or any valid css height spec
      lineColor: 'black', // Used by line and discrete charts
-     fillColor: 'false', // Set to false to disable fill.
      // chartRangeMin: '0', // min value for range, default to min value
      // chardRangeMax: '0', // max value for range, default to max value
-     // composite: 'true'   // true to overwrite existing chart (chart on chart)
+     // composite: 'true',  // true to overwrite existing chart (chart on chart)
+     fillColor: 'false'  // Set to false to disable fill.
      };
 // ===========================================
 

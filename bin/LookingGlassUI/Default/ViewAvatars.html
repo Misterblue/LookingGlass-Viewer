@@ -4,9 +4,8 @@
 <head>
 <title>LookingGlass</title>
 <link rel="stylesheet" href="/static/LookingGlass.css" type="text/css"/>
-<script type="text/javascript" src="/std/jquery.js"></script>
-<script type="text/javascript" src="/std/LGScripts.js"></script>
-<script type="text/javascript" src="/std/jquery.sparkline.min.js"></script>
+<script type="text/javascript" src="/std/jquery.js?xx=4"></script>
+<script type="text/javascript" src="/std/LGScripts.js?xx=4"></script>
 <noscript>
 <p color="red">
 Your browser does not support Javascript. This won't work for you.
@@ -26,8 +25,9 @@ $(document).ready(function() {
     });
 
     // Start the timed functions
+    loginTimerProcessing = false;
     TimerLoginStuff(true);
-    TimerDataStuff();
+    loginTimerHandle = setInterval('TimerLoginStuff(false)', 3000);
 });
 
 // Login works by polling the viewer for the status of the user.
@@ -37,8 +37,11 @@ $(document).ready(function() {
 // login state.
 var BASEURL='http://127.0.0.1:9144';
 var loginTimerHandle;
+var loginTimerProcessing;
 // poll for the user's date. Initialize form if first GET.
 function TimerLoginStuff(firstTime) {
+    if (loginTimerProcessing) return;
+    loginTimerProcessing = true;
     $.ajax({
         type: "GET",
         url: BASEURL + '/api/LLLP/status/',
@@ -57,8 +60,7 @@ function TimerLoginStuff(firstTime) {
             });
         }
     });
-            
-    loginTimerHandle = setTimeout('TimerLoginStuff(false)', 3000);
+    loginTimerProcessing = false;
 };
 
 // given a set of login status parameters, update login status area
@@ -104,57 +106,6 @@ function InitializeLoginForm(data) {
 function SendLoginRequest() {
     $.post(BASEURL + "/api/LLLP/connect/login", $('#LGLoginForm').serializeArray());
     return false;
-}
-
-// One of the sections is viewer statistics. Poll for the data.
-var statTimerHandle;
-var graphFPS;
-var lastFPS = 10;
-var xxThru = 0;
-function TimerDataStuff() {
-    statTimerHandle = setTimeout('TimerStatDisplay()', 2000);
-}
-
-// called by timer to fetch and display statistic information
-function TimerStatDisplay() {
-    if ($('#LGQueueStats').is(':visible')) {
-        $.getJSON(BASEURL+'/api/stats/workQueues', function(data, status) {
-            if (status == 'success') {
-                BuildBasicTable('#LGQueueStats', data, false, false);
-            }
-        });
-        $.getJSON(BASEURL+'/api/stats/Renderer/detailStats', function(data, status) {
-            if (status == 'success') {
-                BuildBasicTable('#LGRendererStats', data, true, false);
-            }
-        });
-        $.getJSON(BASEURL+'/api/stats/Renderer/ogreStats', function(data, status) {
-            if (status == 'success') {
-                BuildBasicTable('#LGOgreStats', data, false, false, true);
-                if (typeof(graphFPS) == 'undefined') {
-                    graphFPS = new TrendData(100);
-                    graphFPS.Format = {type:'bar', width:'auto',height:'20px'};
-                                
-                }
-                var thisFPS = data['framespersecond']['value'];
-                if (thisFPS > (lastFPS * 2)) thisFPS = lastFPS * 2;
-                lastFPS = (lastFPS + thisFPS) / 2;
-                graphFPS.AddPoint(thisFPS);
-                graphFPS.UpdateDisplay('#LGOgreStats-framespersecond-Display');
-            }
-        });
-        $.getJSON(BASEURL+'/api/stats/Comm/stats', function(data, status) {
-            if (status == 'success') {
-                BuildBasicTable('#LGCommStats', data, false, false);
-            }
-        });
-    }
-    statTimerHandle = setTimeout('TimerStatDisplay()', 2000);
-};
-
-function DebugLog(msg) {
-    $("#DEBUG").append('<div>' + msg + '</div>');
-    $("#DEBUG").show();
 }
 
 </script>
@@ -230,58 +181,6 @@ function DebugLog(msg) {
         <input type="submit" value="Login"/>
     </span>
 </div>  <!-- LGLogin -->
-</div>  <!-- LGSectionContainer -->
-
-<!-- ============================================== -->
-<div class="LGSectionContainer">
-<a class="LGSectionHeader" href="#">Chat</a>
-<div id="LGChat" class="LGSection">
-<textarea name="chattext" rows="20" cols="80"></textarea>
-</div>  <!-- LGChat -->
-</div>  <!-- LGSectionContainer -->
-
-<!-- ============================================== -->
-<div class="LGSectionContainer">
-<a class="LGSectionHeader" href="#">Inventory</a>
-<div id="LGInventory" class="LGSection">
-<p>Look at all the stuff in my inventory</p>
-</div>  <!-- LGInventory -->
-</div>  <!-- LGSectionContainer -->
-
-<!-- ============================================== -->
-<div class="LGSectionContainer">
-<a class="LGSectionHeader" href="#">Statistics</a>
-<div id="LGStatistics" class="LGSection">
-<table width="100%">
-<tr><td rowspan="2">
-<div id="LGCommStats">
-<h1>Communication Stats</h1>
-</div>  <!-- LGCommStats -->
-</td>
-<td>
-<div id="LGQueueStats">
-<h1>WorkQueues</h1>
-</div>  <!-- LGQueueStats -->
-</td></tr>
-<tr><td>
-<div id="LGRendererStats">
-<h1>Renderer</h1>
-</div>  <!-- LGRendererStats -->
-</td></tr>
-</table>
-
-<div id="LGOgreStats">
-<h1>Ogre Stats</h1>
-</div>  <!-- LGOgreStats -->
-<div>
-
-<h1>Stat Graphs</h1>
-<div id="LGStatCharts">
-</div>  <!-- LGOStatCharts -->
-
-<a href="/static/DefaultParameters.html">Parameter Defaults</a></div>
-
-</div>  <!-- LGStatistics -->
 </div>  <!-- LGSectionContainer -->
 
 <!-- ============================================== -->

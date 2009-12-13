@@ -16,10 +16,11 @@ namespace LookingGlass.View {
             LGB = llgb;
 
             InitializeComponent();
+            Random rand = new Random();
 
             string baseURL = LGB.AppParams.ParamString("RestManager.BaseURL");
             string portNum = LGB.AppParams.ParamString("RestManager.Port");
-            string avatarURL = baseURL + ":" + portNum + "/static/ViewAvatars.html";
+            string avatarURL = baseURL + ":" + portNum + "/static/ViewAvatars.html?xx=" + rand.Next(1,99999).ToString();
             this.WindowAvatars.Url = new Uri(avatarURL);
             this.WindowAvatars.ScriptErrorsSuppressed = false;  // DEBUG
             this.WindowAvatars.Refresh();

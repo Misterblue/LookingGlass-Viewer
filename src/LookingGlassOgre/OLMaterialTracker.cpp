@@ -402,6 +402,11 @@ void OLMaterialTracker::CreateMaterialResource2(const char* mName, const char* t
 	pass->setAmbient(LG::RendererOgre::Instance()->MaterialAmbientColor);
 	pass->setVertexColourTracking(Ogre::TVC_AMBIENT);
 	if (textureName.length() > 0) {
+		Ogre::TextureUnitState* tus2 = pass->createTextureUnitState();
+		tus2->setColourOperationEx(Ogre::LBX_SOURCE1, Ogre::LBS_CURRENT, Ogre::LBS_MANUAL,
+				 	Ogre::ColourValue( parms[CreateMaterialColorR], parms[CreateMaterialColorG], 
+						parms[CreateMaterialColorB], parms[CreateMaterialColorA]));
+
 		Ogre::TextureUnitState* tus = pass->createTextureUnitState(textureName);
 
 		// use SceneBlendType to add the alpha information
@@ -435,12 +440,9 @@ void OLMaterialTracker::CreateMaterialResource2(const char* mName, const char* t
 		//2 		parms[CreateMaterialColorA]
 		//2 );
 
-		Ogre::TextureUnitState* tus2 = pass->createTextureUnitState();
-		tus2->setColourOperationEx(Ogre::LBX_MODULATE, Ogre::LBS_CURRENT, Ogre::LBS_MANUAL,
-		 	Ogre::ColourValue( parms[CreateMaterialColorR], parms[CreateMaterialColorG], parms[CreateMaterialColorB]));
-		if (CreateMaterialColorA != 1.0) {
-			tus2->setAlphaOperation(Ogre::LBX_SOURCE1, Ogre::LBS_MANUAL, Ogre::LBS_CURRENT,
-					parms[CreateMaterialColorA]);
+		tus->setColourOperationEx(Ogre::LBX_MODULATE, Ogre::LBS_TEXTURE, Ogre::LBS_CURRENT);
+		if (parms[CreateMaterialTransparancy] != 1.0) {
+			tus->setAlphaOperation(Ogre::LBX_SOURCE1, Ogre::LBS_TEXTURE, Ogre::LBS_CURRENT);
 		}
 	}
 	else {
