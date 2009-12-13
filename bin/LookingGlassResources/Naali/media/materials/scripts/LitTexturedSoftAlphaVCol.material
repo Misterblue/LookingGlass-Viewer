@@ -1,0 +1,42 @@
+material LitTexturedSoftAlphaVCol
+{
+    receive_shadows off
+
+   	technique
+	{
+		pass
+		{
+	        scene_blend alpha_blend
+            depth_write off
+
+			vertex_program_ref rex/DiffaVColVP
+			{
+			}
+			fragment_program_ref rex/DiffaVColFP
+			{
+			}
+
+			texture_unit baseMap
+			{
+				texture TextureMissing.png
+			}
+		}
+	}
+
+	// fallback
+	technique
+	{
+		pass
+		{
+	        scene_blend alpha_blend
+            depth_write off
+
+            diffuse vertexcolour
+
+			texture_unit baseMap
+			{
+				texture TextureMissing.png
+			}
+		}
+	}
+}

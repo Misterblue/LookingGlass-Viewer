@@ -1,5 +1,11 @@
 .project
 .settings
+*.so
+*.dylib
+*.lib
+*.log
+*.exe
+*.zip
 *.build
 *.mdb
 *.mdp
@@ -18,7 +24,7 @@
 *.rc
 *.suo
 .svn/
-bin/
+*/*/bin/
 obj/
 Release/
 Debug/

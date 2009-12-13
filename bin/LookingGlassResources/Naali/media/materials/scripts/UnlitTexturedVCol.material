@@ -1,0 +1,37 @@
+// Renders primitives with a single unlit texture, modulates with vertex color
+material UnlitTexturedVCol
+{
+	technique
+	{
+		pass
+		{
+			vertex_program_ref UnlitTexturedVColVP
+			{
+			}
+			fragment_program_ref UnlitTexturedVColFP
+			{
+			}
+			texture_unit baseMap
+			{
+				texture TextureMissing.png
+			}
+		}
+	}
+
+	// fallback
+	technique
+	{
+	    pass
+	    {
+	        lighting off
+
+            diffuse vertexcolour
+
+	        texture_unit baseMap
+	        {
+	            texture TextureMissing.png
+	        }
+        }
+	}
+}
+ 

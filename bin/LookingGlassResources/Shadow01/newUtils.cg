@@ -1,0 +1,43 @@
+ifndef _newUtils_cg
+#define _newUtils_cg
+
+half getLightAttenuation(float distanceLight, float4 lightAtt)
+{
+   half att = distanceLight / lightAtt.r;
+   att *= att;
+   return 1.0 - att;
+}
+
+float getSpecularContribution(float lightSpec, float3 eyePos, float4 worldPos, float3 direction, float3 normal, float nDotL, float shininess)
+{
+   float3 viewVector = normalize(eyePos - worldPos.xyz);
+   float3 half = normalize(direction + viewVector);
+   float nDotH = dot(normal, half);
+#if _CELSHADING
+   return pow(max(nDotH,0), lightSpec * shininess);
+#else
+   return lit(nDotL, nDotH, lightSpec * shininess).z;
+#endif
+}
+
+float getSpotlightEffect(float3 ld0, float3 spotDir, float4 spotParams)
+{
+   float spot = dot(ld0, normalize(-spotDir));
+   spot = saturate((spot - spotParams.y) / (spotParams.x - spotParams.y));
+   return spot;
+}
+
+float4 btex2D_rg(sampler2D shadowMap, float2 uv, float offset)
+{   
+    float4 c = tex2D(shadowMap, uv.xy); // center
+    c += tex2D(shadowMap, uv.xy - offset); // top left
+    c += tex2D(shadowMap, uv.xy + offset); // bottom right
+    c += tex2D(shadowMap, float2(uv.x - offset, uv.y)); // left
+    c += tex2D(shadowMap, float2(uv.x + offset, uv.y)); // right
+    c += tex2D(shadowMap, float2(uv.x, uv.y + offset)); // bottom
+    c += tex2D(shadowMap, float2(uv.x, uv.y - offset)); // top
+    c += tex2D(shadowMap, float2(uv.x - offset, uv.y + offset)); // bottom left
+    c += tex2D(shadowMap, float2(uv.x + offset, uv.y - offset)); // top right
+    return c / 9;
+}
+#endif

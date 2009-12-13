@@ -1,0 +1,31 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>LookingGlass Copyrights</title>
+<link rel="stylesheet" href="/static/LookingGlass.css" type="text/css">
+<script type="application/javascript" src="/std/jquery.js"></script>
+<script type="application/javascript" src="/std/LGScripts.js"></script>
+<script type="application/javascript">
+$(document).ready(function() {
+    var BASEURL='http://127.0.0.1:9144';
+    $.getJSON(BASEURL+'/std/Copyrights.json', function(data, status) {
+        if (status == 'success') {
+            BuildBasicTable('#LGCopyrights', data, false);
+        }
+    });
+});
+</script>
+</head>
+<body id="LGBody">
+    <div id="LGContent">
+    <h1>Copyrights</h1>
+    <p>
+    LookingGlass is built upon the great work of many creative people.
+    They have shared by licensing their works and, as per the license
+    agreements, here are the copyrights for the various components.
+    </p>
+    <div id="LGCopyrights"></div>
+    </div>
+</body>
+</html>

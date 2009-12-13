@@ -1,0 +1,36 @@
+// Renders primitives with a single lit texture, includes alpharejection
+material LitTexturedHardAlpha
+{
+	technique
+	{	    
+		pass
+		{
+            alpha_rejection greater_equal 128
+
+			vertex_program_ref rex/DiffAlphamaskVP
+			{
+			}
+			fragment_program_ref rex/DiffAlphamaskFP
+			{
+			}
+			
+			texture_unit baseMap
+			{
+				texture TextureMissing.png
+			}
+		}
+	}
+	// fallback
+	technique
+	{
+	    pass
+	    {
+	        alpha_rejection greater_equal 128
+
+	        texture_unit baseMap
+	        {
+	            texture TextureMissing.png
+	        }
+        }
+	}
+}

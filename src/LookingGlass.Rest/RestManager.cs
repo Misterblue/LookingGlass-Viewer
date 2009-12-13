@@ -115,8 +115,6 @@ public class RestManager : ModuleBase, IInstance<RestManager>, HttpServer.ILogWr
                     "Base URL for rest interfaces");
         ModuleParams.AddDefaultParameter(m_moduleName + ".CSSLocalURL", "/std/LookingGlass.css",
                     "CSS file for rest display");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Browser", @"""\Program Files\Mozilla Firefox\firefox.exe""",
-                    "The browser to run");
         ModuleParams.AddDefaultParameter(m_moduleName + ".UIContentDir", 
                     Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "./LookingGlassUI"),
                     "Directory for static HTML content");

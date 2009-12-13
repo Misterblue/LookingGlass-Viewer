@@ -1,0 +1,22 @@
+material shadowCaster
+{   
+   technique
+   {
+      pass
+      {
+         vertex_program_ref shadow_caster_vs
+         {
+         }
+
+         fragment_program_ref shadow_caster_ps
+         {
+            param_named iAlphaReject float 0.5
+         }
+
+         texture_unit
+         {
+            texture diffuse.png
+         }
+           }
+   }
+}

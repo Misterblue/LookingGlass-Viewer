@@ -1,0 +1,24 @@
+vertex_program shadow_caster_vs cg
+{
+    source vsmCaster.cg
+    profiles vs_1_1 arbvp1
+    entry_point shadow_caster_vs
+
+    default_params
+    {
+        param_named_auto iWorldView worldview_matrix
+   param_named_auto iWorldViewProj worldviewproj_matrix
+    }
+}
+
+fragment_program shadow_caster_ps cg
+{
+    source vsmCaster.cg
+    profiles ps_2_0 arbfp1
+    entry_point shadow_caster_ps
+
+    default_params
+    {
+        param_named_auto iDepthRange scene_depth_range
+    }
+}

@@ -1,0 +1,62 @@
+{
+"Modules": [
+    {   "Assembly": "LookingGlass.Rest.dll",
+        "Interface": "LookingGlass.Framework.Modules.IModule",
+        "Name": "RestManager",
+        "Order": 10
+    },
+    {   "Assembly": "LookingGlass.Comm.LLLP.dll",
+        "Interface": "LookingGlass.Comm.ICommProvider",
+        "Name": "Comm",
+        "Order": 20
+    },
+    {   "Assembly": "LookingGlass.World.dll",
+        "Interface": "LookingGlass.World.IWorld",
+        "Name": "World",
+        "Order": 30
+    },
+    {   "Assembly": "LookingGlass.View.dll",
+        "Interface": "LookingGlass.View.IViewProvider",
+        "Name": "Viewer",
+        "Order": 40
+    },
+    {   "Assembly": "LookingGlass.View.dll",
+        "Interface": "LookingGlass.Renderer.IUserInterfaceProvider",
+        "Name": "WindowUI",
+        "Order": 50
+    },
+    {   "Assembly": "LookingGlass.Renderer.Ogre.dll",
+        "Interface": "LookingGlass.Renderer.IRenderProvider",
+        "Name": "Renderer",
+        "Order": 60
+    },
+    {   "Assembly": "LookingGlass.Comm.LLLP.dll",
+        "Interface": "LookingGlass.Rest.IRestUser",
+        "Name": "CommLLLPRest",
+        "Order": 70
+    },
+    {   "Assembly": "LookingGlass.View.dll",
+        "Interface": "LookingGlass.View.IControlViewProvider",
+        "Name": "ControlView",
+        "Order": 80
+    }
+],
+
+// ====================================================
+// Viewer connects to the World and a Renderer
+"Viewer.World.Name": "World",
+"Viewer.Renderer.Name": "Renderer",
+
+// The Renderer needs to know what input system to use
+"Renderer.Ogre.InputSystem.Name": "WindowUI",
+
+// The view windows needs to connect to the Renderer,
+"ViewerWindow.Renderer.Name": "Renderer",
+
+// The login REST interface needs to find  the comm system
+"CommLLLPRest.Comm.Name": "Comm",
+
+// ====================================================
+"ParameterWithoutAComma2": "Last"
+}
+

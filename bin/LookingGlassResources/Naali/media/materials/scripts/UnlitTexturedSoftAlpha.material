@@ -1,0 +1,40 @@
+material UnlitTexturedSoftAlpha
+{ 
+    receive_shadows off
+
+	technique
+	{
+		pass
+		{
+            depth_write off
+	        scene_blend alpha_blend
+
+			vertex_program_ref UnlitTexturedVP
+			{
+			}
+			fragment_program_ref UnlitTexturedFP
+			{
+			}
+			texture_unit baseMap
+			{
+				texture TextureMissing.png
+			}
+		} 
+	}
+
+    // fallback
+	technique
+	{
+	    pass
+	    {
+	        lighting off
+	        scene_blend alpha_blend
+            depth_write off
+
+	        texture_unit baseMap
+	        {
+	            texture TextureMissing.png
+	        }
+        }
+	}
+}

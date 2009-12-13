@@ -1,0 +1,198 @@
+vertex_program ambient_vs cg
+{
+    source newLighting.cg
+    profiles vs_1_1 arbvp1
+    entry_point ambient_vs
+
+    default_params
+    {
+        param_named_auto iAmbient ambient_light_colour
+        param_named_auto iWorldViewProj worldviewproj_matrix
+   param_named_auto iFogParams fog_params
+    }
+}
+
+fragment_program ambient_ps cg
+{
+    source newLighting.cg
+    profiles ps_2_0 arbfp1
+    entry_point ambient_ps
+
+    default_params
+    {
+   param_named_auto iFogColour fog_colour
+    }
+}
+
+vertex_program diffuse_directional_normal_shadow_vs cg
+{
+   source newLighting.cg
+   profiles vs_1_1 arbvp1
+   entry_point diffuse_vs
+
+   compile_arguments -D_DIRECTIONAL=1 -D_POINT=0 -D_SPOTLIGHT=0 -D_SPECULAR=0 -D_NORMAL=1 -D_SHADOWS=1
+
+   default_params
+   {
+      param_named_auto iWorld world_matrix
+             param_named_auto iWorldIT inverse_transpose_world_matrix
+      param_named_auto iWorldViewProj worldviewproj_matrix
+      param_named_auto iTextViewProj texture_viewproj_matrix
+      param_named_auto iFogParams fog_params
+   }
+}
+
+vertex_program diffuse_point_normal_shadow_vs cg
+{
+   source newLighting.cg
+   profiles vs_1_1 arbvp1
+   entry_point diffuse_vs
+
+   compile_arguments -D_DIRECTIONAL=0 -D_POINT=1 -D_SPOTLIGHT=0 -D_SPECULAR=0 -D_NORMAL=1 -D_SHADOWS=1
+
+   default_params
+   {
+      param_named_auto iWorld world_matrix
+             param_named_auto iWorldIT inverse_transpose_world_matrix
+      param_named_auto iWorldViewProj worldviewproj_matrix
+      param_named_auto iTextViewProj texture_viewproj_matrix
+      param_named_auto iFogParams fog_params
+   }
+}
+
+vertex_program diffuse_spot_normal_shadow_vs cg
+{
+   source newLighting.cg
+   profiles vs_1_1 arbvp1
+   entry_point diffuse_vs
+
+   compile_arguments -D_DIRECTIONAL=0 -D_POINT=0 -D_SPOTLIGHT=1 -D_SPECULAR=0 -D_NORMAL=1 -D_SHADOWS=1
+
+   default_params
+   {
+      param_named_auto iWorld world_matrix
+             param_named_auto iWorldIT inverse_transpose_world_matrix
+      param_named_auto iWorldViewProj worldviewproj_matrix
+      param_named_auto iTextViewProj texture_viewproj_matrix
+      param_named_auto iSpotDir light_direction_object_space 0
+      param_named_auto iFogParams fog_params
+   }
+}
+
+fragment_program diffuse_directional_specular_normal_shadow_ps cg
+{
+   source newLighting.cg
+   profiles ps_2_x arbfp1
+   entry_point diffuse_ps
+
+   compile_arguments -D_DIRECTIONAL=1 -D_POINT=0 -D_SPOTLIGHT=0 -D_SPECULAR=1 -D_NORMAL=1 -D_SHADOWS=1
+
+   default_params
+   {
+      param_named_auto iLightPos light_position 0
+      param_named_auto iLightDif light_diffuse_colour 0
+      param_named_auto iLightSpec light_specular_colour 0
+      param_named_auto iEyePos camera_position
+      param_named_auto iInvShMapSize inverse_texture_size 3
+   }
+}
+
+fragment_program diffuse_point_specular_normal_shadow_ps cg
+{
+   source newLighting.cg
+   profiles ps_2_x arbfp1
+   entry_point diffuse_ps
+
+   compile_arguments -D_DIRECTIONAL=0 -D_POINT=1 -D_SPOTLIGHT=0 -D_SPECULAR=1 -D_NORMAL=1 -D_SHADOWS=1
+
+   default_params
+   {
+      param_named_auto iLightPos light_position 0
+      param_named_auto iLightDif light_diffuse_colour 0
+      param_named_auto iLightSpec light_specular_colour 0
+      param_named_auto iLightAtt light_attenuation 0
+      param_named_auto iEyePos camera_position
+           param_named_auto iDepthRange shadow_scene_depth_range 0
+      param_named_auto iInvShMapSize inverse_texture_size 3
+   }
+}
+
+fragment_program diffuse_spot_specular_normal_shadow_ps cg
+{
+   source newLighting.cg
+   profiles ps_2_x arbfp1
+   entry_point diffuse_ps
+
+   compile_arguments -D_DIRECTIONAL=0 -D_POINT=0 -D_SPOTLIGHT=1 -D_SPECULAR=1 -D_NORMAL=1 -D_SHADOWS=1
+
+   default_params
+   {
+      param_named_auto iLightPos light_position 0
+      param_named_auto iLightDif light_diffuse_colour 0
+      param_named_auto iLightSpec light_specular_colour 0
+      param_named_auto iLightAtt light_attenuation 0
+      param_named_auto iSpotParams spotlight_params 0
+      param_named_auto iEyePos camera_position
+           param_named_auto iDepthRange shadow_scene_depth_range 0
+      param_named_auto iInvShMapSize inverse_texture_size 3
+   }
+}
+
+fragment_program diffuse_directional_specular_celshading_shadow_ps cg
+{
+   source newLighting.cg
+   profiles ps_2_x arbfp1
+   entry_point diffuse_ps
+
+   compile_arguments -D_DIRECTIONAL=1 -D_POINT=0 -D_SPOTLIGHT=0 -D_SPECULAR=1 -D_NORMAL=0 -D_CELSHADING=1 -D_SHADOWS=1
+
+   default_params
+   {
+      param_named_auto iLightPos light_position 0
+      param_named_auto iLightDif light_diffuse_colour 0
+      param_named_auto iLightSpec light_specular_colour 0
+      param_named_auto iEyePos camera_position
+      param_named_auto iInvShMapSize inverse_texture_size 3
+   }
+}
+
+fragment_program diffuse_point_specular_celshading_shadow_ps cg
+{
+   source newLighting.cg
+   profiles ps_2_x arbfp1
+   entry_point diffuse_ps
+
+   compile_arguments -D_DIRECTIONAL=0 -D_POINT=1 -D_SPOTLIGHT=0 -D_SPECULAR=1 -D_NORMAL=0 -D_CELSHADING=1 -D_SHADOWS=1
+
+   default_params
+   {
+      param_named_auto iLightPos light_position 0
+      param_named_auto iLightDif light_diffuse_colour 0
+      param_named_auto iLightSpec light_specular_colour 0
+      param_named_auto iLightAtt light_attenuation 0
+      param_named_auto iEyePos camera_position
+           param_named_auto iDepthRange shadow_scene_depth_range 0
+      param_named_auto iInvShMapSize inverse_texture_size 3
+   }
+}
+
+fragment_program diffuse_spot_specular_celshading_shadow_ps cg
+{
+   source newLighting.cg
+   profiles ps_2_x arbfp1
+   entry_point diffuse_ps
+
+   compile_arguments -D_DIRECTIONAL=0 -D_POINT=0 -D_SPOTLIGHT=1 -D_SPECULAR=1 -D_NORMAL=0 -D_CELSHADING=1 -D_SHADOWS=1
+
+   default_params
+   {
+      param_named_auto iLightPos light_position 0
+      param_named_auto iLightDif light_diffuse_colour 0
+      param_named_auto iLightSpec light_specular_colour 0
+      param_named_auto iLightAtt light_attenuation 0
+      param_named_auto iSpotParams spotlight_params 0
+      param_named_auto iEyePos camera_position
+           param_named_auto iDepthRange shadow_scene_depth_range 0
+      param_named_auto iInvShMapSize inverse_texture_size 3
+   }
+}

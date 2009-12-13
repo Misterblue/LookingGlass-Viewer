@@ -1,0 +1,10 @@
+#! /bin/bash
+DIR="/cygdrive/c/Documents and Settings/Robert/Application Data/LookingGlass"
+
+cd "$DIR"
+
+echo "No textures"
+find . -type f -size 3435c | while read file ; do echo $file ; rm $file ; done
+echo "Zero textures"
+find . -type f -size 0c | while read file ; do echo $file ; rm $file ; done
+

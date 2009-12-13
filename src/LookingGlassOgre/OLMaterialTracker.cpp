@@ -414,7 +414,7 @@ void OLMaterialTracker::CreateMaterialResource2(const char* mName, const char* t
 			// pass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
 			// next 4 lines found in http://www.ogre3d.org/wiki/index.php/Creating_transparency_based_on_a_key_colour_in_code
 			pass->setSceneBlending(Ogre::SBT_REPLACE);
-			pass->setAlphaRejectSettings(Ogre::CMPF_GREATER_EQUAL, 160);
+			// pass->setAlphaRejectSettings(Ogre::CMPF_GREATER_EQUAL, 160);
 			pass->setCullingMode(Ogre::CULL_NONE);
 			pass->setManualCullingMode(Ogre::MANUAL_CULL_NONE);
 			mat->setTransparencyCastsShadows(true);
@@ -429,29 +429,38 @@ void OLMaterialTracker::CreateMaterialResource2(const char* mName, const char* t
 		//1 tus->setColourOperationEx(Ogre::LBX_MODULATE, Ogre::LBS_TEXTURE, Ogre::LBS_MANUAL, 
 		//1 	Ogre::ColourValue( parms[CreateMaterialColorR], parms[CreateMaterialColorG], 
 		//1 	parms[CreateMaterialColorB], parms[CreateMaterialColorA] ));
-		pass->setDiffuse(parms[CreateMaterialColorR], 
-				parms[CreateMaterialColorG], 
-				parms[CreateMaterialColorB], 
-				parms[CreateMaterialColorA]
-		);
+		//2 pass->setDiffuse(parms[CreateMaterialColorR], 
+		//2 		parms[CreateMaterialColorG], 
+		//2 		parms[CreateMaterialColorB], 
+		//2 		parms[CreateMaterialColorA]
+		//2 );
+
+		Ogre::TextureUnitState* tus2 = pass->createTextureUnitState();
+		tus2->setColourOperationEx(Ogre::LBX_MODULATE, Ogre::LBS_CURRENT, Ogre::LBS_MANUAL,
+		 	Ogre::ColourValue( parms[CreateMaterialColorR], parms[CreateMaterialColorG], parms[CreateMaterialColorB]));
+		if (CreateMaterialColorA != 1.0) {
+			tus2->setAlphaOperation(Ogre::LBX_SOURCE1, Ogre::LBS_MANUAL, Ogre::LBS_CURRENT,
+					parms[CreateMaterialColorA]);
+		}
 	}
 	else {
-		/*
 		// this code makes the prim a solid color that does not respect light shading
 		Ogre::TextureUnitState* tus = pass->createTextureUnitState(textureName);
 		tus->setColourOperationEx(Ogre::LBX_SOURCE1, Ogre::LBS_MANUAL, Ogre::LBS_CURRENT,
-				Ogre::ColourValue(
-				parms[CreateMaterialColorR], parms[CreateMaterialColorG], parms[CreateMaterialColorB]));
-		tus->setAlphaOperation(Ogre::LBX_SOURCE1, Ogre::LBS_MANUAL, Ogre::LBS_CURRENT,
-				parms[CreateMaterialColorA]);
-		*/
+				Ogre::ColourValue(parms[CreateMaterialColorR], parms[CreateMaterialColorG], parms[CreateMaterialColorB]));
+		if (CreateMaterialColorA != 1.0) {
+			tus->setAlphaOperation(Ogre::LBX_SOURCE1, Ogre::LBS_MANUAL, Ogre::LBS_CURRENT,
+					parms[CreateMaterialColorA]);
+		}
 
+		/*
 		// it's a solid color. Just use that.
 		pass->setDiffuse(parms[CreateMaterialColorR], 
 				parms[CreateMaterialColorG], 
 				parms[CreateMaterialColorB], 
 				parms[CreateMaterialColorA]
 		);
+		*/
 		if (parms[CreateMaterialColorA] == 1.0) {
 			pass->setSceneBlending(Ogre::SBT_REPLACE);
 		}

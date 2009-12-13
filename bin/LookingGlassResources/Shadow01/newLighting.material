@@ -1,0 +1,220 @@
+material newLighting
+{
+   technique
+   {
+      pass Ambient
+      {
+         ambient  1 1 1
+         diffuse  0 0 0
+         specular 0 0 0 0
+         emissive 0 0 0
+
+         vertex_program_ref ambient_vs
+         {
+         }
+
+         fragment_program_ref ambient_ps
+         {
+            param_named iScale float2 1 1
+            param_named iScroll float2 0 0
+         }
+
+         texture_unit
+         {
+            texture diffuse.png
+         }
+      }
+
+      pass Directional
+      {
+         ambient  0 0 0
+         diffuse  1 1 1
+         specular 1 1 1 255
+
+         max_lights 8
+         scene_blend add
+         iteration once_per_light directional
+
+         vertex_program_ref diffuse_directional_shadow_vs
+         {
+         }
+
+         fragment_program_ref diffuse_directional_specular_celshading_shadow_ps
+         {
+            param_named iScale float2 1 1
+            param_named iScroll float2 0 0
+                                param_named iShininess float 128
+         }
+
+         texture_unit
+         {
+            texture diffuse.png
+         }
+
+         texture_unit
+         {
+            texture specular.png
+         }
+
+         texture_unit
+         {
+            texture normal.png
+         }
+
+         texture_unit
+         {
+            content_type shadow
+            tex_address_mode clamp
+         }
+
+         texture_unit
+         {
+            texture cel_diff.png 1d
+            tex_address_mode clamp
+            filtering point point none
+         }
+
+         texture_unit
+         {
+            texture cel_spec.png 1d
+            tex_address_mode clamp
+            filtering point point none
+         }
+
+         texture_unit
+         {
+            texture cel_edge.png 1d
+            tex_address_mode clamp
+            filtering point point none
+         }
+      }
+
+      pass Point
+      {
+         ambient  0 0 0
+         diffuse  1 1 1
+         specular 1 1 1 255
+
+         max_lights 8
+         scene_blend add
+         iteration once_per_light point
+
+         vertex_program_ref diffuse_point_shadow_vs
+         {
+         }
+
+         fragment_program_ref diffuse_point_specular_celshading_shadow_ps
+         {
+            param_named iScale float2 1 1
+            param_named iScroll float2 0 0
+                                param_named iShininess float 128
+         }
+
+         texture_unit
+         {
+            texture diffuse.png
+         }
+
+         texture_unit
+         {
+            texture specular.png
+         }
+
+         texture_unit
+         {
+            texture normal.png
+         }
+
+         texture_unit
+         {
+            content_type shadow
+            tex_address_mode clamp
+         }
+
+         texture_unit
+         {
+            texture cel_diff.png 1d
+            tex_address_mode clamp
+            filtering point point none
+         }
+
+         texture_unit
+         {
+            texture cel_spec.png 1d
+            tex_address_mode clamp
+            filtering point point none
+         }
+
+         texture_unit
+         {
+            texture cel_edge.png 1d
+            tex_address_mode clamp
+            filtering point point none
+         }
+      }
+
+      pass Spot
+      {
+         ambient  0 0 0
+         diffuse  1 1 1
+         specular 1 1 1 255
+
+         max_lights 8
+         scene_blend add
+         iteration once_per_light spot
+
+         vertex_program_ref diffuse_spot_shadow_vs
+         {
+         }
+
+         fragment_program_ref diffuse_spot_specular_celshading_shadow_ps
+         {
+            param_named iScale float2 1 1
+            param_named iScroll float2 0 0
+                                param_named iShininess float 128
+         }
+
+         texture_unit
+         {
+            texture diffuse.png
+         }
+
+         texture_unit
+         {
+            texture specular.png
+         }
+
+         texture_unit
+         {
+            texture normal.png
+         }
+
+         texture_unit
+         {
+            content_type shadow
+            tex_address_mode clamp
+         }
+
+         texture_unit
+         {
+            texture cel_diff.png 1d
+            tex_address_mode clamp
+            filtering point point none
+         }
+
+         texture_unit
+         {
+            texture cel_spec.png 1d
+            tex_address_mode clamp
+            filtering point point none
+         }
+
+         texture_unit
+         {
+            texture cel_edge.png 1d
+            tex_address_mode clamp
+            filtering point point none
+         }
+      }
+   }
+}

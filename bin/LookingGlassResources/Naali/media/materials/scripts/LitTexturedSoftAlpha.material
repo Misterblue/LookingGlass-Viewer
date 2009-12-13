@@ -1,0 +1,40 @@
+material LitTexturedSoftAlpha
+{
+    receive_shadows off
+
+	technique
+	{
+		pass
+		{
+	        scene_blend alpha_blend
+            depth_write off
+
+			vertex_program_ref rex/DiffaVP
+			{
+			}
+			fragment_program_ref rex/DiffaFP
+			{
+			}
+
+			texture_unit baseMap
+			{
+				texture TextureMissing.png
+			}
+		}
+	}
+	
+	// fallback
+	technique
+	{
+		pass
+		{
+	        scene_blend alpha_blend
+            depth_write off
+
+			texture_unit baseMap
+			{
+				texture TextureMissing.png
+			}
+		}
+	}
+}

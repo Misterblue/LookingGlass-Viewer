@@ -1,0 +1,33 @@
+{
+// Uncomment this if you like lots of debug output
+// "Log.FilterLevel": "2147483647",	// log everything
+"Log.FilterLevel": "5592405",	// 0x555555: log info messages
+// "Log.FilterLevel": "1073744896",	// RENDER and RENDERDETAIL
+
+// ====================================================
+"Framework.WorkQueue.MaxThreads": "10",
+
+// ====================================================
+"Renderer.Ogre.Renderer": "OpenGL Rendering Subsystem",
+// "Renderer.Ogre.Renderer": "Direct3D9 Rendering Subsystem",
+"Renderer.Ogre.VideoMode": "800 x 600@ 32-bit colour",
+// Shadow technique: none, texture-modulative, stencil-modulative, texture-additive, stencil-additive
+"Renderer.Ogre.ShadowTechnique": "none",
+// "Renderer.Ogre.ShadowTechnique": "texture-additive",
+"Renderer.Ogre.Visibility.MaxDistance": "200",
+"Renderer.Ogre.Visibility.MinDistance": "30",
+"Renderer.Ogre.Visibility.OnlyLargeAfter": "80",
+"Renderer.Ogre.Visibility.Large": "8",
+"Renderer.Ogre.Visibility.Cull.Frustrum": "false",
+"Renderer.Ogre.InputSystem": "",
+// currently only works with Direct3D9
+// "Renderer.Ogre.Sky": "SkyX",
+
+// ====================================================
+"Comm.Texture.MaxRequests": "4",
+"Comm.Settings.MultipleSims": "false",
+"Comm.Assets.OMVResources": "./openmetaverse_data",
+
+// ====================================================
+"ParameterWithoutAComma": "Last"
+}

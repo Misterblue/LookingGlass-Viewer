@@ -1,0 +1,54 @@
+{
+// For Radegst, we need the usual World, View, Renderer and Rest
+//   but we also need the special Comm provider to
+//   talk through the Radegast comm stack and the user interaction
+//   that talks  through the Radegast view window.
+"Modules": [
+    {   "Assembly": "LookingGlass.Rest.dll",
+        "Interface": "LookingGlass.Framework.Modules.IModule",
+        "Name": "RestManager",
+        "Order": 10
+    },
+    {   "Assembly": "LookingGlass.Radegast.dll",
+        "Interface": "LookingGlass.Comm.ICommProvider",
+        "Name": "Comm",
+        "Order": 20
+    },
+    {   "Assembly": "LookingGlass.World.dll",
+        "Interface": "LookingGlass.World.IWorld",
+        "Name": "World",
+        "Order": 30
+    },
+    {   "Assembly": "LookingGlass.View.dll",
+        "Interface": "LookingGlass.View.IViewProvider",
+        "Name": "Viewer",
+        "Order": 40
+    },
+    {   "Assembly": "LookingGlass.Radegast.dll",
+        "Interface": "LookingGlass.Renderer.IUserInterfaceProvider",
+        "Name": "RadegastUI",
+        "Order": 50
+    },
+    {   "Assembly": "LookingGlass.Renderer.Ogre.dll",
+        "Interface": "LookingGlass.Renderer.IRenderProvider",
+        "Name": "Renderer",
+        "Order": 60
+    }
+],
+
+// ====================================================
+// Viewer connects to the World and a Renderer
+"Viewer.World.Name": "World",
+"Viewer.Renderer.Name": "Renderer",
+
+// The Renderer needs to know what input system to use
+"Renderer.Ogre.InputSystem.Name": "RadegastUI",
+
+// The Radegast viewer needs to connect to the Renderer
+//   the comm module and the proper UI system
+"Radegast.Renderer.Name": "Renderer",
+"Radegast.Comm.Name": "Comm",
+
+// ====================================================
+"ParameterWithoutAComma": "Last"
+}

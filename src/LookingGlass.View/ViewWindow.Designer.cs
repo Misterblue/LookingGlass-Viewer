@@ -64,6 +64,7 @@ namespace LookingGlass.View {
         /// the contents of this method with the code editor.
         /// </summary>
         private void InitializeComponent() {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ViewWindow));
             this.LGWindow = new LookingGlass.View.ViewWindow.LGPanel();
             this.SuspendLayout();
             // 
@@ -87,6 +88,7 @@ namespace LookingGlass.View {
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(807, 608);
             this.Controls.Add(this.LGWindow);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "ViewWindow";
             this.Text = "ViewWindow";
             this.Load += new System.EventHandler(this.ViewWindow_Load);

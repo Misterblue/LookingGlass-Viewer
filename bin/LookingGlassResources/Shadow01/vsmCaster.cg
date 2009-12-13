@@ -1,0 +1,52 @@
+void shadow_caster_vs
+(
+   float4 iPosition   : POSITION,
+   float2 iUV      : TEXCOORD0,
+
+
+   uniform float4x4 iWorldView,
+   uniform float4x4 iWorldViewProj,
+
+   out float4 oPosition   : POSITION,
+   out float2 oUV      : TEXCOORD0,
+   out float4 oDepth   : TEXCOORD1,
+   out float4 oDepthDir   : TEXCOORD2
+
+)
+
+{
+
+   oDepth = mul(iWorldView, iPosition);
+   oDepthDir = mul(iWorldViewProj, iPosition);
+
+   oPosition = oDepthDir;
+
+   oUV = iUV;
+
+}
+
+
+
+void shadow_caster_ps
+(
+   float2 iUV      : TEXCOORD0,
+   float4 iDepth      : TEXCOORD1,
+   float4 iDepthDir   : TEXCOORD2,
+
+   uniform sampler2D dTex   : TEXUNIT0,
+
+   uniform float4 iDepthRange,
+   uniform float iAlphaReject,
+
+   out float4 oColour   : COLOR
+)
+
+{
+   if(tex2D(dTex,iUV).a < iAlphaReject)
+      discard;   
+
+   float d = (length(iDepth.xyz) - iDepthRange.x) * iDepthRange.w;
+
+   oColour = float4(d, d * d, iDepthDir.z, iDepthDir.z*iDepthDir.z);
+
+}
