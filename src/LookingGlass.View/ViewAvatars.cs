@@ -31,7 +31,12 @@ namespace LookingGlass.View {
         }
 
         public void Shutdown() {
-            this.Close();
+            if (this.InvokeRequired) {
+                BeginInvoke((MethodInvoker)delegate() { this.Close(); });
+            }
+            else {
+                this.Close();
+            }
         }
     }
 }

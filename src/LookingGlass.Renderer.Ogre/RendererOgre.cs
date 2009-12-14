@@ -1103,7 +1103,6 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     private void TextureLoadedCallback(string textureEntityName, bool hasTransparancy) {
         LogManager.Log.Log(LogLevel.DRENDERDETAIL, "TextureLoadedCallback: Load complete. Name: {0}", textureEntityName);
         EntityNameOgre entName = new EntityNameOgre(textureEntityName);
-        Object[] textureCompleteParameters = { entName, hasTransparancy };
         string ogreResourceName = entName.OgreResourceName;
         if (hasTransparancy) {
             Ogr.RefreshResourceBF(100f, Ogr.ResourceTypeTransparentTexture, ogreResourceName);

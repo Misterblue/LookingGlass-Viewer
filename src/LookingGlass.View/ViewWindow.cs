@@ -104,7 +104,12 @@ public partial class ViewWindow : Form {
             m_renderer.RenderOneFrame(false, m_frameAllowanceMs);
         }
         if (!m_lgb.KeepRunning) {
-            this.Close();
+            if (this.InvokeRequired) {
+                BeginInvoke((MethodInvoker)delegate() { this.Close(); });
+            }
+            else {
+                this.Close();
+            }
         }
         return;
     }

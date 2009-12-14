@@ -1,4 +1,4 @@
-﻿/* Copyright (c) 2008 Robert Adams
+﻿/* Copyright (c) 2009 Robert Adams
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *     * Redistributions of source code must retain the above copyright
@@ -23,8 +23,35 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using LookingGlass.Comm;
+using LookingGlass.Framework;
+using LookingGlass.World;
 
-namespace LookingGlass.View {
-    interface IEntityTrackerProvider : IProvider {
+namespace LookingGlass.World.OS {
+public class OSAssetContextV1 : AssetContextBase {
+
+    public OSAssetContextV1() : base() {
+        m_Name = "Unknown";
     }
+
+    public OSAssetContextV1(string name) : base() {
+        m_Name = name;
+    }
+
+    public override void InitializeContextFinish() {
+        return;
+    }
+
+    public override bool isTextureOwner(EntityName textureEntityName) {
+        return false;
+    }
+
+    public override void DoTextureLoad(EntityName textureEntityName, AssetType typ, DownloadFinishedCallback finishCall) {
+    }
+
+    private void OnTextureLoadCompletion() {
+        // ProcessDownloadFinished(OMV.TextureRequestState state, OMV.Assets.AssetTexture assetTexture) {
+    }
+
+}
 }

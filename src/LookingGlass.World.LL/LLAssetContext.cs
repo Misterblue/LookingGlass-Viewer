@@ -42,40 +42,10 @@ namespace LookingGlass.World.LL {
     /// asset (texture) into the filesystem.
     /// </summary>
 public sealed class LLAssetContext : AssetContextBase {
-
     private ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
-
-    // used to lock access to the filesystem so the threads and instances of this don't get too tangled
-    public static readonly object FileSystemAccessLock = new object();
-
-    private int m_maxRequests;
-    private BasicWorkQueue m_completionWork;
 
     // private const string WorldIDMatch = "^(...)(...)(..)-(.)(.*)$";
     // private const string WorldIDReplace = "Texture/$1/$2/$3$4/$1$2$3-$4$5";
-
-    private ICommProvider m_comm;       // handle to the underlying LL comm
-
-    private class WaitingInfo : IComparable<WaitingInfo> {
-        public OMV.UUID worldID;
-        public DownloadFinishedCallback callback;
-        public string filename;
-        public AssetType type;
-        public WaitingInfo(OMV.UUID wid, DownloadFinishedCallback cback) {
-            worldID = wid;
-            callback = cback;
-        }
-        public int CompareTo(WaitingInfo other) {
-            return (worldID.CompareTo(other.worldID));
-        }
-    }
-
-    private string m_cacheDir;
-    public override string CacheDirBase {
-        get { return m_cacheDir; }
-    }
-
-    private Dictionary<OMV.UUID, WaitingInfo> m_waiting;
 
     public LLAssetContext() : base() {
         m_Name = "Unknown";
@@ -92,12 +62,7 @@ public sealed class LLAssetContext : AssetContextBase {
     /// </summary>
     /// <param name="gclient"></param>
     /// <param name="maxrequests"></param>
-    public void InitializeContext(ICommProvider comm, string cacheDir, int maxrequests) {
-        m_waiting = new Dictionary<OMV.UUID, WaitingInfo>();
-        m_completionWork = new BasicWorkQueue("LLAssetContextCompletion");
-        m_comm = comm;
-        m_cacheDir = cacheDir;
-        m_maxRequests = maxrequests;
+    public override void InitializeContextFinish() {
         m_comm.GridClient.Settings.MAX_CONCURRENT_TEXTURE_DOWNLOADS = m_maxRequests;
         // m_client.Assets.OnImageReceived += new OMV.AssetManager.ImageReceivedCallback(OnImageReceived);
         m_comm.GridClient.Assets.Cache.ComputeAssetCacheFilename = ComputeTextureFilename;
@@ -120,19 +85,6 @@ public sealed class LLAssetContext : AssetContextBase {
 
         // m_log.Log(LogLevel.DTEXTUREDETAIL, "ComputerTextureFilename: returning " + textureFilename);
         return textureFilename;
-    }
-
-    /// <summary>
-    /// Given a fully qualified filename, make sure all the parent directies exist
-    /// </summary>
-    /// <param name="filename"></param>
-    private static void MakeParentDirectoriesExist(string filename) {
-        string textureDirName = Path.GetDirectoryName(filename);
-        lock (LLAssetContext.FileSystemAccessLock) {
-            if (!Directory.Exists(textureDirName)) {
-                Directory.CreateDirectory(textureDirName);
-            }
-        }
     }
 
     /// <summary>
@@ -234,290 +186,26 @@ public sealed class LLAssetContext : AssetContextBase {
         m_currentOutstandingTextureRequests--;
         ThrottleTextureRequestsCheck();
     }
+
     #endregion THROTTLE TEXTURES
-
-    // Call the callback on a separate thread to keep from getting tangled
-    private bool FinishCallDoLater(DoLaterBase qInstance, Object parm) {
-        Object[] lParams = (Object[])parm;
-        DownloadFinishedCallback m_callback = (DownloadFinishedCallback)lParams[0];
-        string m_textureEntityName = (string)lParams[1];
-        bool m_hasTransparancy = (bool)lParams[2];
-
-        m_callback(m_textureEntityName, m_hasTransparancy);
-        return true;
-    }
-
-    /// Check the file at the specified filename for transparancy. We presume the texture is
-    /// a JPEG2000 image. If we can't figure it out, we presume it has transparancy.
-    /// </summary>
-    /// <param name="textureFilename"></param>
-    /// <returns></returns>
-    private bool CheckTextureFileForTransparancy(string textureFilename) {
-        bool ret = true;    // assume the worst about  this texture
-        try {
-            byte[] data = File.ReadAllBytes(textureFilename);
-            OMV.Assets.AssetTexture assetTexture = new OMV.Assets.AssetTexture(OMV.UUID.Zero, data);
-            ret = CheckAssetTextureForTransparancy(assetTexture);
-        }
-        catch (Exception e) {
-            m_log.Log(LogLevel.DTEXTURE, "CheckTextureFileForTransparancy: error checking {0}: {1}",
-                textureFilename, e.ToString());
-            ret = true;
-        }
-        return ret;
-    }
-
-    /// <summary>
-    /// Given a decoded asset texture, return whether there is any transparancy therein.
-    /// </summary>
-    /// <param name="assetTexture"></param>
-    /// <returns>true if there is transparancy in the texture</returns>
-    private static bool CheckAssetTextureForTransparancy(OMV.Assets.AssetTexture assetTexture) {
-        bool hasTransparancy = false;
-        try {
-            if (assetTexture.Image == null) {
-                assetTexture.Decode();
-            }
-            if (assetTexture.Image !=null && assetTexture.Image.Alpha != null)
-            {
-                for (int ii = 0; ii < assetTexture.Image.Alpha.Length; ii++) {
-                    if (assetTexture.Image.Alpha[ii] != 255) {
-                        hasTransparancy = true;
-                        break;
-                    }
-                }
-            }
-        }
-        catch {
-            hasTransparancy = false;
-        }
-        return hasTransparancy;
-    }
 
     // Used for texture pipeline
     // returns flag = true if texture was sucessfully downloaded
     private void OnACDownloadFinished(OMV.TextureRequestState state, OMV.Assets.AssetTexture assetTexture) {
-        // if texture could not be downloaded, create a fake texture
-        OMV.UUID assetWorldID = assetTexture.AssetID;
-        if ((state == OMV.TextureRequestState.NotFound) || (state == OMV.TextureRequestState.Timeout)) {
-            try {
-                // get the name of the entity from the WorldID that we have
-                EntityNameLL tempTexture = EntityNameLL.ConvertTextureWorldIDToEntityName(this, assetWorldID.ToString());
-                // calculate the filename this entity would have in the cache
-                string tempTextureFilename = Path.Combine(CacheDirBase, tempTexture.CacheFilename);
-                MakeParentDirectoriesExist(tempTextureFilename);
-
-                lock (FileSystemAccessLock) {
-                    string noTextureFilename = LookingGlassBase.Instance.AppParams.ParamString(m_comm.Name + ".Assets.NoTextureFilename");
-                    // if we copy the no texture file into the filesystem, we will never retry to
-                    // fetch the texture. This copy is not a good thing.
-                    if (!File.Exists(tempTextureFilename)) {
-                        File.Copy(noTextureFilename, tempTextureFilename);
-                    }
-                }
-                m_log.Log(LogLevel.DTEXTURE, 
-                    "TextureDownload: Texture fetch failed={0}. Using not found texture.", tempTexture.Name);
-            }
-            catch (Exception e) {
-                m_log.Log(LogLevel.DBADERROR, 
-                    "TextureDownload: Texture fetch failed. Could not create default texture: " + e.ToString());
-            }
-        }
-        List<WaitingInfo> toCall = new List<WaitingInfo>();
-        m_log.Log(LogLevel.DTEXTUREDETAIL, "OnACDownloadFinished: Completion for " + assetWorldID.ToString());
-        lock (m_waiting) {
-            foreach (KeyValuePair<OMV.UUID, WaitingInfo> kvp in m_waiting) {
-                if (kvp.Value.worldID == assetWorldID) {
-                    // sneak new values into the queued items 
-                    toCall.Add(kvp.Value);
-                }
-            }
-            // now remove the ones from the list (we cannot remove while transversing the list)
-            // only remove them if the code is not for just a progress update
-            if (state != OMV.TextureRequestState.Progress) {
-                foreach (WaitingInfo wx in toCall) {
-                    m_waiting.Remove(wx.worldID);
-                }
-            }
-        }
-        // m_completionWork.DoLater(new CompleteDownloadLater(this, assetTexture, toCall, m_comm.Name, m_log));
-        Object[] completeDownloadParams = { assetTexture, toCall, m_comm.Name };
-        m_completionWork.DoLater(CompleteDownloadLater, completeDownloadParams);
-        return;
-    }
-
-    private bool CompleteDownloadLater(DoLaterBase qInstance, Object parms) {
-        Object[] lParams = (Object[])parms;
-        OMV.Assets.AssetTexture m_assetTexture = (OMV.Assets.AssetTexture)lParams[0];
-        List<WaitingInfo> m_completeWork = (List<WaitingInfo>)lParams[1];
-        string m_commName = (string)lParams[2];
-        bool hasTransparancy;
-
-        foreach (WaitingInfo wii in m_completeWork) {
-            EntityName textureEntityName = EntityNameLL.ConvertTextureWorldIDToEntityName(this, wii.worldID);
-            bool m_convertToPng = LookingGlassBase.Instance.AppParams.ParamBool(m_commName + ".Assets.ConvertPNG");
-            OMV.Imaging.ManagedImage managedImage;
-            System.Drawing.Image tempImage = null;
-            if (wii.type == AssetType.Texture) {
-                // a regular texture we write out as it's JPEG2000 image
-                try {
-                    hasTransparancy = CheckAssetTextureForTransparancy(m_assetTexture);
-                    MakeParentDirectoriesExist(wii.filename);
-                    if (m_convertToPng) {
-                        // This PNG code kinda works but PNGs are larger than the JPEG files and
-                        // there are occasional 'out of memory'. It also uses WAY MORE disk space.
-                        if (OMVI.OpenJPEG.DecodeToImage(m_assetTexture.AssetData, out managedImage)) {
-                            try {
-                                tempImage = OMVI.LoadTGAClass.LoadTGA(new MemoryStream(managedImage.ExportTGA()));
-                            }
-                            catch (Exception e) {
-                                m_log.Log(LogLevel.DBADERROR, "Failed to export and load TGA data from decoded image: {0}", 
-                                    e.ToString());
-                            }
-                            try {
-                                using (Bitmap textureBitmap = new Bitmap(tempImage.Width, tempImage.Height,
-                                            System.Drawing.Imaging.PixelFormat.Format32bppArgb)) {
-                                    using (Graphics graphics = Graphics.FromImage(textureBitmap)) {
-                                        graphics.DrawImage(tempImage, 0, 0);
-                                        graphics.Flush();
-                                    }
-                                    lock (LLAssetContext.FileSystemAccessLock) {
-                                        using (FileStream fileStream = File.Open(wii.filename, FileMode.Create)) {
-                                            textureBitmap.Save(fileStream, System.Drawing.Imaging.ImageFormat.Png);
-                                            fileStream.Flush();
-                                            fileStream.Close();
-                                        }
-                                    }
-                                }
-                            }
-                            catch (Exception e) {
-                                m_log.Log(LogLevel.DBADERROR, "TEXTURE DOWNLOAD COMPLETE. FAILED PNG FILE CREATION FOR {0}: {1}", 
-                                        textureEntityName.Name, e.ToString());
-                            }
-                        }
-                        else {
-                            m_log.Log(LogLevel.DBADERROR, "TEXTURE DOWNLOAD COMPLETE. FAILED JPEG2 DECODE FOR {0}", textureEntityName.Name);
-                        }
-                    }
-                    else {
-                        // Just save the JPEG2000 file
-                        try {
-                            lock (LLAssetContext.FileSystemAccessLock) {
-                                using (FileStream fileStream = File.Open(wii.filename, FileMode.Create)) {
-                                    fileStream.Flush();
-                                    fileStream.Write(m_assetTexture.AssetData, 0, m_assetTexture.AssetData.Length);
-                                    fileStream.Close();
-                                }
-                            }
-                        }
-                        catch (Exception e) {
-                            m_log.Log(LogLevel.DBADERROR, "TEXTURE DOWNLOAD COMPLETE. ERROR JPEG2000 FILE CREATION FOR {0}: {1}", 
-                                        textureEntityName.Name, e.ToString());
-                        }
-                    }
-                    m_log.Log(LogLevel.DTEXTUREDETAIL, "Download finished callback: " + wii.worldID.ToString());
-                    wii.callback(textureEntityName.Name, hasTransparancy);
-                    Object[] finishCallParams = { wii.callback, textureEntityName.Name, hasTransparancy };
-                    m_completionWork.DoLater(FinishCallDoLater, finishCallParams);
-                }
-                catch (Exception e) {
-                    m_log.Log(LogLevel.DBADERROR, "TEXTURE DOWNLOAD COMPLETE. UNKNOWN FAILURE CREATING FILE FOR {0}: {1}", 
-                        textureEntityName.Name, e.ToString());
-                }
-            }
-            if (wii.type == AssetType.SculptieTexture) {
-                // for sculpties, we clear the alpha channel and write out a PNG
-                try {
-                    if (OMVI.OpenJPEG.DecodeToImage(m_assetTexture.AssetData, out managedImage)) {
-
-                        // have to clear the alpha channel for sculptie textures because of the TGA conversion
-                        if (managedImage.Alpha != null) {
-                            for (int ii = 0; ii < managedImage.Alpha.Length; ii++) managedImage.Alpha[ii] = 255;
-                        }
-                        try {
-                            tempImage = OMVI.LoadTGAClass.LoadTGA(new MemoryStream(managedImage.ExportTGA()));
-                        }
-                        catch (Exception e) {
-                            m_log.Log(LogLevel.DBADERROR, "Failed to export and load TGA data from decoded image: {0}", 
-                                e.ToString());
-                        }
-
-                        MakeParentDirectoriesExist(wii.filename);
-                        using (Bitmap textureBitmap = new Bitmap(tempImage.Width, tempImage.Height,
-                                    System.Drawing.Imaging.PixelFormat.Format32bppArgb)) {
-                            using (Graphics graphics = Graphics.FromImage(textureBitmap)) {
-                                graphics.DrawImage(tempImage, 0, 0);
-                                graphics.Flush();
-                            }
-
-                            try {
-                                lock (LLAssetContext.FileSystemAccessLock) {
-                                    string tempFilename = wii.filename + ".tmp";
-                                    using (FileStream fileStream = File.Open(tempFilename, FileMode.Create)) {
-                                        textureBitmap.Save(fileStream, System.Drawing.Imaging.ImageFormat.Png);
-                                        fileStream.Flush();
-                                        fileStream.Close();
-                                        // attempt to make the creation of the file almost atomic
-                                        FileInfo fi = new FileInfo(tempFilename);
-                                        fi.MoveTo(wii.filename);
-                                    }
-                                }
-                            }
-                            catch (Exception e) {
-                                m_log.Log(LogLevel.DBADERROR, "SCULPTIE TEXTURE DOWNLOAD COMPLETE. FAILED FILE CREATION FOR {0}: {1}", 
-                                        textureEntityName.Name, e.ToString());
-                                // the usual error is 'file already exists' so let the system use it
-                            }
-                        }
-                        m_log.Log(LogLevel.DTEXTUREDETAIL, "Download sculpty finished callback: " + wii.worldID.ToString());
-                        Object[] finishCallParams = { wii.callback, textureEntityName.Name, false };
-                        m_completionWork.DoLater(FinishCallDoLater, finishCallParams);
-                    }
-                    else {
-                        m_log.Log(LogLevel.DBADERROR, "SCULPTIE TEXTURE DOWNLOAD COMPLETE. FAILED JPEG2 DECODE FOR {0}", textureEntityName.Name);
-                    }
-                }
-                catch (Exception e) {
-                    m_log.Log(LogLevel.DBADERROR, "SCULPTIE TEXTURE DOWNLOAD COMPLETE. UNKNOWN ERROR PROCESSING {0}: {1}", 
-                        textureEntityName.Name, e.ToString());
-                }
-            }
-        }
-        m_completeWork.Clear();
-        ThrottleTextureRequestsComplete();
-        return true;
+        ProcessDownloadFinished(state, assetTexture);
     }
 
     /// <summary>
-    /// Get the texture right now. If the texture is not immediately available (not on local
-    /// computer's disk or memory), return null saying it's not here.
+    /// Implementation routine that the parent class uses to create communication specific entity
+    /// names.
     /// </summary>
-    /// <param name="textureEnt"></param>
-    /// <returns></returns>
-    public override System.Drawing.Bitmap GetTexture(EntityName textureEnt) {
-        Bitmap bitmap = null;
-        try {
-            string textureFilename = Path.Combine(CacheDirBase, textureEnt.CacheFilename);
-            lock (LLAssetContext.FileSystemAccessLock) {
-                if (File.Exists(textureFilename)) {
-                    bitmap = (Bitmap)Bitmap.FromFile(textureFilename);
-                }
-                else {
-                    // the texture is not there yet. Return null to tell the caller they are out of luck
-                    bitmap = null;
-                }
-            }
-        }
-        catch (OutOfMemoryException) {
-            // m_log.Log(LogLevel.DBADERROR, "GetTexture: OUT OF MEMORY!!!");
-            bitmap = null;
-        }
-        catch (Exception e) {
-            m_log.Log(LogLevel.DBADERROR, "GetTexture: Exception getting texture {0}: {1}",
-                textureEnt.Name, e.ToString());
-            bitmap = null;
-        }
-        return bitmap;
+    /// <param name="acb"></param>
+    /// <param name="at"></param>
+    protected override EntityName ConvertToEntityName(AssetContextBase acb, string worldID) {
+        return EntityNameLL.ConvertTextureWorldIDToEntityName(acb, worldID);
+    }
+    protected override void CompletionWorkComplete() {
+        ThrottleTextureRequestsComplete();
     }
 
     private void OnImageReceived(OMV.ImageDownload cntl, OMV.Assets.AssetTexture textureID) {

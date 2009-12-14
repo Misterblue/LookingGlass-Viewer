@@ -32,8 +32,9 @@
 // "Renderer.Ogre.Ambient.Material": "<0.4,0.4,0.4>",
 
 // ====================================================
-"Comm.Texture.MaxRequests": "6",
+"Comm.Texture.MaxRequests": "8",
 "Comm.Settings.MultipleSims": "false",
+"Comm.Assets.ConvertPNG": "true",
 
 // ====================================================
 "ParameterWithoutAComma": "Last"
