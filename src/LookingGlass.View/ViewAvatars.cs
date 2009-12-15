@@ -38,5 +38,7 @@ namespace LookingGlass.View {
                 this.Close();
             }
         }
+
+    
     }
 }

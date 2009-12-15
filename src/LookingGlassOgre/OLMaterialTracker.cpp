@@ -295,9 +295,14 @@ void OLMaterialTracker::GetMeshesToRefreshForTexture(MeshPtrHashMap* meshes, con
 							if (oneTus->getTextureName() == texName) {
 								// we have the material pass with this texture. Update transparancy flag while here
 								if (hasTransparancy) {
-									onePass->setDepthWriteEnabled(false);
-									onePass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
-								}
+									// since we know  the texture has transparancy, make sure the pass is good for that
+									// onePass->setDepthWriteEnabled(false);
+									// onePass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
+									onePass->setSceneBlending(Ogre::SBT_REPLACE);
+									onePass->setAlphaRejectSettings(Ogre::CMPF_GREATER_EQUAL, 230);
+									onePass->setCullingMode(Ogre::CULL_NONE);
+									onePass->setManualCullingMode(Ogre::MANUAL_CULL_NONE);
+													}
 								else {
 									onePass->setDepthWriteEnabled(true);
 									onePass->setSceneBlending(Ogre::SBT_REPLACE);
@@ -402,11 +407,6 @@ void OLMaterialTracker::CreateMaterialResource2(const char* mName, const char* t
 	pass->setAmbient(LG::RendererOgre::Instance()->MaterialAmbientColor);
 	pass->setVertexColourTracking(Ogre::TVC_AMBIENT);
 	if (textureName.length() > 0) {
-		Ogre::TextureUnitState* tus2 = pass->createTextureUnitState();
-		tus2->setColourOperationEx(Ogre::LBX_SOURCE1, Ogre::LBS_CURRENT, Ogre::LBS_MANUAL,
-				 	Ogre::ColourValue( parms[CreateMaterialColorR], parms[CreateMaterialColorG], 
-						parms[CreateMaterialColorB], parms[CreateMaterialColorA]));
-
 		Ogre::TextureUnitState* tus = pass->createTextureUnitState(textureName);
 
 		// use SceneBlendType to add the alpha information
@@ -415,13 +415,13 @@ void OLMaterialTracker::CreateMaterialResource2(const char* mName, const char* t
 		}
 		else {
 			// next 2 are what most of the forum entries suggest
-			pass->setDepthWriteEnabled(false);
-			pass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
+			// pass->setDepthWriteEnabled(false);
+			// pass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
 			// next 4 lines found in http://www.ogre3d.org/wiki/index.php/Creating_transparency_based_on_a_key_colour_in_code
-			// pass->setSceneBlending(Ogre::SBT_REPLACE);
-			// pass->setAlphaRejectSettings(Ogre::CMPF_GREATER_EQUAL, 160);
-			// pass->setCullingMode(Ogre::CULL_NONE);
-			// pass->setManualCullingMode(Ogre::MANUAL_CULL_NONE);
+			pass->setSceneBlending(Ogre::SBT_REPLACE);
+			pass->setAlphaRejectSettings(Ogre::CMPF_GREATER_EQUAL, 230);
+			pass->setCullingMode(Ogre::CULL_NONE);
+			pass->setManualCullingMode(Ogre::MANUAL_CULL_NONE);
 			mat->setTransparencyCastsShadows(true);
 
 		}
@@ -434,11 +434,19 @@ void OLMaterialTracker::CreateMaterialResource2(const char* mName, const char* t
 					parms[CreateMaterialColorB], parms[CreateMaterialColorA]
 		);
 
+		Ogre::TextureUnitState* tus2 = pass->createTextureUnitState();
+		tus2->setColourOperationEx(Ogre::LBX_MODULATE, Ogre::LBS_CURRENT, Ogre::LBS_MANUAL,
+				 	Ogre::ColourValue( parms[CreateMaterialColorR], parms[CreateMaterialColorG], 
+						parms[CreateMaterialColorB], parms[CreateMaterialColorA]));
+		tus2->setAlphaOperation(Ogre::LBX_SOURCE2, Ogre::LBS_TEXTURE, Ogre::LBS_CURRENT);
+
+		/*
 		tus->setColourOperationEx(Ogre::LBX_MODULATE, Ogre::LBS_TEXTURE, Ogre::LBS_CURRENT);
 		// tus->setAlphaOperation(Ogre::LBX_MODULATE, Ogre::LBS_TEXTURE, Ogre::LBS_CURRENT);
 		if (parms[CreateMaterialTransparancy] != 1.0) {
 			tus->setAlphaOperation(Ogre::LBX_SOURCE2, Ogre::LBS_TEXTURE, Ogre::LBS_CURRENT);
 		}
+		*/
 	}
 	else {
 		// this code makes the prim a solid color

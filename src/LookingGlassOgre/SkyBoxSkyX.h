@@ -40,8 +40,8 @@ public:
 	void AddSkyPass(Ogre::MaterialPtr matP);
 
 	// bool frameStarted(const Ogre::FrameEvent &e);
-	bool frameRenderingQueued(const Ogre::FrameEvent &e);
-	// bool frameEnded(const Ogre::FrameEvent &e);
+	// bool frameRenderingQueued(const Ogre::FrameEvent &e);
+	bool frameEnded(const Ogre::FrameEvent &e);
 
 private:
 	SkyX::SkyX* m_SkyX;

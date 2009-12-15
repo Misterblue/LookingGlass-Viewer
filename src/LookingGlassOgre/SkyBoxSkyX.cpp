@@ -34,11 +34,13 @@ SkyBoxSkyX::~SkyBoxSkyX() {
 
 void SkyBoxSkyX::Initialize() {
 	// Create SkyX
+	LG::Log("SkyBoxSkyX::Initialize");
 	m_SkyX = new SkyX::SkyX(LG::RendererOgre::Instance()->m_sceneMgr, LG::RendererOgre::Instance()->m_camera->Cam);
 	m_SkyX->create();
 }
 
 void SkyBoxSkyX::Start() {
+	LG::Log("SkyBoxSkyX::Start");
 	// Add a basic cloud layer
 	// m_SkyX->getCloudsManager()->add(SkyX::CloudLayer::Options(/* Default options */));
 	// add cloud layer 1. These are the default values
@@ -77,9 +79,11 @@ void SkyBoxSkyX::Start() {
 	m_moon->setCastShadows(true);
 
 	if (LG::GetParameterBool("Renderer.Ogre.SkyX.LightingHDR")) {
+		LG::Log("SkyBoxSkyX::Start: HDR lighting mode");
 		m_SkyX->setLightingMode(m_SkyX->LM_HDR);
 	}
 	else {
+		LG::Log("SkyBoxSkyX::Start: LDR lighting mode");
 		m_SkyX->setLightingMode(m_SkyX->LM_LDR);
 	}
 
@@ -96,6 +100,7 @@ void SkyBoxSkyX::Start() {
 }
 
 void SkyBoxSkyX::Stop() {
+	LG::Log("SkyBoxSkyX::Stop");
 	LG::RendererOgre::Instance()->m_root->removeFrameListener(this);
 	if (m_SkyX != 0) {
 		delete m_SkyX;
@@ -108,8 +113,8 @@ void SkyBoxSkyX::AddSkyPass(Ogre::MaterialPtr matP) {
 }
 
 
-// bool SkyBoxSkyX::frameEnded(const Ogre::FrameEvent &e) {
-bool SkyBoxSkyX::frameRenderingQueued(const Ogre::FrameEvent &e) {
+bool SkyBoxSkyX::frameEnded(const Ogre::FrameEvent &e) {
+// bool SkyBoxSkyX::frameRenderingQueued(const Ogre::FrameEvent &e) {
 /*
 		// Check camera height
 		Ogre::RaySceneQuery * raySceneQuery = 
