@@ -183,7 +183,7 @@ static class Ogr {
                             [MarshalAs(UnmanagedType.LPStr)]string textureName,
                             [MarshalAs(UnmanagedType.LPArray)] float[] parms);
     [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
-    public static extern void CreateMaterialResource6BF(
+    public static extern void CreateMaterialResource7BF(
                             float prio,
                             [MarshalAs(UnmanagedType.LPStr)]string uniq,
                             [MarshalAs(UnmanagedType.LPStr)]string matName1,
@@ -192,12 +192,14 @@ static class Ogr {
                             [MarshalAs(UnmanagedType.LPStr)]string matName4,
                             [MarshalAs(UnmanagedType.LPStr)]string matName5,
                             [MarshalAs(UnmanagedType.LPStr)]string matName6,
+                            [MarshalAs(UnmanagedType.LPStr)]string matName7,
                             [MarshalAs(UnmanagedType.LPStr)]string textureName1,
                             [MarshalAs(UnmanagedType.LPStr)]string textureName2,
                             [MarshalAs(UnmanagedType.LPStr)]string textureName3,
                             [MarshalAs(UnmanagedType.LPStr)]string textureName4,
                             [MarshalAs(UnmanagedType.LPStr)]string textureName5,
                             [MarshalAs(UnmanagedType.LPStr)]string textureName6,
+                            [MarshalAs(UnmanagedType.LPStr)]string textureName7,
                             [MarshalAs(UnmanagedType.LPArray)] float[] parms);
     // pass an array of parameters to create the material
     public enum CreateMaterialParam {

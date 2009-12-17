@@ -56,6 +56,11 @@ public abstract class EntityBase : IEntity {
         set { m_name = value; }
     }
 
+    protected EntityBase m_containingEntity;
+    public virtual IEntity ContainingEntity {
+        get { return m_containingEntity; }
+    }
+
     protected int m_lastEntityHashCode = 0;
     public int LastEntityHashCode { get { return m_lastEntityHashCode; } set { m_lastEntityHashCode = value; } }
 

@@ -179,7 +179,7 @@ public class RendererOgreLL : IWorldRenderConv {
 
             // while we're in the neighborhood, we can create the materials
             if (m_buildMaterialsAtRenderInfoTime) {
-                CreateMaterialResource6X(priority, ent, prim, 6);
+                CreateMaterialResource7X(priority, ent, prim, 7);
             }
         }
         return ri;
@@ -363,7 +363,7 @@ public class RendererOgreLL : IWorldRenderConv {
 
                 // while we're in the neighborhood, we can create the materials
                 if (m_buildMaterialsAtMeshCreationTime) {
-                    CreateMaterialResource6X(priority, ent, prim, mesh.Faces.Count);
+                    CreateMaterialResource7X(priority, ent, prim, mesh.Faces.Count);
                 }
 
                 // We were passed a 'context' entity. Create a scene node name to pass to
@@ -530,7 +530,7 @@ public class RendererOgreLL : IWorldRenderConv {
         else {
             // a standard prim, for the rebulding of it's materials
             if (prim == null) throw new LookingGlassException("ASSERT: RenderOgreLL: prim is null 3");
-            CreateMaterialResource6X(priority, llent, prim, 6);
+            CreateMaterialResource7X(priority, llent, prim, 6);
         }
     }
 
@@ -552,9 +552,9 @@ public class RendererOgreLL : IWorldRenderConv {
     /// </summary>
     /// <param name="ent"></param>
     /// <param name="prim"></param>
-    private void CreateMaterialResource6X(float prio, IEntity ent, OMV.Primitive prim, int faces) {
+    private void CreateMaterialResource7X(float prio, IEntity ent, OMV.Primitive prim, int faces) {
         // we create the usual ones. extra faces will be asked for on demand
-        const int genCount = 6;
+        const int genCount = 7;
         float[] textureParams = new float[1 + ((int)Ogr.CreateMaterialParam.maxParam) * genCount];
         string[] materialNames = new string[genCount];
         string[] textureOgreNames = new string[genCount];
@@ -574,10 +574,12 @@ public class RendererOgreLL : IWorldRenderConv {
                 pBase += (int)textureParams[0];
             }
         }
-        m_log.Log(LogLevel.DRENDERDETAIL, "CreateMaterialResource6X: materials for {0}", ent.Name);
-        Ogr.CreateMaterialResource6BF(prio, materialNames[0],
-            materialNames[0], materialNames[1], materialNames[2], materialNames[3], materialNames[4], materialNames[5],
-            textureOgreNames[0], textureOgreNames[1], textureOgreNames[2], textureOgreNames[3], textureOgreNames[4], textureOgreNames[5],
+        m_log.Log(LogLevel.DRENDERDETAIL, "CreateMaterialResource7X: materials for {0}", ent.Name);
+        Ogr.CreateMaterialResource7BF(prio, materialNames[0],
+            materialNames[0], materialNames[1], materialNames[2], materialNames[3], 
+            materialNames[4], materialNames[5], materialNames[6],
+            textureOgreNames[0], textureOgreNames[1], textureOgreNames[2], textureOgreNames[3], 
+            textureOgreNames[4], textureOgreNames[5], textureOgreNames[6],
             textureParams
         );
     }

@@ -70,11 +70,13 @@ public:
 
 	void RefreshResource(float, char*, int);
 	void CreateMaterialResource2(float, const char*, const char*, const float*);
-	void CreateMaterialResource6(float, const char*, 
+	void CreateMaterialResource7(float, const char*, 
 			const char* matName1, const char* matName2, const char* matName3, 
 			const char* matName4, const char* matName5, const char* matName6, 
+			const char* matName7,
 			char* textureName1, char* textureName2, char* textureName3, 
 			char* textureName4, char* textureName5, char* textureName6, 
+			char* textureName7,
 			const float* parms);
 	void CreateMeshResource(float, const char*, const char*, const int*, const float*);
 	void CreateMeshSceneNode(float,  Ogre::SceneManager* sceneMgr, 

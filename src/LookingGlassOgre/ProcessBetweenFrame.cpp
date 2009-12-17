@@ -87,7 +87,7 @@ public:
 };
 
 // ====================================================================
-class CreateMaterialResource6Qc : public GenericQc {
+class CreateMaterialResource7Qc : public GenericQc {
 public:
 	Ogre::String matName1;
 	Ogre::String matName2;
@@ -95,18 +95,22 @@ public:
 	Ogre::String matName4;
 	Ogre::String matName5;
 	Ogre::String matName6;
+	Ogre::String matName7;
 	Ogre::String textureName1;
 	Ogre::String textureName2;
 	Ogre::String textureName3;
 	Ogre::String textureName4;
 	Ogre::String textureName5;
 	Ogre::String textureName6;
+	Ogre::String textureName7;
 	const float* matParams;
-	CreateMaterialResource6Qc(float prio, Ogre::String uni, 
+	CreateMaterialResource7Qc(float prio, Ogre::String uni, 
 			const char* matName1p, const char* matName2p, const char* matName3p, 
-			const char* matName4p, const char* matName5p, const char* matName6p, 
+			const char* matName4p, const char* matName5p, const char* matName6p,
+			const char* matName7p,
 			char* textureName1p, char* textureName2p, char* textureName3p, 
 			char* textureName4p, char* textureName5p, char* textureName6p, 
+			char* textureName7p,
 			const float* parmsp) {
 		// this->priority = prio;
 		this->priority = 0.0;	// EXPERIMENTAL: to get materials out of the way
@@ -137,16 +141,22 @@ public:
 			this->matName6 = Ogre::String(matName6p);
 			this->textureName6 = Ogre::String(textureName6p);
 		}
-		int blocksize = (*parmsp * 6 + 1 ) * sizeof(float);
+		if (matName7p != 0) {
+			this->matName7 = Ogre::String(matName7p);
+			this->textureName7 = Ogre::String(textureName7p);
+		}
+		int blocksize = (*parmsp * 7 + 1 ) * sizeof(float);
 		this->matParams = (float*)malloc(blocksize);
 		memcpy((void*)this->matParams, parmsp, blocksize);
 	}
-	~CreateMaterialResource6Qc(void) {
+	~CreateMaterialResource7Qc(void) {
 		this->uniq.clear();
 		this->matName1.clear(); this->matName2.clear(); this->matName3.clear();
 		this->matName4.clear(); this->matName5.clear(); this->matName6.clear();
+		this->matName7.clear();
 		this->textureName1.clear(); this->textureName2.clear(); this->textureName3.clear();
 		this->textureName4.clear(); this->textureName5.clear(); this->textureName6.clear();
+		this->textureName7.clear();
 		free((void*)this->matParams);
 	}
 	void Process() {
@@ -162,6 +172,8 @@ public:
 			LG::OLMaterialTracker::Instance()->CreateMaterialResource2(this->matName5.c_str(), this->textureName5.c_str(), &(this->matParams[1 + stride * 4]));
 		if (!this->matName6.empty())
 			LG::OLMaterialTracker::Instance()->CreateMaterialResource2(this->matName6.c_str(), this->textureName6.c_str(), &(this->matParams[1 + stride * 5]));
+		if (!this->matName7.empty())
+			LG::OLMaterialTracker::Instance()->CreateMaterialResource2(this->matName7.c_str(), this->textureName7.c_str(), &(this->matParams[1 + stride * 6]));
 	}
 };
 
@@ -453,18 +465,20 @@ void ProcessBetweenFrame::CreateMaterialResource2(float priority,
 	LG::IncStat(LG::StatBetweenFrameWorkItems);
 	LG::IncStat(LG::StatBetweenFrameCreateMaterialResource);
 }
-void ProcessBetweenFrame::CreateMaterialResource6(float priority, const char* uniq,
+void ProcessBetweenFrame::CreateMaterialResource7(float priority, const char* uniq,
 			const char* matName1, const char* matName2, const char* matName3, 
 			const char* matName4, const char* matName5, const char* matName6, 
+			const char* matName7,
 			char* textureName1, char* textureName2, char* textureName3, 
 			char* textureName4, char* textureName5, char* textureName6, 
+			char* textureName7,
 			const float* parms) {
 	LGLOCK_LOCK(m_workItemMutex);
-	CreateMaterialResource6Qc* cmr6q = new CreateMaterialResource6Qc(priority, uniq, 
-			matName1, matName2, matName3, matName4, matName5, matName6, 
-			textureName1, textureName2, textureName3, textureName4, textureName5, textureName6, 
+	CreateMaterialResource7Qc* cmr7q = new CreateMaterialResource7Qc(priority, uniq, 
+			matName1, matName2, matName3, matName4, matName5, matName6, matName7,
+			textureName1, textureName2, textureName3, textureName4, textureName5, textureName6, textureName7,
 			parms);
-	QueueWork((GenericQc*)cmr6q);
+	QueueWork((GenericQc*)cmr7q);
 	LGLOCK_UNLOCK(m_workItemMutex);
 	LG::IncStat(LG::StatBetweenFrameWorkItems);
 	LG::IncStat(LG::StatBetweenFrameCreateMaterialResource);

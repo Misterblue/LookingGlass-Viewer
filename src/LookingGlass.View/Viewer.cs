@@ -371,15 +371,21 @@ public class Viewer : ModuleBase, IViewProvider {
                     m_mainCamera.Update(agnt.GlobalPosition + globalOffset, agnt.Heading);
                      */
                     // OMV.Vector3 cameraOffset = new OMV.Vector3(0, m_agentCameraBehind, m_agentCameraAbove);
-                    OMV.Vector3 cameraOffset = new OMV.Vector3(m_agentCameraBehind, 0, m_agentCameraAbove);
+                    // OMV.Vector3 cameraOffset = new OMV.Vector3(m_agentCameraBehind, 0, m_agentCameraAbove);
+                    OMV.Vector3 cameraOffset = new OMV.Vector3(0f, 0f, 0f);
                     // world space desired camera location
-                    OMV.Vector3 rotatedOffset = Utilities.RotateVector(agnt.Heading, cameraOffset);
+                    // OMV.Vector3 rotatedOffset = Utilities.RotateVector(agnt.Heading, cameraOffset);
+                    // OMV.Vector3 rotatedOffset = Utilities.RotateVector(agnt.Heading, cameraOffset);
+                    OMV.Vector3 rotatedOffset = cameraOffset * OMV.Quaternion.Inverse(agnt.Heading);
                     OMV.Vector3d globalRotatedOffset = new OMV.Vector3d(rotatedOffset.X, rotatedOffset.Y, rotatedOffset.Z);
                     OMV.Vector3d desiredCameraPosition = agnt.GlobalPosition + globalRotatedOffset;
-                    // OMV.Vector3d globalOffet = desiredCameraPosition - m_mainCamera.GlobalPosition();
 
                     m_log.Log(LogLevel.DVIEWDETAIL, "OnAgentUpdate: offset={0}, goffset={1}, cpos={2}, apos={3}",
                         cameraOffset, globalRotatedOffset, desiredCameraPosition, agnt.GlobalPosition);
+                    if (agnt.AssociatedAvatar != null) {
+                        m_log.Log(LogLevel.DVIEWDETAIL, "OnAgentUpdate: av.gpos={0}, av.head={1}",
+                            agnt.AssociatedAvatar.GlobalPosition, agnt.AssociatedAvatar.Heading);
+                    }
 
                     m_mainCamera.Update(desiredCameraPosition, agnt.Heading);
                 }
