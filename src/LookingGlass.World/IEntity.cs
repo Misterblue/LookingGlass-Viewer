@@ -35,6 +35,9 @@ public interface IEntity : IRegistryCore, IDisposable {
     RegionContextBase RegionContext { get; }
     AssetContextBase AssetContext { get; }
 
+    // Returns the entity which implements IEntityCollection which contains this entity
+    IEntity ContainingEntity { get; }
+
     OMV.Quaternion Heading { get; set; }
     OMV.Vector3 RelativePosition { get; set; }   // position relative to RegionContext
     OMV.Vector3d GlobalPosition { get; set;  }

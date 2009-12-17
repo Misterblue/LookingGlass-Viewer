@@ -431,14 +431,14 @@ void OLMaterialTracker::CreateMaterialResource2(const char* mName, const char* t
 		tus->setTextureVScale(parms[CreateMaterialScaleV]);
 		tus->setTextureRotate(Ogre::Radian(parms[CreateMaterialRotate]));
 		pass->setDiffuse(parms[CreateMaterialColorR], parms[CreateMaterialColorG], 
-					parms[CreateMaterialColorB], parms[CreateMaterialColorA]
-		);
+					parms[CreateMaterialColorB], parms[CreateMaterialColorA] );
 
 		Ogre::TextureUnitState* tus2 = pass->createTextureUnitState();
 		tus2->setColourOperationEx(Ogre::LBX_MODULATE, Ogre::LBS_CURRENT, Ogre::LBS_MANUAL,
 				 	Ogre::ColourValue( parms[CreateMaterialColorR], parms[CreateMaterialColorG], 
 						parms[CreateMaterialColorB], parms[CreateMaterialColorA]));
-		tus2->setAlphaOperation(Ogre::LBX_SOURCE2, Ogre::LBS_TEXTURE, Ogre::LBS_CURRENT);
+		// tus2->setAlphaOperation(Ogre::LBX_SOURCE2, Ogre::LBS_TEXTURE, Ogre::LBS_CURRENT);
+		tus2->setAlphaOperation(Ogre::LBX_MODULATE_X2, Ogre::LBS_TEXTURE, Ogre::LBS_CURRENT);
 
 		/*
 		tus->setColourOperationEx(Ogre::LBX_MODULATE, Ogre::LBS_TEXTURE, Ogre::LBS_CURRENT);
@@ -454,11 +454,10 @@ void OLMaterialTracker::CreateMaterialResource2(const char* mName, const char* t
 		tus->setColourOperationEx(Ogre::LBX_SOURCE1, Ogre::LBS_MANUAL, Ogre::LBS_CURRENT,
 				Ogre::ColourValue(parms[CreateMaterialColorR], parms[CreateMaterialColorG], 
 				parms[CreateMaterialColorB], parms[CreateMaterialColorA]));
-		// tus->setAlphaOperation(Ogre::LBX_SOURCE1, Ogre::LBS_MANUAL, Ogre::LBS_CURRENT,
-		// 		parms[CreateMaterialColorA]);
+		tus->setAlphaOperation(Ogre::LBX_SOURCE1, Ogre::LBS_MANUAL, Ogre::LBS_CURRENT,
+				parms[CreateMaterialColorA]);
 		pass->setDiffuse(parms[CreateMaterialColorR], parms[CreateMaterialColorG], 
-					parms[CreateMaterialColorB], parms[CreateMaterialColorA]
-		);
+					parms[CreateMaterialColorB], parms[CreateMaterialColorA] );
 		if (parms[CreateMaterialColorA] == 1.0) {
 			pass->setSceneBlending(Ogre::SBT_REPLACE);
 		}

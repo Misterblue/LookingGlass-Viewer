@@ -115,22 +115,21 @@ void SkyBoxSkyX::AddSkyPass(Ogre::MaterialPtr matP) {
 
 bool SkyBoxSkyX::frameEnded(const Ogre::FrameEvent &e) {
 // bool SkyBoxSkyX::frameRenderingQueued(const Ogre::FrameEvent &e) {
-/*
 		// Check camera height
+		Ogre::Camera* cam = LG::RendererOgre::Instance()->m_camera->Cam;
 		Ogre::RaySceneQuery * raySceneQuery = 
-			LG::RendererOgre::Instance()->mSceneMgr->
-			     createRayQuery(Ogre::Ray(mCamera->getPosition() + Ogre::Vector3(0,1000000,0), 
-				                Vector3::NEGATIVE_UNIT_Y));
+			LG::RendererOgre::Instance()->m_sceneMgr->
+			createRayQuery(Ogre::Ray(cam->getPosition() + Ogre::Vector3(0,1000000,0), 
+			Ogre::Vector3::NEGATIVE_UNIT_Y));
 		Ogre::RaySceneQueryResult& qryResult = raySceneQuery->execute();
         Ogre::RaySceneQueryResult::iterator i = qryResult.begin();
         if (i != qryResult.end() && i->worldFragment) {
-			if (LG::RendererOgre::Instance()->mCamera->getDerivedPosition().y < i->worldFragment->singleIntersection.y + 30) {
-                LG::RendererOgre::Instance()->mCamera-> setPosition(mCamera->getPosition().x, 
+			if (cam->getDerivedPosition().y < i->worldFragment->singleIntersection.y + 30) {
+                cam->setPosition(cam->getPosition().x, 
                                  i->worldFragment->singleIntersection.y + 30, 
-                                 mCamera->getPosition().z);
+                                 cam->getPosition().z);
 			}
         }
-		*/
 
 		m_sun->setPosition(m_SkyX->getAtmosphereManager()->getSunPosition());
 		m_sun->setDirection(m_SkyX->getAtmosphereManager()->getSunDirection());
