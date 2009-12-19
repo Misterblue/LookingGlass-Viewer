@@ -218,8 +218,8 @@ void OLMeshTracker::RequestMesh(Ogre::String meshName, Ogre::String context) {
 		LG::RequestResource(meshName.c_str(), context.c_str(), LG::ResourceTypeMesh);
 	}
 	else {
-		// see if it's been 2 seconds since we asked for this material
-		if ((intr->second + 2000) > now) {
+		// see if it's been 10 seconds since we asked for this material
+		if ((intr->second + 10000) > now) {
 			// been a while. Reset timer and ask for the material
 			intr->second = now;
 			LG::RequestResource(meshName.c_str(), context.c_str(), LG::ResourceTypeMesh);
@@ -277,7 +277,7 @@ void OLMeshTracker::MakeUnLoaded(Ogre::String meshName, Ogre::String stringParam
 // Serialize the mesh to it's file on our own thread.
 void OLMeshTracker::MakePersistant(Ogre::String meshName, Ogre::String entName, Ogre::String stringParm, Ogre::Entity* entityParm) {
 	LGLOCK_LOCK(MeshTrackerLock);
-	// check to see if in unloaded list, if so, remove it and claim success
+	// check to see if in unloaded list, if so, remove it
 	GenericQm* unloadEntry = m_meshesToUnload->Find(meshName);
 	if (unloadEntry != NULL) {
 		LG::Log("OLMeshTracker::MakePersistant: removing one from unload list: %s", meshName.c_str());

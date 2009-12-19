@@ -433,12 +433,15 @@ void OLMaterialTracker::CreateMaterialResource2(const char* mName, const char* t
 		pass->setDiffuse(parms[CreateMaterialColorR], parms[CreateMaterialColorG], 
 					parms[CreateMaterialColorB], parms[CreateMaterialColorA] );
 
-		Ogre::TextureUnitState* tus2 = pass->createTextureUnitState();
-		tus2->setColourOperationEx(Ogre::LBX_MODULATE, Ogre::LBS_CURRENT, Ogre::LBS_MANUAL,
-				 	Ogre::ColourValue( parms[CreateMaterialColorR], parms[CreateMaterialColorG], 
-						parms[CreateMaterialColorB], parms[CreateMaterialColorA]));
-		// tus2->setAlphaOperation(Ogre::LBX_SOURCE2, Ogre::LBS_TEXTURE, Ogre::LBS_CURRENT);
-		tus2->setAlphaOperation(Ogre::LBX_MODULATE_X2, Ogre::LBS_TEXTURE, Ogre::LBS_CURRENT);
+		if ((parms[CreateMaterialColorR] + parms[CreateMaterialColorG] + 
+						parms[CreateMaterialColorB] + parms[CreateMaterialColorA]) != 4.0) {
+			Ogre::TextureUnitState* tus2 = pass->createTextureUnitState();
+			tus2->setColourOperationEx(Ogre::LBX_MODULATE, Ogre::LBS_CURRENT, Ogre::LBS_MANUAL,
+					 	Ogre::ColourValue( parms[CreateMaterialColorR], parms[CreateMaterialColorG], 
+							parms[CreateMaterialColorB], parms[CreateMaterialColorA]));
+			// tus2->setAlphaOperation(Ogre::LBX_SOURCE2, Ogre::LBS_TEXTURE, Ogre::LBS_CURRENT);
+			tus2->setAlphaOperation(Ogre::LBX_MODULATE, Ogre::LBS_TEXTURE, Ogre::LBS_CURRENT);
+		}
 
 		/*
 		tus->setColourOperationEx(Ogre::LBX_MODULATE, Ogre::LBS_TEXTURE, Ogre::LBS_CURRENT);

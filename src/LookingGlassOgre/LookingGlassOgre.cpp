@@ -344,7 +344,7 @@ const bool LG::isTrue(const char* txt) {
 
 // Call back into the managed world to output a log message with formatting
 void LG::Log(const char* msg, ...) {
-	char buff[1024];
+	char buff[2048];
 	if (LG::debugLogCallback != NULL) {
 		va_list args;
 		va_start(args, msg);

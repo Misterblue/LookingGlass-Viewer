@@ -118,22 +118,23 @@ namespace LG {
 	// If the passed parameter is 'true' we call the windows message pump
 	// and the number of ms this frame should take. We do between frame work
 	// with any extra time.
-	unsigned long m_lastFrameTime;
 	bool RendererOgre::renderOneFrame(bool pump, int len) {
 		bool ret = true;
 		unsigned long now = rendererTimeKeeper->getMilliseconds();
 		unsigned long timeStartedLastFrame = rendererTimeKeeper->getMilliseconds();
 		if (m_root != NULL) {
-			// LGLOCK_LOCK(m_sceneGraphLock);
+			LGLOCK_LOCK(m_sceneGraphLock);
 			ret = m_root->renderOneFrame();
-			// LGLOCK_UNLOCK(m_sceneGraphLock);
-			// LGLOCK_NOTIFY_ALL(m_sceneGraphLock);
+			LGLOCK_UNLOCK(m_sceneGraphLock);
+			LGLOCK_NOTIFY_ALL(m_sceneGraphLock);
 			if (pump) Ogre::WindowEventUtilities::messagePump();
 		}
 
 		/*
 		// The amount of time a frame takes to render is passed to us
 		// If we have time left over and there is between frame processing, do them
+		// DEBUG NOTE: removed here in lue of ProcessBetweenFrames using a fixed
+		// amount of time of processing.
 		int remaining = len - ((int)(now - timeStartedLastFrame));
 		while (remaining > 10) {
 			if (m_processBetweenFrame->HasWorkItems()) {
@@ -222,6 +223,7 @@ namespace LG {
 
 		m_root = new Ogre::Root(LG::GetParameter("Renderer.Ogre.PluginFilename"));
 		LG::Log("RendererOgre::initialize: after new Ogre::Root()");
+
 		// if detail logging is turned off, I don't want Ogre yakking up a storm either
 		if (LG::debugLogCallback == NULL) {
 			Ogre::LogManager::getSingleton().setLogDetail(Ogre::LL_LOW);
@@ -300,7 +302,7 @@ namespace LG {
 		m_root->getRenderSystem()->preExtraThreadsStarted();
 #endif
 		LG::ProcessBetweenFrame::Instance();
-		LG::ProcessAnyTime::Instance();
+		// LG::ProcessAnyTime::Instance();
 		LG::OLMaterialTracker::Instance();
 		LG::OLMeshTracker::Instance();
 		LG::RegionTracker::Instance();
@@ -387,6 +389,7 @@ namespace LG {
 			SceneAmbientColor = LG::GetParameterColor("Renderer.Ogre.Ambient.Scene");
 			MaterialAmbientColor = LG::GetParameterColor("Renderer.Ogre.Ambient.Material");
 			m_sceneMgr->setAmbientLight(SceneAmbientColor);
+			m_sceneMgr->setCameraRelativeRendering(true);
 			const char* shadowName = LG::GetParameter("Renderer.Ogre.ShadowTechnique");
 			if (strlen(shadowName) == 0 || stricmp(shadowName, "none") == 0) {
 				this->Shadow = new ShadowBase();
@@ -645,10 +648,18 @@ namespace LG {
 			mo = 0;
 			mesh->buildEdgeList();
 
-			// mesh->generateLodLevels(m_lodDistances, Ogre::ProgressiveMesh::VertexReductionQuota::VRQ_PROPORTIONAL, 0.25f);
+			std::vector<Ogre::Real> m_lodDistances(3);
+			m_lodDistances[0] = 100;
+			m_lodDistances[1] = 200;
+			m_lodDistances[2] = 400;
+			// DEBUG NOTE: uncommenting this causes a crash. Why?
+			// mesh->generateLodLevels(m_lodDistances, Ogre::ProgressiveMesh::VRQ_PROPORTIONAL, 0.3f);
 
 			if (m_serializeMeshes) {
 				// serialize the mesh to the filesystem
+				// DEBUG NOTE: The call to MakePersistant causes a crash. Not sure why doing the op
+				//   on another thread and not here (between frames) causes  the crash -- shouldn't with
+				//   Ogre threading turned on. The old, inline code is currently still here and being used.
 				// LG::OLMeshTracker::Instance()->MakePersistant(mesh->getName(), entName, Ogre::String(), NULL);
 				Ogre::String targetFilename = LG::RendererOgre::Instance()->EntityNameToFilename(mesh->getName(), "");
 

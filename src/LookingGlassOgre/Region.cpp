@@ -101,6 +101,7 @@ void Region::SetFocusRegion() {
 }
 
 bool Region::IsFocusRegion() {
+	return this->m_focusRegion;
 }
 
 void Region::CalculateLocal(double X, double Y, double Z) {

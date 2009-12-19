@@ -960,9 +960,12 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                 }
                 break;
             case Ogr.ResourceTypeMaterial:
+                /*
+                // DEBUT COMMENT: commented out to see if material requests are too many
                 m_statMaterialsRequested.Event();
                 RequestMaterial(resourceContext, resourceName);
                 // RequestMaterialX(resourceContext, resourceName);
+                 */
                 break;
             case Ogr.ResourceTypeTexture:
                 m_statTexturesRequested.Event();

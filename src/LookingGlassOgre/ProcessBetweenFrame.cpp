@@ -596,14 +596,15 @@ void ProcessBetweenFrame::ProcessThreadRoutine() {
 // Add the work itemt to the work list
 void ProcessBetweenFrame::QueueWork(GenericQc* wi) {
 	// Check to see if uniq is specified and remove any duplicates
-	if (wi->uniq.length() != 0) {
+	if (!wi->uniq.empty()) {
 		// There will be duplicate requests for things. If we already have a request, delete the old
 		std::list<GenericQc*>::iterator li;
 		for (li = m_betweenFrameWork.begin(); li != m_betweenFrameWork.end(); li++) {
-			if (li._Ptr->_Myval->uniq.length() != 0) {
+			if (!li._Ptr->_Myval->uniq.empty()) {
 				if (wi->uniq == li._Ptr->_Myval->uniq) {
 					m_betweenFrameWork.erase(li,li);
 					LG::IncStat(LG::StatBetweenFrameDiscardedDups);
+					break;
 				}
 			}
 		}
@@ -634,10 +635,14 @@ void ProcessBetweenFrame::ProcessWorkItems(int numToProcess) {
 		if (repriorityCount-- < 0) {
 			// periodically ask the items to recalc their priority
 			repriorityCount = 10;
+			/*
+			// temp remove priority recalc. I think this is getting some order dependent
+			//    operations (createMesh/refreshMesh for instance) out of order
 			std::list<GenericQc*>::iterator li;
 			for (li = m_betweenFrameWork.begin(); li != m_betweenFrameWork.end(); li++) {
 				li._Ptr->_Myval->RecalculatePriority();
 			}
+			*/
 			m_betweenFrameWork.sort(XXCompareElements);
 		}
 		LGLOCK_UNLOCK(m_workItemMutex);
@@ -652,7 +657,12 @@ void ProcessBetweenFrame::ProcessWorkItems(int numToProcess) {
 		LGLOCK_UNLOCK(m_workItemMutex);
 		LG::SetStat(LG::StatBetweenFrameWorkItems, m_betweenFrameWork.size());
 		LG::IncStat(LG::StatBetweenFrameTotalProcessed);
-		workGeneric->Process();
+		try {
+			workGeneric->Process();
+		}
+		catch (...) {
+			LG::Log("ProcessBetweenFrame: EXCEPTION PROCESSING:");
+		}
 		loopCost -= workGeneric->cost;
 		delete(workGeneric);
 	}

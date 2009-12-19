@@ -137,6 +137,8 @@ private:
 	Ogre::String m_preloadedDir; 
 	bool m_serializeMeshes;
 
+	unsigned long m_lastFrameTime;
+
 	Ogre::Quaternion m_desiredCameraOrientation;
 	float m_desiredCameraOrientationProgress;
 

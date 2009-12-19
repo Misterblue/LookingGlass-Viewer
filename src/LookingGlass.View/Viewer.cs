@@ -86,8 +86,8 @@ public class Viewer : ModuleBase, IViewProvider {
         ModuleParams.AddDefaultParameter(m_moduleName + ".Camera.RotationSpeed", "0.100", "Degrees to rotate camera");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Camera.ServerFar", "300.0", "Far distance sent to server");
 
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Camera.BehindAgent", "1.0", "Distance camera is behind agent");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Camera.AboveAgent", "1.0", "Distance camera is above agent (combined with behind)");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Camera.BehindAgent", "2.0", "Distance camera is behind agent");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Camera.AboveAgent", "2.0", "Distance camera is above agent (combined with behind)");
 
         // m_EntitySlot = EntityBase.AddAdditionSubsystem("VIEWER");        // used by anyone?
     }
@@ -371,21 +371,15 @@ public class Viewer : ModuleBase, IViewProvider {
                     m_mainCamera.Update(agnt.GlobalPosition + globalOffset, agnt.Heading);
                      */
                     // OMV.Vector3 cameraOffset = new OMV.Vector3(0, m_agentCameraBehind, m_agentCameraAbove);
-                    // OMV.Vector3 cameraOffset = new OMV.Vector3(m_agentCameraBehind, 0, m_agentCameraAbove);
-                    OMV.Vector3 cameraOffset = new OMV.Vector3(0f, 0f, 0f);
-                    // world space desired camera location
-                    // OMV.Vector3 rotatedOffset = Utilities.RotateVector(agnt.Heading, cameraOffset);
+                    OMV.Vector3 cameraOffset = new OMV.Vector3(m_agentCameraBehind, 0, m_agentCameraAbove);
                     // OMV.Vector3 rotatedOffset = Utilities.RotateVector(agnt.Heading, cameraOffset);
                     OMV.Vector3 rotatedOffset = cameraOffset * OMV.Quaternion.Inverse(agnt.Heading);
                     OMV.Vector3d globalRotatedOffset = new OMV.Vector3d(rotatedOffset.X, rotatedOffset.Y, rotatedOffset.Z);
-                    OMV.Vector3d desiredCameraPosition = agnt.GlobalPosition + globalRotatedOffset;
+                    OMV.Vector3d kludgeOffset = new OMV.Vector3d(10d, 10d, 0d);
+                    OMV.Vector3d desiredCameraPosition = agnt.GlobalPosition + globalRotatedOffset + kludgeOffset;
 
                     m_log.Log(LogLevel.DVIEWDETAIL, "OnAgentUpdate: offset={0}, goffset={1}, cpos={2}, apos={3}",
                         cameraOffset, globalRotatedOffset, desiredCameraPosition, agnt.GlobalPosition);
-                    if (agnt.AssociatedAvatar != null) {
-                        m_log.Log(LogLevel.DVIEWDETAIL, "OnAgentUpdate: av.gpos={0}, av.head={1}",
-                            agnt.AssociatedAvatar.GlobalPosition, agnt.AssociatedAvatar.Heading);
-                    }
 
                     m_mainCamera.Update(desiredCameraPosition, agnt.Heading);
                 }

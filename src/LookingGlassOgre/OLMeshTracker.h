@@ -141,7 +141,9 @@ public:
 		std::list<GenericQm*>::iterator li;
 		for (li = m_workQueue.begin(); li != m_workQueue.end(); li++) {
 			if (nam == li._Ptr->_Myval->uniq) {
+				GenericQm* found = li._Ptr->_Myval;
 				m_workQueue.erase(li);
+				delete(found);
 				break;
 			}
 		}
