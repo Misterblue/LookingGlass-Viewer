@@ -656,9 +656,9 @@ void ProcessBetweenFrame::ProcessWorkItems(int millisToProcess) {
 	}
 	int loopCost = millisToProcess;
 	// Several schemes have been tried to control the between frame processing.
-	while (!m_betweenFrameWork.empty() && (loopCost > 0) ) {
+	// while (!m_betweenFrameWork.empty() && (loopCost > 0) ) {
 	// while (!m_betweenFrameWork.empty() && (loopCost > 0) && (betweenFrameTimeKeeper->getMilliseconds() < endTime) ) {
-	// while (!m_betweenFrameWork.empty() && (betweenFrameTimeKeeper->getMilliseconds() < endTime) ) {
+	while (!m_betweenFrameWork.empty() && (betweenFrameTimeKeeper->getMilliseconds() < endTime) ) {
 		LGLOCK_LOCK(m_workItemMutex);
 		GenericQc* workGeneric = (GenericQc*)m_betweenFrameWork.front();
 		m_betweenFrameWork.pop_front();
