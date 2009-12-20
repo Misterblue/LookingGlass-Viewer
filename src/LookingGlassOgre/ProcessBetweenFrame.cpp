@@ -413,8 +413,8 @@ public:
 		this->priority = 100;
 		this->cost = 50;
 		this->type = "UpdateTerrain";
-		this->uniq.clear();
 		this->regionName = Ogre::String(regionNm);
+		this->uniq = this->regionName + "/UpdateTerrain";
 		this->width = w; this->length = l;
 		this->heightMap = (float*)malloc(w * l * sizeof(float));
 		memcpy(this->heightMap, hm, w * l * sizeof(float));

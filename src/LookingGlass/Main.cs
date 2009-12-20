@@ -32,7 +32,7 @@ using LookingGlass.Framework.Parameters;
 using LookingGlass.View;
 
 namespace LookingGlass {
-class LookingGlassMain : ApplicationContext {
+public class LookingGlassMain : ApplicationContext {
     static ILog m_log = LogManager.GetLogger("Main");
     static Dictionary<string, string> m_Parameters;
 
@@ -40,7 +40,7 @@ class LookingGlassMain : ApplicationContext {
     public LookingGlassMain LGApplicationInstance = null;
 
     [STAThread]
-    static void Main(string[] args) {
+    public static void Main(string[] args) {
 
         LookingGlassBase LGB = new LookingGlassBase();
 
