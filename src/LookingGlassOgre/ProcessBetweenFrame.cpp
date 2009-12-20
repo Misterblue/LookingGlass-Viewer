@@ -47,7 +47,7 @@ public:
 		this->priority = prio;
 		this->cost = 40;
 		this->type = "RefreshResource";
-		this->uniq = uni;
+		this->uniq = uni + "/RefreshResource";
 		this->matName = Ogre::String(resourceName);
 		this->rType = rTyp;
 	}
@@ -73,7 +73,7 @@ public:
 		// this->priority = prio - fmod(prio, (float)100.0);	// EXPERIMENTAL. Group material ops
 		this->cost = 0;
 		this->type = "CreateMaterialResource";
-		this->uniq = uni;
+		this->uniq = uni + "/CreateMaterialResource";
 		this->matName = Ogre::String(mName);
 		this->texName = Ogre::String(tName);
 		memcpy(this->parms, inParms, LG::OLMaterialTracker::CreateMaterialSize*sizeof(float));
@@ -119,7 +119,7 @@ public:
 		// this->priority = prio - fmod(prio, (float)100.0);	// EXPERIMENTAL. Group material ops
 		this->cost = 0;
 		this->type = "CreateMaterialResource7";
-		this->uniq = uni;
+		this->uniq = uni + "/CreateMaterialResource7";
 		if (matName1p != 0) {
 			this->matName1 = Ogre::String(matName1p);
 			this->textureName1 = Ogre::String(textureName1p);
@@ -198,8 +198,8 @@ public:
 		this->priority = prio;
 		this->origPriority = prio;
 		this->cost = 100;
-		this->type = "CreateMeshResource7";
-		this->uniq = uni;
+		this->type = "CreateMeshResource";
+		this->uniq = uni + "/CreateMeshResource";
 		this->meshName = Ogre::String(mName);
 		this->contextSceneNodeName = Ogre::String(contextSN);
 		// if there is a context node, use that to get the location of the mesh for later reprioritization
@@ -210,14 +210,15 @@ public:
 			pz = contextSceneNode->getPosition().z;
 		}
 		else {
-			px = 10.0;
-			py = 10.0;
-			pz = 10.0;
+			px = 128.0;
+			py = 128.0;
+			pz = 30.0;
 		}
 		this->faceCounts = (int*)malloc((*faceC) * sizeof(int));
 		memcpy(this->faceCounts, faceC, (*faceC) * sizeof(int));
 		this->faceVertices = (float*)malloc((*faceV) * sizeof(float));
 		memcpy(this->faceVertices, faceV, (*faceV) * sizeof(float));
+		LG::Log("ProcessBetweenFrame::CreateMeshResourceQc: queuing %s", mName);
 	}
 	~CreateMeshResourceQc(void) {
 		this->uniq.clear();
@@ -226,6 +227,7 @@ public:
 		free(this->faceVertices);
 	}
 	void Process() {
+		LG::Log("ProcessBetweenFrame::CreateMeshResourceQc: processing %s", this->meshName.c_str());
 		LG::RendererOgre::Instance()->CreateMeshResource(this->meshName.c_str(), this->faceCounts, this->faceVertices);
 	}
 
@@ -241,10 +243,12 @@ public:
 			this->priority = this->priority + 300.0;
 		}
 		*/
+		/*
 		if (!LG::RendererOgre::Instance()->m_camera->isVisible(Ogre::Sphere(ourLoc, 3.0))) {
 			// we're not visible at the moment so no rush to create us
 			this->priority = this->priority + 500.0;
 		}
+		*/
 		return;
 	}
 };
@@ -276,7 +280,7 @@ public:
 		this->origPriority = prio;
 		this->cost = 10;
 		this->type = "CreateMeshSceneNode";
-		this->uniq = uni;
+		this->uniq = uni + "/CreateMeshSceneNode";
 		this->sceneMgr = sceneMgr;
 		this->sceneNodeName = Ogre::String(sceneNodeName);
 		this->parentNode = parentNode;
@@ -316,10 +320,12 @@ public:
 			this->priority = this->priority + 300.0;
 		}
 		*/
+		/*
 		if (!LG::RendererOgre::Instance()->m_camera->isVisible(Ogre::Sphere(ourLoc, 3.0))) {
 			// we're not visible at the moment so no rush to create us
 			this->priority = this->priority + 500.0;
 		}
+		*/
 		return;
 	}
 };
@@ -342,7 +348,7 @@ public:
 		this->priority = prio;
 		this->cost = 3;
 		this->type = "UpdateSceneNode";
-		this->uniq = uni;
+		this->uniq = uni + "/UpdateSceneNode";
 		this->entName = Ogre::String(entName);
 		this->setPosition = setPosition;
 		this->setScale = setScale;
@@ -629,7 +635,7 @@ bool ProcessBetweenFrame::HasWorkItems() {
 
 
 bool XXCompareElements(const GenericQc* e1, const GenericQc* e2) {
-	return (fabs(e1->priority) < fabs(e2->priority));
+	return (e1->priority < e2->priority);
 }
 
 int repriorityCount = 10;

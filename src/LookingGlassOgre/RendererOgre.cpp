@@ -683,6 +683,7 @@ namespace LG {
 				// Make sure the directory exists -- I wish the serializer did this for me
 				LG::RendererOgre::Instance()->CreateParentDirectory(targetFilename);
 				
+				LG::Log("RendererOgre::CreateMeshResource: serializing mesh to %s", targetFilename.c_str());
 				LG::OLMeshTracker::Instance()->MeshSerializer->exportMesh(mesh.getPointer(), targetFilename);
 			}
 			// you'd think doing  the unload here would be the right thing but it causes crashes

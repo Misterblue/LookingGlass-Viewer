@@ -34,7 +34,6 @@
 // ====================================================
 "Comm.Texture.MaxRequests": "8",
 "Comm.Settings.MultipleSims": "false",
-"Comm.Assets.ConvertPNG": "true",
 
 // ====================================================
 "ParameterWithoutAComma": "Last"
