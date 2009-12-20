@@ -93,7 +93,8 @@ namespace LookingGlass.Renderer.Ogr {
                 float px, float py, float pz, float sx, float sy, float sz,
                 float rw, float rx, float ry, float rz) {
             return Ogr.CreateMeshSceneNodeBF(priority, m_sceneMgr, sceneNodeName, parentNodeName, 
-                        EntityNameOgre.ConvertToOgreEntityName(new EntityNameOgre(meshName)),
+                        // EntityNameOgre.ConvertToOgreEntityName(new EntityNameOgre(meshName)),
+                        EntityNameOgre.ConvertToOgreEntityName(new EntityNameOgre(sceneNodeName)),
                         meshName,
                         scale, orientation,
                         px, py, pz, sx, sy, sz, rw, rx, ry, rz);

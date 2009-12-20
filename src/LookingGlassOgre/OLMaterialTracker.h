@@ -24,6 +24,7 @@
 
 #include "LGOCommon.h"
 #include "SingletonInstance.h"
+#include "LGLocking.h"
 
 namespace LG {
 
@@ -110,6 +111,16 @@ private:
 	typedef stdext::hash_map<Ogre::String, unsigned long> RequestedMaterialHashMap;
 	RequestedMaterialHashMap m_requestedMaterials;
 	Ogre::Timer* m_materialTimeKeeper;
+
+	// queue to hold the names of the materials that were reloaded. At FrameListener time,
+	//   go through all the Entities and find the ones that contain this material. If found,
+	//   reload the entity. This will cause the reapplication of the changed material.
+	std::list<Ogre::String> m_materialsModified;
+	std::list<Ogre::String> m_texturesModified;
+	LGLOCK_MUTEX m_modifiedMutex;
+
+	int m_slowCount;	// the number of frames until we check meshes
+
 };
 
 }

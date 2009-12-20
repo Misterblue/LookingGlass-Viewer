@@ -240,7 +240,8 @@ void VisCalcFrustDist::processEntityVisibility() {
 		meshesToLoad.erase(intr);
 		// Ogre::MeshPtr meshP = Ogre::MeshManager::getSingleton().getByName(meshName);
 		// if (!meshP.isNull()) {
-			if (m_shouldCullMeshes) LG::OLMeshTracker::Instance()->MakeLoaded(meshName, Ogre::String(""), Ogre::String(""), parentEntity);
+			if (m_shouldCullMeshes) LG::OLMeshTracker::Instance()->MakeLoaded(meshName, 
+						Ogre::String(""), Ogre::String("visible"), parentEntity);
 			// if (m_shouldCullMeshes) meshP->load();
 			// parentEntity->setVisible(true);
 			LG::IncStat(LG::StatCullMeshesLoaded);

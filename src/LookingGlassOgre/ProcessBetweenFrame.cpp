@@ -46,6 +46,7 @@ public:
 	RefreshResourceQc(float prio, Ogre::String uni, char* resourceName, int rTyp) {
 		this->priority = prio;
 		this->cost = 40;
+		this->type = "RefreshResource";
 		this->uniq = uni;
 		this->matName = Ogre::String(resourceName);
 		this->rType = rTyp;
@@ -71,6 +72,7 @@ public:
 		this->priority = 0.0;	// EXPERIMENTAL: to get materials out of the way
 		// this->priority = prio - fmod(prio, (float)100.0);	// EXPERIMENTAL. Group material ops
 		this->cost = 0;
+		this->type = "CreateMaterialResource";
 		this->uniq = uni;
 		this->matName = Ogre::String(mName);
 		this->texName = Ogre::String(tName);
@@ -116,6 +118,7 @@ public:
 		this->priority = 0.0;	// EXPERIMENTAL: to get materials out of the way
 		// this->priority = prio - fmod(prio, (float)100.0);	// EXPERIMENTAL. Group material ops
 		this->cost = 0;
+		this->type = "CreateMaterialResource7";
 		this->uniq = uni;
 		if (matName1p != 0) {
 			this->matName1 = Ogre::String(matName1p);
@@ -195,6 +198,7 @@ public:
 		this->priority = prio;
 		this->origPriority = prio;
 		this->cost = 100;
+		this->type = "CreateMeshResource7";
 		this->uniq = uni;
 		this->meshName = Ogre::String(mName);
 		this->contextSceneNodeName = Ogre::String(contextSN);
@@ -271,6 +275,7 @@ public:
 		this->priority = prio;
 		this->origPriority = prio;
 		this->cost = 10;
+		this->type = "CreateMeshSceneNode";
 		this->uniq = uni;
 		this->sceneMgr = sceneMgr;
 		this->sceneNodeName = Ogre::String(sceneNodeName);
@@ -298,6 +303,7 @@ public:
 					this->ow, this->ox, this->oy, this->oz);
 		LG::RendererOgre::Instance()->AddEntity(this->sceneMgr, node, this->entityName.c_str(), this->meshName.c_str());
 	}
+
 	void RecalculatePriority() {
 		Ogre::Vector3 ourLoc = Ogre::Vector3(this->px, this->py, this->pz);
 		// this->priority = ourLoc.distance(LG::RendererOgre::Instance()->m_camera->getPosition());
@@ -335,6 +341,7 @@ public:
 					bool setRotation, float ow, float ox, float oy, float oz) {
 		this->priority = prio;
 		this->cost = 3;
+		this->type = "UpdateSceneNode";
 		this->uniq = uni;
 		this->entName = Ogre::String(entName);
 		this->setPosition = setPosition;
@@ -368,8 +375,10 @@ public:
 					const double gX, const double gY, const double gZ,
 					const float szX, const float szY, const float waterHt) {
 		this->priority = prio;
-		this->cost = 0;
-		this->uniq = "";
+		this->priority = 100;
+		this->cost = 50;
+		this->type = "AddRegion";
+		this->uniq.clear();
 		this->regionName = Ogre::String(regionNm);
 		this->px = gX; this->py = gY; this->pz = gZ;
 		this->sizeX = szX; this->sizeY = szY;
@@ -395,8 +404,10 @@ public:
 					const char* regionNm,
 					const int w, const int l, const float* hm) {
 		this->priority = prio;
-		this->cost = 0;
-		this->uniq = "";
+		this->priority = 100;
+		this->cost = 50;
+		this->type = "UpdateTerrain";
+		this->uniq.clear();
 		this->regionName = Ogre::String(regionNm);
 		this->width = w; this->length = l;
 		this->heightMap = (float*)malloc(w * l * sizeof(float));
@@ -421,7 +432,7 @@ public:
 // The constructors and destructors of the *Qc class handles all the allocation
 // and deallocation of memory needed to pass the parameters.
 ProcessBetweenFrame::ProcessBetweenFrame() {
-	int betweenWork = LG::GetParameterInt("Renderer.Ogre.BetweenFrame.WorkItems");
+	int betweenWork = LG::GetParameterInt("Renderer.Ogre.BetweenFrame.WorkMilliSecondsMax");
 	if (betweenWork == 0) betweenWork = 5000;
 	m_numWorkItemsToDoBetweenFrames = betweenWork;
 
@@ -559,20 +570,18 @@ void ProcessBetweenFrame::UpdateTerrain(float priority, const char* rn,
 
 // ====================================================================
 // we're between frames, on our own thread so we can do the work without locking
-int currentCost;
+int milliSecondsToProcess;
 bool ProcessBetweenFrame::frameEnded(const Ogre::FrameEvent& evt) {
-	currentCost = m_numWorkItemsToDoBetweenFrames;
-	/*
-	if (evt.timeSinceLastFrame < 0.25) {
-		currentCost = currentCost + 50;
-		if (currentCost > m_numWorkItemsToDoBetweenFrames) currentCost = m_numWorkItemsToDoBetweenFrames;
+	//current cost is number of milliseconds to do the processing
+	if (evt.timeSinceLastFrame > 0.25 || m_betweenFrameWork.size() > 4000) {
+		milliSecondsToProcess = milliSecondsToProcess + 50;
+		if (milliSecondsToProcess > m_numWorkItemsToDoBetweenFrames) milliSecondsToProcess = m_numWorkItemsToDoBetweenFrames;
 	}
 	else {
-		currentCost = currentCost - 50;
+		milliSecondsToProcess = milliSecondsToProcess - 50;
 	}
-	if (currentCost < 100) currentCost = 100;
-	*/
-	ProcessWorkItems(currentCost);
+	if (milliSecondsToProcess < 50) milliSecondsToProcess = 50;
+	ProcessWorkItems(milliSecondsToProcess);
 	return true;
 }
 
@@ -602,7 +611,7 @@ void ProcessBetweenFrame::QueueWork(GenericQc* wi) {
 		for (li = m_betweenFrameWork.begin(); li != m_betweenFrameWork.end(); li++) {
 			if (!li._Ptr->_Myval->uniq.empty()) {
 				if (wi->uniq == li._Ptr->_Myval->uniq) {
-					m_betweenFrameWork.erase(li,li);
+					m_betweenFrameWork.erase(li);
 					LG::IncStat(LG::StatBetweenFrameDiscardedDups);
 					break;
 				}
@@ -620,43 +629,43 @@ bool ProcessBetweenFrame::HasWorkItems() {
 
 
 bool XXCompareElements(const GenericQc* e1, const GenericQc* e2) {
-	return (e1->priority < e2->priority);
+	return (fabs(e1->priority) < fabs(e2->priority));
 }
 
 int repriorityCount = 10;
-Ogre::Timer* betweenFrameTimeKeeper = new Ogre::Timer();
-void ProcessBetweenFrame::ProcessWorkItems(int numToProcess) {
+void ProcessBetweenFrame::ProcessWorkItems(int millisToProcess) {
+	//1 Lines commented with '1' were used to figure out processing times
+	Ogre::Timer* betweenFrameTimeKeeper = new Ogre::Timer();
 	unsigned long startTime = betweenFrameTimeKeeper->getMilliseconds();
-	unsigned long endTime = startTime + 200;
+	unsigned long endTime = startTime + millisToProcess;
 	// This sort is intended to put the highest priority (ones with lowest numbers) at
 	//   the front of the list for processing first.
 	if (m_modified) {
 		LGLOCK_LOCK(m_workItemMutex);
-		if (repriorityCount-- < 0) {
+		if (--repriorityCount < 0) {
 			// periodically ask the items to recalc their priority
 			repriorityCount = 10;
-			/*
-			// temp remove priority recalc. I think this is getting some order dependent
-			//    operations (createMesh/refreshMesh for instance) out of order
 			std::list<GenericQc*>::iterator li;
 			for (li = m_betweenFrameWork.begin(); li != m_betweenFrameWork.end(); li++) {
 				li._Ptr->_Myval->RecalculatePriority();
 			}
-			*/
 			m_betweenFrameWork.sort(XXCompareElements);
 		}
 		LGLOCK_UNLOCK(m_workItemMutex);
 		m_modified = false;
 	}
-	int loopCost = numToProcess;
+	int loopCost = millisToProcess;
+	// Several schemes have been tried to control the between frame processing.
+	while (!m_betweenFrameWork.empty() && (loopCost > 0) ) {
 	// while (!m_betweenFrameWork.empty() && (loopCost > 0) && (betweenFrameTimeKeeper->getMilliseconds() < endTime) ) {
-	while (!m_betweenFrameWork.empty() && (betweenFrameTimeKeeper->getMilliseconds() < endTime) ) {
+	// while (!m_betweenFrameWork.empty() && (betweenFrameTimeKeeper->getMilliseconds() < endTime) ) {
 		LGLOCK_LOCK(m_workItemMutex);
 		GenericQc* workGeneric = (GenericQc*)m_betweenFrameWork.front();
 		m_betweenFrameWork.pop_front();
 		LGLOCK_UNLOCK(m_workItemMutex);
 		LG::SetStat(LG::StatBetweenFrameWorkItems, m_betweenFrameWork.size());
 		LG::IncStat(LG::StatBetweenFrameTotalProcessed);
+		//1 unsigned long checkTimeBegin = betweenFrameTimeKeeper->getMicroseconds();
 		try {
 			workGeneric->Process();
 		}
@@ -664,6 +673,10 @@ void ProcessBetweenFrame::ProcessWorkItems(int numToProcess) {
 			LG::Log("ProcessBetweenFrame: EXCEPTION PROCESSING:");
 		}
 		loopCost -= workGeneric->cost;
+		//1 unsigned long checkTimeEnd = betweenFrameTimeKeeper->getMicroseconds();
+		//1 LG::Log("PBF: c=%d, m=%d, lc=%d, t=%d, t=%s, u=%s", 
+		//1  	repriorityCount, millisToProcess, loopCost,
+		//1 	(int)(checkTimeEnd-checkTimeBegin), workGeneric->type.c_str(), workGeneric->uniq.c_str());
 		delete(workGeneric);
 	}
 	return;

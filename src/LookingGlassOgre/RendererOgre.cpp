@@ -123,10 +123,10 @@ namespace LG {
 		unsigned long now = rendererTimeKeeper->getMilliseconds();
 		unsigned long timeStartedLastFrame = rendererTimeKeeper->getMilliseconds();
 		if (m_root != NULL) {
-			LGLOCK_LOCK(m_sceneGraphLock);
+			// LGLOCK_LOCK(m_sceneGraphLock);
 			ret = m_root->renderOneFrame();
-			LGLOCK_UNLOCK(m_sceneGraphLock);
-			LGLOCK_NOTIFY_ALL(m_sceneGraphLock);
+			// LGLOCK_UNLOCK(m_sceneGraphLock);
+			// LGLOCK_NOTIFY_ALL(m_sceneGraphLock);
 			if (pump) Ogre::WindowEventUtilities::messagePump();
 		}
 
@@ -490,20 +490,37 @@ namespace LG {
 	// ============= REQUESTS TO DO WORK
 	// BETWEEN FRAME OPERATION
 	void RendererOgre::AddEntity(Ogre::SceneManager* sceneMgr, Ogre::SceneNode* sceneNode,
-							const char* entName, const char* meshName) {
-		// LG::Log("RendererOgre::AddEntity: declare %s, t=%s, g=%s", meshName,
-		// 						"Mesh", meshResourceGroupName);
+							const char* entName, const char* meshNam) {
+		// LG::Log("RendererOgre::AddEntity: declare %s, t=%s, g=%s", meshNam, "Mesh", OLResourceGroupName);
+		Ogre::String meshName = Ogre::String(meshNam);
 		Ogre::ResourceGroupManager::getSingleton().declareResource(meshName,
 								"Mesh", OLResourceGroupName
 								);
 		try {
-			Ogre::MovableObject* ent = sceneMgr->createEntity(entName, meshName);
-			// it's not scenery
-			ent->removeQueryFlags(Ogre::SceneManager::WORLD_GEOMETRY_TYPE_MASK);	
-			// Ogre::MovableObject* ent = sceneMgr->createEntity(entName, Ogre::SceneManager::PT_SPHERE);	// DEBUG
-			Shadow->AddCasterShadow(ent);
-			sceneNode->attachObject(ent);
-			m_visCalc->RecalculateVisibility();
+			// This createEntity call does a 'load' operation on the mesh
+			// Really shouldn't be doing this on the between frame thread.
+			// DEVELOPMENT NOTE: because createEntity causes a load (and the delay waiting
+			// for the file to load) the commenting out below means that AddEntity always
+			// happens in the queued, non-between frame thread. When Ogre is compiled with
+			// threading on, this makes the loading happen on the other thread.
+			// The code in the 'if' is duplicated in OLMeshTracker.
+			/*
+			Ogre::ResourcePtr theMesh = Ogre::MeshManager::getSingleton().getByName(meshName);
+			if ((!theMesh.isNull()) && theMesh->isLoaded()) {
+				// LG::Log("RendererOgre::AddEntity: immediate create of %s", meshName.c_str());
+				Ogre::MovableObject* ent = sceneMgr->createEntity(entName, meshName);
+				// it's not scenery
+				ent->removeQueryFlags(Ogre::SceneManager::WORLD_GEOMETRY_TYPE_MASK);	
+				Shadow->AddCasterShadow(ent);
+				sceneNode->attachObject(ent);
+				m_visCalc->RecalculateVisibility();
+			}
+			else {
+				// LG::Log("RendererOgre::AddEntity: request loading of %s", meshName.c_str());
+				LG::OLMeshTracker::Instance()->MakeLoaded(sceneNode, meshName, Ogre::String(entName));
+			}
+			*/
+			LG::OLMeshTracker::Instance()->MakeLoaded(sceneNode, meshName, Ogre::String(entName));
 		}
 		catch (Ogre::Exception e) {
 			// we presume this is because the entity already exists
@@ -575,7 +592,7 @@ namespace LG {
 				LG::Log("RendererOgre::UpdateSceneNode: update rotation: w%f, x%f, y%f, z%f", ow, ox, oy, oz);
 				sceneNode->setOrientation(ow, ox, oy, oz);
 			}
-			sceneNode->needUpdate(false);
+			sceneNode->needUpdate(true);
 		}
 		else {
 			LG::Log("RendererOgre::UpdateSceneNode: entity not found. Did not update entity %s", entName);

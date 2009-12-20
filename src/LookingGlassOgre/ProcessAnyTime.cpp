@@ -136,7 +136,7 @@ void ProcessAnyTime::QueueWork(GenericPc* wi) {
 		for (li = m_work.begin(); li != m_work.end(); li++) {
 			if (li._Ptr->_Myval->uniq.length() != 0) {
 				if (wi->uniq == li._Ptr->_Myval->uniq) {
-					m_work.erase(li,li);
+					m_work.erase(li);
 					LG::IncStat(LG::StatProcessAnyTimeDiscardedDups);
 				}
 			}

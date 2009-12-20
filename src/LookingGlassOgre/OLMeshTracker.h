@@ -196,6 +196,7 @@ public:
 
 	void RequestMesh(Ogre::String meshName, Ogre::String context);
 	void MakeLoaded(Ogre::String meshName, Ogre::String, Ogre::String, Ogre::Entity*);
+	void MakeLoaded(Ogre::SceneNode* sceneNode, Ogre::String meshName, Ogre::String entityName);
 	void MakeUnLoaded(Ogre::String meshName, Ogre::String, Ogre::Entity*);
 	void MakePersistant(Ogre::String meshName, Ogre::String entName, Ogre::String, Ogre::Entity*);
 

@@ -35,6 +35,7 @@ class GenericQc {
 public:
 	float priority;
 	int cost;
+	Ogre::String type;
 	Ogre::String uniq;
 	virtual void Process() {};
 	virtual void RecalculatePriority() {};

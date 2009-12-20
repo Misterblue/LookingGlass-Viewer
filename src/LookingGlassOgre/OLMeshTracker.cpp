@@ -163,9 +163,38 @@ public:
 	void Process() {
 		LG::Log("OLMeshTracker::MakeLoadedQm: loading: %s", meshName.c_str());
 		Ogre::MeshManager::getSingleton().load(this->meshName, this->stringParam);
-		if (this->entityParam != NULL) {
+		if (stringParam == "visible" && this->entityParam != NULL) {
 			this->entityParam->setVisible(true);
 		}
+	}
+};
+
+// ===============================================================================
+class MakeMeshLoaded2Qm : public GenericQm {
+public:
+	Ogre::SceneNode* sceneNode;
+	Ogre::String meshName;
+	Ogre::String entityName;
+	MakeMeshLoaded2Qm(float prio, Ogre::String uniq, Ogre::SceneNode* sceneNod,
+							Ogre::String meshNam, Ogre::String entNam) {
+		this->priority = prio;
+		this->uniq = uniq;
+		this->sceneNode = sceneNod;
+		this->meshName = meshNam;
+		this->entityName = entNam;
+	}
+	~MakeMeshLoaded2Qm(void) {
+		this->uniq.clear();
+	}
+	void Process() {
+		LG::Log("OLMeshTracker::MakeLoaded2Qm: loading: %s", meshName.c_str());
+		Ogre::MeshManager::getSingleton().load(this->meshName, OLResourceGroupName);
+		Ogre::MovableObject* ent = LG::RendererOgre::Instance()->m_sceneMgr->createEntity(this->entityName, this->meshName);
+		// it's not scenery
+		ent->removeQueryFlags(Ogre::SceneManager::WORLD_GEOMETRY_TYPE_MASK);	
+		LG::RendererOgre::Instance()->Shadow->AddCasterShadow(ent);
+		this->sceneNode->attachObject(ent);
+		LG::RendererOgre::Instance()->m_visCalc->RecalculateVisibility();
 	}
 };
 
@@ -245,11 +274,40 @@ void OLMeshTracker::MakeLoaded(Ogre::String meshName, Ogre::String contextEntity
 	}
 	// add this to the loading list
 	LG::Log("OLMeshTracker::MakeLoaded: queuing loading: %s", meshName.c_str());
-	MakeMeshLoadedQm* mmlq = new MakeMeshLoadedQm(10, meshName, contextEntity, stringParam, entityParam);
-	m_meshesToLoad->AddLast(mmlq);
+	GenericQm* loadEntry = m_meshesToLoad->Find(meshName);
+	if (loadEntry == NULL) {
+		MakeMeshLoadedQm* mmlq = new MakeMeshLoadedQm(10, meshName, contextEntity, stringParam, entityParam);
+		m_meshesToLoad->AddLast(mmlq);
+	}
 	LGLOCK_UNLOCK(MeshTrackerLock);
 	LGLOCK_NOTIFY_ALL(MeshTrackerLock);
 }
+
+// ===============================================================================
+// Make the mesh loaded then create an entity for the mesh. This is used
+// when creating the scene graph with the mesh since the 'createEntity' call
+// forces a load of the mesh. This does the load on the other thread and then
+// creates the entity.
+void OLMeshTracker::MakeLoaded(Ogre::SceneNode* sceneNode, Ogre::String meshName, Ogre::String entityName) {
+	LGLOCK_LOCK(MeshTrackerLock);
+	// check to see if in unloaded list, if so, remove it and claim success
+	GenericQm* unloadEntry = m_meshesToUnload->Find(meshName);
+	if (unloadEntry != NULL) {
+		unloadEntry->Abort();
+		m_meshesToUnload->Remove(meshName);
+		LG::Log("OLMeshTracker::MakeLoaded: removing one from unload list: %s", meshName.c_str());
+	}
+	// add this to the loading list
+	LG::Log("OLMeshTracker::MakeLoaded: queuing loading: %s", meshName.c_str());
+	GenericQm* loadEntry = m_meshesToLoad->Find(meshName);
+	if (loadEntry == NULL) {
+		MakeMeshLoaded2Qm* mmlq = new MakeMeshLoaded2Qm(10, meshName, sceneNode, meshName, entityName);
+		m_meshesToLoad->AddLast(mmlq);
+	}
+	LGLOCK_UNLOCK(MeshTrackerLock);
+	LGLOCK_NOTIFY_ALL(MeshTrackerLock);
+}
+
 
 // ===============================================================================
 // Make the mesh unloaded. Schedule the unload operation on our own thread

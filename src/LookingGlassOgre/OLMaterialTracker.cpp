@@ -64,17 +64,12 @@ namespace LG {
 
 OLMaterialTracker* OLMaterialTracker::m_instance = NULL;
 
-// queue to hold the names of the materials that were reloaded. At FrameListener time,
-//   go through all the Entities and find the ones that contain this material. If found,
-//   reload the entity. This will cause the reapplication of the changed material.
-std::queue<Ogre::String> m_materialsModified;
-std::queue<Ogre::String> m_texturesModified;
-
 OLMaterialTracker::OLMaterialTracker() {
 	m_defaultTextureName = LG::GetParameter("Renderer.Ogre.DefaultTextureResourceName");
 	m_cacheDir = LG::GetParameter("Renderer.Ogre.CacheDir");
 	m_shouldSerialize = LG::isTrue(LG::GetParameter("Renderer.Ogre.SerializeMaterials"));
 	m_materialTimeKeeper = new Ogre::Timer();
+	m_modifiedMutex = LGLOCK_ALLOCATE_MUTEX("OLMaterialTracker");
 
 	LG::GetOgreRoot()->addFrameListener(this);
 	if (m_shouldSerialize) {
@@ -87,6 +82,8 @@ OLMaterialTracker::OLMaterialTracker() {
 }
 
 OLMaterialTracker::~OLMaterialTracker() {
+	LGLOCK_RELEASE_MUTEX(m_modifiedMutex);
+	LG::GetOgreRoot()->removeFrameListener(this);
 }
 
 // SingletonInstance.Shutdown
@@ -202,7 +199,19 @@ void OLMaterialTracker::RefreshResource(const Ogre::String& resName, const int r
 // A material has been modified. Remember it's name and, between frames, reload the
 // entities that contain the material.
 void OLMaterialTracker::MarkMaterialModified(const Ogre::String materialName) {
-	m_materialsModified.push(materialName);
+	LGLOCK_LOCK(this->m_modifiedMutex);
+	bool found = false;
+	std::list<Ogre::String>::const_iterator li;
+	for (li = m_materialsModified.begin(); li != m_materialsModified.end(); li++) {
+		if (materialName == li._Ptr->_Myval) {
+			found = true;
+			break;
+		}
+	}
+	if (!found) {
+		m_materialsModified.push_back(materialName);
+	}
+	LGLOCK_UNLOCK(this->m_modifiedMutex);
 }
 
 // A texture has been modified. Remember it's name and, between frames, reload the
@@ -217,31 +226,49 @@ void OLMaterialTracker::MarkMaterialModified(const Ogre::String materialName) {
 // that and you now just need Ogre to get with the program.
 void OLMaterialTracker::MarkTextureModified(const Ogre::String materialName, bool hasTransparancy) {
 	Ogre::String taggedName = (hasTransparancy ? "T" : " ") + materialName;
-	m_texturesModified.push(taggedName);
+	LGLOCK_LOCK(this->m_modifiedMutex);
+	bool found = false;
+	std::list<Ogre::String>::const_iterator li;
+	for (li = m_texturesModified.begin(); li != m_texturesModified.end(); li++) {
+		if (taggedName == li._Ptr->_Myval) {
+			found = true;
+			break;
+		}
+	}
+	if (!found) {
+		m_materialsModified.push_back(taggedName);
+	}
+	LGLOCK_UNLOCK(this->m_modifiedMutex);
 }
 
 // between frames, if there were material modified, refresh their containing entities
 bool OLMaterialTracker::frameEnded(const Ogre::FrameEvent&) {
-	Ogre::String matName;
-	MeshPtrHashMap m_meshesToChange;
-	int cnt = 10;
-	while ((m_materialsModified.size() > 0) && (--cnt > 0)) {
-		matName = m_materialsModified.front();
-		m_materialsModified.pop();
-		GetMeshesToRefreshForMaterials(&m_meshesToChange, matName);
+	if (this->m_slowCount-- < 0) {
+		this->m_slowCount = 10;
+		Ogre::String matName;
+		LGLOCK_LOCK(this->m_modifiedMutex);
+		MeshPtrHashMap m_meshesToChange;
+		int cnt = 10;
+		while ((m_materialsModified.size() > 0) && (--cnt > 0)) {
+			matName = m_materialsModified.front();
+			m_materialsModified.pop_front();
+			GetMeshesToRefreshForMaterials(&m_meshesToChange, matName);
+		}
+		cnt = 10;
+		Ogre::String texName;
+		while ((m_texturesModified.size() > 0) && (--cnt > 0)) {
+			texName = m_texturesModified.front();
+			m_texturesModified.pop_front();
+			char transparancyFlag = texName[0];
+			GetMeshesToRefreshForTexture(&m_meshesToChange, texName.substr(1, texName.length()-1),
+					(transparancyFlag == 'T' ? true : false));
+		}
+		LGLOCK_UNLOCK(this->m_modifiedMutex);
+		if (m_meshesToChange.size() > 0) {
+			ReloadMeshes(&m_meshesToChange);
+		}
+		m_meshesToChange.clear();
 	}
-	cnt = 10;
-	while ((m_texturesModified.size() > 0) && (--cnt > 0)) {
-		matName = m_texturesModified.front();
-		m_texturesModified.pop();
-		char transparancyFlag = matName[0];
-		GetMeshesToRefreshForTexture(&m_meshesToChange, matName.substr(1, matName.length()-1),
-				(transparancyFlag == 'T' ? true : false));
-	}
-	if (m_meshesToChange.size() > 0) {
-		ReloadMeshes(&m_meshesToChange);
-	}
-	m_meshesToChange.clear();
 	return true;
 }
 
