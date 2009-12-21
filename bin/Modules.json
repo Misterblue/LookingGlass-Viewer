@@ -53,6 +53,12 @@
         "Interface": "LookingGlass.View.IEntityTrackerProvider",
         "Name": "EntityTracker",
         "Order": 90
+    },
+    // Information about the avatars in the region
+    {   "Assembly": "LookingGlass.World.Services.dll",
+        "Interface": "LookingGlass.World.Services.IAvatarTrackerService",
+        "Name": "AvatarTracker",
+        "Order": 100
     }
 ],
 
@@ -72,6 +78,10 @@
 
 // The entity trackers needs to know where to track the entities
 "EntityTracker.World.Name": "World",
+
+// The avatar tracker service connects to the world to track
+"AvatarTracker.World.Name": "World",
+"AvatarTracker.RestManager.Name": "RestManager",
 
 // ====================================================
 "ParameterWithoutAComma2": "Last"

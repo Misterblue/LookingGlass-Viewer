@@ -30,6 +30,14 @@ namespace LookingGlass.World {
         public EntityAvatarBase(RegionContextBase rcontext, AssetContextBase acontext)
             : base(rcontext, acontext) {
         }
+
+        public virtual string DisplayName {
+            get { return this.Name.Name; }
+        }
+            
+        public virtual string ActivityFlags {
+            get { return ""; }
+        }
             
         override public void Dispose() {
         }

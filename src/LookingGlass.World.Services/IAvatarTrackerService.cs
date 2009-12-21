@@ -1,4 +1,4 @@
-﻿/* Copyright (c) 2008 Robert Adams
+﻿/* Copyright (c) Robert Adams
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *     * Redistributions of source code must retain the above copyright
@@ -23,13 +23,8 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using LookingGlass;
-using LookingGlass.World;
-using OMV = OpenMetaverse;
 
-namespace LookingGlass.World {
-    public interface IEntityAvatar : IEntity {
-        string DisplayName { get; }
-        string ActivityFlags { get; }
-    }
+namespace LookingGlass.World.Services {
+interface IAvatarTrackerService {
+}
 }

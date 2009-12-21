@@ -43,6 +43,27 @@ namespace LookingGlass.World.LL {
             set { m_avatarManager = value; }
         }
 
+        public string DisplayName {
+            get {
+                if (this.Avatar != null) {
+                    return this.Avatar.FirstName + " " + this.Avatar.LastName;
+                }
+                return this.Name.Name;
+            }
+        }
+
+        public string ActivityFlags {
+            get {
+                string ret = "";
+                if (this.Avatar != null) {
+                    if ((this.Avatar.Flags & OMV.PrimFlags.Flying) != 0) {
+                        ret += "F";
+                    }
+                }
+                return ret;
+            }
+        }
+
         public LLEntityAvatar(AssetContextBase acontext, LLRegionContext rcontext, 
                 ulong regionHandle, OMV.Avatar av) : base(rcontext, acontext) {
             // let people looking at IEntity's get at my avatarness

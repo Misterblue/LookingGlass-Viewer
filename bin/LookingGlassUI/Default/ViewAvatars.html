@@ -65,17 +65,12 @@ function TimerLoginStuff(firstTime) {
 
 // given a set of login status parameters, update login status area
 function UpdateLoginArea(data) {
-    $('#LGCurrentLogin td').empty();
-    if (data['first'] != undefined) {
-        $('#LGCurrentLogin td:nth-child(1)').append(data.first.value);
-        $('#LGCurrentLogin td:nth-child(2)').append(data.last.value);
-        $('#LGCurrentLogin td:nth-child(3)').append(data.currentgrid.value);
-        $('#LGCurrentLogin td:nth-child(4)').append(data.currentsim.value);
-        $('#LGCurrentLogin td:nth-child(5)').append(data.positionx.value);
-        $('#LGCurrentLogin td:nth-child(6)').append(data.positiony.value);
-        $('#LGCurrentLogin td:nth-child(7)').append(data.positionz.value);
-    }
-
+    $.getJSON(BASEURL+'/api/avatars?yy=' + Math.floor(Math.random()*999999),
+                function(data, status) {
+        if (status == 'success') {
+            BuildBasicTable('#LGCurrentLogin', data, false, false);
+        }
+    });
     $('#LGLoginMessage').empty();
     $('#LGLoginMessage').append(data.msg.value);
 
@@ -120,26 +115,6 @@ function SendLoginRequest() {
 
 <div id="LGLoginMessage"></div>
 <div id="LGCurrentLogin">
-    <table>
-        <tr>
-            <th>First</th>
-            <th>Last</th>
-            <th>Grid</th>
-            <th>Sim</th>
-            <th>X</th>
-            <th>Y</th>
-            <th>Z</th>
-        </tr>
-        <tr>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-    </table>
 </div>  <!-- LGCurrentLogin -->
 
 <form id="LGLoginForm">
