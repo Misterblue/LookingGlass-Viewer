@@ -157,14 +157,14 @@ public class AvatarTracker : IAvatarTrackerService, IModule {
                 try {
                     oneAV.Add("Name", new OMVSD.OSDString(kvp.Value.DisplayName));
                     oneAV.Add("Region", new OMVSD.OSDString(kvp.Value.RegionContext.Name.Name));
-                    oneAV.Add("X", new OMVSD.OSDString(kvp.Value.RelativePosition.X.ToString("###0.###")));
-                    oneAV.Add("Y", new OMVSD.OSDString(kvp.Value.RelativePosition.Y.ToString("###0.###")));
-                    oneAV.Add("Z", new OMVSD.OSDString(kvp.Value.RelativePosition.Z.ToString("###0.###")));
+                    oneAV.Add("X", new OMVSD.OSDString(kvp.Value.RelativePosition.X.ToString("0000.###")));
+                    oneAV.Add("Y", new OMVSD.OSDString(kvp.Value.RelativePosition.Y.ToString("0000.###")));
+                    oneAV.Add("Z", new OMVSD.OSDString(kvp.Value.RelativePosition.Z.ToString("0000.###")));
                     float dist = 0f;
                     if (m_agentAV != null) {
                         dist = OMV.Vector3.Distance(m_agentAV.RelativePosition, kvp.Value.RelativePosition);
                     }
-                    oneAV.Add("Distance", new OMVSD.OSDReal(dist));
+                    oneAV.Add("Distance", new OMVSD.OSDString(dist.ToString("0000.###")));
                     oneAV.Add("Flags", new OMVSD.OSDString(kvp.Value.ActivityFlags));
                 }
                 catch (Exception e) {

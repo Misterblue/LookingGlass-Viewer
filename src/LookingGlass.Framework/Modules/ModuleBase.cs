@@ -37,6 +37,7 @@ namespace LookingGlass.Framework.Modules {
 /// </summary>
 public class ModuleBase : IModule {
 
+    #region IModule
     protected string m_moduleName;
     public string ModuleName { get { return m_moduleName; } set { m_moduleName = value; } }
 
@@ -52,14 +53,14 @@ public class ModuleBase : IModule {
 
     // IModule.OnLoad
     public virtual void OnLoad(string modName, LookingGlassBase lgbase) {
-        LogManager.Log.Log(LogLevel.DINIT, "ModuleBase.OnLoad()");
+        LogManager.Log.Log(LogLevel.DINIT, ModuleName + ".OnLoad()");
         m_moduleName = modName;
         m_lgb = lgbase;
     }
 
     // IModule.AfterAllModulesLoaded
     public virtual bool AfterAllModulesLoaded() {
-        LogManager.Log.Log(LogLevel.DINIT, "ModuleBase.AfterAllModulesLoaded()");
+        LogManager.Log.Log(LogLevel.DINIT, ModuleName + ".AfterAllModulesLoaded()");
         return true;
     }
 
@@ -77,5 +78,6 @@ public class ModuleBase : IModule {
     public virtual bool PrepareForUnload() {
         return false;
     }
+    #endregion IModule
 }
 }

@@ -634,8 +634,6 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
 
         m_commStatsHandler = new RestHandler("/stats/" + m_moduleName + "/stats", m_commStatistics);
 
-        // m_chatHandler = new RestHandler("/chat", Chat_GetHandler, Chat_PostHandler);
-
         return true;
     }
     #endregion IModule methods
