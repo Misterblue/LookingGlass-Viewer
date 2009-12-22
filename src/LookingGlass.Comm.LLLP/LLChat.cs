@@ -23,19 +23,18 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using LookingGlass.Comm;
+using LookingGlass.Comm.LLLP;
+using LookingGlass.Framework;
 using LookingGlass.Framework.Logging;
+using LookingGlass.Framework.Modules;
 using LookingGlass.Framework.Parameters;
+using LookingGlass.Rest;
+using OMV = OpenMetaverse;
+using OMVSD = OpenMetaverse.StructuredData;
 
-namespace LookingGlass.Framework.Modules {
-
-/// <summary>
-/// Classes that are modules used to be inheritied from this class but since C#
-/// does not allow multiple inheritance, this is the wrong thing to use the one 
-/// inheritance for.
-/// When you create a module, cut the code out of this and adapt it to the module
-/// and say the module implements IModule.
-/// </summary>
-public class ModuleBase : IModule {
+namespace LookingGlass.Comm.LLLP {
+class LLChat : IChatProvider, IModule {
 
     #region IModule
     protected string m_moduleName;
@@ -46,7 +45,11 @@ public class ModuleBase : IModule {
 
     public IAppParameters ModuleParams { get { return m_lgb.AppParams; } }
 
-    public ModuleBase() {
+    protected RestManager m_restManager;
+    protected CommLLLP m_comm;
+    protected RestHandler m_restHandler;
+
+    public LLChat() {
         // default to the class name. The module code can set it to something else later.
         m_moduleName = System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name;
     }
@@ -56,11 +59,26 @@ public class ModuleBase : IModule {
         LogManager.Log.Log(LogLevel.DINIT, ModuleName + ".OnLoad()");
         m_moduleName = modName;
         m_lgb = lgbase;
+
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Comm.Name", "Comm",
+                    "Name of LLLP comm to connect to");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".RestManager.Name", "RestManager",
+                    "Name of REST interface manager to connect to");
     }
 
     // IModule.AfterAllModulesLoaded
     public virtual bool AfterAllModulesLoaded() {
         LogManager.Log.Log(LogLevel.DINIT, ModuleName + ".AfterAllModulesLoaded()");
+
+        // Find the rest manager and setup to get web requests
+        String restManagerName = ModuleParams.ParamString(m_moduleName + ".RestManager.Name");
+        m_restManager = (RestManager)LGB.ModManager.Module(restManagerName);
+        m_restHandler = new RestHandler("/avatars", GetHandler, PostHandler);
+
+        // Find the world and connect to same to hear about all the avatars
+        String commName = ModuleParams.ParamString(m_moduleName + ".Comm.Name");
+        m_comm = (CommLLLP)LGB.ModManager.Module(commName);
+
         return true;
     }
 
@@ -79,5 +97,14 @@ public class ModuleBase : IModule {
         return false;
     }
     #endregion IModule
+
+    private OMVSD.OSD GetHandler(Uri uri, String after) {
+        OMVSD.OSDMap ret = new OMVSD.OSDMap();
+        return ret;
+    }
+
+    private OMVSD.OSD PostHandler(Uri uri, String after, OMVSD.OSD body) {
+        return new OMVSD.OSDMap();
+    }
 }
 }
