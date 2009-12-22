@@ -157,9 +157,9 @@ public class AvatarTracker : IAvatarTrackerService, IModule {
                 try {
                     oneAV.Add("Name", new OMVSD.OSDString(kvp.Value.DisplayName));
                     oneAV.Add("Region", new OMVSD.OSDString(kvp.Value.RegionContext.Name.Name));
-                    oneAV.Add("X", new OMVSD.OSDReal(kvp.Value.RelativePosition.X));
-                    oneAV.Add("Y", new OMVSD.OSDReal(kvp.Value.RelativePosition.Y));
-                    oneAV.Add("Z", new OMVSD.OSDReal(kvp.Value.RelativePosition.Z));
+                    oneAV.Add("X", new OMVSD.OSDString(kvp.Value.RelativePosition.X.ToString("###0.###")));
+                    oneAV.Add("Y", new OMVSD.OSDString(kvp.Value.RelativePosition.Y.ToString("###0.###")));
+                    oneAV.Add("Z", new OMVSD.OSDString(kvp.Value.RelativePosition.Z.ToString("###0.###")));
                     float dist = 0f;
                     if (m_agentAV != null) {
                         dist = OMV.Vector3.Distance(m_agentAV.RelativePosition, kvp.Value.RelativePosition);

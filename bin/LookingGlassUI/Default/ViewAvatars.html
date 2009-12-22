@@ -19,6 +19,7 @@ $(document).ready(function() {
     // Major divisions in the content accordioning
     $('.LGSection').hide();
     $('#LGLogin').show();
+    $('#LGAvatarView').show();
     $('.LGSectionHeader').click(function() {
         $(this).next().toggle();
         return false;
@@ -28,17 +29,18 @@ $(document).ready(function() {
     loginTimerProcessing = false;
     TimerLoginStuff(true);
     loginTimerHandle = setInterval('TimerLoginStuff(false)', 3000);
+    avatarTimerHandle = setInterval('TimerAvatarStuff()', 3000);
 });
 
 // Login works by polling the viewer for the status of the user.
-// If the user is logged in, we display this status and the user location.
+// If the user is logged in, we display the avatars in the area.
 // If not logged in, the user filled in fields and pressed 'login'
 // which POSTs parameters to the viewer which change the user's
 // login state.
 var BASEURL='http://127.0.0.1:9144';
 var loginTimerHandle;
 var loginTimerProcessing;
-// poll for the user's date. Initialize form if first GET.
+// Poll for the user's data. Initialize form if first GET.
 function TimerLoginStuff(firstTime) {
     if (loginTimerProcessing) return;
     loginTimerProcessing = true;
@@ -65,17 +67,12 @@ function TimerLoginStuff(firstTime) {
 
 // given a set of login status parameters, update login status area
 function UpdateLoginArea(data) {
-    $.getJSON(BASEURL+'/api/avatars?yy=' + Math.floor(Math.random()*999999),
-                function(data, status) {
-        if (status == 'success') {
-            BuildBasicTable('#LGCurrentLogin', data, false, false);
-        }
-    });
     $('#LGLoginMessage').empty();
     $('#LGLoginMessage').append(data.msg.value);
 
     if(data.loginstate.value == 'logout') {
         $("#LGLoginForm").show();
+        $("#LGAvatarView").hide();
     }
     else {
         $("#LGLoginForm").hide();
@@ -103,6 +100,20 @@ function SendLoginRequest() {
     return false;
 }
 
+var avatarTimerHandle;
+var avatarTimerProcessing;
+function TimerAvatarStuff() {
+    if (avatarTimerProcessing) return;
+    avatarTimerProcessing = true;
+    $.getJSON(BASEURL+'/api/avatars?yy=' + Math.floor(Math.random()*999999),
+                function(data, status) {
+        if (status == 'success') {
+            BuildBasicTable('#LGAvatars', data, false, false);
+        }
+    });
+    avatarTimerProcessing = false;
+}
+
 </script>
 </head>
 <body id="LGBody">
@@ -114,8 +125,6 @@ function SendLoginRequest() {
 <div id="LGLogin" class="LGSectionContent">
 
 <div id="LGLoginMessage"></div>
-<div id="LGCurrentLogin">
-</div>  <!-- LGCurrentLogin -->
 
 <form id="LGLoginForm">
     <ul class="LGLogin">
@@ -157,10 +166,18 @@ function SendLoginRequest() {
     </span>
 </div>  <!-- LGLogin -->
 </div>  <!-- LGSectionContainer -->
+<!-- ============================================== -->
+<div class="LGSectionContainer">
+<a class="LGSectionHeader" href="#">Avatars</a>
+<div id="LGAvatarView" class="LGSectionContent">
 
+<div id="LGAvatars">
+</div>  <!-- LGAvatars -->
+</div>  <!-- LGSectionContainer -->
 <!-- ============================================== -->
 </div>  <!-- LGContent -->
 <div id="DEBUG"></div>
+<div id="LGDialogSelection"></div>
 <div id="LGFooter"></div>
 </body>
 </html>

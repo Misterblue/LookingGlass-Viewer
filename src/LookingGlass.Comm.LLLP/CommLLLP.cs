@@ -24,6 +24,7 @@ using System;
 using System.Threading;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Text;
 using LookingGlass;
 using LookingGlass.Comm;
@@ -633,6 +634,8 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
 
         m_commStatsHandler = new RestHandler("/stats/" + m_moduleName + "/stats", m_commStatistics);
 
+        // m_chatHandler = new RestHandler("/chat", Chat_GetHandler, Chat_PostHandler);
+
         return true;
     }
     #endregion IModule methods
@@ -943,8 +946,8 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
                     // TODO: copy terrain texture IDs
 
                     ret = new LLRegionContext(null, DefaultAssetContext, llterr, sim);
-                    // ret.Name = new EntityNameLL(LoggedInGridName + "/Region/" + sim.ToString().Trim());
-                    ret.Name = new EntityNameLL(LoggedInGridName + "/Region/" + sim.Name.Trim());
+                    // ret.Name = new EntityNameLL(LoggedInGridName + "/Region/" + sim.Name.Trim());
+                    ret.Name = new EntityNameLL(LoggedInGridName + "/" + sim.Name.Trim());
                     ret.RegionContext = ret;    // since we don't know ourself before
                     ret.Comm = m_client;
                     ret.TerrainInfo.RegionContext = ret;
