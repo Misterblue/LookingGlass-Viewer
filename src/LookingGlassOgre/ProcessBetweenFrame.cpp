@@ -331,6 +331,37 @@ public:
 };
 
 // ====================================================================
+class AddLoadedMeshQc : public GenericQc {
+public:
+	Ogre::String entityName;
+	Ogre::String meshName;
+	Ogre::SceneNode* sceneNode;
+	AddLoadedMeshQc(float prio, Ogre::String uni,
+		Ogre::String entityNam, Ogre::String meshNam, Ogre::SceneNode* sceneNod) {
+		this->priority = prio;
+		this->cost = 0;
+		this->type = "AddLoadedMesh";
+		this->uniq = uni;
+		this->entityName = entityNam;
+		this->meshName = meshNam;
+		this->sceneNode = sceneNod;
+	}
+	~AddLoadedMeshQc(void) {
+		this->uniq.clear();
+		this->entityName.clear();
+		this->meshName.clear();
+	}
+	void Process() {
+		Ogre::MovableObject* ent = LG::RendererOgre::Instance()->m_sceneMgr->createEntity(this->entityName, this->meshName);
+		// it's not scenery
+		ent->removeQueryFlags(Ogre::SceneManager::WORLD_GEOMETRY_TYPE_MASK);	
+		LG::RendererOgre::Instance()->Shadow->AddCasterShadow(ent);
+		this->sceneNode->attachObject(ent);
+		LG::RendererOgre::Instance()->m_visCalc->RecalculateVisibility();
+	}
+};
+
+// ====================================================================
 class UpdateSceneNodeQc : public GenericQc {
 public:
 	Ogre::String entName;
@@ -537,6 +568,16 @@ void ProcessBetweenFrame::CreateMeshSceneNode(float priority,
 	LGLOCK_UNLOCK(m_workItemMutex);
 	LG::IncStat(LG::StatBetweenFrameWorkItems);
 	LG::IncStat(LG::StatBetweenFrameCreateMeshSceneNode);
+}
+
+void ProcessBetweenFrame::AddLoadedMesh(float priority, Ogre::String uniq,
+					Ogre::String entityName, Ogre::String meshName, Ogre::SceneNode* sceneNode) {
+	LGLOCK_LOCK(m_workItemMutex);
+	AddLoadedMeshQc* almq = new AddLoadedMeshQc(priority, uniq, entityName, meshName, sceneNode);
+	QueueWork((GenericQc*)almq);
+	LGLOCK_UNLOCK(m_workItemMutex);
+	LG::IncStat(LG::StatBetweenFrameWorkItems);
+	LG::IncStat(LG::StatBetweenFrameAddLoadedMesh);
 }
 
 void ProcessBetweenFrame::UpdateSceneNode(float priority, char* entName,

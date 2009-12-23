@@ -27,6 +27,7 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include "RendererOgre.h"
+#include "ProcessBetweenFrame.h"
 #include "LGLocking.h"
 
 /*
@@ -189,12 +190,16 @@ public:
 	void Process() {
 		LG::Log("OLMeshTracker::MakeLoaded2Qm: loading: %s", meshName.c_str());
 		Ogre::MeshManager::getSingleton().load(this->meshName, OLResourceGroupName);
+		LG::ProcessBetweenFrame::Instance()->AddLoadedMesh(0, Ogre::String(""), entityName, meshName, sceneNode);
+		/*
+		// functionality moved into between frame processing
 		Ogre::MovableObject* ent = LG::RendererOgre::Instance()->m_sceneMgr->createEntity(this->entityName, this->meshName);
 		// it's not scenery
 		ent->removeQueryFlags(Ogre::SceneManager::WORLD_GEOMETRY_TYPE_MASK);	
 		LG::RendererOgre::Instance()->Shadow->AddCasterShadow(ent);
 		this->sceneNode->attachObject(ent);
 		LG::RendererOgre::Instance()->m_visCalc->RecalculateVisibility();
+		*/
 	}
 };
 

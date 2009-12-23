@@ -52,6 +52,7 @@ static class Ogr {
     public const int StatBetweenFrameCreateMaterialResource = 9;
     public const int StatBetweenFrameCreateMeshResource = 10;
     public const int StatBetweenFrameCreateMeshSceneNode = 11;
+    public const int StatBetweenFrameAddLoadedMesh = 29;
     public const int StatBetweenFrameUpdateSceneNode = 12;
     public const int StatBetweenFrameTotalProcessed = 16;
     public const int StatBetweenFrameUnknownProcess = 17;

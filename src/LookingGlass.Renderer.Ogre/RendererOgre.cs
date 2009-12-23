@@ -348,6 +348,9 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         m_ogreStats.Add("TotalBetweenFrameCreateMeshScenenode", delegate(string xx) {
                 return new OMVSD.OSDString(m_ogreStatsPinned[Ogr.StatBetweenFrameCreateMeshSceneNode].ToString()); },
                 "Number of 'create mesh scene node' work items queued");
+        m_ogreStats.Add("TotalBetweenFrameAddLoadedMesh", delegate(string xx) {
+                return new OMVSD.OSDString(m_ogreStatsPinned[Ogr.StatBetweenFrameAddLoadedMesh].ToString()); },
+                "Number of 'add loaded mesh' work items queued");
         m_ogreStats.Add("TotalBetweenframeupdatescenenode", delegate(string xx) {
                 return new OMVSD.OSDString(m_ogreStatsPinned[Ogr.StatBetweenFrameUpdateSceneNode].ToString()); },
                 "Number of 'update scene node' work items queued");
@@ -641,6 +644,12 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                         parentSceneNodeName = EntityNameOgre.ConvertToOgreSceneNodeName(m_ent.RegionContext.Name);
                     }
 
+                    // create the mesh we know we need
+                    if (m_shouldForceMeshRebuild) {
+                        // TODO: figure out how to do this without queuing -- do it now
+                        RequestMesh(m_ent.Name, entMeshName.Name);
+                    }
+
                     // Create the scene node for this entity
                     // and add the definition for the object on to the scene node
                     // This will cause the load function to be called and create all
@@ -665,10 +674,6 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     // we can find it later.
                     m_ent.SetAddition(RendererOgre.AddSceneNodeName, entitySceneNodeName);
 
-                    // create the mesh we know we need
-                    if (m_shouldForceMeshRebuild) {
-                        RequestMesh(m_ent.Name, entMeshName.Name);
-                    }
                 }
                 catch (Exception e) {
                     m_log.Log(LogLevel.DBADERROR, "Render: Failed conversion of {0}: {1}", m_ent.Name.Name, e.ToString());
