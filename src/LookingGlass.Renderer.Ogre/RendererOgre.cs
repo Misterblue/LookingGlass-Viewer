@@ -647,7 +647,11 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     // create the mesh we know we need
                     if (m_shouldForceMeshRebuild) {
                         // TODO: figure out how to do this without queuing -- do it now
-                        RequestMesh(m_ent.Name, entMeshName.Name);
+                        // RequestMesh(m_ent.Name, entMeshName.Name);
+                        Object[] meshLaterParams = { entMeshName.Name, entMeshName };
+                        bool worked = RequestMeshLater(qInstance, meshLaterParams);
+                        // if we can't get the mesh now, we'll have to wait until all the pieces are here
+                        if (!worked) return false;
                     }
 
                     // Create the scene node for this entity

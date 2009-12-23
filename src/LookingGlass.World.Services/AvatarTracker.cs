@@ -164,7 +164,7 @@ public class AvatarTracker : IAvatarTrackerService, IModule {
                     if (m_agentAV != null) {
                         dist = OMV.Vector3.Distance(m_agentAV.RelativePosition, kvp.Value.RelativePosition);
                     }
-                    oneAV.Add("Distance", new OMVSD.OSDString(dist.ToString("0000.###")));
+                    oneAV.Add("Distance", new OMVSD.OSDString(dist.ToString("###0.###")));
                     oneAV.Add("Flags", new OMVSD.OSDString(kvp.Value.ActivityFlags));
                 }
                 catch (Exception e) {
