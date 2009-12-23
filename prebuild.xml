@@ -34,6 +34,36 @@
       </Options>
     </Configuration>
 
+    <Project name="LookingGlass" path="src/LookingGlass" type="Exe" frameworkVersion="v3_5">
+      <Configuration name="Debug">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+
+      <ReferencePath>../../bin/</ReferencePath>
+      <Reference name="System"/>
+      <Reference name="System.Data"/>
+      <Reference name="System.Drawing"/>
+      <Reference name="System.Windows.Forms"/>
+      <Reference name="System.Xml"/>
+      <Reference name="LookingGlass.Comm.dll"/>
+      <Reference name="LookingGlass.Comm.LLLP.dll"/>
+      <Reference name="LookingGlass.Framework.dll"/>
+      <Reference name="LookingGlass.Radegast.dll"/>
+      <Reference name="LookingGlass.View.dll"/>
+      <Reference name="OpenMetaverse.dll"/>
+      <Reference name="Radegast.exe"/>
+      <Files>
+        <Match pattern="*.cs" recurse="true"/>
+      </Files>
+    </Project>
+
     <Project name="LookingGlass.Framework" path="src/LookingGlass.Framework" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
@@ -379,6 +409,7 @@
       <Reference name="LookingGlass.World.dll"/>
       <Reference name="OpenMetaverse.dll"/>
       <Reference name="OpenMetaverseTypes.dll"/>
+      <Reference name="OpenMetaverse.StructuredData.dll"/>
       <Reference name="HttpServer.dll"/>
       <Files>
         <Match pattern="*.cs" recurse="false"/>
@@ -407,43 +438,7 @@
       </Files>
     </Project>
 -->
-
-    <Project name="LookingGlass" path="src/LookingGlass" type="Exe" frameworkVersion="v3_5">
-      <Configuration name="Debug">
-        <Options>
-          <OutputPath>../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release">
-        <Options>
-          <OutputPath>../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-
-      <ReferencePath>../../bin/</ReferencePath>
-      <Reference name="System"/>
-      <Reference name="System.Data"/>
-      <Reference name="System.Drawing"/>
-      <Reference name="System.Windows.Forms"/>
-      <Reference name="System.Xml"/>
-      <Reference name="LookingGlass.Comm.dll"/>
-      <Reference name="LookingGlass.Comm.LLLP.dll"/>
-      <Reference name="LookingGlass.Framework.dll"/>
-      <Reference name="LookingGlass.Radegast.dll"/>
-      <Reference name="LookingGlass.View.dll"/>
-      <Reference name="OpenMetaverse.dll"/>
-      <Reference name="Radegast.exe"/>
-      <Files>
-        <Match pattern="*.cs" recurse="true"/>
-      </Files>
-    </Project>
-
   
   </Solution>
 </Prebuild>
-
-
-
-
-
 
