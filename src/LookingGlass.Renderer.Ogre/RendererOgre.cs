@@ -571,7 +571,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
 
     // wrapper routine for the queuing if rendering work for this entity
     private void DoRenderQueued(IEntity ent) {
-        Object[] renderParameters = { ent, null };
+        Object[] renderParameters = { ent, null, false };
+        m_log.Log(LogLevel.DRENDERDETAIL, "DoRenderQueued: ent={0}", ent.Name.Name);
         m_workQueueRender.DoLater(CalculateInterestOrder(ent), DoRenderLater, renderParameters);
     }
 
@@ -579,6 +580,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         Object[] loadParams = (Object[])parms;
         IEntity m_ent = (IEntity)loadParams[0];
         RenderableInfo m_ri = (RenderableInfo)loadParams[1];
+        bool m_hasMesh = (bool)loadParams[2];
         string entitySceneNodeName = EntityNameOgre.ConvertToOgreSceneNodeName(m_ent.Name);
 
         lock (m_ent) {
@@ -616,13 +618,24 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     }
 
                     // create the mesh we know we need
-                    if (m_shouldForceMeshRebuild) {
+                    if (m_shouldForceMeshRebuild && !m_hasMesh) {
                         // TODO: figure out how to do this without queuing -- do it now
-                        // RequestMesh(m_ent.Name, entMeshName.Name);
-                        Object[] meshLaterParams = { entMeshName.Name, entMeshName };
-                        bool worked = RequestMeshLater(qInstance, meshLaterParams);
-                        // if we can't get the mesh now, we'll have to wait until all the pieces are here
-                        if (!worked) return false;
+                        //2 RequestMesh(m_ent.Name, entMeshName.Name);
+                        //1 Object[] meshLaterParams = { entMeshName.Name, entMeshName };
+                        //1 bool worked = RequestMeshLater(qInstance, meshLaterParams);
+                        //1 // if we can't get the mesh now, we'll have to wait until all the pieces are here
+                        //1 if (!worked) return false;
+                        if (!RendererOgre.GetWorldRenderConv(m_ent).CreateMeshResource(qInstance.priority, m_ent, 
+                                entMeshName.Name, entMeshName)) {
+                            // we need to wait until some resource exists before we can complete this creation
+                            return false;
+                        }
+                        m_log.Log(LogLevel.DRENDERDETAIL, "RendererOgre.DorRenderLater: forced mesh build for {0}", 
+                            entMeshName.Name);
+                        m_hasMesh = true;
+                        // Push that the mesh was crreated into the queued item so if a 'false' is returned
+                        // later, we don't create the mesh again.
+                        loadParams[2] = m_hasMesh;
                     }
 
                     // Create the scene node for this entity

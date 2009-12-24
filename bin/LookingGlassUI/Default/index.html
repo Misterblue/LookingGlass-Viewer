@@ -19,9 +19,9 @@ $(document).ready(function() {
 
     // Major divisions in the content accordioning
     $('.LGSection').hide();
-    $('#LGLogin').show();
+    $('#LGLogin').show('slow');
     $('.LGSectionHeader').click(function() {
-        $(this).next().toggle();
+        $(this).next().slideToggle('slow');
         return false;
     });
 
@@ -78,10 +78,10 @@ function UpdateLoginArea(data) {
     $('#LGLoginMessage').append(data.msg.value);
 
     if(data.loginstate.value == 'logout') {
-        $("#LGLoginForm").show();
+        $("#LGLoginForm").slideDown('slow');
     }
     else {
-        $("#LGLoginForm").hide();
+        $("#LGLoginForm").slideUp('slow');
     }
 }
 
@@ -229,6 +229,7 @@ function DebugLog(msg) {
     <span class="LGLoginSubmit">
         <input type="submit" value="Login"/>
     </span>
+</form>
 </div>  <!-- LGLogin -->
 </div>  <!-- LGSectionContainer -->
 

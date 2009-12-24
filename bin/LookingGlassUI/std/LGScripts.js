@@ -93,6 +93,7 @@ function BuildBasicTable(sect, data /*, addRowName, rebuild, addDisplayCol*/) {
     if (arguments.length > 4) addDisplayCol = arguments[4];
     if ($('#' + tableID).length == 0 || rebuild) {
         // table does not exist. Build same
+        $(sect).empty();
         $(sect).append(BuildTableForData(sectID, tableID, data, addRowName, addDisplayCol));
     }
     // Fill its cells with the text data

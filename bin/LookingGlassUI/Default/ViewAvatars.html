@@ -17,11 +17,10 @@ $(document).ready(function() {
     $("#LGLoginForm").submit(SendLoginRequest);
 
     // Major divisions in the content accordioning
-    $('.LGSection').hide();
-    $('#LGLogin').show();
-    $('#LGAvatarView').show();
+    $('.LGSectionContent').hide('slow');
+    $('#LGLogin').show('slow');
     $('.LGSectionHeader').click(function() {
-        $(this).next().toggle();
+        $(this).next().slideToggle('slow');
         return false;
     });
 
@@ -71,11 +70,12 @@ function UpdateLoginArea(data) {
     $('#LGLoginMessage').append(data.msg.value);
 
     if(data.loginstate.value == 'logout') {
-        $("#LGLoginForm").show();
-        $("#LGAvatarView").hide();
+        $("#LGLoginForm").show('slow');
+        $("#LGAvatarView").hide('slow');
     }
     else {
-        $("#LGLoginForm").hide();
+        $("#LGLoginForm").hide('slow');
+        $("#LGAvatarView").show('slow');
     }
 }
 
@@ -101,14 +101,14 @@ function SendLoginRequest() {
 }
 
 var avatarTimerHandle;
-var avatarTimerProcessing;
+var avatarTimerProcessing = false;
 function TimerAvatarStuff() {
     if (avatarTimerProcessing) return;
     avatarTimerProcessing = true;
     $.getJSON(BASEURL+'/api/avatars?yy=' + Math.floor(Math.random()*999999),
                 function(data, status) {
         if (status == 'success') {
-            BuildBasicTable('#LGAvatars', data, false, false);
+            BuildBasicTable('#LGAvatars', data, false, true);
         }
     });
     avatarTimerProcessing = false;
@@ -164,6 +164,7 @@ function TimerAvatarStuff() {
     <span class="LGLoginSubmit">
         <input type="submit" value="Login"/>
     </span>
+</form>
 </div>  <!-- LGLogin -->
 </div>  <!-- LGSectionContainer -->
 <!-- ============================================== -->
