@@ -99,14 +99,6 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     protected BasicWorkQueue m_workQueueReqTexture = new BasicWorkQueue("OgreRendererRequestTexture");
     protected OnDemandWorkQueue m_betweenFramesQueue = new OnDemandWorkQueue("OgreBetweenFrames");
     private static int m_betweenFrameTotalCost = 300;
-    // private static int m_betweenFrameMinTotalCost = 50;
-    private static int m_betweenFrameCreateMaterialCost = 5;
-    private static int m_betweenFrameCreateSceneNodeCost = 20;
-    private static int m_betweenFrameCreateMeshCost = 20;
-    private static int m_betweenFrameRefreshMeshCost = 20;
-    private static int m_betweenFrameMapRegionCost = 50;
-    private static int m_betweenFrameUpdateTerrainCost = 50;
-    private static int m_betweenFrameMapTextureCost = 10;
 
     // private Thread m_rendererThread = null;
     private bool m_shouldRenderOnMainThread = false;
@@ -196,20 +188,6 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "Cost of queued C++ work items to do between each frame");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.BetweenFrame.Costs.Total", "1000",
                     "The total cost of C# operations to do between each frame");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.BetweenFrame.Costs.CreateMaterial", "5",
-                    "The cost of creating a material");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.BetweenFrame.Costs.CreateSceneNode", "20",
-                    "The cost of creating a scene node");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.BetweenFrame.Costs.CreateMesh", "20",
-                    "The cost of creating a mesh");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.BetweenFrame.Costs.RefreshMesh", "20",
-                    "The cost of refreshing a mesh (scanning all entities and reloading ones using mesh)");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.BetweenFrame.Costs.MapRegion", "50",
-                    "The cost of mapping a region (creating the region management structures");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.BetweenFrame.Costs.UpdateTerrain", "50",
-                    "The cost of updating the terrain (rebuilding terrain mesh)");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.BetweenFrame.Costs.MapTexture", "10",
-                    "The cost of mapping a texture (doing a texture reload)");
 
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.SerializeMaterials", "false",
                     "Write out materials to files (replace with DB someday)");
@@ -435,13 +413,6 @@ public class RendererOgre : ModuleBase, IRenderProvider {
 
         // pick up a bunch of parameterized values
         m_betweenFrameTotalCost = ModuleParams.ParamInt(m_moduleName + ".Ogre.BetweenFrame.Costs.Total");
-        m_betweenFrameCreateMaterialCost = ModuleParams.ParamInt(m_moduleName + ".Ogre.BetweenFrame.Costs.CreateMaterial");
-        m_betweenFrameCreateSceneNodeCost = ModuleParams.ParamInt(m_moduleName + ".Ogre.BetweenFrame.Costs.CreateSceneNode");
-        m_betweenFrameCreateMeshCost = ModuleParams.ParamInt(m_moduleName + ".Ogre.BetweenFrame.Costs.CreateMesh");
-        m_betweenFrameRefreshMeshCost = ModuleParams.ParamInt(m_moduleName + ".Ogre.BetweenFrame.Costs.RefreshMesh");
-        m_betweenFrameMapRegionCost = ModuleParams.ParamInt(m_moduleName + ".Ogre.BetweenFrame.Costs.MapRegion");
-        m_betweenFrameUpdateTerrainCost = ModuleParams.ParamInt(m_moduleName + ".Ogre.BetweenFrame.Costs.UpdateTerrain");
-        m_betweenFrameMapTextureCost = ModuleParams.ParamInt(m_moduleName + ".Ogre.BetweenFrame.Costs.MapTexture");
 
         // start up the Ogre renderer
         try {
