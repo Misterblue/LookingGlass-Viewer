@@ -1,0 +1,102 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>LookingGlass Chat</title>
+<link rel="stylesheet" href="/static/LookingGlass.css" type="text/css"/>
+<script type="text/javascript" src="/std/jquery.js?xx=4"></script>
+<script type="text/javascript" src="/std/LGScripts.js?xx=4"></script>
+<noscript>
+<p color="red">
+Your browser does not support Javascript. This won't work for you.
+</p>
+</noscript>
+<script type="text/javascript">
+$(document).ready(function() {
+    // setup form to post info when 'Login' is pressed
+    $("#LGChatForm").submit(SendChatSay);
+    $("#LGSayButton").click(SendChatSay);
+    $("#LGWhisperButton").click(SendChatWhisper);
+    $("#LGShoutButton").click(SendChatShout);
+
+    // Start the timed functions
+    chatTimerProcessing = false;
+    chatTimerHandle = setInterval('TimerChatStuff()', 1500);
+});
+
+// Called by login form 'submit' click
+// Post the user's parameters to the viewer to login the user
+function SendChatRequest() {
+    $.post(BASEURL + "/api/chat", $('#LGChatForm').serializeArray());
+    return false;
+}
+
+var chatTimerHandle;
+var chatTimerProcessing = false;
+function TimerChatStuff() {
+    if (chatTimerProcessing) return;
+    chatTimerProcessing = true;
+    $.getJSON(BASEURL+'/api/chat?yy=' + Math.floor(Math.random()*999999),
+                function(data, status) {
+        if (status == 'success') {
+            for (timeCode in data) {
+                var chatLine = FormatChatLine(data[timeCode]);
+            }
+        }
+    });
+    chatTimerProcessing = false;
+}
+
+function FormatChatLine(chatInfo) {
+    var chatLine = "";
+    chatLine += '<div class="LGChatLine">';
+    chatLine += '<span class="LGChatLineTime">';
+    chatLine += chatInfo['Time'];
+    chatLine += ': </span>';
+    chatLine += '<span class="LGChatLineFrom">';
+    chatLine += chatInfo['From'];
+    chatLine += '</span>';
+    chatLine += '<span class="LGChatLineExpression">';
+    if (chatInfo['Type'] == 'Whisper') {
+        chatLine += ' whispers ';
+    }
+    else {
+        if (chatInfo['Type'] == 'Shout') {
+            chatLine += ' shouts ';
+        }
+        else {
+            chatLine += ' says ';
+        }
+    }
+    chatLine += chatInfo['From'];
+    chatLine += '</span>';
+    chatLine += '<span class="LGChatLineText ' + chatInfo['EntryType'] + '">';
+    chatLine += chatInfo['Message'];
+    chatLine += '</span>';
+    chatLine += '</div>';
+    return chatLine;
+}
+
+</script>
+</head>
+<body id="LGBody">
+<div id="LGHeader"></div>
+<div id="LGContent">
+<!-- ============================================== -->
+<div class="LGChatContainer">
+<div id="LGChat">
+<form id="LGChatForm">
+    <textarea id="LGChatText" name="chattext" rows="20" cols="80"></textarea>
+    <div id="LGChatInputArea">
+    <textarea id="LGChatInput" name="chatinput" rows="1" cols="60"></textarea>
+    <input id="LGSayButton" type="button" type="button" value="Say"/>
+    <input id="LGWhisperButton" type="button" type="button" value="Whisper"/>
+    <input id="LGShoutButton" type="button" type="button" value="Shout"/>
+    </div> <!-- LGChatInputArea -->
+</div>  <!-- LGChat -->
+</div>  <!-- LGChatContainer -->
+<!-- ============================================== -->
+</div>  <!-- LGContent -->
+<div id="LGFooter"></div>
+</body>
+</html>

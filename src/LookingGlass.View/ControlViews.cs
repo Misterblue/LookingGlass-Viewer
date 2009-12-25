@@ -33,6 +33,7 @@ namespace LookingGlass.View {
 public class ControlViews : IControlViewProvider, IModule {
 
     FormAvatars m_avatarView;
+    ViewChat m_chatView;
 
 #region IMODULE
     protected string m_moduleName;
@@ -63,17 +64,29 @@ public class ControlViews : IControlViewProvider, IModule {
 
     // IModule.Start
     public virtual void Start() {
+        LogManager.Log.Log(LogLevel.DINIT, "ControlViews.Start(): Initializing FormAvatar");
         m_avatarView = new FormAvatars(LGB);
         m_avatarView.Initialize();
         m_avatarView.Visible = true;
+
+        LogManager.Log.Log(LogLevel.DINIT, "ControlViews.Start(): Initializing ViewChat");
+        m_chatView = new ViewChat(LGB);
+        m_chatView.Initialize();
+        m_chatView.Visible = true;
         return;
     }
 
     // IModule.Stop
     public virtual void Stop() {
         if (m_avatarView != null) {
+            LogManager.Log.Log(LogLevel.DINIT, "ControlViews.Stop(): Stopping FormAvatar");
             m_avatarView.Shutdown();
             m_avatarView = null;
+        }
+        if (m_chatView != null) {
+            LogManager.Log.Log(LogLevel.DINIT, "ControlViews.Stop(): Stopping ViewChat");
+            m_chatView.Shutdown();
+            m_chatView = null;
         }
         return;
     }
