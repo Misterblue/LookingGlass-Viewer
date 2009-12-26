@@ -36,6 +36,7 @@ pre {
 }
 .LGSectionHeader {
 }
+/* Statistics ===================================== */
 #LGStatistics div {
     margin-left: 20px;
     background: #3A4F5D;
@@ -91,6 +92,7 @@ table.LGRendererStats-table-class td {
     text-align: right;
 }
 
+/* Default Parameters ========================= */
 table.LGDefaultParametersTable {
 }
 table.LGDefaultParametersTable td {
@@ -102,4 +104,41 @@ table.LGDefaultParametersTable td {
 #LGDefaultParameters-table td.LGDefaultParameters-description-class {
     text-align: left;
     width: 400px;
+}
+/* Chat ======================================= */
+#LGChatText {
+    /* width: 500px; */
+    /* height: 200px; */
+    background: #668396;
+    overflow: auto;
+}
+#LGChatText .LGChatLineTime {
+    color: #c0c0c0
+}
+#LGChatText .LGChatLineFrom {
+    color: #f09090;
+}
+#LGChatText .LGChatLineExpression {
+    color: yellow;
+}
+#LGChatText .ChatTypeStatusBlue {
+    color: #303090;
+}
+#LGChatText .ChatTypeStatusDarkBlue {
+    color: #0000FF;
+}
+#LGChatText .ChatTypeLindenChat {
+    color: yellow;
+}
+#LGChatText .ChatTypeObjectChat {
+    color: yellow;
+}
+#LGChatText .ChatTypeAlert {
+    color: red;
+}
+#LGChatText .ChatTypeError {
+    color: red;
+}
+#LGChatInput {
+    background: #668396;
 }

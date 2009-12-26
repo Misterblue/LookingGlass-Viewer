@@ -232,6 +232,9 @@ stdext::hash_map<Ogre::String, Ogre::Entity*> meshesToLoad;
 stdext::hash_map<Ogre::String, Ogre::Entity*> meshesToUnload;
 void VisCalcFrustDist::processEntityVisibility() {
 	int cnt = m_meshesReloadedPerFrame;
+	if (!meshesToLoad.empty()) {
+		LG::Log("processEntityVisibility: changing state on entities");
+	}
 	stdext::hash_map<Ogre::String, Ogre::Entity*>::iterator intr;
 	while ((!meshesToLoad.empty()) && (cnt-- > 0)) {
 		intr = meshesToLoad.begin();

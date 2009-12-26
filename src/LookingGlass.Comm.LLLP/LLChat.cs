@@ -34,7 +34,7 @@ using OMV = OpenMetaverse;
 using OMVSD = OpenMetaverse.StructuredData;
 
 namespace LookingGlass.Comm.LLLP {
-class LLChat : IChatProvider, IModule {
+public class LLChat : IChatProvider, IModule {
 
     protected ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
 
@@ -139,6 +139,11 @@ class LLChat : IChatProvider, IModule {
 
     // there is chat coming our way
     void Self_ChatFromSimulator(object sender, OpenMetaverse.ChatEventArgs e) {
+        m_log.Log(LogLevel.DCOMMDETAIL, "Self_ChatFromSimulator: {0} says '{1}'", e.FromName, e.Message);
+        if (e.Message.Length == 0) {
+            // zero length messages are typing start and end
+            return;
+        }
         ChatEntry ce = new ChatEntry();
         ce.fromName = e.FromName;
         ce.message = e.Message;
@@ -174,11 +179,12 @@ class LLChat : IChatProvider, IModule {
 
     private OMVSD.OSD GetHandler(Uri uri, String after) {
         OMVSD.OSDMap ret = new OMVSD.OSDMap();
+        string lastDate = "xx";
         lock (m_chats) {
             while (m_chats.Count > 0) {
                 ChatEntry ce = m_chats.Dequeue();
                 OMVSD.OSDMap chat = new OMVSD.OSDMap();
-                string dateString = ce.time.ToString("yyyyMMddhhmmss");
+                string dateString = ce.time.ToString("yyyyMMddhhmmssfff");
                 chat.Add("Time", new OMVSD.OSDString(dateString));
                 chat.Add("From", new OMVSD.OSDString(ce.fromName));
                 chat.Add("Message", new OMVSD.OSDString(ce.message));
@@ -189,6 +195,7 @@ class LLChat : IChatProvider, IModule {
                     chat.Add("OwnerID", new OMVSD.OSDString(ce.ownerID.ToString()));
                 }
                 ret.Add(dateString, chat);
+                lastDate = dateString;
             }
         }
         return ret;
@@ -196,9 +203,10 @@ class LLChat : IChatProvider, IModule {
 
     private OMVSD.OSD PostHandler(Uri uri, String after, OMVSD.OSD body) {
         try {
-            // collect parameters and send it to the simulator
             OMVSD.OSDMap mapBody = (OMVSD.OSDMap)body;
-            string msg = mapBody["Message"].AsString();
+            m_log.Log(LogLevel.DCOMMDETAIL, "PostHandler: received chat '{0}'", mapBody["Message"]);
+            // collect parameters and send it to the simulator
+            string msg = Uri.UnescapeDataString(mapBody["Message"].AsString().Replace("+", " "));
             OMVSD.OSD channelString = new OMVSD.OSDString("0");
             mapBody.TryGetValue("Channel", out channelString);
             int channel = Int32.Parse(channelString.AsString());
