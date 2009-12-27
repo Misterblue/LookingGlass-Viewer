@@ -115,6 +115,7 @@ void SkyBoxSkyX::AddSkyPass(Ogre::MaterialPtr matP) {
 
 bool SkyBoxSkyX::frameEnded(const Ogre::FrameEvent &e) {
 // bool SkyBoxSkyX::frameRenderingQueued(const Ogre::FrameEvent &e) {
+		/* Don't know what this code does
 		// Check camera height
 		Ogre::Camera* cam = LG::RendererOgre::Instance()->m_camera->Cam;
 		Ogre::RaySceneQuery * raySceneQuery = 
@@ -130,6 +131,9 @@ bool SkyBoxSkyX::frameEnded(const Ogre::FrameEvent &e) {
                                  cam->getPosition().z);
 			}
         }
+		*/
+
+		m_SkyX->update(e.timeSinceLastFrame);
 
 		m_sun->setPosition(m_SkyX->getAtmosphereManager()->getSunPosition());
 		m_sun->setDirection(m_SkyX->getAtmosphereManager()->getSunDirection());
@@ -149,8 +153,6 @@ bool SkyBoxSkyX::frameEnded(const Ogre::FrameEvent &e) {
 		else {
 			m_moon->setVisible(true);
 		}
-
-		m_SkyX->update(e.timeSinceLastFrame);
 
 		/*
 		// Update terrain material
