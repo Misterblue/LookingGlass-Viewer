@@ -218,6 +218,7 @@ public class LLChat : IChatProvider, IModule {
             m_comm.GridClient.Self.Chat(msg, channel, chatType);
 
             // echo my own message back for the log and chat window
+            /* NOTE: Don't have to do this. The simulator echos it back
             OMV.ChatEventArgs cea = new OpenMetaverse.ChatEventArgs(m_comm.GridClient.Network.CurrentSim, 
                             msg, 
                             OpenMetaverse.ChatAudibleLevel.Fully,
@@ -228,6 +229,7 @@ public class LLChat : IChatProvider, IModule {
                             OMV.UUID.Zero, 
                             m_comm.GridClient.Self.RelativePosition);
             this.Self_ChatFromSimulator(this, cea);
+             */
         }
         catch (Exception e) {
             m_log.Log(LogLevel.DCOMM, "ERROR PARSING CHAT MESSAGE: {0}", e);
