@@ -195,7 +195,8 @@ namespace LG {
 			// if greater than zero we're working on progress
 			if (m_desiredCameraOrientationProgress < 1.0) {
 				// still within the progress area
-				Ogre::Quaternion newOrientation = Ogre::Quaternion::Slerp(m_desiredCameraOrientationProgress, 
+				// Ogre::Quaternion newOrientation = Ogre::Quaternion::Slerp(m_desiredCameraOrientationProgress, 
+				Ogre::Quaternion newOrientation = Ogre::Quaternion::nlerp(m_desiredCameraOrientationProgress, 
 					m_camera->getOrientation(), m_desiredCameraOrientation, true);
 				m_camera->setOrientation(newOrientation); // XXXX
 				m_visCalc->RecalculateVisibility(); // XXXX

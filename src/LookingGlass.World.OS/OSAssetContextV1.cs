@@ -51,11 +51,15 @@ public class OSAssetContextV1 : AssetContextBase {
     public override void InitializeContextFinish() {
         m_basePath = World.Instance.Grids.GridParameter(Grids.Current, "OS.AssetServer.V1");
         m_proxyPath = World.Instance.Grids.GridParameter(Grids.Current, "OS.AssetServer.Proxy");
+        if (m_proxyPath != null && m_proxyPath.Length == 0) m_proxyPath = null;
+        m_log.Log(LogLevel.DINIT, "InitializeContextFinish: base={0}, proxy={1}", m_basePath,
+                        m_proxyPath == null ? "NULL" : m_proxyPath);
         return;
     }
     
+    // if it starts with our region name, it must be ours
     public override bool isTextureOwner(EntityName textureEntityName) {
-        return false;
+        return textureEntityName.Name.StartsWith(m_Name + EntityName.PartSeparator);
     }
 
     public override void DoTextureLoad(EntityName textureEntityName, AssetType typ, DownloadFinishedCallback finishCall) {
@@ -138,7 +142,7 @@ public class OSAssetContextV1 : AssetContextBase {
     private bool ThrottleTextureMakeRequest(DoLaterBase qInstance, Object obinID) {
         OMV.UUID binID = (OMV.UUID)obinID;
 
-        Uri assetPath = new Uri(m_basePath + "/" + binID.ToString() + "/texture");
+        Uri assetPath = new Uri(m_basePath + "/assets/" + binID.ToString() + "/data");
         HttpWebRequest request = (HttpWebRequest)WebRequest.Create(assetPath);
         request.MaximumAutomaticRedirections = 4;
         request.MaximumResponseHeadersLength = 4;
@@ -149,17 +153,29 @@ public class OSAssetContextV1 : AssetContextBase {
             myProxy.Address = new Uri(m_proxyPath);
             request.Proxy = myProxy;
         }
-        HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-        if (response.StatusCode == HttpStatusCode.OK) {
-            Stream receiveStream = response.GetResponseStream();
-            byte[] textureBuff = new byte[response.ContentLength];
-            receiveStream.Read(textureBuff, 0, (int)response.ContentLength);
-            OMV.Assets.AssetTexture at = new OMV.Assets.AssetTexture(binID, textureBuff);
-            ProcessDownloadFinished(OMV.TextureRequestState.Finished, at);
+        try {
+            m_log.Log(LogLevel.DCOMMDETAIL, "ThrottleTextureMakeRequest: requesting '{0}'", assetPath);
+            using (HttpWebResponse response = (HttpWebResponse)request.GetResponse()) {
+                m_log.Log(LogLevel.DCOMMDETAIL, "ThrottleTextureMakeRequest: request returned. resp={0}, l={1}",
+                            response.StatusCode, response.ContentLength);
+                if (response.StatusCode == HttpStatusCode.OK) {
+                    using (Stream receiveStream = response.GetResponseStream()) {
+                        byte[] textureBuff = new byte[response.ContentLength];
+                        receiveStream.Read(textureBuff, 0, (int)response.ContentLength);
+                        OMV.Assets.AssetTexture at = new OMV.Assets.AssetTexture(binID, textureBuff);
+                        ProcessDownloadFinished(OMV.TextureRequestState.Finished, at);
+                    }
+                }
+                else {
+                    OMV.Assets.AssetTexture at = new OMV.Assets.AssetTexture(binID, new byte[0]);
+                    ProcessDownloadFinished(OMV.TextureRequestState.NotFound, at);
+                }
+            }
         }
-        else {
+        catch (Exception e) {
+            m_log.Log(LogLevel.DBADERROR, "Error fetching asset: {0}", e);
             OMV.Assets.AssetTexture at = new OMV.Assets.AssetTexture(binID, new byte[0]);
-            ProcessDownloadFinished(OMV.TextureRequestState.NotFound, null);
+            ProcessDownloadFinished(OMV.TextureRequestState.NotFound, at);
         }
         return true;
     }

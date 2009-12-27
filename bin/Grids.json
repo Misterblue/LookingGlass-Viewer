@@ -36,6 +36,7 @@
         "SupportURL": "http://osgrid.org",
         "AccountURL": "http://osgrid.org/index.php?page=create",
         "PasswordURL": "http://osgrid.org/index.php?page=change"
+        // ,"OS.AssetServer.V1": "http://assets.osgrid.org:8003"
     },
 "ScienceSim.com": {
         "Name": "ScienceSim.com",

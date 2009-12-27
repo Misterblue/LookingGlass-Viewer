@@ -954,7 +954,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
     private AssetContextBase SelectAssetContextForGrid(OMV.Simulator sim) {
         AssetContextBase ret = null;
         string otherAssets = World.World.Instance.Grids.GridParameter(World.Grids.Current, "OS.AssetServer.V1");
-        if (otherAssets != null) {
+        if (otherAssets != null && otherAssets.Length != 0) {
             m_log.Log(LogLevel.DBADERROR, "CommLLLP: creating OSAssetContextV1 for {0}", m_loginGrid);
             ret = new OSAssetContextV1(LoggedInGridName);
             ret.InitializeContext(this, 
