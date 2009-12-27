@@ -274,7 +274,11 @@
       <Reference name="OpenMetaverseTypes.dll"/>
       <Reference name="OpenMetaverse.StructuredData.dll"/>
       <Files>
+        <Match pattern="ViewWindow.cs" recurse="false" subType="Form"/>
+        <Match pattern="ViewAvatars.cs" recurse="false" subType="Form"/>
+        <Match pattern="ViewChat.cs" recurse="false" subType="Form"/>
         <Match pattern="*.cs" recurse="false"/>
+        <Match pattern="*.resx" recurse="false" buildAction="EmbeddedResource" subType="Designer"/>
       </Files>
     </Project>
 
