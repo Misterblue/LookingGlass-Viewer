@@ -47,6 +47,9 @@ public sealed class World : ModuleBase, IWorld, IProvider {
     // list of the region information build for the simulator
     List<RegionContextBase> m_regionList;
 
+    // list of parameters and information on the grids
+    Grids m_grids;
+
     #region Events
     # pragma warning disable 0067   // disable unused event warning
     // A new region has been added to the world
@@ -275,6 +278,17 @@ public sealed class World : ModuleBase, IWorld, IProvider {
     }
     #endregion AGENT MANAGEMENT
     #endregion IWorld methods
+
+    #region GRID MANAGEMENT
+    public Grids Grids {
+        get {
+            if (m_grids == null) {
+                m_grids = new Grids();
+            } 
+            return m_grids;
+        }
+    }
+    #endregion GRID MANAGEMENT
 
 
 }

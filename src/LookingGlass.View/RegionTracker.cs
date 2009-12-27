@@ -38,9 +38,8 @@ namespace LookingGlass.View {
     /// of entities (regions, avatars, ...) for display. The interface to this is
     /// through the HTTP interface.
     /// </summary>
-public class EntityTracker : IEntityTrackerProvider, IModule {
+public class RegionTracker : IRegionTrackerProvider, IModule {
 
-protected RestHandler m_avatarRestHandler;
 protected RestHandler m_regionRestHandler;
 
 protected IWorld m_world;
@@ -54,43 +53,33 @@ protected IWorld m_world;
 
     public IAppParameters ModuleParams { get { return m_lgb.AppParams; } }
 
-    public EntityTracker() {
+    public RegionTracker() {
         // default to the class name. The module code can set it to something else later.
         m_moduleName = System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name;
     }
 
     // IModule.OnLoad
     public virtual void OnLoad(string modName, LookingGlassBase lgbase) {
-        LogManager.Log.Log(LogLevel.DINIT, "EntityTracker.OnLoad()");
+        LogManager.Log.Log(LogLevel.DINIT, "RegionTracker.OnLoad()");
         m_moduleName = modName;
         m_lgb = lgbase;
-        ModuleParams.AddDefaultParameter(ModuleName + ".Avatar.Enable", "true",
-                    "Whether to make avatar information available");
         ModuleParams.AddDefaultParameter(ModuleName + ".Regions.Enable", "true",
                     "Whether to make region information available");
         ModuleParams.AddDefaultParameter(ModuleName + ".World.Name", "World",
                     "Name of world module to track entities in");
     }
-
+   
     // IModule.AfterAllModulesLoaded
     public virtual bool AfterAllModulesLoaded() {
         LogManager.Log.Log(LogLevel.DINIT, "EntityTracker.AfterAllModulesLoaded()");
         // connect to the world and listen for entity events
         m_world = (IWorld)LGB.ModManager.Module(ModuleParams.ParamString(ModuleName + ".World.Name"));
-        m_world.OnAgentNew += new WorldAgentNewCallback(World_OnAgentNew);
-        m_world.OnAgentRemoved += new WorldAgentRemovedCallback(World_OnAgentRemoved);
-        m_world.OnWorldEntityNew += new WorldEntityNewCallback(World_OnWorldEntityNew);
-        m_world.OnWorldEntityRemoved += new WorldEntityRemovedCallback(World_OnWorldEntityRemoved);
-        m_world.OnWorldEntityUpdate += new WorldEntityUpdateCallback(World_OnWorldEntityUpdate);
         if (ModuleParams.ParamBool(ModuleName + ".Regions.Enable")) {
             m_world.OnWorldRegionNew += new WorldRegionNewCallback(World_OneWorldRegionNew);
             m_world.OnWorldRegionRemoved += new WorldRegionRemovedCallback(World_OneWorldRegionRemoved);
             m_world.OnWorldRegionUpdated += new WorldRegionUpdatedCallback(World_OneWorldRegionUpdated);
         }
 
-        if (ModuleParams.ParamBool(ModuleName + ".Avatars.Enable")) {
-            m_avatarRestHandler = new RestHandler("/Tracker/Avatars", new AvatarInformation(this));
-        }
         if (ModuleParams.ParamBool(ModuleName + ".Regions.Enable")) {
             m_regionRestHandler = new RestHandler("/Tracker/Regions", new RegionInformation(this));
         }
@@ -109,11 +98,6 @@ protected IWorld m_world;
 
     // IModule.PrepareForUnload
     public virtual bool PrepareForUnload() {
-        m_world.OnAgentNew -= new WorldAgentNewCallback(World_OnAgentNew);
-        m_world.OnAgentRemoved -= new WorldAgentRemovedCallback(World_OnAgentRemoved);
-        m_world.OnWorldEntityNew -= new WorldEntityNewCallback(World_OnWorldEntityNew);
-        m_world.OnWorldEntityRemoved -= new WorldEntityRemovedCallback(World_OnWorldEntityRemoved);
-        m_world.OnWorldEntityUpdate -= new WorldEntityUpdateCallback(World_OnWorldEntityUpdate);
         if (ModuleParams.ParamBool(ModuleName + ".Regions.Enable")) {
             m_world.OnWorldRegionNew -= new WorldRegionNewCallback(World_OneWorldRegionNew);
             m_world.OnWorldRegionRemoved -= new WorldRegionRemovedCallback(World_OneWorldRegionRemoved);
@@ -124,16 +108,6 @@ protected IWorld m_world;
 #endregion IMODULE
 
 #region EVENT PROCESSING
-    void World_OnAgentNew(IAgent agnt) {
-    }
-    void World_OnAgentRemoved(IAgent agnt) {
-    }
-    void World_OnWorldEntityNew(IEntity ent) {
-    }
-    void World_OnWorldEntityRemoved(IEntity ent) {
-    }
-    void World_OnWorldEntityUpdate(IEntity ent, UpdateCodes what) {
-    }
     void World_OneWorldRegionNew(RegionContextBase rcontext) {
     }
     void World_OneWorldRegionRemoved(RegionContextBase rcontext) {
@@ -143,28 +117,10 @@ protected IWorld m_world;
 #endregion EVENT PROCESSING
 
 #region RESPONSE DATA CONTSRUCTION
-    private class AvatarInformation : IDisplayable {
-        EntityTracker m_tracker;
-        public AvatarInformation(EntityTracker entTrack) {
-            m_tracker = entTrack;
-        }
-        /// <summary>
-        /// Returns avatar information as:
-        /// {"First Last": {"first": "f", "last": "l", "distance": "N", "activity": "TFWAB"},
-        ///  "First Last": { ... }
-        ///  ...
-        ///  }
-        /// </summary>
-        /// <returns></returns>
-        public OMVSD.OSDMap GetDisplayable() {
-            return new OMVSD.OSDMap();
-        }
-    }
-
     private class RegionInformation : IDisplayable {
-        EntityTracker m_tracker;
-        public RegionInformation(EntityTracker entTrack) {
-            m_tracker = entTrack;
+        RegionTracker m_tracker;
+        public RegionInformation(RegionTracker regTrack) {
+            m_tracker = regTrack;
         }
         public OMVSD.OSDMap GetDisplayable() {
             return new OMVSD.OSDMap();

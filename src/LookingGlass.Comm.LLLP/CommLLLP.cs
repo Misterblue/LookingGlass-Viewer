@@ -35,6 +35,7 @@ using LookingGlass.Framework.WorkQueue;
 using LookingGlass.Rest;
 using LookingGlass.World;
 using LookingGlass.World.LL;
+using LookingGlass.World.OS;
 using OMV = OpenMetaverse;
 using OMVSD = OpenMetaverse.StructuredData;
 
@@ -75,23 +76,6 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
     // while we wait for a region to be online, we queue requests here
     protected Dictionary<RegionContextBase, OnDemandWorkQueue> m_waitTilOnline;
     protected bool m_shouldWaitTilOnline = true;
-
-    protected LLAssetContext m_defaultAssetContext = null;
-    protected LLAssetContext DefaultAssetContext {
-        get {
-            if (m_defaultAssetContext == null) {
-                // Create the asset contect for this communication instance
-                // this should happen after connected. reconnection is a problem.
-                m_log.Log(LogLevel.DBADERROR, "CommLLLP: creating default asset context for grid {0}", m_loginGrid);
-                m_defaultAssetContext = new LLAssetContext(LoggedInGridName);
-                m_defaultAssetContext.InitializeContext(this,
-                    ModuleParams.ParamString(ModuleName + ".Assets.CacheDir"),
-                    ModuleParams.ParamInt(ModuleName + ".Texture.MaxRequests"));
-            }
-            return m_defaultAssetContext;
-        }
-        set { m_defaultAssetContext = value; }
-    }
 
     // There are some messages that come in that are rare but could use some locking.
     // The main paths of prims and updates is pretty solid and multi-threaded but
@@ -139,9 +123,6 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
     public const string FIELDPOSITIONY = "positiony";
     public const string FIELDPOSITIONZ = "positionz";
 
-
-    protected GridLists m_gridLists = null;
-
     protected IAgent m_myAgent = null;
     protected IAgent MainAgent {
         get {
@@ -170,7 +151,6 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         m_commStatistics = new ParameterSet();
 
         m_loginGrid = "Unknown";
-        m_gridLists = new GridLists();
     }
 
     protected void InitLoginParameters() {
@@ -188,7 +168,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         m_connectionParams.Add(FIELDPOSSIBLEGRIDS, delegate(string k) {
             try {
                 OMVSD.OSDArray gridNames = new OMVSD.OSDArray();
-                m_gridLists.ForEach(delegate(OMVSD.OSDMap gg) { gridNames.Add(gg["Name"]); });
+                World.World.Instance.Grids.ForEach(delegate(OMVSD.OSDMap gg) { gridNames.Add(gg["Name"]); });
                 return gridNames;
             }
             catch {
@@ -507,7 +487,8 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         }
         loginParams.Start = (loginSetting == null) ? "last" : loginSetting;
 
-        loginParams.URI = m_gridLists.GridLoginURI(m_loginGrid);
+        World.World.Instance.Grids.SetCurrentGrid(m_loginGrid);
+        loginParams.URI = World.World.Instance.Grids.GridLoginURI(World.Grids.Current);
         if (loginParams.URI == null) {
             m_log.Log(LogLevel.DBADERROR, "COULD NOT FIND URL OF GRID. Grid=" + m_loginGrid);
             m_loginMsg = "Unknown Grid name";
@@ -939,11 +920,11 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
                     }
                 }
                 if (ret == null) {
-                    LLTerrainInfo llterr = new LLTerrainInfo(null, DefaultAssetContext);
+                    LLTerrainInfo llterr = new LLTerrainInfo(null, SelectAssetContextForGrid(sim));
                     llterr.WaterHeight = sim.WaterHeight;
                     // TODO: copy terrain texture IDs
 
-                    ret = new LLRegionContext(null, DefaultAssetContext, llterr, sim);
+                    ret = new LLRegionContext(null, SelectAssetContextForGrid(sim), llterr, sim);
                     // ret.Name = new EntityNameLL(LoggedInGridName + "/Region/" + sim.Name.Trim());
                     ret.Name = new EntityNameLL(LoggedInGridName + "/" + sim.Name.Trim());
                     ret.RegionContext = ret;    // since we don't know ourself before
@@ -966,6 +947,28 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
                     break;
                 }
             }
+        }
+        return ret;
+    }
+
+    private AssetContextBase SelectAssetContextForGrid(OMV.Simulator sim) {
+        AssetContextBase ret = null;
+        string otherAssets = World.World.Instance.Grids.GridParameter(World.Grids.Current, "OS.AssetServer.V1");
+        if (otherAssets != null) {
+            m_log.Log(LogLevel.DBADERROR, "CommLLLP: creating OSAssetContextV1 for {0}", m_loginGrid);
+            ret = new OSAssetContextV1(LoggedInGridName);
+            ret.InitializeContext(this, 
+                ModuleParams.ParamString(ModuleName + ".Assets.CacheDir"),
+                ModuleParams.ParamInt(ModuleName + ".Texture.MaxRequests"));
+        }
+        if (ret == null) {
+            // Create the asset contect for this communication instance
+            // this should happen after connected. reconnection is a problem.
+            m_log.Log(LogLevel.DBADERROR, "CommLLLP: creating default asset context for grid {0}", m_loginGrid);
+            ret = new LLAssetContext(LoggedInGridName);
+            ret.InitializeContext(this,
+                ModuleParams.ParamString(ModuleName + ".Assets.CacheDir"),
+                ModuleParams.ParamInt(ModuleName + ".Texture.MaxRequests"));
         }
         return ret;
     }

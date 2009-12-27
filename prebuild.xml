@@ -176,6 +176,7 @@
       <Reference name="LookingGlass.Rest.dll"/>
       <Reference name="LookingGlass.World.dll"/>
       <Reference name="LookingGlass.World.LL.dll"/>
+      <Reference name="LookingGlass.World.OS.dll"/>
       <Reference name="OpenMetaverse.dll"/>
       <Reference name="OpenMetaverse.StructuredData.dll"/>
       <Reference name="OpenMetaverseTypes.dll"/>
@@ -328,6 +329,7 @@
       <Reference name="LookingGlass.Framework.dll"/>
       <Reference name="OpenMetaverse.dll"/>
       <Reference name="OpenMetaverseTypes.dll"/>
+      <Reference name="OpenMetaverse.StructuredData.dll"/>
       <Files>
         <Match pattern="*.cs" recurse="false"/>
       </Files>
@@ -381,6 +383,7 @@
       <Reference name="LookingGlass.Comm.dll"/>
       <Reference name="LookingGlass.Framework.dll"/>
       <Reference name="LookingGlass.World.dll"/>
+      <Reference name="LookingGlass.World.LL.dll"/>
       <Reference name="OpenMetaverse.dll"/>
       <Reference name="OpenMetaverseTypes.dll"/>
       <Files>

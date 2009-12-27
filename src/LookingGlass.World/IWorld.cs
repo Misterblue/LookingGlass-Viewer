@@ -127,6 +127,9 @@ public interface IWorld {
     void AddAgent(IAgent agnt);
     void RemoveAgent();
     IAgent Agent { get; }
+
+    // GRID MANAGEMENT
+    Grids Grids { get; }
 }
 
 }

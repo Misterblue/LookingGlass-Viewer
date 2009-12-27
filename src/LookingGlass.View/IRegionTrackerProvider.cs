@@ -25,6 +25,6 @@ using System.Collections.Generic;
 using System.Text;
 
 namespace LookingGlass.View {
-    interface IEntityTrackerProvider : IProvider {
+    interface IRegionTrackerProvider : IProvider {
     }
 }

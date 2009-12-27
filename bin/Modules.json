@@ -48,10 +48,10 @@
         "Name": "ControlView",
         "Order": 80
     },
-    // Lots of statistics are available. Collect them and make available
+    // Regions are tracked for their LOD and loadedness
     {   "Assembly": "LookingGlass.View.dll",
-        "Interface": "LookingGlass.View.IEntityTrackerProvider",
-        "Name": "EntityTracker",
+        "Interface": "LookingGlass.View.IRegionTrackerProvider",
+        "Name": "RegionTracker",
         "Order": 90
     },
     // Information about the avatars in the region
@@ -82,8 +82,8 @@
 // The login REST interface needs to find  the comm system
 "CommLLLPRest.Comm.Name": "Comm",
 
-// The entity trackers needs to know where to track the entities
-"EntityTracker.World.Name": "World",
+// The region trackers needs to know where to track the entities
+"RegionTracker.World.Name": "World",
 
 // The avatar tracker service connects to the world to track
 "AvatarTracker.World.Name": "World",
