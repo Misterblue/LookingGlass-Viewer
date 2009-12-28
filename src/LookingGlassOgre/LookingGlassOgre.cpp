@@ -97,15 +97,8 @@ extern "C" DLLExport bool AttachCamera(const char* parentNode, float offsetX, fl
 									   float ow, float ox, float oy, float oz) {
    return LG::RendererOgre::Instance()->m_camera->AttachCamera(parentNode, offsetX, offsetY, offsetZ, ow, ox, oy, oz);
 }
-extern "C" DLLExport void RefreshResource(int rType, char* resourceName) {
-	Ogre::String resName = resourceName;
-	LG::OLMaterialTracker::Instance()->RefreshResource(resName, rType);
-}
 extern "C" DLLExport void RefreshResourceBF(float pri, int rType, char* resourceName) {
 	LG::ProcessBetweenFrame::Instance()->RefreshResource(pri, resourceName, rType);
-}
-extern "C" DLLExport void CreateMeshResource(const char* meshName, const int* faceCounts, const float* faceVertices) {
-	LG::RendererOgre::Instance()->CreateMeshResource(meshName, faceCounts, faceVertices);
 }
 extern "C" DLLExport void CreateMeshResourceBF(float pri, const char* meshName, char* contextSceneNode, 
 											   const int* faceCounts, const float* faceVertices) {
@@ -124,21 +117,6 @@ extern "C" DLLExport void CreateMaterialResource2(const char* matName, char* tex
 extern "C" DLLExport void CreateMaterialResource2BF(float pri, const char* matName, char* textureName, 
 												  const float* parms) {
 	  LG::ProcessBetweenFrame::Instance()->CreateMaterialResource2(pri, matName, textureName, parms);
-}
-
-extern "C" DLLExport void CreateMaterialResource6(
-			const char* matName1, const char* matName2, const char* matName3, 
-			const char* matName4, const char* matName5, const char* matName6, 
-			char* textureName1, char* textureName2, char* textureName3, 
-			char* textureName4, char* textureName5, char* textureName6, 
-			const float* parms) {
-	int stride = (int)parms[0];
-	LG::OLMaterialTracker::Instance()->CreateMaterialResource2(matName1, textureName1, &parms[1 + stride * 0]);
-	LG::OLMaterialTracker::Instance()->CreateMaterialResource2(matName2, textureName2, &parms[1 + stride * 1]);
-	LG::OLMaterialTracker::Instance()->CreateMaterialResource2(matName3, textureName3, &parms[1 + stride * 2]);
-	LG::OLMaterialTracker::Instance()->CreateMaterialResource2(matName4, textureName4, &parms[1 + stride * 3]);
-	LG::OLMaterialTracker::Instance()->CreateMaterialResource2(matName5, textureName5, &parms[1 + stride * 4]);
-	LG::OLMaterialTracker::Instance()->CreateMaterialResource2(matName6, textureName6, &parms[1 + stride * 5]);
 }
 
 extern "C" DLLExport void CreateMaterialResource7BF(float prio, char* uniq,
@@ -162,21 +140,11 @@ extern "C" DLLExport void DiagnosticAction(int flag) {
 }
 
 // ================================================================
-extern "C" DLLExport void AddRegion(const char* regionNodeName, 
-		 double globalX, double globalY, double globalZ,
-		 const float sizeX, const float sizeY, const float waterHeight) {
-	 LG::RegionTracker::Instance()->AddRegion(regionNodeName, 
-		 globalX, globalY, globalZ, sizeX, sizeY, waterHeight);
-}
 extern "C" DLLExport void AddRegionBF(float prio, const char* regionNodeName, 
 		 double globalX, double globalY, double globalZ,
 		 const float sizeX, const float sizeY, const float waterHeight) {
 	 LG::ProcessBetweenFrame::Instance()->AddRegion(prio, regionNodeName, 
 		 globalX, globalY, globalZ, sizeX, sizeY, waterHeight);
-}
-extern "C" DLLExport void UpdateTerrain(const char* regionName, 
-											const int width, const int length, const float* heights) {
-	 LG::RegionTracker::Instance()->UpdateTerrain(regionName, width, length, heights);
 }
 extern "C" DLLExport void UpdateTerrainBF(float prio, const char* regionName, 
 											const int width, const int length, const float* heights) {
@@ -240,25 +208,6 @@ extern "C" DLLExport void UpdateSceneNodeBF(float pri,
 					setScale, sx, sy, sz,
 					setRotation, ow, ox, oy, oz);
 	return;
-}
-extern "C" DLLExport Ogre::SceneNode* CreateChildSceneNode(Ogre::SceneNode* node) {
-	return node->createChildSceneNode();
-}
-extern "C" DLLExport void AddEntity(Ogre::SceneManager* sceneMgr, Ogre::SceneNode* sceneNode, 
-									const char* entName, const char* meshName) {
-	LG::RendererOgre::Instance()->AddEntity(sceneMgr, sceneNode, entName, meshName);
-}
-extern "C" DLLExport void SceneNodeScale(Ogre::SceneNode* sceneNode, float sX, float sY, float sZ) {
-	sceneNode->setScale(sX, sY, sZ);
-}
-extern "C" DLLExport void SceneNodePosition(Ogre::SceneNode* sceneNode, float pX, float pY, float pZ) {
-	sceneNode->setPosition(pX, pY, pZ);
-}
-extern "C" DLLExport void SceneNodePitch(Ogre::SceneNode* sceneNode, float pitch, int ts) {
-	sceneNode->pitch(Ogre::Radian(pitch), (Ogre::SceneNode::TransformSpace)ts);
-}
-extern "C" DLLExport void SceneNodeYaw(Ogre::SceneNode* sceneNode, float yaw, int ts) {
-	sceneNode->yaw(Ogre::Radian(yaw), (Ogre::SceneNode::TransformSpace)ts);
 }
 // ================================================================
 Ogre::Root* GetOgreRoot() {

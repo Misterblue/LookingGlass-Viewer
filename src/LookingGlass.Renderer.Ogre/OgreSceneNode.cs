@@ -65,46 +65,5 @@ namespace LookingGlass.Renderer.Ogr {
             return;
         }
 
-        /// <summary>
-        /// Create a child scene node for this node
-        /// </summary>
-        /// <returns></returns>
-        public OgreSceneNode CreateChildSceneNode() {
-            return new OgreSceneNode(Ogr.CreateChildSceneNode(m_realSceneNode));
-        }
-
-        /// <summary>
-        /// Add an entity to this scene node. This creates an entity containing
-        /// the movable object with the specified name. If the object does not exist
-        /// yet, this starts the callbacks that create the object (create mesh,
-        /// download texture, ...).
-        /// </summary>
-        /// <param name="entName"></param>
-        public void AddEntity(OgreSceneMgr sceneMgr, string meshName) {
-            Ogr.AddEntity(sceneMgr.BasePtr, m_realSceneNode, 
-                EntityNameOgre.ConvertToOgreEntityName(new EntityNameOgre(meshName)),
-                meshName);
-            return;
-        }
-
-        public void Scale(float sX, float sY, float sZ) {
-            Ogr.SceneNodeScale(m_realSceneNode, sX, sY, sZ);
-            return;
-        }
-
-        public void Position(float pX, float pY, float pZ) {
-            Ogr.SceneNodePosition(m_realSceneNode, pX, pY, pZ);
-            return;
-        }
-
-        public void Pitch(float pitch, TransformSpace ts) {
-            Ogr.SceneNodePitch(m_realSceneNode, pitch, (int)ts);
-            return;
-        }
-
-        public void Yaw(float yaw, TransformSpace ts) {
-            Ogr.SceneNodeYaw(m_realSceneNode, yaw, (int)ts);
-            return;
-        }
     }
 }

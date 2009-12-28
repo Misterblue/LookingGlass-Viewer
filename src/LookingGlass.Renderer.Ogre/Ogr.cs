@@ -154,14 +154,7 @@ static class Ogr {
        float offsetX, float offsetY, float offsetZ, float ow, float ox, float oy, float oz);
 
     [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
-    public static extern void RefreshResource(int type, [MarshalAs(UnmanagedType.LPStr)]string resourceName);
-    // queue for between frame processing
-    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
     public static extern void RefreshResourceBF(float pri, int type, [MarshalAs(UnmanagedType.LPStr)]string resourceName);
-    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
-    public static extern void CreateMeshResource([MarshalAs(UnmanagedType.LPStr)]string resourceName,
-                            [MarshalAs(UnmanagedType.LPArray)] int[] faceCounts, 
-                            [MarshalAs(UnmanagedType.LPArray)] float[] faceVertices);
     [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
     public static extern void CreateMeshResourceBF(float pri, 
                             [MarshalAs(UnmanagedType.LPStr)]string resourceName,
@@ -217,20 +210,11 @@ static class Ogr {
 
     // ======================================================================
     [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
-    public static extern void AddRegion(
-            [MarshalAs(UnmanagedType.LPStr)]string regionNodeName,
-            double globalX, double globalY, double globalZ,
-            float sizeX, float sizeY,
-            float waterHeight);
-    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
     public static extern void AddRegionBF(float prio,
             [MarshalAs(UnmanagedType.LPStr)]string regionNodeName,
             double globalX, double globalY, double globalZ,
             float sizeX, float sizeY,
             float waterHeight);
-    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
-    public static extern void UpdateTerrain([MarshalAs(UnmanagedType.LPStr)]string regionNodeName,
-            int width, int length, [MarshalAs(UnmanagedType.LPArray)] float[] heightmap);
     [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
     public static extern void UpdateTerrainBF(float prio, 
             [MarshalAs(UnmanagedType.LPStr)]string regionNodeName,
@@ -268,22 +252,6 @@ static class Ogr {
                 float px, float py, float pz, float sx, float sy, float sz,
                 float rw, float rx, float ry, float rz
         );
-    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
-    public static extern System.IntPtr CreateChildSceneNode(System.IntPtr node);
-    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
-    public static extern void AddEntity(System.IntPtr sceneMgr, System.IntPtr sceneNode,
-                [MarshalAs(UnmanagedType.LPStr)]string entName,
-                [MarshalAs(UnmanagedType.LPStr)]string meshName);
-    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
-    public static extern void SceneNodeScale( System.IntPtr sceneNode,
-                    float sX, float sY, float sZ);
-    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
-    public static extern void SceneNodePosition( System.IntPtr sceneNode,
-                    float pX, float pY, float pZ);
-    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
-    public static extern void SceneNodePitch(System.IntPtr sceneNode, float pitch, int ts);
-    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
-    public static extern void SceneNodeYaw(System.IntPtr sceneNode, float yaw, int ts);
 
     // ======================================================================
 }
