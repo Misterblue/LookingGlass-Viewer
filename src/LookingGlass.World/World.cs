@@ -133,7 +133,7 @@ public sealed class World : ModuleBase, IWorld, IProvider {
                 rcontext.OnEntityUpdate += Region_OnUpdateEntityCallback;
 
                 if (Region_OnRemovedEntityCallback == null) {
-                    Region_OnRemovedEntityCallback = new RegionEntityRemovedCallback(Region_OnNewEntity);
+                    Region_OnRemovedEntityCallback = new RegionEntityRemovedCallback(Region_OnRemovedEntity);
                 }
                 rcontext.OnEntityRemoved += Region_OnRemovedEntityCallback;
 

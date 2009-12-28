@@ -197,6 +197,7 @@ public class Viewer : ModuleBase, IViewProvider {
 
     private void World_OnEntityRemoved(IEntity ent) {
         m_log.Log(LogLevel.DVIEWDETAIL, "OnEntityRemoved: ");
+        Renderer.UnRender(ent);
         return;
     }
 
