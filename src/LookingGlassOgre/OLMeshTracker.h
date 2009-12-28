@@ -199,6 +199,7 @@ public:
 	void MakeLoaded(Ogre::SceneNode* sceneNode, Ogre::String meshName, Ogre::String entityName);
 	void MakeUnLoaded(Ogre::String meshName, Ogre::String, Ogre::Entity*);
 	void MakePersistant(Ogre::String meshName, Ogre::String entName, Ogre::String, Ogre::Entity*);
+	void DeleteMesh(Ogre::MeshPtr mesh);
 
 private:
 	static OLMeshTracker* m_instance;

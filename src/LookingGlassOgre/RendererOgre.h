@@ -88,6 +88,8 @@ public:
 	void CreateParentDirectory(const Ogre::String);
 	void MakeParentDir(const Ogre::String);
 
+	void CleanAndDeleteEntity(Ogre::MovableObject* ent);
+
 	// mutex  that is locked when the scene graph is in use
 	LGLOCK_MUTEX SceneGraphLock() { return m_sceneGraphLock; }
 

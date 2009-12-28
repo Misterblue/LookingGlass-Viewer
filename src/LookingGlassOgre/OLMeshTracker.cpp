@@ -354,4 +354,12 @@ void OLMeshTracker::MakePersistant(Ogre::String meshName, Ogre::String entName, 
 	LGLOCK_NOTIFY_ALL(MeshTrackerLock);
 }
 
+// ===============================================================================
+// Someone wants to delete this mesh. Check to see if it's a shared mesh and decide if we
+// should actually delete it or not.
+void OLMeshTracker::DeleteMesh(Ogre::MeshPtr mesh) {
+	Ogre::MeshManager::getSingleton().remove(mesh->getName());
+}
+
+
 }

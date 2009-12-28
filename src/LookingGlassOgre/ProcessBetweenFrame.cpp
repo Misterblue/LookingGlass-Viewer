@@ -356,6 +356,12 @@ public:
 		// it's not scenery
 		ent->removeQueryFlags(Ogre::SceneManager::WORLD_GEOMETRY_TYPE_MASK);	
 		LG::RendererOgre::Instance()->Shadow->AddCasterShadow(ent);
+		// clean off scene node so there aren't memory leaks
+		while (this->sceneNode->numAttachedObjects() > 0) {
+			Ogre::MovableObject* mo = this->sceneNode->detachObject((unsigned short)0);
+			LG::RendererOgre::Instance()->CleanAndDeleteEntity(mo);
+		}
+
 		this->sceneNode->attachObject(ent);
 		LG::RendererOgre::Instance()->m_visCalc->RecalculateVisibility();
 	}

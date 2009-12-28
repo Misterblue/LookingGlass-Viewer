@@ -700,6 +700,18 @@ namespace LG {
 		return;
 	}
 
+	// given an entity, free up it's meshes and pieces and then the entity itself
+	void RendererOgre::CleanAndDeleteEntity(Ogre::MovableObject* mo) {
+		if (mo->getMovableType() == "Entity") {
+			Ogre::Entity* ent = (Ogre::Entity*)mo;
+			Ogre::MeshPtr mesh = ent->getMesh();
+			if (! mesh.isNull()) {
+				LG::OLMeshTracker::Instance()->DeleteMesh(mesh);
+			}
+			LG::RendererOgre::Instance()->m_sceneMgr->destroyEntity(ent);
+		}
+	}
+
 	/*
 	// Create a simple cube to be the loading mesh representation
 	void RendererOgre::GenerateLoadingMesh() {
