@@ -30,13 +30,20 @@ var chatTimerProcessing = false;
 function TimerChatStuff() {
     if (chatTimerProcessing) return;
     chatTimerProcessing = true;
-    $.getJSON(BASEURL+'/api/chat?yy=' + Math.floor(Math.random()*999999),
-                function(data, status) {
-        if (status == 'success') {
-            for (timeCode in data) {
-                var chatLine = FormatChatLine(data[timeCode]);
-                PlaceLineInChatDisplay(chatLine);
+    $.ajax({
+        type: "GET",
+        url: BASEURL+'/api/chat?yy=' + Math.floor(Math.random()*999999),
+        dataType: 'json',
+        timeout: 2000,
+        success: function(data, status) {
+            if (status == 'success') {
+                for (timeCode in data) {
+                    var chatLine = FormatChatLine(data[timeCode]);
+                    PlaceLineInChatDisplay(chatLine);
+                }
             }
+        },
+        error: function(xmlHTTPRequest, errorType) {
         }
     });
     chatTimerProcessing = false;

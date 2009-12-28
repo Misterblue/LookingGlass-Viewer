@@ -128,8 +128,8 @@ public class EntityNameOgre : EntityName {
     public static string ConvertOgreResourceToEntityNameX(string resName) {
         int pos;
         string oldName = resName;
-        if (oldName.StartsWith("SceneNode/")) oldName = oldName.Substring(10);
         if (oldName.StartsWith("Entity/")) oldName = oldName.Substring(7);
+        if (oldName.StartsWith("SceneNode/")) oldName = oldName.Substring(10);
         // Remove the ".material"
         if (oldName.EndsWith(".material")) {
             oldName = oldName.Substring(0, oldName.Length - 9);
