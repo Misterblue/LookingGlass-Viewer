@@ -160,6 +160,7 @@ void VisCalcFrustDist::calculateEntityVisibility(Ogre::Node* regionNode, Ogre::N
 					}
 					else {
 						// not visible any more... make invisible nad unload it`
+						/*
 						Ogre::Vector3 cPos = LG::RendererOgre::Instance()->m_camera->getPosition();
 						Ogre::Vector3 rPos = regionNode->getPosition();
 						Ogre::Vector3 sPos = snode->getPosition();
@@ -169,6 +170,7 @@ void VisCalcFrustDist::calculateEntityVisibility(Ogre::Node* regionNode, Ogre::N
 								snode->getName().c_str(),
 								sPos.x, sPos.y, sPos.z, 
 								snodeDistance);
+								*/
 						snodeEntity->setVisible(false);
 						visVisToInvis++;
 						if (!snodeEntity->getMesh().isNull()) {
