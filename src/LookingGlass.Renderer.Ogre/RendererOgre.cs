@@ -68,12 +68,6 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     public static OgreSceneNode GetTerrainSceneNode(IEntity ent) {
         return (OgreSceneNode)ent.Addition(RendererOgre.AddTerrainSceneNode);
     }
-    // Instance if IWorldRenderConv for converting this entity to my renderer
-    public static int AddWorldRenderConv;
-    public static string AddWorldRenderConvName = "OgreWorldRenderConvName";
-    public static IWorldRenderConv GetWorldRenderConv(IEntity ent) {
-        return (IWorldRenderConv)ent.Addition(RendererOgre.AddWorldRenderConv);
-    }
 
     protected IUserInterfaceProvider m_userInterface = null;
 
@@ -241,7 +235,6 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         AddSceneNodeName = EntityBase.AddAdditionSubsystem(RendererOgre.AddSceneNodeNameName);
         AddRegionSceneNode = EntityBase.AddAdditionSubsystem(RendererOgre.AddRegionSceneNodeName);
         AddTerrainSceneNode = EntityBase.AddAdditionSubsystem(RendererOgre.AddTerrainSceneNodeName);
-        AddWorldRenderConv = EntityBase.AddAdditionSubsystem(RendererOgre.AddWorldRenderConvName);
     }
 
     // these exist to keep one managed pointer to the delegates so they don't get garbage collected
@@ -558,10 +551,11 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     // IRenderProvider.Render()
     public void Render(IEntity ent) {
         // do we have a format converted for this entity?
-        if (RendererOgre.GetWorldRenderConv(ent) == null) {
+        IWorldRenderConv conver;
+        if (!ent.TryGet<IWorldRenderConv>(out conver)) {
             // for the moment, we only know about LL stuff
             // TODO: Figure out how to make this dynamic, extendable and runtime
-            ent.SetAddition(RendererOgre.AddWorldRenderConv, RendererOgreLL.Instance);
+            ent.RegisterInterface<IWorldRenderConv>(RendererOgreLL.Instance);
         }
         // We don't create the entity here because an update immediately follows the 'new'
         //    call. That update will create the entity with the new values.
@@ -588,8 +582,9 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                 try {
                     // m_log.Log(LogLevel.DRENDERDETAIL, "Adding SceneNode to new entity " + m_ent.Name);
                     if (m_ri == null) {
-                        m_ri = RendererOgre.GetWorldRenderConv(m_ent).RenderingInfo(qInstance.priority,
-                                m_sceneMgr, m_ent, qInstance.timesRequeued);
+                        IWorldRenderConv conver;
+                        m_ent.TryGet<IWorldRenderConv>(out conver);
+                        m_ri = conver.RenderingInfo(qInstance.priority, m_sceneMgr, m_ent, qInstance.timesRequeued);
                         if (m_ri == null) {
                             // The rendering info couldn't be built now. This is usually because
                             // the parent of this object is not available so we don't know where to put it
@@ -625,8 +620,9 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                         //1 bool worked = RequestMeshLater(qInstance, meshLaterParams);
                         //1 // if we can't get the mesh now, we'll have to wait until all the pieces are here
                         //1 if (!worked) return false;
-                        if (!RendererOgre.GetWorldRenderConv(m_ent).CreateMeshResource(qInstance.priority, m_ent, 
-                                entMeshName.Name, entMeshName)) {
+                        IWorldRenderConv conver;
+                        m_ent.TryGet<IWorldRenderConv>(out conver);
+                        if (!conver.CreateMeshResource(qInstance.priority, m_ent, entMeshName.Name, entMeshName)) {
                             // we need to wait until some resource exists before we can complete this creation
                             return false;
                         }
@@ -670,8 +666,9 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             else {
                 // the entity already has a scene node. We're just forcing the rebuild of the prim
                 if (m_ri == null) {
-                    m_ri = RendererOgre.GetWorldRenderConv(m_ent).RenderingInfo(qInstance.priority,
-                            m_sceneMgr, m_ent, qInstance.timesRequeued);
+                    IWorldRenderConv conver;
+                    m_ent.TryGet<IWorldRenderConv>(out conver);
+                    m_ri = conver.RenderingInfo(qInstance.priority, m_sceneMgr, m_ent, qInstance.timesRequeued);
                     if (m_ri == null) {
                         // The rendering info couldn't be built now. This is usually because
                         // the parent of this object is not available so we don't know where to put it
@@ -765,8 +762,9 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                 // texure on the prim were updated. Refresh them if not the initial creation update
                 m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: textures changed");
                 // to get the textures to refresh, we must force the situation
-                if (RendererOgre.GetWorldRenderConv(ent) != null) {
-                    RendererOgre.GetWorldRenderConv(ent).RebuildEntityMaterials(priority, ent);
+                IWorldRenderConv conver;
+                if (ent.TryGet<IWorldRenderConv>(out conver)) {
+                    conver.RebuildEntityMaterials(priority, ent);
                     Ogr.RefreshResourceBF(priority, Ogr.ResourceTypeMesh, EntityNameOgre.ConvertToOgreMeshName(ent.Name).Name);
                 }
             }
@@ -991,7 +989,9 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             // Create mesh resource. In this case its most likely a .mesh file in the cache
             // The actual mesh creation is queued and done later between frames
             float priority = CalculateInterestOrder(ent);
-            if (!RendererOgre.GetWorldRenderConv(ent).CreateMeshResource(priority, ent, m_meshName, m_contextEntityName)) {
+            IWorldRenderConv conver;
+            ent.TryGet<IWorldRenderConv>(out conver);
+            if (!conver.CreateMeshResource(priority, ent, m_meshName, m_contextEntityName)) {
                 // we need to wait until some resource exists before we can complete this creation
                 return false;
             }
@@ -1043,14 +1043,15 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             IEntity ent;
             if (World.World.Instance.TryGetEntity(m_entName, out ent)) {
                 LogManager.Log.Log(LogLevel.DRENDERDETAIL, "RequestMaterialLater.DoIt(): converting {0}", m_entName);
-                if (RendererOgre.GetWorldRenderConv(ent) == null) {
+                IWorldRenderConv conver;
+                if (!ent.TryGet<IWorldRenderConv>(out conver)) {
                     // the rendering context is not set up. Odd but not fatal
                     // try again later
                     return false;
                 }
                 else {
                     // Create the material resource and then make the rendering redisplay
-                    RendererOgre.GetWorldRenderConv(ent).CreateMaterialResource(qInstance.priority, ent, m_matName);
+                    conver.CreateMaterialResource(qInstance.priority, ent, m_matName);
                     Ogr.RefreshResourceBF(this.CalculateInterestOrder(ent), Ogr.ResourceTypeMaterial, m_matName);
                 }
             }
