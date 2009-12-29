@@ -45,10 +45,6 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     private ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
     private ILog m_logOgre = LogManager.GetLogger("RendererCpp");
 
-# pragma warning disable 0067   // disable unused event warning
-    public event RendererBeforeFrameCallback OnRendererBeforeFrame;
-# pragma warning restore 0067
-
     // we decorate IEntities with SceneNodes. This is our slot in the IEntity addition table
     // SceneNode of the entity itself
     public static int AddSceneNodeName;

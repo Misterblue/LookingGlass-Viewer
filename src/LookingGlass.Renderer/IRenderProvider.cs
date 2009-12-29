@@ -79,8 +79,6 @@ public struct FaceData {
     public delegate void RendererBeforeFrameCallback();
 
     public interface IRenderProvider {
-        event RendererBeforeFrameCallback OnRendererBeforeFrame;
-
         IUserInterfaceProvider UserInterface { get; }
 
         // entry for main thread for rendering. Return false if you don't need it.
