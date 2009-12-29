@@ -36,6 +36,8 @@ public delegate void EntityRemovedCallback(IEntity ent);
         event EntityUpdateCallback OnEntityUpdate;
         event EntityRemovedCallback OnEntityRemoved;
 
+        int Count { get; }
+
         void AddEntity(IEntity entity);
 
         void UpdateEntity(IEntity entity, UpdateCodes detail);

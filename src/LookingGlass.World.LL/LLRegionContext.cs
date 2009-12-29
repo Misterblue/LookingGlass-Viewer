@@ -104,9 +104,10 @@ public sealed class LLRegionContext : RegionContextBase {
     /// <returns>true if we created a new entry</returns>
     public bool TryGetCreateEntityLocalID(uint localID, out IEntity ent, RegionCreateEntityCallback createIt) {
         try {
+            IEntity newEntity = null;
             lock (m_entityCollection) {
                 if (!TryGetEntityLocalID(localID, out ent)) {
-                    IEntity newEntity = createIt();
+                    newEntity = createIt();
                     m_entityCollection.AddEntity(newEntity);
                     ent = newEntity;
                 }

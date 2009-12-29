@@ -154,14 +154,23 @@ public class RendererOgreLL : IWorldRenderConv {
 
             // if the prim has a parent, we must hang this scene node off the parent's scene node
             if (prim.ParentID != 0) {
-                if (!rcontext.TryGetEntityLocalID(prim.ParentID, out ri.parentEntity)) {
-                    // we can't find the parent. Can't build render info.
-                    // if we've been waiting for that parent, ask for same
-                    if ((callCount != 0) && ((callCount % 3) == 0)) {
-                        rcontext.RequestLocalID(prim.ParentID);
+                if (ent.ContainingEntity == null) {
+                    IEntity parentEntity = null;
+                    rcontext.TryGetEntityLocalID(prim.ParentID, out parentEntity);
+                    if (parentEntity != null) {
+                        ent.ContainingEntity = parentEntity;
+                        parentEntity.AddEntityToContainer(ent);
                     }
-                    return null;
+                    else {
+                        // we can't find the parent. Can't build render info.
+                        // if we've been waiting for that parent, ask for same
+                        if ((callCount != 0) && ((callCount % 3) == 0)) {
+                            rcontext.RequestLocalID(prim.ParentID);
+                        }
+                        return null;
+                    }
                 }
+                ri.parentEntity = ent.ContainingEntity;
             }
             
             ri.rotation = prim.Rotation;

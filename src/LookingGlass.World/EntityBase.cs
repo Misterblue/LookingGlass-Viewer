@@ -56,9 +56,10 @@ public abstract class EntityBase : IEntity {
         set { m_name = value; }
     }
 
-    protected EntityBase m_containingEntity;
+    protected IEntity m_containingEntity;
     public virtual IEntity ContainingEntity {
         get { return m_containingEntity; }
+        set { m_containingEntity = value; }
     }
     // If associated with a parent, go to the parent and remove us from
     // the parent's container.
@@ -70,6 +71,21 @@ public abstract class EntityBase : IEntity {
                 coll.RemoveEntity(this);
             }
             m_containingEntity = null;
+        }
+    }
+    protected IEntityCollection m_entityCollection = null;
+    public virtual void AddEntityToContainer(IEntity ent) {
+        if (m_entityCollection == null) {
+            m_entityCollection = new EntityCollection();
+        }
+        m_entityCollection.AddEntity(ent);
+    }
+    public virtual void RemoveEntityFromContainer(IEntity ent) {
+        if (m_entityCollection != null) {
+            m_entityCollection.RemoveEntity(ent);
+            if (m_entityCollection.Count == 0) {
+                m_entityCollection = null;
+            }
         }
     }
 

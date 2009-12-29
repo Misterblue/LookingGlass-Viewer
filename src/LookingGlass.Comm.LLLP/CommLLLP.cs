@@ -717,6 +717,17 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
                         }) ) {
                     // new prim created
                 }
+                if (args.Prim.ParentID != 0 && updatedEntity.ContainingEntity == null) {
+                    IEntity parentEntity = null;
+                    rcontext.TryGetEntityLocalID(args.Prim.ParentID, out parentEntity);
+                    if (parentEntity != null) {
+                        updatedEntity.ContainingEntity = parentEntity;
+                        parentEntity.AddEntityToContainer(updatedEntity);
+                    }
+                    else {
+                        m_log.Log(LogLevel.DUPDATEDETAIL, "Can't assign parent. Entity not found. ent={0}", updatedEntity.Name);
+                    }
+                }
             }
             catch (Exception e) {
                 m_log.Log(LogLevel.DBADERROR, "FAILED CREATION OF NEW PRIM: " + e.ToString());

@@ -39,8 +39,6 @@ public abstract class RegionContextBase : EntityBase, IRegionContext, IDisposabl
     # pragma warning restore 0067
     #endregion
 
-    protected IEntityCollection m_entityCollection;
-
     protected WorldGroupCode m_worldGroup;
     public WorldGroupCode WorldGroup { get { return m_worldGroup; } }
 
