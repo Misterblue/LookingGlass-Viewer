@@ -120,29 +120,6 @@ public class LookingGlassMain : ApplicationContext {
     public LookingGlassMain() {
         LookingGlassBase LGB = LookingGlassBase.Instance;
 
-        // Point the Ogre renderer to our panel window
-        // Ya, ya. I know it's RendererOgre specific. Fix that someday.
-
-        ViewWindow m_viewDialog = new ViewWindow(LGB);
-        Control[] subControls = m_viewDialog.Controls.Find("LGWindow", true);
-        if (subControls.Length == 1) {
-            Control windowPanel = subControls[0];
-            string wHandle = windowPanel.Handle.ToString();
-            m_log.Log(LogLevel.DRADEGASTDETAIL, "Connecting to external window {0}, w={1}, h={2}",
-                wHandle, windowPanel.Width, windowPanel.Height);
-            LGB.AppParams.AddDefaultParameter("Renderer.Ogre.ExternalWindow.Handle",
-                windowPanel.Handle.ToString(),
-                "The window handle to use for our rendering");
-            LGB.AppParams.AddDefaultParameter("Renderer.Ogre.ExternalWindow.Width",
-                windowPanel.Width.ToString(), "width of external window");
-            LGB.AppParams.AddDefaultParameter("Renderer.Ogre.ExternalWindow.Height",
-                windowPanel.Height.ToString(), "Height of external window");
-        }
-        else {
-            m_log.Log(LogLevel.DBADERROR, "Could not find window control on dialog");
-            throw new Exception("Could not find window control on dialog");
-        }
-
         try {
             LGB.ReadConfigurationFile();
         }
@@ -152,9 +129,6 @@ public class LookingGlassMain : ApplicationContext {
 
         // log level after all the parameters have been set
         LogManager.CurrentLogLevel = (LogLevel)LGB.AppParams.ParamInt("Log.FilterLevel");
-
-        // plug the window into the module system so it gets created and destroy at the right times
-        LGB.ModManager.ManageModule(new ViewerWrapper(m_viewDialog), "ViewWindow");
 
         if (LGB.Initialize()) {
             // send the thread to render or wait. This only returns when exiting.

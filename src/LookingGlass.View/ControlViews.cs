@@ -31,9 +31,11 @@ using System.Windows.Forms;
 
 namespace LookingGlass.View {
 public class ControlViews : IControlViewProvider, IModule {
+    private ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
 
     FormAvatars m_avatarView;
     ViewChat m_chatView;
+    ViewWindow m_viewWindow;
 
 #region IMODULE
     protected string m_moduleName;
@@ -51,25 +53,53 @@ public class ControlViews : IControlViewProvider, IModule {
 
     // IModule.OnLoad
     public virtual void OnLoad(string modName, LookingGlassBase lgbase) {
-        LogManager.Log.Log(LogLevel.DINIT, "ControlViews.OnLoad()");
+        m_log.Log(LogLevel.DINIT, "ControlViews.OnLoad()");
         m_moduleName = modName;
         m_lgb = lgbase;
+
+        // Point the Ogre renderer to our panel window
+        // Ya, ya. I know it's RendererOgre specific. Fix that someday.
+        m_viewWindow = new ViewWindow(LGB);
+        Control[] subControls = m_viewWindow.Controls.Find("LGWindow", true);
+        if (subControls.Length == 1) {
+            Control windowPanel = subControls[0];
+            string wHandle = windowPanel.Handle.ToString();
+            m_log.Log(LogLevel.DRADEGASTDETAIL, "Connecting to external window {0}, w={1}, h={2}",
+                wHandle, windowPanel.Width, windowPanel.Height);
+            LGB.AppParams.AddDefaultParameter("Renderer.Ogre.ExternalWindow.Handle",
+                windowPanel.Handle.ToString(),
+                "The window handle to use for our rendering");
+            LGB.AppParams.AddDefaultParameter("Renderer.Ogre.ExternalWindow.Width",
+                windowPanel.Width.ToString(), "width of external window");
+            LGB.AppParams.AddDefaultParameter("Renderer.Ogre.ExternalWindow.Height",
+                windowPanel.Height.ToString(), "Height of external window");
+        }
+        else {
+            m_log.Log(LogLevel.DBADERROR, "Could not find window control on dialog");
+            throw new Exception("Could not find window control on dialog");
+        }
+
     }
 
     // IModule.AfterAllModulesLoaded
     public virtual bool AfterAllModulesLoaded() {
-        LogManager.Log.Log(LogLevel.DINIT, "ControlViews.AfterAllModulesLoaded()");
+        m_log.Log(LogLevel.DINIT, "ControlViews.AfterAllModulesLoaded()");
         return true;
     }
 
     // IModule.Start
     public virtual void Start() {
-        LogManager.Log.Log(LogLevel.DINIT, "ControlViews.Start(): Initializing FormAvatar");
+        m_log.Log(LogLevel.DINIT, "ControlViews.Start(): Initializing ViewWindow");
+        m_viewWindow.Initialize();
+        m_viewWindow.Visible = true;
+        m_viewWindow.Show();
+
+        m_log.Log(LogLevel.DINIT, "ControlViews.Start(): Initializing FormAvatar");
         m_avatarView = new FormAvatars(LGB);
         m_avatarView.Initialize();
         m_avatarView.Visible = true;
 
-        LogManager.Log.Log(LogLevel.DINIT, "ControlViews.Start(): Initializing ViewChat");
+        m_log.Log(LogLevel.DINIT, "ControlViews.Start(): Initializing ViewChat");
         m_chatView = new ViewChat(LGB);
         m_chatView.Initialize();
         m_chatView.Visible = true;
@@ -78,13 +108,18 @@ public class ControlViews : IControlViewProvider, IModule {
 
     // IModule.Stop
     public virtual void Stop() {
+        if (m_viewWindow != null) {
+            m_log.Log(LogLevel.DINIT, "ControlViews.Stop(): Stopping ViewWindow");
+            m_viewWindow.Shutdown();
+            m_viewWindow = null;
+        }
         if (m_avatarView != null) {
-            LogManager.Log.Log(LogLevel.DINIT, "ControlViews.Stop(): Stopping FormAvatar");
+            m_log.Log(LogLevel.DINIT, "ControlViews.Stop(): Stopping FormAvatar");
             m_avatarView.Shutdown();
             m_avatarView = null;
         }
         if (m_chatView != null) {
-            LogManager.Log.Log(LogLevel.DINIT, "ControlViews.Stop(): Stopping ViewChat");
+            m_log.Log(LogLevel.DINIT, "ControlViews.Stop(): Stopping ViewChat");
             m_chatView.Shutdown();
             m_chatView = null;
         }
