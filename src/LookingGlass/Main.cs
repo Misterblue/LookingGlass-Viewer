@@ -156,32 +156,6 @@ LookingGlass
 ";
     }
 
-    // A little wrapper class which will cause the dialog to be started and shut
-    //   down at the right times.
-    private class ViewerWrapper : ModuleBase {
-        ViewWindow m_viewWindow;
-        public ViewerWrapper(ViewWindow theWindow) {
-            m_viewWindow = theWindow;
-        }
-
-        public override void Start() {
-            base.Start();
-            // initialize the viewer dialog
-            m_viewWindow.Initialize();
-
-            // put the dialog up
-            m_viewWindow.Show();
-            // The dialog window will do all the image updating
-            return;
-        }
-
-        public override void Stop() {
-            base.Stop();
-            m_viewWindow.Shutdown();
-        }
-
-    }
-
     #region Parameter Processing
     // ================================================================
     /// <summary>
