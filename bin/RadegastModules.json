@@ -33,6 +33,18 @@
         "Interface": "LookingGlass.Renderer.IRenderProvider",
         "Name": "Renderer",
         "Order": 60
+    },
+    // Multiple dialogs are presented to the user. This manages them.
+    {   "Assembly": "LookingGlass.View.dll",
+        "Interface": "LookingGlass.View.IControlViewProvider",
+        "Name": "ControlView",
+        "Order": 80
+    },
+    // Regions are tracked for their LOD and loadedness
+    {   "Assembly": "LookingGlass.View.dll",
+        "Interface": "LookingGlass.View.IRegionTrackerProvider",
+        "Name": "RegionTracker",
+        "Order": 90
     }
 ],
 

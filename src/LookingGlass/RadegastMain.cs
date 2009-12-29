@@ -40,7 +40,6 @@ class RadegastMain : IRadegastPlugin {
     private ILog m_log = null;
 
     private LookingGlass.LookingGlassBase m_lgb = null;
-    private RadegastWindow m_viewDialog = null;
 
     public RadegastMain() {
     }
@@ -76,27 +75,10 @@ class RadegastMain : IRadegastPlugin {
         m_lgb.AppParams.AddDefaultParameter("Settings.Modules", 
             Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "RadegastModules.json"),
             "Modules configuration file");
-
-        // Point the Ogre renderer to our panel window
-        // Ya, ya. I know it's RendererOgre specific. Fix that someday.
-        RadegastWindow m_viewDialog = new RadegastWindow(RadInstance, m_lgb);
-        Control[] subControls = m_viewDialog.Controls.Find("LGWindow", true);
-        if (subControls.Length == 1) {
-            Control windowPanel = subControls[0];
-            string wHandle = windowPanel.Handle.ToString();
-            m_log.Log(LogLevel.DRADEGASTDETAIL, "Connecting to external window {0}, w={1}, h={2}",
-                wHandle, windowPanel.Width, windowPanel.Height);
-            m_lgb.AppParams.AddDefaultParameter("Renderer.Ogre.ExternalWindow.Handle",
-                windowPanel.Handle.ToString(),
-                "The window handle to use for our rendering");
-            m_lgb.AppParams.AddDefaultParameter("Renderer.Ogre.ExternalWindow.Width",
-                windowPanel.Width.ToString(), "width of external window");
-            m_lgb.AppParams.AddDefaultParameter("Renderer.Ogre.ExternalWindow.Height",
-                windowPanel.Height.ToString(), "Height of external window");
-        }
-        else {
-            throw new Exception("Could not find window control on dialog");
-        }
+        // parameters used by Control view for selection of dialogs to display
+        m_lgb.AppParams.AddDefaultParameter("ControlView.WorldView.Enable", "true", "View the world in Radegast");
+        m_lgb.AppParams.AddDefaultParameter("ControlView.AvatarView.Enable", "false", "Disable avatar view in Radegast");
+        m_lgb.AppParams.AddDefaultParameter("ControlView.ChatView.Enable", "false", "Disable avatar view in Radegast");
 
         try {
             m_lgb.ReadConfigurationFile();
@@ -130,13 +112,6 @@ class RadegastMain : IRadegastPlugin {
                         RadInstance.Client.Network.CurrentSim.Name);
         worldComm.Network_SimConnected(this, new OMV.SimConnectedEventArgs(RadInstance.Client.Network.CurrentSim));
             
-        // initialize the viewer dialog
-        m_viewDialog.Initialize();
-
-        // put the dialog up
-        m_viewDialog.Show();
-        // The dialog window will do all the image updating
-
         // if anything was queue for this sim, put them in the world
         LoadWorldObjects.LoadASim(RadInstance.Client.Network.CurrentSim, RadInstance.Client, worldComm);
 
@@ -149,11 +124,6 @@ class RadegastMain : IRadegastPlugin {
         if (m_lgb != null) {
             m_lgb.Stop();
             m_lgb = null;
-        }
-        if (m_viewDialog != null) {
-            m_viewDialog.Refresh();
-            m_viewDialog.Shutdown();
-            m_viewDialog = null;
         }
     }
 
