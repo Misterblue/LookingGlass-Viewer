@@ -37,6 +37,8 @@ public interface IEntity : IRegistryCore, IDisposable {
 
     // Returns the entity which implements IEntityCollection which contains this entity
     IEntity ContainingEntity { get; }
+    // do what is necessary to set ContainingEntity to null (remove from parent if necessary)
+    void DisconnectFromContainer();
 
     OMV.Quaternion Heading { get; set; }
     OMV.Vector3 RelativePosition { get; set; }   // position relative to RegionContext

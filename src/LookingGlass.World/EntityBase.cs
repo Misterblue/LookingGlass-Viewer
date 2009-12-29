@@ -60,6 +60,18 @@ public abstract class EntityBase : IEntity {
     public virtual IEntity ContainingEntity {
         get { return m_containingEntity; }
     }
+    // If associated with a parent, go to the parent and remove us from
+    // the parent's container.
+    // Call before removing/deleting/destroying an entity.
+    public virtual void DisconnectFromContainer() {
+        if (m_containingEntity != null) {
+            IEntityCollection coll;
+            if (m_containingEntity.TryGet<IEntityCollection>(out coll)) {
+                coll.RemoveEntity(this);
+            }
+            m_containingEntity = null;
+        }
+    }
 
     protected int m_lastEntityHashCode = 0;
     public int LastEntityHashCode { get { return m_lastEntityHashCode; } set { m_lastEntityHashCode = value; } }
@@ -236,7 +248,10 @@ public abstract class EntityBase : IEntity {
     virtual public void Update(UpdateCodes what) {
         if (this.RegionContext != null) {
             LogManager.Log.Log(LogLevel.DUPDATEDETAIL, "EntityBase.Update calling RegionContext.UpdateEntity. w={0}", what);
-            this.RegionContext.UpdateEntity(this, what);
+            IEntityCollection coll;
+            if (this.RegionContext.TryGet<IEntityCollection>(out coll)) {
+                coll.UpdateEntity(this, what);
+            }
         }
         return;
     }

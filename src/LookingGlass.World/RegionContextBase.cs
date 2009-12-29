@@ -27,7 +27,7 @@ using LookingGlass.Framework.Logging;
 using OMV = OpenMetaverse;
 
 namespace LookingGlass.World {
-public abstract class RegionContextBase : EntityBase, IRegionContext, IDisposable, IEntityCollection {
+public abstract class RegionContextBase : EntityBase, IRegionContext, IDisposable {
     protected ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
 
     #region Events
@@ -36,14 +36,10 @@ public abstract class RegionContextBase : EntityBase, IRegionContext, IDisposabl
     public event RegionRegionStateChangeCallback OnRegionStateChange;
     public event RegionRegionUpdatedCallback OnRegionUpdated;
 
-    public event RegionEntityNewCallback OnEntityNew;
-    public event RegionEntityUpdateCallback OnEntityUpdate;
-    public event RegionEntityRemovedCallback OnEntityRemoved;
-
     # pragma warning restore 0067
     #endregion
 
-    protected OMV.DoubleDictionary<string, ulong, IEntity> m_entityDictionary;
+    protected IEntityCollection m_entityCollection;
 
     protected WorldGroupCode m_worldGroup;
     public WorldGroupCode WorldGroup { get { return m_worldGroup; } }
@@ -56,11 +52,11 @@ public abstract class RegionContextBase : EntityBase, IRegionContext, IDisposabl
 
     public RegionContextBase(RegionContextBase rcontext, AssetContextBase acontext) 
                 : base(rcontext, acontext) {
-        m_entityDictionary = new OMV.DoubleDictionary<string, ulong, IEntity>();
         m_regionState = new RegionState();
         m_regionStateChangedCallback = new RegionStateChangedCallback(State_OnChange);
         State.OnStateChanged += m_regionStateChangedCallback;
-        this.RegisterInterface<IEntityCollection>(this);
+        m_entityCollection = new EntityCollection();
+        this.RegisterInterface<IEntityCollection>(m_entityCollection);
         this.RegisterInterface<IRegionContext>(this);
     }
 
@@ -92,112 +88,11 @@ public abstract class RegionContextBase : EntityBase, IRegionContext, IDisposabl
         if (OnRegionUpdated != null) OnRegionUpdated(this, what);
     }
 
-    #region ENTITY MANAGEMENT
-    public void AddEntity(IEntity entity) {
-        m_log.Log(LogLevel.DWORLDDETAIL, "AddEntity: n={0}, lid={1}", entity.Name, entity.LGID);
-        if (TrackEntity(entity)) {
-            // tell the viewer about this prim and let the renderer convert it
-            //    into the format needed for display
-            if (OnEntityNew != null) OnEntityNew(entity);
-        }
-    }
-
-    public void UpdateEntity(IEntity entity, UpdateCodes detail) {
-        m_log.Log(LogLevel.DUPDATEDETAIL, "UpdateEntity: " + entity.Name);
-        if (OnEntityUpdate != null) OnEntityUpdate(entity, detail);
-    }
-
-    public void RemoveEntity(IEntity entity) {
-        m_log.Log(LogLevel.DWORLDDETAIL, "RemoveEntity: " + entity.Name);
-        if (OnEntityRemoved != null) OnEntityRemoved(entity);
-    }
-
-    private void SelectEntity(IEntity ent) {
-    }
-
-    private bool TrackEntity(IEntity ent) {
-        try {
-            if (m_entityDictionary.ContainsKey(ent.Name.Name)) {
-                m_log.Log(LogLevel.DWORLD, "Asked to add same entity again: " + ent.Name);
-            }
-            else {
-                m_entityDictionary.Add(ent.Name.Name, ent.LGID, ent);
-                return true;
-            }
-        }
-        catch {
-            // sometimes they send me the same entry twice
-            m_log.Log(LogLevel.DWORLD, "Asked to add same entity again: " + ent.Name);
-        }
-        return false;
-    }
-
-    private void UnTrackEntity(IEntity ent) {
-        m_entityDictionary.Remove(ent.Name.Name, ent.LGID);
-    }
-
-    private void ClearTrackedEntities() {
-        m_entityDictionary.Clear();
-    }
-    public bool TryGetEntity(ulong lgid, out IEntity ent) {
-        return m_entityDictionary.TryGetValue(lgid, out ent);
-    }
-
-    public bool TryGetEntity(string entName, out IEntity ent) {
-        return m_entityDictionary.TryGetValue(entName, out ent);
-    }
-
-    public bool TryGetEntity(EntityName entName, out IEntity ent) {
-        return m_entityDictionary.TryGetValue(entName.Name, out ent);
-    }
-
-    /// <summary>
-    /// </summary>
-    /// <param name="localID"></param>
-    /// <param name="ent"></param>
-    /// <param name="createIt"></param>
-    /// <returns>true if we created a new entry</returns>
-    public bool TryGetCreateEntity(EntityName entName, out IEntity ent, RegionCreateEntityCallback createIt) {
-        try {
-            lock (m_entityDictionary) {
-                if (!TryGetEntity(entName, out ent)) {
-                    IEntity newEntity = createIt();
-                    AddEntity(newEntity);
-                    ent = newEntity;
-                }
-            }
-            return true;
-        }
-        catch (Exception e) {
-            m_log.Log(LogLevel.DBADERROR, "TryGetCreateEntityLocalID: Failed to create entity: {0}", e.ToString());
-        }
-        ent = null;
-        return false;
-    }
-
-    public IEntity FindEntity(Predicate<IEntity> pred) {
-        return m_entityDictionary.FindValue(pred);
-    }
-
-    public void ForEach(Action<IEntity> act) {
-        lock (m_entityDictionary) {
-            m_entityDictionary.ForEach(act);
-        }
-    }
-    #endregion ENTITY MANAGEMENT
-
     public override void Dispose() {
         m_terrainInfo = null; // let the garbage collector work
         if (m_regionState != null && m_regionStateChangedCallback != null) {
             State.OnStateChanged -= m_regionStateChangedCallback;
         }
-
-        // TODO: do something about the entity list
-        m_entityDictionary.ForEach(delegate(IEntity ent) {
-            ent.Dispose();
-        });
-        m_entityDictionary.Clear(); // release any entities we might have
-
         return;
     }
 }

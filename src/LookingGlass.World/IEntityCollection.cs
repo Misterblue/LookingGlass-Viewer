@@ -25,7 +25,17 @@ using System.Collections.Generic;
 using System.Text;
 
 namespace LookingGlass.World {
-    public interface IEntityCollection {
+
+public delegate void EntityNewCallback(IEntity ent);
+public delegate void EntityUpdateCallback(IEntity ent, UpdateCodes what);
+public delegate void EntityRemovedCallback(IEntity ent);
+
+    public interface IEntityCollection : IDisposable {
+        // when new items are added to the world
+        event EntityNewCallback OnEntityNew;
+        event EntityUpdateCallback OnEntityUpdate;
+        event EntityRemovedCallback OnEntityRemoved;
+
         void AddEntity(IEntity entity);
 
         void UpdateEntity(IEntity entity, UpdateCodes detail);

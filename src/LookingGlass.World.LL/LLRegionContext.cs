@@ -93,7 +93,7 @@ public sealed class LLRegionContext : RegionContextBase {
         // TODO: add some checking for rcontext since the localIDs are scoped by 'simulator'
         // we are relying on a low collision rate for localIDs
         // A linear search of the list takes way too long for the number of objects arriving
-        return TryGetEntity((ulong)localID, out ent);
+        return m_entityCollection.TryGetEntity((ulong)localID, out ent);
     }
 
     /// <summary>
@@ -104,10 +104,10 @@ public sealed class LLRegionContext : RegionContextBase {
     /// <returns>true if we created a new entry</returns>
     public bool TryGetCreateEntityLocalID(uint localID, out IEntity ent, RegionCreateEntityCallback createIt) {
         try {
-            lock (m_entityDictionary) {
+            lock (m_entityCollection) {
                 if (!TryGetEntityLocalID(localID, out ent)) {
                     IEntity newEntity = createIt();
-                    AddEntity(newEntity);
+                    m_entityCollection.AddEntity(newEntity);
                     ent = newEntity;
                 }
             }

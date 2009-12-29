@@ -750,7 +750,10 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
                         return newEnt;
                     }) ) {
                 // if new or not, assume everything about this entity has changed
-                rcontext.UpdateEntity(ent, UpdateCodes.FullUpdate | UpdateCodes.New);
+                IEntityCollection coll;
+                if (rcontext.TryGet<IEntityCollection>(out coll)) {
+                    coll.UpdateEntity(ent, UpdateCodes.FullUpdate | UpdateCodes.New);
+                }
             }
             else {
                 m_log.Log(LogLevel.DBADERROR, "FAILED CREATION OF NEW ATTACHMENT");
@@ -832,7 +835,9 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
             updateFlags |= UpdateCodes.CollisionPlane;
 
             EntityName avatarEntityName = LLEntityAvatar.AvatarEntityNameFromID(rcontext.AssetContext, args.Avatar.ID);
-            if (rcontext.TryGetCreateEntity(avatarEntityName, out updatedEntity, delegate() {
+            IEntityCollection coll;
+            rcontext.TryGet<IEntityCollection>(out coll);
+            if (coll.TryGetCreateEntity(avatarEntityName, out updatedEntity, delegate() {
                             m_log.Log(LogLevel.DUPDATEDETAIL, "AvatarUpdate: creating avatar {0} {1} ({2})",
                                 args.Avatar.FirstName, args.Avatar.LastName, args.Avatar.ID);
                             IEntityAvatar newEnt = new LLEntityAvatar(rcontext.AssetContext,
@@ -873,7 +878,10 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
             IEntity removedEntity;
             if (rcontext.TryGetEntityLocalID(args.ObjectLocalID, out removedEntity)) {
                 // we need a handle to the objectID
-                rcontext.RemoveEntity(removedEntity);
+                IEntityCollection coll;
+                if (rcontext.TryGet<IEntityCollection>(out coll)) {
+                    coll.RemoveEntity(removedEntity);
+                }
             }
         }
         catch (Exception e) {

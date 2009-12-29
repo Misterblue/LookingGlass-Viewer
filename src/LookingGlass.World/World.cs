@@ -122,20 +122,23 @@ public sealed class World : ModuleBase, IWorld, IProvider {
                 // we don't know about this region. Add it and connect to events
                 m_regionList.Add(rcontext);
 
-                if (Region_OnNewEntityCallback == null) {
-                    Region_OnNewEntityCallback = new RegionEntityNewCallback(Region_OnNewEntity);
-                }
-                rcontext.OnEntityNew += Region_OnNewEntityCallback;
+                IEntityCollection coll;
+                if (rcontext.TryGet<IEntityCollection>(out coll)) {
+                    if (Region_OnNewEntityCallback == null) {
+                        Region_OnNewEntityCallback = new EntityNewCallback(Region_OnNewEntity);
+                    }
+                    coll.OnEntityNew += Region_OnNewEntityCallback;
 
-                if (Region_OnUpdateEntityCallback == null) {
-                    Region_OnUpdateEntityCallback = new RegionEntityUpdateCallback(Region_OnUpdateEntity);
-                }
-                rcontext.OnEntityUpdate += Region_OnUpdateEntityCallback;
+                    if (Region_OnUpdateEntityCallback == null) {
+                        Region_OnUpdateEntityCallback = new EntityUpdateCallback(Region_OnUpdateEntity);
+                    }
+                    coll.OnEntityUpdate += Region_OnUpdateEntityCallback;
 
-                if (Region_OnRemovedEntityCallback == null) {
-                    Region_OnRemovedEntityCallback = new RegionEntityRemovedCallback(Region_OnRemovedEntity);
+                    if (Region_OnRemovedEntityCallback == null) {
+                        Region_OnRemovedEntityCallback = new EntityRemovedCallback(Region_OnRemovedEntity);
+                    }
+                    coll.OnEntityRemoved += Region_OnRemovedEntityCallback;
                 }
-                rcontext.OnEntityRemoved += Region_OnRemovedEntityCallback;
 
                 if (Region_OnRegionUpdatedCallback == null) {
                     Region_OnRegionUpdatedCallback = new RegionRegionUpdatedCallback(Region_OnRegionUpdated);
@@ -150,20 +153,20 @@ public sealed class World : ModuleBase, IWorld, IProvider {
     }
 
     #region REGION EVENT PROCESSING
-    private RegionEntityNewCallback Region_OnNewEntityCallback = null;
+    private EntityNewCallback Region_OnNewEntityCallback = null;
     private void Region_OnNewEntity(IEntity ent) {
         m_log.Log(LogLevel.DWORLDDETAIL, "Region_OnNewEntity: {0}", ent.Name.Name);
         if (OnWorldEntityNew != null) OnWorldEntityNew(ent);
         return;
     }
 
-    private RegionEntityUpdateCallback Region_OnUpdateEntityCallback = null;
+    private EntityUpdateCallback Region_OnUpdateEntityCallback = null;
     private void Region_OnUpdateEntity(IEntity ent, UpdateCodes what) {
         if (OnWorldEntityUpdate != null) OnWorldEntityUpdate(ent, what);
         return;
     }
 
-    private RegionEntityRemovedCallback Region_OnRemovedEntityCallback = null;
+    private EntityRemovedCallback Region_OnRemovedEntityCallback = null;
     private void Region_OnRemovedEntity(IEntity ent) {
         m_log.Log(LogLevel.DWORLDDETAIL, "Region_OnRemovedEntity: {0}", ent.Name.Name);
         if (OnWorldEntityRemoved != null) OnWorldEntityRemoved(ent);
@@ -211,11 +214,17 @@ public sealed class World : ModuleBase, IWorld, IProvider {
                 // we know about this region so remove it and disconnect from events
                 m_regionList.Remove(foundRegion);
                 m_log.Log(LogLevel.DWORLD, "Removing region " + foundRegion.Name);
-                if (Region_OnNewEntityCallback != null) {
-                    rcontext.OnEntityNew -= Region_OnNewEntityCallback;
-                }
-                if (Region_OnRemovedEntityCallback != null) {
-                    rcontext.OnEntityRemoved -= Region_OnRemovedEntityCallback;
+                IEntityCollection coll;
+                if (rcontext.TryGet<IEntityCollection>(out coll)) {
+                    if (Region_OnNewEntityCallback != null) {
+                        coll.OnEntityNew -= Region_OnNewEntityCallback;
+                    }
+                    if (Region_OnUpdateEntityCallback != null) {
+                        coll.OnEntityUpdate -= Region_OnUpdateEntityCallback;
+                    }
+                    if (Region_OnRemovedEntityCallback != null) {
+                        coll.OnEntityRemoved -= Region_OnRemovedEntityCallback;
+                    }
                 }
                 if (Region_OnRegionUpdatedCallback != null) {
                     rcontext.OnRegionUpdated -= Region_OnRegionUpdatedCallback;
@@ -243,7 +252,10 @@ public sealed class World : ModuleBase, IWorld, IProvider {
         IEntity ret = null;
         lock (m_regionList) {
             foreach (RegionContextBase rcb in m_regionList) {
-                rcb.TryGetEntity(entName, out ret);
+                IEntityCollection coll;
+                if (rcb.TryGet<IEntityCollection>(out coll)) {
+                    coll.TryGetEntity(entName, out ret);
+                }
                 if (ret != null) break;
             }
         }

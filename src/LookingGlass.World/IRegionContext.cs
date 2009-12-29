@@ -37,10 +37,6 @@ namespace LookingGlass.World {
 public delegate void RegionRegionStateChangeCallback(RegionContextBase rcontext, RegionStateCode code);
 public delegate void RegionRegionUpdatedCallback(RegionContextBase rcontext, UpdateCodes what);
 
-public delegate void RegionEntityNewCallback(IEntity ent);
-public delegate void RegionEntityUpdateCallback(IEntity ent, UpdateCodes what);
-public delegate void RegionEntityRemovedCallback(IEntity ent);
-
 // used in TryGetCreateentity calls to create the entity if needed
 public delegate IEntity RegionCreateEntityCallback();
 
@@ -52,11 +48,6 @@ public interface IRegionContext {
 
     // when the underlying simulator is changing.
     event RegionRegionUpdatedCallback OnRegionUpdated;
-
-    // when new items are added to the world
-    event RegionEntityNewCallback OnEntityNew;
-    event RegionEntityUpdateCallback OnEntityUpdate;
-    event RegionEntityRemovedCallback OnEntityRemoved;
 
     #endregion Events
 
@@ -81,17 +72,6 @@ public interface IRegionContext {
 
     // information on terrain for this region
     TerrainInfoBase TerrainInfo { get; }
-
-    // ENTITY MANAGEMENT
-    void AddEntity(IEntity entity);
-    void UpdateEntity(IEntity entity, UpdateCodes detail);
-    void RemoveEntity(IEntity entity);
-
-    bool TryGetEntity(ulong lgid, out IEntity ent);
-    bool TryGetEntity(string entName, out IEntity ent);
-    bool TryGetEntity(EntityName entName, out IEntity ent);
-    IEntity FindEntity(Predicate<IEntity> pred);
-    bool TryGetCreateEntity(EntityName name, out IEntity ent, RegionCreateEntityCallback creater);
 
     /*
     // In  transition requests for getting region entities based on implementation
