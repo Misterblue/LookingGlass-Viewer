@@ -67,7 +67,12 @@ namespace LookingGlass.Framework.WorkQueue {
             OMVSD.OSDMap aMap = new OMVSD.OSDMap();
             lock (m_queues) {
                 foreach (IWorkQueue wq in m_queues) {
-                    aMap.Add(wq.Name, wq.GetDisplayable());
+                    try {
+                        aMap.Add(wq.Name, wq.GetDisplayable());
+                    }
+                    catch (Exception e) {
+                        LogManager.Log.Log(LogLevel.DBADERROR, "WorkQueueManager.GetDisplayable: duplicate symbol: {0}", wq.Name);
+                    }
                 }
             }
             return aMap;
