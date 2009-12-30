@@ -561,6 +561,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
 
     // wrapper routine for the queuing if rendering work for this entity
     private void DoRenderQueued(IEntity ent) {
+        // NOTE: we pass extra parameters that are later modified by DoRenderLater to remember
+        // state (RenderableInfo and if mesh has already been rebuilt)
         Object[] renderParameters = { ent, null, false };
         m_log.Log(LogLevel.DRENDERDETAIL, "DoRenderQueued: ent={0}", ent.Name.Name);
         m_workQueueRender.DoLater(CalculateInterestOrder(ent), DoRenderLater, renderParameters);

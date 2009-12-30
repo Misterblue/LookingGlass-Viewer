@@ -59,6 +59,7 @@ public class RendererMap : IModule, IRenderProvider {
     // IModule.AfterAllModulesLoaded
     public virtual bool AfterAllModulesLoaded() {
         LogManager.Log.Log(LogLevel.DINIT, ModuleName + ".AfterAllModulesLoaded()");
+        m_userInterface = new UserInterfaceNull();
         return true;
     }
 
@@ -79,7 +80,10 @@ public class RendererMap : IModule, IRenderProvider {
     #endregion IModule
 
     #region IRenderProvider
-    public IUserInterfaceProvider UserInterface { get { return null; } }
+    IUserInterfaceProvider m_userInterface = null;
+    public IUserInterfaceProvider UserInterface { 
+        get { return m_userInterface; } 
+    }
 
     // entry for main thread for rendering. Return false if you don't need it.
     public bool RendererThread() {

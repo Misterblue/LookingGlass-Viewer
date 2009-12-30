@@ -58,16 +58,16 @@ public class ControlViews : IControlViewProvider, IModule {
         m_lgb = lgbase;
 
         // some of these parameters are overridden early. Add defaults if not overridden
-        if (!LGB.AppParams.HasParameter(ModuleName + "WorldView.Enable")) {
-            LGB.AppParams.AddDefaultParameter(ModuleName + "WorldView.Enable", "true",
+        if (!LGB.AppParams.HasParameter(ModuleName + ".WorldView.Enable")) {
+            LGB.AppParams.AddDefaultParameter(ModuleName + ".WorldView.Enable", "true",
                 "Default action is to enable the view window");
         }
-        if (!LGB.AppParams.HasParameter(ModuleName + "AvatarView.Enable")) {
-            LGB.AppParams.AddDefaultParameter(ModuleName + "AvatarView.Enable", "true",
+        if (!LGB.AppParams.HasParameter(ModuleName + ".AvatarView.Enable")) {
+            LGB.AppParams.AddDefaultParameter(ModuleName + ".AvatarView.Enable", "true",
                 "Default action is to enable the view window");
         }
-        if (!LGB.AppParams.HasParameter(ModuleName + "ChatView.Enable")) {
-            LGB.AppParams.AddDefaultParameter(ModuleName + "ChatView.Enable", "true",
+        if (!LGB.AppParams.HasParameter(ModuleName + ".ChatView.Enable")) {
+            LGB.AppParams.AddDefaultParameter(ModuleName + ".ChatView.Enable", "true",
                 "Default action is to enable the view window");
         }
 

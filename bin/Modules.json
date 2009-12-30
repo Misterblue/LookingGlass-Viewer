@@ -45,7 +45,7 @@
     // Multiple dialogs are presented to the user. This manages them.
     {   "Assembly": "LookingGlass.View.dll",
         "Interface": "LookingGlass.View.IControlViewProvider",
-        "Name": "ControlView",
+        "Name": "ControlViews",
         "Order": 80
     },
     // Regions are tracked for their LOD and loadedness
