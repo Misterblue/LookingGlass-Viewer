@@ -30,9 +30,9 @@ namespace LookingGlass.Framework {
     /// a handle to that interface.
     /// </summary>
     public interface IRegistryCore {
-        T Get<T>();
         void RegisterInterface<T>(T iface);
         bool TryGet<T>(out T iface);
+        T Get<T>();
 
         void StackModuleInterface<M>(M mod);
         T[] RequestModuleInterfaces<T>();

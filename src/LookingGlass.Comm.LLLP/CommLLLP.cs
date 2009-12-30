@@ -717,6 +717,13 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
                         }) ) {
                     // new prim created
                 }
+                // The way this is supposed to work is that entities have parents and parents have collections
+                // of entities as children. Occasionally we learn about children before we hear about
+                // the parent. This code just punts that problem. There is code over in Renderer.Ogre
+                // to hold the child until a parent is found. What should really happen is comm should
+                // hold the child until a parent is found. This would make parent/child relatioships 
+                // first class relations and hide any comm implmentation dependencies from the rest
+                // of the system.
                 if (args.Prim.ParentID != 0 && updatedEntity.ContainingEntity == null) {
                     IEntity parentEntity = null;
                     rcontext.TryGetEntityLocalID(args.Prim.ParentID, out parentEntity);

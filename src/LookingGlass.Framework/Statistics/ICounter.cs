@@ -32,6 +32,10 @@ namespace LookingGlass.Framework.Statistics {
     /// is done. The passing of the value helps keep threads from stepping
     /// on each other.
     /// </summary>
+    
+    // used if counter value is kept externally
+    public delegate long CounterValueCallback();
+
     public interface ICounter {
         string Name { get; }
 

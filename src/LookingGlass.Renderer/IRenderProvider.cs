@@ -45,6 +45,7 @@ namespace LookingGlass.Renderer {
         public Object basicObject;
         // public uint parentID;
         public IEntity parentEntity;
+        public ulong shapeHash;
         public OMV.Vector3 position;
         public OMV.Quaternion rotation;
         public OMV.Vector3 scale;

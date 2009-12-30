@@ -70,7 +70,7 @@ namespace LookingGlass.Framework.WorkQueue {
                     try {
                         aMap.Add(wq.Name, wq.GetDisplayable());
                     }
-                    catch (Exception e) {
+                    catch {
                         LogManager.Log.Log(LogLevel.DBADERROR, "WorkQueueManager.GetDisplayable: duplicate symbol: {0}", wq.Name);
                     }
                 }

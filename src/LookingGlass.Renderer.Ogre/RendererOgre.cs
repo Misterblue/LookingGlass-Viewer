@@ -98,6 +98,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     private ICounter m_statMaterialsRequested;
     private ICounter m_statMeshesRequested;
     private ICounter m_statTexturesRequested;
+    private ICounter m_statSharableTotal;
+    private ICounter m_statShareInstances;
 
     private RestHandler m_ogreStatsHandler;
     private ParameterSet m_ogreStats;
@@ -226,6 +228,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         m_statMaterialsRequested = m_stats.GetCounter("MaterialsRequested");
         m_statMeshesRequested = m_stats.GetCounter("MeshesRequested");
         m_statTexturesRequested = m_stats.GetCounter("TexturesRequested");
+        m_statSharableTotal = m_stats.GetCounterValue("TotalMeshes", delegate() { return (long)prebuiltMeshes.Count; });
+        m_statShareInstances = m_stats.GetCounter("TotalSharedInstances");
 
         // renderer keeps rendering specific data in an entity's addition/subsystem slots
         AddSceneNodeName = EntityBase.AddAdditionSubsystem(RendererOgre.AddSceneNodeNameName);
@@ -568,6 +572,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         m_workQueueRender.DoLater(CalculateInterestOrder(ent), DoRenderLater, renderParameters);
     }
 
+    // collection of meshes that have already been built
+    private Dictionary<ulong, EntityName> prebuiltMeshes = new Dictionary<ulong, EntityName>();
     private bool DoRenderLater(DoLaterBase qInstance, Object parms) {
         Object[] loadParams = (Object[])parms;
         IEntity m_ent = (IEntity)loadParams[0];
@@ -597,7 +603,17 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                         }
                     }
 
+                    // Check to see if something of this mesh shape already exists. Use it if so.
                     EntityName entMeshName = (EntityName)m_ri.basicObject;
+                    if (prebuiltMeshes.ContainsKey(m_ri.shapeHash)) {
+                        entMeshName = prebuiltMeshes[m_ri.shapeHash];
+                        m_log.Log(LogLevel.DRENDERDETAIL, "DorRenderLater: using prebuilt {0}", entMeshName);
+                        m_statShareInstances.Event();
+                    }
+                    else {
+                        // this is a new mesh. Remember that it has been built
+                        prebuiltMeshes.Add(m_ri.shapeHash, entMeshName);
+                    }
 
                     // Find a handle to the parent for this node
                     string parentSceneNodeName = null;

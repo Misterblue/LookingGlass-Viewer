@@ -186,6 +186,8 @@ public class RendererOgreLL : IWorldRenderConv {
                 ri.scale = new OMV.Vector3(m_sceneMagnification, m_sceneMagnification, m_sceneMagnification);
             }
 
+            ri.shapeHash = GetMeshKey(prim, ri.scale, 0);
+
             // while we're in the neighborhood, we can create the materials
             if (m_buildMaterialsAtRenderInfoTime) {
                 CreateMaterialResource7X(priority, ent, prim, 7);
@@ -255,6 +257,7 @@ public class RendererOgreLL : IWorldRenderConv {
                         m_log.Log(LogLevel.DRENDERDETAIL, "CreateMeshResource: mesherizing scuplty {0}", ent.Name.Name);
                         // mesh = m_meshMaker.GenerateSculptMesh(textureBitmap, prim, OMVR.DetailLevel.Highest);
                         mesh = m_meshMaker.GenerateSculptMesh(textureBitmap, prim, OMVR.DetailLevel.Medium);
+                        // mesh = m_meshMaker.GenerateSculptMesh(textureBitmap, prim, OMVR.DetailLevel.Low);
                         if (mesh.Faces.Count > 10) {
                             m_log.Log(LogLevel.DBADERROR, "CreateMeshResource: mesh has {0} faces!!!!", mesh.Faces.Count);
                         }
@@ -646,5 +649,78 @@ public class RendererOgreLL : IWorldRenderConv {
          */
         return;
     }
+
+    // Routine from OpenSim which creates a hash for the prim shape
+    private ulong GetMeshKey(OMV.Primitive prim, OMV.Vector3 size, float lod)
+    {
+        ulong hash = (ulong)prim.GetHashCode();
+        // ulong hash = 5381;
+
+
+        hash = djb2(hash, (byte)prim.PrimData.PathCurve);
+        hash = djb2(hash, prim.PrimData.ProfileHollow);
+        hash = djb2(hash, (byte)prim.PrimData.ProfileHole);
+        hash = djb2(hash, prim.PrimData.PathBegin);
+        hash = djb2(hash, prim.PrimData.PathEnd);
+        hash = djb2(hash, prim.PrimData.PathScaleX);
+        hash = djb2(hash, prim.PrimData.PathScaleY);
+        hash = djb2(hash, prim.PrimData.PathShearX);
+        hash = djb2(hash, prim.PrimData.PathShearY);
+        hash = djb2(hash, (byte)prim.PrimData.PathTwist);
+        hash = djb2(hash, (byte)prim.PrimData.PathTwistBegin);
+        hash = djb2(hash, (byte)prim.PrimData.PathRadiusOffset);
+        hash = djb2(hash, (byte)prim.PrimData.PathTaperX);
+        hash = djb2(hash, (byte)prim.PrimData.PathTaperY);
+        hash = djb2(hash, prim.PrimData.PathRevolutions);
+        hash = djb2(hash, (byte)prim.PrimData.PathSkew);
+        hash = djb2(hash, prim.PrimData.ProfileBegin);
+        hash = djb2(hash, prim.PrimData.ProfileEnd);
+        hash = djb2(hash, prim.PrimData.ProfileHollow);
+
+        // TODO: Separate scale out from the primitive shape data (after
+        // scaling is supported at the physics engine level)
+        byte[] scaleBytes = size.GetBytes();
+        for (int i = 0; i < scaleBytes.Length; i++)
+            hash = djb2(hash, scaleBytes[i]);
+
+        // Include LOD in hash, accounting for endianness
+        byte[] lodBytes = new byte[4];
+        Buffer.BlockCopy(BitConverter.GetBytes(lod), 0, lodBytes, 0, 4);
+        if (!BitConverter.IsLittleEndian) {
+            Array.Reverse(lodBytes, 0, 4);
+        }
+        for (int i = 0; i < lodBytes.Length; i++)
+            hash = djb2(hash, lodBytes[i]);
+
+        // include sculpt UUID
+        if (prim.Sculpt != null) {
+            scaleBytes = prim.Sculpt.SculptTexture.GetBytes();
+            for (int i = 0; i < scaleBytes.Length; i++)
+                hash = djb2(hash, scaleBytes[i]);
+        }
+
+        return hash;
+    }
+
+    private ulong djb2(ulong hash, byte c)
+    {
+        return ((hash << 5) + hash) + (ulong)c;
+    }
+
+    private ulong djb2(ulong hash, ushort c)
+    {
+        hash = ((hash << 5) + hash) + (ulong)((byte)c);
+        return ((hash << 5) + hash) + (ulong)(c >> 8);
+    }
+
+    private ulong djb2(ulong hash, float c)
+    {
+        byte[] asBytes = BitConverter.GetBytes(c);
+        hash = ((hash << 5) + hash) + (ulong)asBytes[0];
+        hash = ((hash << 5) + hash) + (ulong)asBytes[1];
+        hash = ((hash << 5) + hash) + (ulong)asBytes[2];
+        return ((hash << 5) + hash) + (ulong)asBytes[3];
+    }
+
 }
 }

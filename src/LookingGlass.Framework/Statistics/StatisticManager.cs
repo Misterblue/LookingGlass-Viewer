@@ -37,12 +37,21 @@ public class StatisticManager : IDisplayable {
     public StatisticManager(string statisticGroupName) {
     }
 
+    // a simple counter
     public ICounter GetCounter(string counterName) {
         ICounter newCounter = new StatCounter(counterName);
         m_counters.Add(newCounter);
         return newCounter;
     }
 
+    // a counter who's value is kept outside one of these counter classes
+    public ICounter GetCounterValue(string counterName, CounterValueCallback valueCall) {
+        ICounter newCounter = new StatCounterValue(counterName, valueCall);
+        m_counters.Add(newCounter);
+        return newCounter;
+    }
+
+    // an interval with a begin and end
     public IIntervalCounter GetIntervalCounter(string counterName) {
         IIntervalCounter newCounter = new IntervalCounter(counterName);
         m_counters.Add(newCounter);
