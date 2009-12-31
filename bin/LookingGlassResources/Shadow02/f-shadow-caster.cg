@@ -1,0 +1,53 @@
+struct Vertex
+{
+  float4 position   : POSITION;     // Fragment position in screen-space
+  float4 color      : COLOR;        // Fragment color
+  float2 texCoords  : TEXCOORD0;    // Fragment's Texture Coordinates
+  float depth       : TEXCOORD1;    // Fragment depth in eye-space
+};
+
+struct Fragment
+{
+    float4 color  : COLOR0;
+};
+
+Fragment main(Vertex p_In
+              
+            #ifdef STORE_NORMALIZED_DEPTH
+              ,uniform float p_Near // Near distance
+              ,uniform float p_Far  // Far distance
+            #endif
+
+              ,uniform float p_DepthOffset  // Depth offset
+              )
+{
+    Fragment l_Out;
+
+#ifdef STORE_NORMALIZED_DEPTH
+
+    // Store normalized depth in [0,1] to avoid overflowing,
+    // even when using half precision floating point render target
+    float l_Depth = (1.0/p_Near - 1.0/p_In.depth) / (1.0/p_Near - 1.0/p_Far);
+
+    // Use some bias to avoid precision issue
+    // TODO : As depth is not distributed uniformly across the range
+    // we should bias proportionately to the depth value itself.
+    // The absolute bias closer to the camera is lower than the bias further away.
+    l_Depth += p_DepthOffset;
+
+#else
+
+    // Store non-normalized depth
+    float l_Depth = p_In.depth;
+    
+    // Use some bias to avoid precision issue
+    l_Depth += p_DepthOffset;
+
+#endif
+    
+    // Write the depth value to the depth map
+    l_Out.color.r = l_Depth;
+    
+    return l_Out;
+}
+

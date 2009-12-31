@@ -1,0 +1,2 @@
+Technique from http://www.ogre3d.org/wiki/index.php/Custom_Shadow_Mapping
+

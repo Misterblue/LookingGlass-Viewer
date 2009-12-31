@@ -272,6 +272,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Shadow02.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ShadowSimple.cpp"
 				>
 			</File>
@@ -395,6 +399,10 @@
 			</File>
 			<File
 				RelativePath=".\ResourceListeners.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Shadow02.h"
 				>
 			</File>
 			<File

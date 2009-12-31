@@ -7,7 +7,7 @@ vertex_program shadow_caster_vs cg
     default_params
     {
         param_named_auto iWorldView worldview_matrix
-   param_named_auto iWorldViewProj worldviewproj_matrix
+        param_named_auto iWorldViewProj worldviewproj_matrix
     }
 }
 

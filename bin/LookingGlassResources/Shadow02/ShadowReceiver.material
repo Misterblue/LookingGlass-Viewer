@@ -1,0 +1,15 @@
+material Shadow02/ShadowReceiver
+{
+    technique default
+    {
+        pass lighting
+        {
+            texture_unit ShadowMap
+            {
+                tex_address_mode clamp
+                filtering none
+            }
+        }
+    }
+}
+

@@ -1,0 +1,72 @@
+// Define inputs from application.
+struct VertexIn
+{
+  float4 position   : POSITION;   // Vertex in object-space
+  float4 normal     : NORMAL;     // Vertex's Normal
+  float2 texCoords  : TEXCOORD0;  // Vertex's Texture Coordinates
+};
+
+// Define outputs from vertex shader.
+struct Vertex
+{
+  float4 position       : POSITION;     // Vertex position in screen-space
+  float2 texCoords      : TEXCOORD0;    // Vertex texture coordinates
+  float3 normal         : TEXCOORD1;    // Normal in eye-space
+  float3 halfVector     : TEXCOORD2;    // Half angle vector in eye space
+  float3 lightVector    : TEXCOORD3;    // Light vector in eye space
+
+#ifdef SHADOW_MAP
+  float4 lightPosition  : TEXCOORD4;    // Vertex position in light space
+#endif
+};
+
+Vertex main(VertexIn p_In,
+            uniform float4x4 p_ModelViewProjection // Model view projection matrix
+            ,uniform float4 p_LightPosition         // Light position in object-space
+            ,uniform float4x4 p_ModelView           // Model view matrix
+            ,uniform float4x4 p_InverseModelView    // Model view matrix inverted
+
+            #ifdef SHADOW_MAP
+              ,uniform float4x4 p_Model                 // Model matrix
+              ,uniform float4x4 p_TextureViewProjection  // Texture view projection matrix
+            #endif
+            )
+{
+    Vertex l_Out;
+
+    // Compute light position in eye-space
+    float4 l_LightPosition4 = mul(p_ModelView, p_LightPosition);
+    float3 l_LightPosition3 = l_LightPosition4.xyz;
+    
+    // Compute vertex position in eye-space
+    float4 l_Position4 = mul(p_ModelView, p_In.position);
+    float3 l_Position3 = l_Position4.xyz / l_Position4.w;
+    
+    // Transform normal from model-space to eye-space.
+    l_Out.normal = normalize(mul(transpose(p_InverseModelView), p_In.normal).xyz);
+    
+    // Light vector.
+    l_Out.lightVector = l_LightPosition3 - (l_Position3 * l_LightPosition4.w);
+    
+    // Half angle vector = light vector + eye vector
+    l_Out.halfVector = l_Out.lightVector + (- l_Position3);
+
+#ifdef SHADOW_MAP
+
+    // Compute vertex position in light space
+    // First object to world space
+    l_Out.lightPosition = mul(p_Model, p_In.position);
+    // Then world to light space
+    l_Out.lightPosition = mul(p_TextureViewProjection, l_Out.lightPosition);
+
+#endif
+
+    // Transform vertex position into homogenous screen-space.
+    l_Out.position = mul(p_ModelViewProjection, p_In.position);
+
+    // Pass texture coordinates to fragment shader
+    l_Out.texCoords = p_In.texCoords;
+
+    return l_Out;
+}
+

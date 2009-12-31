@@ -1,0 +1,38 @@
+// Define inputs from application.
+struct VertexIn
+{
+  float4 position : POSITION;       // Vertex in object-space
+  float2 texCoords  : TEXCOORD0;    // Vertex's Texture Coordinates
+};
+
+// Define outputs from vertex shader.
+struct Vertex
+{
+  float4 position   : POSITION;     // Vertex position in screen-space
+  float4 color      : COLOR;        // Vertex color
+  float2 texCoords  : TEXCOORD0;    // Vertex Texture Coordinates
+  float depth       : TEXCOORD1;    // Vertex depth in eye space
+};
+
+Vertex main(VertexIn p_In,
+            uniform float4 p_AmbientLight,          // Ambient light in scene
+            uniform float4x4 p_ModelViewProjection  // Model view projection matrix
+           )
+{
+    Vertex l_Out;
+    
+    // Transform vertex position into homogenous screen-space.
+    l_Out.position = mul(p_ModelViewProjection, p_In.position);
+    
+    // Store depth
+    l_Out.depth = l_Out.position.z;
+    
+    // Store ambient color
+    l_Out.color = p_AmbientLight;
+    
+    // Pass texture coordinates to fragment shader
+    l_Out.texCoords = p_In.texCoords;
+
+    return l_Out;
+}
+

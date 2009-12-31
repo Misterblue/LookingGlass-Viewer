@@ -37,6 +37,7 @@
 #include "ProcessAnyTime.h"
 #include "ShadowBase.h"
 #include "ShadowSimple.h"
+#include "Shadow02.h"
 #include "SkyBoxSimple.h"
 #include "SkyBoxSkyX.h"
 #include "VisCalcNull.h"
@@ -410,6 +411,9 @@ namespace LG {
 			if (strlen(shadowName) == 0 || stricmp(shadowName, "none") == 0) {
 				this->Shadow = new ShadowBase();
 			}
+			else if (stricmp(shadowName, "shadow02") == 0) {
+				this->Shadow = new Shadow02(shadowName);
+			}
 			else {
 				this->Shadow = new ShadowSimple(shadowName);
 			}
@@ -630,7 +634,7 @@ namespace LG {
 		fC += 1;
 
 		Ogre::ManualObject* mo = m_sceneMgr->createManualObject(manualObjectName);
-		mo->setCastShadows(true);
+		Shadow->AddCasterShadow(mo);
 		// Ogre::ManualObject* mo = new Ogre::ManualObject(manualObjectName);
 		LG::Log("RendererOgre::CreateMeshResource: Creating mo. f = %d, %s", faces, manualObjectName.c_str());
 

@@ -1,0 +1,68 @@
+vertex_program LightingVP cg
+{
+    source v-lighting.cg
+    entry_point main
+    profiles arbvp1
+
+    default_params
+    {
+        param_named_auto p_ModelView worldview_matrix
+        param_named_auto p_InverseModelView inverse_worldview_matrix
+        param_named_auto p_ModelViewProjection worldviewproj_matrix
+        param_named_auto p_LightPosition light_position_object_space
+    }
+}
+
+fragment_program LightingFP cg
+{
+    source f-lighting.cg
+    entry_point main
+    profiles arbfp1
+    
+    default_params
+    {
+        param_named_auto p_LightDiffuse light_diffuse_colour 0
+        param_named_auto p_LightSpecular light_specular_colour 0
+        param_named_auto p_LightPower light_power 0
+        param_named p_Diffuse float4 0.5 0 0 1 
+        param_named p_Specular float 1 1 1 30
+    }
+}
+
+vertex_program LightingWithShadowMapVP cg
+{
+    source v-lighting.cg
+    entry_point main
+    profiles arbvp1
+    // Similar to standard lighting but using the shadow map in addition
+    compile_arguments -DSHADOW_MAP
+    
+    default_params
+    {
+        param_named_auto p_ModelView worldview_matrix
+        param_named_auto p_InverseModelView inverse_worldview_matrix
+        param_named_auto p_ModelViewProjection worldviewproj_matrix
+        param_named_auto p_LightPosition light_position_object_space
+        // Required to express fragment's position in light space
+        param_named_auto p_Model world_matrix
+        param_named_auto p_TextureViewProjection texture_viewproj_matrix
+    }
+}
+
+fragment_program LightingWithShadowMapFP cg
+{
+    source f-lighting.cg
+    entry_point main
+    profiles arbfp1
+    // Similar to standard lighting but using the shadow map in addition
+    compile_arguments -DSHADOW_MAP
+    
+    default_params
+    {
+        param_named_auto p_LightDiffuse light_diffuse_colour 0
+        param_named_auto p_LightSpecular light_specular_colour 0
+        param_named_auto p_LightPower light_power 0
+        param_named p_Diffuse float4 0.5 0 0 1 
+        param_named p_Specular float 1 1 1 30
+    }
+}

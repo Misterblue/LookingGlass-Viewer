@@ -1,0 +1,103 @@
+// Shadow map always comes in texture unit 0,
+// so we have to decal all other textures if any...
+#ifdef SHADOW_MAP
+  sampler2D p_ShadowMap : TEXUNIT0;
+  //sampler2D p_DiffuseMap : TEXUNIT1;
+#else
+  //sampler2D p_DiffuseMap : TEXUNIT0;
+#endif
+
+struct Vertex
+{
+  float4 position       : POSITION;     // Fragment's position in screen-space
+  float2 texCoords      : TEXCOORD0;    // Fragment's texture coordinates
+  float3 normal         : TEXCOORD1;    // Fragment's normal in eye-space
+  float3 halfVector     : TEXCOORD2;    // Fragment's half angle vector in eye-space
+  float3 lightVector    : TEXCOORD3;    // Fragment's light vector in eye-space
+
+#ifdef SHADOW_MAP
+  float4 lightPosition  : TEXCOORD4;    // Fragment's position in light space
+#endif
+};
+
+struct Fragment
+{
+    float4 color  : COLOR0;
+};
+
+Fragment main(Vertex p_In,
+              uniform float4 p_LightDiffuse,        // Light diffuse component
+              uniform float  p_LightPower,          // Light power
+              uniform float4 p_Diffuse,             // Material diffuse component
+              uniform float4 p_LightSpecular,       // Light specular component
+              uniform float4 p_Specular,            // Material specular component + specular exponent
+              )
+{
+    Fragment l_Out;
+
+    // Normalized normal.
+    float3 l_Normal = normalize(p_In.normal);
+
+    // Normalized light vector.
+    float3 l_LightVector = normalize(p_In.lightVector);
+    
+    // Normalized half angle vector.
+    float3 l_HalfVector = normalize(p_In.halfVector);
+    
+    // Diffuse component
+    // -----------------
+
+    // Angle between normal and light vector
+    float l_CosNL = saturate(dot(l_Normal, l_LightVector));
+
+    // No light can reach back surfaces...
+    if (l_CosNL == 0)
+        discard;
+    
+    l_Out.color.rgb = p_Diffuse.rgb * p_LightDiffuse.rgb * l_CosNL;
+    
+    // Specular component
+    // ------------------
+
+    // Apply cosine power distribution around mirror direction
+    float l_CosNH = saturate(dot(l_Normal, l_HalfVector));
+        
+    float l_SpecularPower = pow(l_CosNH, p_Specular.a);
+    
+    float3 l_Specular = p_Specular.rgb * p_LightSpecular.rgb * l_SpecularPower;
+
+    // Add specular component
+    l_Out.color.rgb += l_Specular.rgb;
+
+    // Modulate by light incoming power
+    l_Out.color.rgb *= p_LightPower;
+    
+#ifdef SHADOW_MAP
+
+    // Test if fragment is in shadow
+    // -----------------------------
+    
+    // Compute the distance from light of the rasterized fragment (normalized in [0,1] or not)
+    #ifdef STORE_NORMALIZED_DEPTH
+        float l_LightDistance = p_In.lightPosition.z / p_In.lightPosition.w;
+    #else
+        float l_LightDistance = p_In.lightPosition.z;
+    #endif
+
+    // Compute fragment position in shadow map (texture) space
+    float2 l_ShadowMapTexCoords = float2(p_In.lightPosition.x / p_In.lightPosition.w,
+                                         p_In.lightPosition.y / p_In.lightPosition.w);
+    
+    // Get the stored nearest fragment distance from light in the shadow map (normalized in [0,1] or not)
+    float3 l_ShadowDistance = tex2D(p_ShadowMap, l_ShadowMapTexCoords).rgb;
+
+    // Perform standard shadow map comparison
+    float l_Lit = (l_LightDistance <= l_ShadowDistance.r ? 1 : 0);
+
+    // Attenuate the light contribution as necessary to compute the final color
+    l_Out.color.rgb *= l_Lit;
+
+#endif
+
+    return l_Out;
+}
