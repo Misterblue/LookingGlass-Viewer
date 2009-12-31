@@ -656,7 +656,6 @@ public class RendererOgreLL : IWorldRenderConv {
         ulong hash = (ulong)prim.GetHashCode();
         // ulong hash = 5381;
 
-
         hash = djb2(hash, (byte)prim.PrimData.PathCurve);
         hash = djb2(hash, prim.PrimData.ProfileHollow);
         hash = djb2(hash, (byte)prim.PrimData.ProfileHole);

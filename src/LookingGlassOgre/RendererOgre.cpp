@@ -124,10 +124,20 @@ namespace LG {
 		unsigned long timeStartedLastFrame = rendererTimeKeeper->getMilliseconds();
 		if (m_root != NULL) {
 			// LGLOCK_LOCK(m_sceneGraphLock);
-			ret = m_root->renderOneFrame();
+			try {
+				ret = m_root->renderOneFrame();
+			}
+			catch (...) {
+				LG::Log("RendererOgre::renderOneFrame: m_root->renderOneFrame() threw");
+			}
 			// LGLOCK_UNLOCK(m_sceneGraphLock);
 			// LGLOCK_NOTIFY_ALL(m_sceneGraphLock);
-			if (pump) Ogre::WindowEventUtilities::messagePump();
+			try {
+				if (pump) Ogre::WindowEventUtilities::messagePump();
+			}
+			catch (...) {
+				LG::Log("RendererOgre::renderOneFrame: messagePump threw");
+			}
 		}
 
 		/*
@@ -147,14 +157,19 @@ namespace LG {
 			remaining = len - ((int)(now - timeStartedLastFrame));
 		}
 		*/
-		int totalMSForLastFrame = (int)(rendererTimeKeeper->getMilliseconds() - m_lastFrameTime);
-		if (totalMSForLastFrame <= 0) totalMSForLastFrame = 1;
-		LG::SetStat(LG::StatLastFrameMs, totalMSForLastFrame);
-		LG::SetStat(LG::StatFramesPerSecond, 1000000/totalMSForLastFrame);
-		m_lastFrameTime = rendererTimeKeeper->getMilliseconds();
+		try {
+			int totalMSForLastFrame = (int)(rendererTimeKeeper->getMilliseconds() - m_lastFrameTime);
+			if (totalMSForLastFrame <= 0) totalMSForLastFrame = 1;
+			LG::SetStat(LG::StatLastFrameMs, totalMSForLastFrame);
+			LG::SetStat(LG::StatFramesPerSecond, 1000000/totalMSForLastFrame);
+			m_lastFrameTime = rendererTimeKeeper->getMilliseconds();
 
-		if (!ret) {
-			// if renderOneFrame returns false, it means we're going down
+			if (!ret) {
+				// if renderOneFrame returns false, it means we're going down
+			}
+		}
+		catch (...) {
+			LG::Log("RendererOgre::renderOneFrame: calculating frame interval threw");
 		}
 
 		return ret;
@@ -671,7 +686,7 @@ namespace LG {
 			m_lodDistances[1] = 200;
 			m_lodDistances[2] = 400;
 			// DEBUG NOTE: uncommenting this causes a crash. Why?
-			// mesh->generateLodLevels(m_lodDistances, Ogre::ProgressiveMesh::VRQ_PROPORTIONAL, 0.3f);
+			// mesh->generateLodLevels(m_lodDistances, Ogre::ProgressiveMesh::VRQ_PROPORTIONAL, 0.5f);
 
 			if (m_serializeMeshes) {
 				// serialize the mesh to the filesystem
