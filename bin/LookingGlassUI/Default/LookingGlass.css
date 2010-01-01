@@ -142,3 +142,14 @@ table.LGDefaultParametersTable td {
 #LGChatInput {
     background: #668396;
 }
+/* Avatars ======================================= */
+#LGAvatars-table td {
+    padding: 1px 0px 0px 5px;
+    margin: 0px 0px 0px 0px;
+}
+.LGAvatars-Name-class {
+    color: #f09090;
+}
+.LGAvatars-Region-class {
+    color: #c0c0c0
+}
