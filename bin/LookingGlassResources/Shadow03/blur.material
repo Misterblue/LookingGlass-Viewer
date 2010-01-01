@@ -1,0 +1,61 @@
+//fragment_program blur_x_ps cg
+//{
+//    source blur.cg
+//    profiles ps_2_0 arbfp1
+//    entry_point blur_x_ps
+//    default_params
+//    {
+//        param_named_auto invSMSize inverse_texture_size 0
+//    }
+//}
+//
+//fragment_program blur_y_ps cg
+//{
+//    source blur.cg
+//    profiles ps_2_0 arbfp1
+//    entry_point blur_y_ps
+//    default_params
+//    {
+//        param_named_auto invSMSize inverse_texture_size 0
+//    }
+//}
+fragment_program blur_ps cg
+{
+    source blur.cg
+    profiles ps_2_0 arbfp1
+    entry_point blur_ps
+    default_params
+    {
+        param_named_auto invSMSize inverse_texture_size 0
+    }
+}
+
+material blur
+{
+    technique
+    {
+        pass
+        {
+            fragment_program_ref blur_ps
+            {
+            }
+
+            texture_unit
+            {
+                filtering none
+            }
+        }
+
+//        pass
+//        {
+//            fragment_program_ref blur_y_ps
+//            {
+//            }
+//
+//            texture_unit
+//            {
+//                //filtering bilinear
+//            }
+//        }
+    }
+}

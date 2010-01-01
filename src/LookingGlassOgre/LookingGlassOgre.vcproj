@@ -276,6 +276,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Shadow03.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ShadowSimple.cpp"
 				>
 			</File>
@@ -403,6 +407,10 @@
 			</File>
 			<File
 				RelativePath=".\Shadow02.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Shadow03.h"
 				>
 			</File>
 			<File

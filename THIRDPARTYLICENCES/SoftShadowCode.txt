@@ -1,0 +1,9 @@
+=========  OGRE SOFT SHADOWING AND NON EXAMPLE APPLICATION FRAMEWORK DEMO ===========
+
+LICENSE: All of the code, shaders, materials, and media is licensed as are the rest
+of the Ogre demos.  The custom "level.mesh" is included (it used to be the Disorder
+Engine test level for Portalized) - use as you wish, for anything you wish, commercial
+or non-commercial, does not matter.  Have fun!  (all source is main.cpp and the shaders
+and materials found in /data/)
+
+=====================================================================================

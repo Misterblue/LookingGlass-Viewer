@@ -1,0 +1,13 @@
+Based on
+http://www.ogre3d.org/forums/viewtopic.php?t=39809
+https://www.ogre3d.org/forums/viewtopic.php?f=1&t=39557
+
+Modified based on directional light mods discussed in:
+(about half way down page 6)
+https://www.ogre3d.org/forums/viewtopic.php?f=1&t=39557&start=125
+
+SSAO Compositor
+https://www.ogre3d.org/forums/viewtopic.php?f=11&t=47927
+
+
+

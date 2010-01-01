@@ -28,15 +28,21 @@
 namespace LG {
 
 // Simple shadow  that usees Ogre's built in shadow implementation
-class Shadow02 : public ShadowBase {
+	class Shadow03 : public ShadowBase/*, public Ogre::ShadowListener*/ {
 public:
-	Shadow02(const char* shadowType);
-	~Shadow02();
+	Shadow03(const char* shadowType);
+	~Shadow03();
 
 	void AddTerrainShadow(Ogre::Material* mat);
 	void AddLightShadow(Ogre::Light* lit);
 	void AddReceiverShadow(Ogre::Material* mat);
 	void AddCasterShadow(Ogre::MovableObject* mat);
+
+	// Ogre::ShadowListener
+    void shadowTextureCasterPreViewProj(Ogre::Light *light, Ogre::Camera *cam);
+    void shadowTexturesUpdated(size_t) {}
+    void shadowTextureReceiverPreViewProj(Ogre::Light*, Ogre::Frustum*) {}
+
 
 private:
 };

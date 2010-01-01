@@ -1,4 +1,4 @@
-material shadowCaster
+material shadow01/shadowCaster
 {   
    technique
    {

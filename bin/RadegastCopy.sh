@@ -29,6 +29,7 @@ if [[ "$copyLookingGlassBin" == "yes" ]] ; then
     cp "$SRCDIR/LookingGlass.View.dll"        "$DSTDIR"
     cp "$SRCDIR/LookingGlass.World.OS.dll"    "$DSTDIR"
     cp "$SRCDIR/LookingGlass.World.LL.dll"    "$DSTDIR"
+    cp "$SRCDIR/LookingGlass.World.Services.dll" "$DSTDIR"
     cp "$SRCDIR/LookingGlass.World.dll"       "$DSTDIR"
     cp "$SRCDIR/LookingGlassOgre.dll"         "$DSTDIR"
     cp "$SRCDIR/PrimMesher.dll"               "$DSTDIR"
