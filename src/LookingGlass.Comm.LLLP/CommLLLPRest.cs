@@ -48,7 +48,7 @@ namespace LookingGlass.Comm.LLLP {
 public class CommLLLPRest : ModuleBase, IRestUser {
     private ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
 
-    ICommProvider m_comm = null;
+    CommLLLP m_comm = null;
     string m_apiName;
     RestHandler m_paramGetHandler = null;
     RestHandler m_actionHandler = null;
@@ -66,7 +66,7 @@ public class CommLLLPRest : ModuleBase, IRestUser {
     public override void Start() {
         string commName = ModuleParams.ParamString(ModuleName + ".Comm.Name");
         try {
-            m_comm = (ICommProvider)LGB.ModManager.Module(commName);
+            m_comm = (CommLLLP)LGB.ModManager.Module(commName);
         }
         catch (Exception e) {
             m_log.Log(LogLevel.DBADERROR, "CommLLLPRest COULD NOT CONNECT TO COMM MODULE NAMED " + commName);
@@ -125,6 +125,9 @@ public class CommLLLPRest : ModuleBase, IRestUser {
             case "login":
                 ret = PostActionLogin(body);
                 break;
+            case "teleport":
+                ret = PostActionTeleport(body);
+                break;
             case "logout":
                 ret = PostActionLogout(body);
                 break;
@@ -172,6 +175,25 @@ public class CommLLLPRest : ModuleBase, IRestUser {
 
         return ret;
     }
+
+    private OMVSD.OSDMap PostActionTeleport(OMVSD.OSD body) {
+        OMVSD.OSDMap ret = new OMVSD.OSDMap();
+        ParameterSet loginParams = new ParameterSet();
+        try {
+            OMVSD.OSDMap paramMap = (OMVSD.OSDMap)body;
+            string dest = paramMap["DESTINATION"].AsString();
+            m_log.Log(LogLevel.DCOMMDETAIL, "Request to teleport to {0}", dest);
+            m_comm.DoTeleport(dest);
+        }
+        catch (Exception e) {
+            m_log.Log(LogLevel.DBADERROR, "CONNECT EXCEPTION: " + e.ToString());
+            ret.Add(RestHandler.RESTREQUESTERRORCODE, new OMVSD.OSDInteger(1));
+            ret.Add(RestHandler.RESTREQUESTERRORMSG, new OMVSD.OSDString("Connection threw exception: " + e.ToString()));
+            return ret;
+        }
+        return ret;
+    }
+
 
     private OMVSD.OSDMap PostActionLogout(OMVSD.OSD body) {
         OMVSD.OSDMap ret = new OMVSD.OSDMap();

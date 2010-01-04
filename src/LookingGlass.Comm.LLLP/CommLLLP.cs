@@ -408,6 +408,46 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         return true;
     }
 
+    public virtual bool DoTeleport(string dest) {
+        bool ret = true;
+        string sim = "";
+        float x = 128;
+        float y = 128;
+        float z = 40;
+        dest = dest.Trim();
+        string[] tokens = dest.Split(new char[] { '/' });
+        if (tokens.Length == 4) {
+            sim = tokens[0];
+            if (!float.TryParse(tokens[1], out x) ||
+                            !float.TryParse(tokens[2], out y) ||
+                            !float.TryParse(tokens[3], out z)) {
+                m_log.Log(LogLevel.DBADERROR, "Could not parse teleport destination '{0}'", dest);
+                ret = false;
+            }
+        }
+        else if (tokens.Length == 1) {
+            sim = tokens[0];
+            x = 128;
+            y = 128;
+            z = 40;
+        }
+        else {
+            m_log.Log(LogLevel.DBADERROR, "Did not recognize format of teleport destination: '{0}'", dest);
+            ret = false;
+        }
+        if (ret) {
+            if (m_client.Self.Teleport(sim, new OMV.Vector3(x, y, z))) {
+                m_log.Log(LogLevel.DBADERROR, "Teleport successful to '{0}'", dest);
+                ret = true;
+            }
+            else {
+                m_log.Log(LogLevel.DBADERROR, "Teleport to '{0}' failed", dest);
+                ret = false;
+            }
+        }
+        return ret;
+    }
+
     /// <summary>
     /// Using its own thread, this sits around checking to see if we're logged in
     /// and, if not, starting the login dialog so we can get logged in.

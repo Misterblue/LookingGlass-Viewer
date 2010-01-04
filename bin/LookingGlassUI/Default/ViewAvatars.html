@@ -15,6 +15,9 @@ Your browser does not support Javascript. This won't work for you.
 $(document).ready(function() {
     // setup form to post info when 'Login' is pressed
     $("#LGLoginForm").submit(SendLoginRequest);
+    // other buttons cause their actions
+    $("#LGNavTeleportButton").click(DoTeleport);
+    $("#LGNavLogoutButton").click(DoLogout);
 
     // Major divisions in the content accordioning
     $('.LGSectionContent').hide('slow');
@@ -114,6 +117,18 @@ function TimerAvatarStuff() {
     avatarTimerProcessing = false;
 }
 
+function DoTeleport() {
+    var teleParms = {};
+    teleParms['DESTINATION'] = $('#LGNavDestinationText').text;
+    $.post(BASEURL + "/api/LLLP/connect/teleport", teleParms);
+    return false;
+}
+
+function DoLogout() {
+    $.post(BASEURL + "/api/LLLP/connect/logout", {});
+    return false;
+}
+
 </script>
 </head>
 <body id="LGBody">
@@ -166,6 +181,21 @@ function TimerAvatarStuff() {
     </span>
 </form>
 </div>  <!-- LGLogin -->
+</div>  <!-- LGSectionContainer -->
+<!-- ============================================== -->
+<div class="LGSectionContainer">
+<a class="LGSectionHeader" href="#">Navigation</a>
+<div id="LGNavgationView" class="LGSectionContent">
+
+<div id="LGNavigation">
+<form id="LGNavigationForm">
+<div id="LGNavigationInputArea">
+    <input id="LGNavDestinationText" type="text" name="DESTINATION" size="20"/>
+    <input id="LGNavTeleportButton" type="button" value="Teleport"/>
+    <input id="LGNavLogoutButton" type="button" value="Logout"/>
+</div>
+</form>
+</div>  <!-- LGNavigation -->
 </div>  <!-- LGSectionContainer -->
 <!-- ============================================== -->
 <div class="LGSectionContainer">

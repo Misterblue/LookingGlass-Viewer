@@ -106,12 +106,30 @@ function SendChatShout() {
 
 function SendChat(expression) {
     var chatt = {};
-    chatt['Message'] = $('#LGChatInput').text();
+    var msg = $('#LGChatInput').text();
     $('#LGChatInput').empty();
+    var chan = '0';
+    var chanPattern = /^\/(\d+) (.*)$/;
+    var checkChan = chanPattern.exec(msg);
+    if (checkChan && (undefined != checkChan.length) && (checkChan.length > 1)) {
+        chan = checkChan[1];
+        msg = checkChan[2];
+    }
+    chatt['Message'] = msg;
     chatt['Type'] = expression;
-    chatt['Channel'] = '0';
+    chatt['Channel'] = chan;
+    DebugLog(expression + " " + chan + " '" + msg + "'");
     $.post(BASEURL + "/api/chat", chatt);
     return false;
+}
+
+// used in the chat input field to make ENTER submit a 'Say'
+function checkEnter(e) {
+    if (e.keyCode == 13) {
+        // the user typed an Enter in the text field
+        return SendChatSay();
+    }
+    return true;
 }
 
 function DebugLog(msg) {
@@ -130,8 +148,9 @@ function DebugLog(msg) {
 <form id="LGChatForm">
     <div id="LGChatText"></div>
     <div id="LGChatInputArea">
-    <textarea id="LGChatInput" name="chatinput" rows="1" cols="40"></textarea>
-    <input id="LGSayButton" type="submit" type="button" value="Say"/>
+    <textarea id="LGChatInput" onKeyPress="checkEnter(event)"
+            name="chatinput" rows="1" cols="40"></textarea>
+    <input id="LGSayButton" type="button" type="button" value="Say"/>
     <input id="LGWhisperButton" type="button" type="button" value="Whisper"/>
     <input id="LGShoutButton" type="button" type="button" value="Shout"/>
     </div> <!-- LGChatInputArea -->
