@@ -186,7 +186,7 @@ namespace LG {
 			m_desiredCameraOrientation = Ogre::Quaternion(dw, dx, dy, dz);
 			m_desiredCameraOrientationProgress = 0.0;
 			// to do slerped movement, comment the next line and uncomment "XXXX" below
-			// m_camera->setOrientation(Ogre::Quaternion(dw, dx, dy, dz));
+			m_camera->setOrientation(Ogre::Quaternion(dw, dx, dy, dz));
 			if (nearClip != m_camera->getNearClipDistance()) {
 				m_camera->setNearClipDistance(nearClip);
 			}
@@ -214,8 +214,8 @@ namespace LG {
 				// Ogre::Quaternion newOrientation = Ogre::Quaternion::Slerp(m_desiredCameraOrientationProgress, 
 				Ogre::Quaternion newOrientation = Ogre::Quaternion::nlerp(m_desiredCameraOrientationProgress, 
 					m_camera->getOrientation(), m_desiredCameraOrientation, true);
-				m_camera->setOrientation(newOrientation); // XXXX
-				m_visCalc->RecalculateVisibility(); // XXXX
+				// m_camera->setOrientation(newOrientation); // XXXX
+				// m_visCalc->RecalculateVisibility(); // XXXX
 			}
 			else {
 				// we've advanced to progress. Make sure we get the last event in

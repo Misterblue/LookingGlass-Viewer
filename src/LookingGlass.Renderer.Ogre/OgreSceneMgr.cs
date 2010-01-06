@@ -45,41 +45,6 @@ namespace LookingGlass.Renderer.Ogr {
             m_sceneMgr = sceneMgr;
         }
 
-        /// <summary>
-        /// Create a scene node. If the parentNode is zero, make this a child of
-        /// the root node.  Add the specified
-        /// position, scale and rotation, set the InheritScale and InheritOrientation
-        /// and do the SetInitialState and return the opaque pointer to the node.
-        /// </summary>
-        /// <param name="nodeName"></param>
-        /// <param name="parentNode">Opaque pointer to a parent node. Create the child
-        /// off the root node for this scene.</param>
-        /// <param name="scale">true/false to SetInheritScale()</param>
-        /// <param name="orientation">true/false to SetInheritOrientation()</param>
-        /// <param name="px">Position</param>
-        /// <param name="py"></param>
-        /// <param name="pz"></param>
-        /// <param name="sx">Scale</param>
-        /// <param name="sy"></param>
-        /// <param name="sz"></param>
-        /// <param name="rw">Rotation</param>
-        /// <param name="rx"></param>
-        /// <param name="ry"></param>
-        /// <param name="rz"></param>
-        /// <returns></returns>
-        public OgreSceneNode CreateSceneNode(
-                string nodeName,
-                OgreSceneNode parentNode,
-                bool scale, bool orientation,
-                float px, float py, float pz, float sx, float sy, float sz,
-                float rw, float rx, float ry, float rz) {
-            System.IntPtr parentReal = (parentNode == null) ? System.IntPtr.Zero : parentNode.BasePtr;
-            System.IntPtr newNode = Ogr.CreateSceneNode(m_sceneMgr, nodeName, 
-                            parentReal, scale, orientation,
-                            px, py, pz, sx, sy, sz, rw, rx, ry, rz);
-            return new OgreSceneNode(newNode, nodeName);
-        }
-
         // Create the scene node between frames.
         // This queues the operation to do later when the processing is between frames
         // Returns true if queued or false if we couldn't resolve the parentNodeName to

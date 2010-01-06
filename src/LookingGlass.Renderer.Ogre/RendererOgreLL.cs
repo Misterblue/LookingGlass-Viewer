@@ -243,7 +243,7 @@ public class RendererOgreLL : IWorldRenderConv {
                     if (prim.Sculpt != null) {
                         // looks like it's a sculpty. Do it that way
                         EntityNameLL textureEnt = EntityNameLL.ConvertTextureWorldIDToEntityName(ent.AssetContext, prim.Sculpt.SculptTexture);
-                        System.Drawing.Bitmap textureBitmap = ent.AssetContext.GetTexture(textureEnt);
+                        System.Drawing.Bitmap textureBitmap =ent.AssetContext.GetTexture(textureEnt);
                         if (textureBitmap == null) {
                             m_log.Log(LogLevel.DRENDERDETAIL, "CreateMeshResource: waiting for texture for sculpty {0}", ent.Name.Name);
                             // Don't have the texture now so ask for the texture to be loaded.

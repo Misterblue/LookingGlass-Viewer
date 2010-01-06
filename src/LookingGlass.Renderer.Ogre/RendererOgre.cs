@@ -1066,7 +1066,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                 else {
                     // Create the material resource and then make the rendering redisplay
                     conver.CreateMaterialResource(qInstance.priority, ent, m_matName);
-                    Ogr.RefreshResourceBF(this.CalculateInterestOrder(ent), Ogr.ResourceTypeMaterial, m_matName);
+                    Ogr.RefreshResourceBF(qInstance.priority, Ogr.ResourceTypeMaterial, m_matName);
                 }
             }
             else {
