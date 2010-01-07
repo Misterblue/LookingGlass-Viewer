@@ -94,6 +94,9 @@ public:
 					bool setPosition, float px, float py, float pz,
 					bool setScale, float sx, float sy, float sz,
 					bool setRotation, float ow, float ox, float oy, float oz);
+	void UpdateCamera(double px, double py, double pz,
+					float ow, float ox, float oy, float oz,
+					float farClipP, float nearClipP, float aspectP);
 	void AddRegion(float, const char*, const double, const double, const double, 
 					const float, const float, const float);
 	void UpdateTerrain(float, const char*, const int, const int, const float*);

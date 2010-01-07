@@ -376,7 +376,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         }
 
         // if we are doing detail logging, enable logging by  the LookingGlassOgre code
-        if (m_log.WouldLog(LogLevel.DRENDERDETAIL)) {
+        if (m_log.WouldLog(LogLevel.DOGREDETAIL)) {
             m_log.Log(LogLevel.DRENDER, "Logging detail high enough to enable unmanaged code log messages");
             debugLogCallbackHandle = new Ogr.DebugLogCallback(OgrLogger);
             Ogr.SetDebugLogCallback(debugLogCallbackHandle);
@@ -429,7 +429,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
 
     // routine called from unmanaged code to log a message
     private void OgrLogger(string msg) {
-        m_logOgre.Log(LogLevel.DRENDERDETAIL, msg);
+        m_logOgre.Log(LogLevel.DOGREDETAIL, msg);
     }
     
     // Called from unmanaged code to get the state of the KeepRunning flag
@@ -840,7 +840,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         m_lastCameraOrientation = orient;
         // note the conversion from LL coordinates (Z up) to Ogre coordinates (Y up)
         OMV.Vector3d pos = cam.GlobalPosition * m_sceneMagnification;
-        Ogr.UpdateCamera(pos.X, pos.Z, -pos.Y, 
+        Ogr.UpdateCameraBF(pos.X, pos.Z, -pos.Y, 
             orient.W, orient.X, orient.Z, -orient.Y,
             1.0f, (float)cam.Far*m_sceneMagnification, 1.0f);
 

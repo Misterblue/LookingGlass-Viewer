@@ -150,6 +150,11 @@ static class Ogr {
         float dw, float dx, float dy, float dz,
         float nearClip, float farClip, float aspect);
     [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
+    public static extern void UpdateCameraBF(
+        double px, double py, double pz, 
+        float dw, float dx, float dy, float dz,
+        float nearClip, float farClip, float aspect);
+    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
     public static extern bool AttachCamera([MarshalAs(UnmanagedType.LPStr)]string parentNodeName,
        float offsetX, float offsetY, float offsetZ, float ow, float ox, float oy, float oz);
 

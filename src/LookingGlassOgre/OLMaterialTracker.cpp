@@ -22,6 +22,7 @@
  */
 #include "StdAfx.h"
 #include "OLMaterialTracker.h"
+#include "OLMeshTracker.h"
 #include "LookingGlassOgre.h"
 #include "RendererOgre.h"
 #include "BadImageCodec.h"
@@ -180,7 +181,9 @@ void OLMaterialTracker::RefreshResource(const Ogre::String& resName, const int r
 		Ogre::MeshPtr theMesh = (Ogre::MeshPtr)Ogre::MeshManager::getSingleton().getByName(resName);
 		// unload it and let the renderer decide if it needs to be loaded again
 		// NOTE: unload doesn't work here. We get exceptions if we unload while reload doesn't fail
-		if (!theMesh.isNull()) theMesh->reload();
+		if (!theMesh.isNull()) {
+			LG::OLMeshTracker::Instance()->DoReload(theMesh);
+		}
 	}
 	if (rType == LG::ResourceTypeMaterial) {
 		// mark it so the work happens later between frames (more queues to manage correctly someday)
@@ -244,30 +247,35 @@ void OLMaterialTracker::MarkTextureModified(const Ogre::String materialName, boo
 // between frames, if there were material modified, refresh their containing entities
 bool OLMaterialTracker::frameEnded(const Ogre::FrameEvent&) {
 	if (this->m_slowCount-- < 0) {
-		this->m_slowCount = 10;
-		Ogre::String matName;
-		LGLOCK_LOCK(this->m_modifiedMutex);
-		MeshPtrHashMap m_meshesToChange;
-		int cnt = 10;
-		while ((m_materialsModified.size() > 0) && (--cnt > 0)) {
-			matName = m_materialsModified.front();
-			m_materialsModified.pop_front();
-			GetMeshesToRefreshForMaterials(&m_meshesToChange, matName);
+		try {
+			this->m_slowCount = 10;
+			Ogre::String matName;
+			LGLOCK_LOCK(this->m_modifiedMutex);
+			MeshPtrHashMap m_meshesToChange;
+			int cnt = 10;
+			while ((m_materialsModified.size() > 0) && (--cnt > 0)) {
+				matName = m_materialsModified.front();
+				m_materialsModified.pop_front();
+				GetMeshesToRefreshForMaterials(&m_meshesToChange, matName);
+			}
+			cnt = 10;
+			Ogre::String texName;
+			while ((m_texturesModified.size() > 0) && (--cnt > 0)) {
+				texName = m_texturesModified.front();
+				m_texturesModified.pop_front();
+				char transparancyFlag = texName[0];
+				GetMeshesToRefreshForTexture(&m_meshesToChange, texName.substr(1, texName.length()-1),
+						(transparancyFlag == 'T' ? true : false));
+			}
+			LGLOCK_UNLOCK(this->m_modifiedMutex);
+			if (m_meshesToChange.size() > 0) {
+				ReloadMeshes(&m_meshesToChange);
+			}
+			m_meshesToChange.clear();
 		}
-		cnt = 10;
-		Ogre::String texName;
-		while ((m_texturesModified.size() > 0) && (--cnt > 0)) {
-			texName = m_texturesModified.front();
-			m_texturesModified.pop_front();
-			char transparancyFlag = texName[0];
-			GetMeshesToRefreshForTexture(&m_meshesToChange, texName.substr(1, texName.length()-1),
-					(transparancyFlag == 'T' ? true : false));
+		catch (...) {
+			LG::Log("OLMaterialTracker: EXCEPTION PROCESSING:");
 		}
-		LGLOCK_UNLOCK(this->m_modifiedMutex);
-		if (m_meshesToChange.size() > 0) {
-			ReloadMeshes(&m_meshesToChange);
-		}
-		m_meshesToChange.clear();
 	}
 	return true;
 }
@@ -354,7 +362,7 @@ void OLMaterialTracker::GetMeshesToRefreshForTexture(MeshPtrHashMap* meshes, con
 void OLMaterialTracker::ReloadMeshes(MeshPtrHashMap* meshes) {
 	if (!meshes->empty()) {
 		for (MeshPtrHashMap::const_iterator ii = meshes->begin(); ii != meshes->end(); ii++) {
-			ii->second->reload();
+			LG::OLMeshTracker::Instance()->DoReload(ii->second);
 		}
 	}
 }

@@ -93,6 +93,11 @@ extern "C" DLLExport void UpdateCamera(double px, double py, double pz,
 									   float nearClip, float farClip, float aspect) {
 	LG::RendererOgre::Instance()->updateCamera(px, py, pz, dw, dx, dy, dz, nearClip, farClip, aspect);
 }
+extern "C" DLLExport void UpdateCameraBF(double px, double py, double pz, 
+									   float dw, float dx, float dy, float dz,
+									   float nearClip, float farClip, float aspect) {
+	LG::ProcessBetweenFrame::Instance()->UpdateCamera(px, py, pz, dw, dx, dy, dz, nearClip, farClip, aspect);
+}
 extern "C" DLLExport bool AttachCamera(const char* parentNode, float offsetX, float offsetY, float offsetZ,
 									   float ow, float ox, float oy, float oz) {
    return LG::RendererOgre::Instance()->m_camera->AttachCamera(parentNode, offsetX, offsetY, offsetZ, ow, ox, oy, oz);

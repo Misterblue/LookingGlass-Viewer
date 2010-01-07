@@ -273,7 +273,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
                     "true",
                     "Whether to move avatar when user types (otherwise wait for server round trip)");
         ModuleParams.AddDefaultParameter("World.LL.Agent.PreMove.RotFudge", 
-                    "5.0",
+                    "3.0",
                     "Degrees to rotate avatar when user turns (float)");
         ModuleParams.AddDefaultParameter("World.LL.Agent.PreMove.FlyFudge", 
                     "2.5",

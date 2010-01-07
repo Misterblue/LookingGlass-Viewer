@@ -407,6 +407,39 @@ public:
 };
 
 // ====================================================================
+class UpdateCameraQc : public GenericQc {
+public:
+	double px; double py; double pz;
+	float ow; float ox; float oy; float oz;
+	float nearClip;
+	float farClip;
+	float aspect;
+	UpdateCameraQc(float prio, Ogre::String uni,
+					double px, double py, double pz,
+					float ow, float ox, float oy, float oz,
+					float farClipP, float nearClipP, float aspectP) {
+		this->priority = prio;
+		this->cost = 0;
+		this->type = "UpdateCamera";
+		this->uniq = uni + "/UpdateCamera";
+		this->px = px; this->py = py; this->pz = pz;
+		this->ow = ow; this->ox = ox; this->oy = oy; this->oz = oz;
+		this->nearClip = nearClipP;
+		this->farClip = farClipP;
+		this->aspect = aspectP;
+	}
+	~UpdateCameraQc(void) {
+		this->uniq.clear();
+	}
+	void Process() {
+		LG::RendererOgre::Instance()->updateCamera(
+					this->px, this->py, this->pz,
+					this->ow, this->ox, this->oy, this->oz,
+					this->farClip, this->nearClip, this->aspect);
+	}
+};
+
+// ====================================================================
 class AddRegionQc : public GenericQc {
 public:
 	Ogre::String regionName;
@@ -602,6 +635,16 @@ void ProcessBetweenFrame::UpdateSceneNode(float priority, char* entName,
 	LG::IncStat(LG::StatBetweenFrameUpdateSceneNode);
 }
 
+void ProcessBetweenFrame::UpdateCamera(double px, double py, double pz,
+					float ow, float ox, float oy, float oz,
+					float farClipP, float nearClipP, float aspectP) {
+	LGLOCK_LOCK(m_workItemMutex);
+	UpdateCameraQc* ucq = new UpdateCameraQc(0.0, Ogre::String(""), px, py, pz, ow, ox, oy, oz, farClipP, nearClipP, aspectP);
+	QueueWork((GenericQc*)ucq);
+	LGLOCK_UNLOCK(m_workItemMutex);
+	LG::IncStat(LG::StatBetweenFrameWorkItems);
+}
+
 void ProcessBetweenFrame::AddRegion(float priority, const char* rn,
 					const double gx, const double gy, const double gz, 
 					const float sx, const float sy, const float wh) {
@@ -723,7 +766,7 @@ void ProcessBetweenFrame::ProcessWorkItems(int millisToProcess) {
 			workGeneric->Process();
 		}
 		catch (...) {
-			LG::Log("ProcessBetweenFrame: EXCEPTION PROCESSING:");
+			LG::Log("ProcessBetweenFrame: EXCEPTION PROCESSING: %s", workGeneric->uniq.c_str());
 		}
 		loopCost -= workGeneric->cost;
 		//1 unsigned long checkTimeEnd = betweenFrameTimeKeeper->getMicroseconds();

@@ -498,8 +498,13 @@ namespace LG {
 		betweenFrameCounter++;
 		if (LG::betweenFramesCallback != NULL) {
 			// the C# code uses this for terrain and regions so don't do it often
-			if ((betweenFrameCounter % 10) == 0) {
-				return (*LG::betweenFramesCallback)();
+			try {
+				if ((betweenFrameCounter % 10) == 0) {
+					return (*LG::betweenFramesCallback)();
+				}
+			}
+			catch (...) {
+				LG::Log("RendererOgre: EXCEPTION FRAMEENDED:");
 			}
 		}
 		return true;

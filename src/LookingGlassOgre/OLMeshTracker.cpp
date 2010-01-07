@@ -129,7 +129,12 @@ void OLMeshTracker::ProcessWorkItems(int totalCost) {
 			}
 		}
 		if (operate != NULL) {
-			operate->Process();
+			try {
+				operate->Process();
+			}
+			catch (...) {
+				LG::Log("ProcessBetweenFrame: EXCEPTION PROCESSING: %s", operate->uniq.c_str());
+			}
 			runningCost -= operate->cost;
 			delete(operate);
 		}
@@ -150,7 +155,7 @@ public:
 					Ogre::String stringParm, Ogre::Entity* entityParm) {
 		this->priority = prio;
 		this->meshName = meshNam;
-		this->uniq = meshNam;
+		this->uniq = meshNam + "/MakeMeshLoaded";
 		this->contextEntity = contextEnt;
 		this->stringParam = stringParm;
 		this->entityParam = entityParm;
@@ -179,7 +184,7 @@ public:
 	MakeMeshLoaded2Qm(float prio, Ogre::String uniq, Ogre::SceneNode* sceneNod,
 							Ogre::String meshNam, Ogre::String entNam) {
 		this->priority = prio;
-		this->uniq = uniq;
+		this->uniq = uniq + "/MakeMeshLoaded2";
 		this->sceneNode = sceneNod;
 		this->meshName = meshNam;
 		this->entityName = entNam;
@@ -212,7 +217,7 @@ public:
 					Ogre::String stringParm, Ogre::Entity* entityParm) {
 		this->priority = prio;
 		this->meshName = meshNam;
-		this->uniq = meshNam;
+		this->uniq = meshNam + "/MakeMeshSerialized";
 		this->contextEntity = contextEnt;
 		this->stringParam = stringParm;
 		this->entityParam = entityParm;
@@ -334,6 +339,26 @@ void OLMeshTracker::MakeUnLoaded(Ogre::String meshName, Ogre::String stringParam
 		Ogre::MeshManager::getSingleton().unload(meshName);
 	}
 	LGLOCK_UNLOCK(MeshTrackerLock);
+	UpdateSceneNodesForMesh(meshName);
+}
+
+// ===============================================================================
+// Reload the mesh if we should
+// This is usually called when a resource needs to be refreshed
+void OLMeshTracker::DoReload(Ogre::String meshName) {
+	Ogre::MeshPtr meshP = (Ogre::MeshPtr)Ogre::MeshManager::getSingleton().getByName(meshName);
+	if (!meshP.isNull()) {
+		DoReload(meshP);
+	}
+}
+
+void OLMeshTracker::DoReload(Ogre::MeshPtr meshP) {
+	// for the moment, don't do anything fancy
+	if (meshP->isLoaded()) {
+		meshP->reload();
+	}
+	UpdateSceneNodesForMesh(meshP);
+	// do we need to call update on all scene nodes that use this mesh?
 }
 
 // ===============================================================================
@@ -361,5 +386,54 @@ void OLMeshTracker::DeleteMesh(Ogre::MeshPtr mesh) {
 	Ogre::MeshManager::getSingleton().remove(mesh->getName());
 }
 
+// ===============================================================================
+// We updated a mesh. Now we have to find all the scene nodes that use this mesh
+// and tell them something changed.
+void OLMeshTracker::UpdateSceneNodesForMesh(Ogre::String meshName) {
+	Ogre::MeshPtr meshP = (Ogre::MeshPtr)Ogre::MeshManager::getSingleton().getByName(meshName);
+	if (!meshP.isNull()) {
+		UpdateSceneNodesForMesh(meshP);
+	}
+}
 
+void OLMeshTracker::UpdateSceneNodesForMesh(Ogre::MeshPtr meshP) {
+	Ogre::SceneNode* nodeRoot = LG::RendererOgre::Instance()->m_sceneMgr->getRootSceneNode();
+	if (nodeRoot == NULL) return;
+	// Hanging off the root node will be a node for each 'region'. A region has
+	// terrain and then content nodes
+	Ogre::SceneNode::ChildNodeIterator rootChildIterator = nodeRoot->getChildIterator();
+	while (rootChildIterator.hasMoreElements()) {
+		Ogre::Node* nodeRegion = rootChildIterator.getNext();
+		// a region node has the nodes of its contents.
+		UpdateSubNodes(nodeRegion, nodeRegion, true, meshP);
+	}
+	return;
+}
+
+void OLMeshTracker::UpdateSubNodes(Ogre::Node* regionNode, Ogre::Node* node, bool recurse, Ogre::MeshPtr meshP) {
+	if (recurse && node->numChildren() > 0) {
+		// if node has more children nodes, visit them recursivily
+		Ogre::SceneNode::ChildNodeIterator nodeChildIterator = node->getChildIterator();
+		while (nodeChildIterator.hasMoreElements()) {
+			Ogre::Node* nodeChild = nodeChildIterator.getNext();
+			// 'false' causes it to not visit sub-children which are included in parent and pos relative to parent
+			UpdateSubNodes(regionNode, nodeChild, true, meshP);
+		}
+	}
+	// children taken care of... check for attached objects to this node
+	Ogre::SceneNode* snode = (Ogre::SceneNode*)node;
+	Ogre::SceneNode::ObjectIterator snodeObjectIterator = snode->getAttachedObjectIterator();
+	while (snodeObjectIterator.hasMoreElements()) {
+		Ogre::MovableObject* snodeObject = snodeObjectIterator.getNext();
+		if (snodeObject->getMovableType() == "Entity") {
+			Ogre::Entity* snodeEntity = (Ogre::Entity*)snodeObject;
+			Ogre::MeshPtr entityMesh = snodeEntity->getMesh();
+			if (entityMesh == meshP) {
+				snode->needUpdate(true);
+				// LG::Log("OLMeshTracker::UpdateSubNodes: setting node update for %s", snode->getName().c_str());
+			}
+		}
+	}
+	return;
+}
 }

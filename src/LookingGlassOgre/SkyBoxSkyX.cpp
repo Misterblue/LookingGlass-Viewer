@@ -115,6 +115,7 @@ void SkyBoxSkyX::AddSkyPass(Ogre::MaterialPtr matP) {
 
 bool SkyBoxSkyX::frameEnded(const Ogre::FrameEvent &e) {
 // bool SkyBoxSkyX::frameRenderingQueued(const Ogre::FrameEvent &e) {
+	try {
 		/* Don't know what this code does
 		// Check camera height
 		Ogre::Camera* cam = LG::RendererOgre::Instance()->m_camera->Cam;
@@ -161,6 +162,10 @@ bool SkyBoxSkyX::frameEnded(const Ogre::FrameEvent &e) {
 				getFragmentProgramParameters()->
 				setNamedConstant("uLightY", -mSkyX->getAtmosphereManager()->getSunDirection().y);
 				*/
+	}
+	catch (...) {
+		LG::Log("SkyBoxSkyX: EXCEPTION FRAMEENDED:");
+	}
 		
         return true;
 

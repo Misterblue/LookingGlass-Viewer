@@ -72,10 +72,15 @@ void VisCalcFrustDist::RecalculateVisibility() {
 
 // we're between frames, on our own thread so we can do the work without locking
 bool VisCalcFrustDist::frameEnded(const Ogre::FrameEvent& evt) {
-	if (m_recalculateVisibility) {
-		calculateEntityVisibility();
+	try {
+		if (m_recalculateVisibility) {
+			calculateEntityVisibility();
+		}
+		processEntityVisibility();
 	}
-	processEntityVisibility();
+	catch (...) {
+		LG::Log("VisCalcFrustDist: EXCEPTION FRAMEENDED:");
+	}
 	return true;
 }
 
@@ -171,7 +176,9 @@ void VisCalcFrustDist::calculateEntityVisibility(Ogre::Node* regionNode, Ogre::N
 								sPos.x, sPos.y, sPos.z, 
 								snodeDistance);
 								*/
-						snodeEntity->setVisible(false);
+						// snodeEntity->setVisible(false);
+						snode->setVisible(false);
+						snode->needUpdate(true);
 						visVisToInvis++;
 						if (!snodeEntity->getMesh().isNull()) {
 							queueMeshUnload(snodeEntity->getMesh());
