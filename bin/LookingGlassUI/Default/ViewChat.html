@@ -87,7 +87,7 @@ function FormatChatLine(chatInfo) {
 
 function PlaceLineInChatDisplay(chatLine) {
     $('#LGChatText').append(chatLine);
-    while ($('#LGChatText').children().size() > 20) {
+    if ($('#LGChatText').children().size() > 20) {
         $('#LGChatText').find('div:first-child').remove();
     }
 }
@@ -118,7 +118,7 @@ function SendChat(expression) {
     chatt['Message'] = msg;
     chatt['Type'] = expression;
     chatt['Channel'] = chan;
-    DebugLog(expression + " " + chan + " '" + msg + "'");
+    // DebugLog(expression + " " + chan + " '" + msg + "'");
     $.post(BASEURL + "/api/chat", chatt);
     return false;
 }

@@ -74,6 +74,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     // If true, requesting a mesh causes the mesh to be rebuilt and written out
     // This makes sure cached copy is the same as server but is also slow
     protected bool m_shouldForceMeshRebuild = false;
+    // True if meshes with the same characteristics should be shared
+    protected bool m_shouldShareMeshes = false;
 
     // this shouldn't be here... this is a feature of the LL renderer
     protected float m_sceneMagnification;
@@ -187,6 +189,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "Write out meshes to files");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.ForceMeshRebuild", "false",
                     "True if to force the generation a mesh when first rendered (don't rely on cache)");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".ShouldShareMeshes", "true",
+                    "True if to share meshes with similar characteristics");
 
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Sky", "Default",
                     "Name of the key system to use");
@@ -403,6 +407,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
 
         m_shouldForceMeshRebuild = ModuleParams.ParamBool(m_moduleName + ".Ogre.ForceMeshRebuild");
         m_shouldRenderOnMainThread = ModuleParams.ParamBool(m_moduleName + ".ShouldRenderOnMainThread");
+        m_shouldShareMeshes = ModuleParams.ParamBool(m_moduleName + ".ShouldShareMeshes");
 
         // pick up a bunch of parameterized values
         m_betweenFrameTotalCost = ModuleParams.ParamInt(m_moduleName + ".Ogre.BetweenFrame.Costs.Total");
@@ -605,7 +610,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
 
                     // Check to see if something of this mesh shape already exists. Use it if so.
                     EntityName entMeshName = (EntityName)m_ri.basicObject;
-                    if (prebuiltMeshes.ContainsKey(m_ri.shapeHash)) {
+                    if (m_shouldShareMeshes && prebuiltMeshes.ContainsKey(m_ri.shapeHash)) {
                         entMeshName = prebuiltMeshes[m_ri.shapeHash];
                         m_log.Log(LogLevel.DRENDERDETAIL, "DorRenderLater: using prebuilt {0}", entMeshName);
                         m_statShareInstances.Event();

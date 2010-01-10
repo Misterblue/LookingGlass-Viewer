@@ -336,7 +336,15 @@ void OLMeshTracker::MakeUnLoaded(Ogre::String meshName, Ogre::String stringParam
 		serialEntry->stringParam = "unload";
 	}
 	else {
-		Ogre::MeshManager::getSingleton().unload(meshName);
+		Ogre::MeshPtr meshP = Ogre::MeshManager::getSingleton().getByName(meshName);
+		if (!meshP.isNull()) {
+			if (meshP.useCount() == 1) {
+				meshP->unload();
+			}
+			else {
+				LG::Log("OLMeshTracker::MakeUnLoaded: Didn't unload mesh because count = %d", meshP.useCount());
+			}
+		}
 	}
 	LGLOCK_UNLOCK(MeshTrackerLock);
 	UpdateSceneNodesForMesh(meshName);
