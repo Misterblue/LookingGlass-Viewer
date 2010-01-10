@@ -1,2 +1,4 @@
+Origional thread: http://www.ogre3d.org/forums/viewtopic.php?f=11&t=52354
+
 Use SHADOW_TEXTURE_ADDITIVE_MODULATIVE
 http://www.ogre3d.org/docs/manual/manual_14.html#SEC23

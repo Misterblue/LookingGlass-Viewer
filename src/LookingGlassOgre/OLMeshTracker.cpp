@@ -167,7 +167,7 @@ public:
 		this->stringParam.clear();
 	}
 	void Process() {
-		LG::Log("OLMeshTracker::MakeLoadedQm: loading: %s", meshName.c_str());
+		// LG::Log("OLMeshTracker::MakeLoadedQm: loading: %s", meshName.c_str());
 		Ogre::MeshManager::getSingleton().load(this->meshName, this->stringParam);
 		if (stringParam == "visible" && this->entityParam != NULL) {
 			this->entityParam->setVisible(true);
@@ -193,7 +193,7 @@ public:
 		this->uniq.clear();
 	}
 	void Process() {
-		LG::Log("OLMeshTracker::MakeLoaded2Qm: loading: %s", meshName.c_str());
+		// LG::Log("OLMeshTracker::MakeLoaded2Qm: loading: %s", meshName.c_str());
 		Ogre::MeshManager::getSingleton().load(this->meshName, OLResourceGroupName);
 		LG::ProcessBetweenFrame::Instance()->AddLoadedMesh(0, Ogre::String(""), entityName, meshName, sceneNode);
 		/*
@@ -283,7 +283,7 @@ void OLMeshTracker::MakeLoaded(Ogre::String meshName, Ogre::String contextEntity
 		LG::Log("OLMeshTracker::MakeLoaded: removing one from unload list: %s", meshName.c_str());
 	}
 	// add this to the loading list
-	LG::Log("OLMeshTracker::MakeLoaded: queuing loading: %s", meshName.c_str());
+	// LG::Log("OLMeshTracker::MakeLoaded: queuing loading: %s", meshName.c_str());
 	GenericQm* loadEntry = m_meshesToLoad->Find(meshName);
 	if (loadEntry == NULL) {
 		MakeMeshLoadedQm* mmlq = new MakeMeshLoadedQm(10, meshName, contextEntity, stringParam, entityParam);
@@ -308,7 +308,7 @@ void OLMeshTracker::MakeLoaded(Ogre::SceneNode* sceneNode, Ogre::String meshName
 		LG::Log("OLMeshTracker::MakeLoaded: removing one from unload list: %s", meshName.c_str());
 	}
 	// add this to the loading list
-	LG::Log("OLMeshTracker::MakeLoaded: queuing loading: %s", meshName.c_str());
+	// LG::Log("OLMeshTracker::MakeLoaded: queuing loading: %s", meshName.c_str());
 	GenericQm* loadEntry = m_meshesToLoad->Find(meshName);
 	if (loadEntry == NULL) {
 		MakeMeshLoaded2Qm* mmlq = new MakeMeshLoaded2Qm(10, meshName, sceneNode, meshName, entityName);

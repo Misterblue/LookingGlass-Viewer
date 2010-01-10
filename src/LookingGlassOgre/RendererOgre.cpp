@@ -128,6 +128,9 @@ namespace LG {
 			try {
 				ret = m_root->renderOneFrame();
 			}
+			catch (Ogre::Exception e) {
+				LG::Log("RendererOgre::renderOneFrame: m_root->renderOneFrame() threw: %s", e.getFullDescription());
+			}
 			catch (...) {
 				LG::Log("RendererOgre::renderOneFrame: m_root->renderOneFrame() threw");
 			}

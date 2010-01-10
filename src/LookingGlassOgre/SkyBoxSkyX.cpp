@@ -113,7 +113,7 @@ void SkyBoxSkyX::AddSkyPass(Ogre::MaterialPtr matP) {
 }
 
 
-bool SkyBoxSkyX::frameEnded(const Ogre::FrameEvent &e) {
+bool SkyBoxSkyX::frameStarted(const Ogre::FrameEvent &e) {
 // bool SkyBoxSkyX::frameRenderingQueued(const Ogre::FrameEvent &e) {
 	try {
 		/* Don't know what this code does
