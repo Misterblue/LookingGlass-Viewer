@@ -189,7 +189,7 @@ namespace LG {
 			m_desiredCameraOrientation = Ogre::Quaternion(dw, dx, dy, dz);
 			m_desiredCameraOrientationProgress = 0.0;
 			// to do slerped movement, comment the next line and uncomment "XXXX" below
-			m_camera->setOrientation(Ogre::Quaternion(dw, dx, dy, dz));
+			// m_camera->setOrientation(Ogre::Quaternion(dw, dx, dy, dz));
 			if (nearClip != m_camera->getNearClipDistance()) {
 				m_camera->setNearClipDistance(nearClip);
 			}
@@ -208,7 +208,7 @@ namespace LG {
 	void RendererOgre::AdvanceCamera(const Ogre::FrameEvent& evt) {
 		// Say time since last frame is .1s. That's 1/10 sec and if we're trying to
 		//   to the smooth turn in 1/2 sec, this is 1/5 of our way there.
-		float progress = evt.timeSinceLastEvent / SECONDS_TO_SLERP;
+		float progress = evt.timeSinceLastFrame / SECONDS_TO_SLERP;
 		m_desiredCameraOrientationProgress += progress;
 		if (m_desiredCameraOrientationProgress > 0) {
 			// if greater than zero we're working on progress
@@ -217,8 +217,8 @@ namespace LG {
 				// Ogre::Quaternion newOrientation = Ogre::Quaternion::Slerp(m_desiredCameraOrientationProgress, 
 				Ogre::Quaternion newOrientation = Ogre::Quaternion::nlerp(m_desiredCameraOrientationProgress, 
 					m_camera->getOrientation(), m_desiredCameraOrientation, true);
-				// m_camera->setOrientation(newOrientation); // XXXX
-				// m_visCalc->RecalculateVisibility(); // XXXX
+				m_camera->setOrientation(newOrientation); // XXXX
+				m_visCalc->RecalculateVisibility(); // XXXX
 			}
 			else {
 				// we've advanced to progress. Make sure we get the last event in
