@@ -311,10 +311,14 @@ void VisCalcFrustDist::unloadTheMesh(Ogre::MeshPtr meshP) {
 						while (tusIter.hasMoreElements()) {
 							Ogre::TextureUnitState* oneTus = tusIter.getNext();
 							Ogre::String texName = oneTus->getTextureName();
-							// TODO: the same texture gets unloaded multiple times. Is that a bad thing?
-							Ogre::TextureManager::getSingleton().unload(texName);
-							LG::IncStat(LG::StatCullTexturesUnloaded);
-							// LG::Log("unloadTheMesh: unloading texture %s", texName.c_str());
+							Ogre::TexturePtr texP = (Ogre::TexturePtr)Ogre::TextureManager::getSingleton().getByName(texName);
+							if (!texP.isNull()) {
+								// if (texP.useCount() <= 1) {
+									texP->unload();
+									LG::IncStat(LG::StatCullTexturesUnloaded);
+									// LG::Log("unloadTheMesh: unloading texture %s", texName.c_str());
+								// }
+							}
 						}
 					}
 				}

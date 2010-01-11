@@ -190,10 +190,10 @@ namespace LG {
 			m_desiredCameraOrientationProgress = 0.0;
 			// to do slerped movement, comment the next line and uncomment "XXXX" below
 			// m_camera->setOrientation(Ogre::Quaternion(dw, dx, dy, dz));
+			/*	don't fool with far and clip for the moment
 			if (nearClip != m_camera->getNearClipDistance()) {
 				m_camera->setNearClipDistance(nearClip);
 			}
-			/*	don't fool with far for the moment
 			if (farClip != m_camera->getFarClipDistance()) {
 				m_camera->setFarClipDistance(farClip);
 			}
