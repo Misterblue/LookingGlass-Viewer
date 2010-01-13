@@ -52,11 +52,11 @@
       <Reference name="System.Drawing"/>
       <Reference name="System.Windows.Forms"/>
       <Reference name="System.Xml"/>
-      <Reference name="LookingGlass.Comm.dll"/>
-      <Reference name="LookingGlass.Comm.LLLP.dll"/>
-      <Reference name="LookingGlass.Framework.dll"/>
-      <Reference name="LookingGlass.Radegast.dll"/>
-      <Reference name="LookingGlass.View.dll"/>
+      <Reference name="LookingGlass.Comm"/>
+      <Reference name="LookingGlass.Comm.LLLP"/>
+      <Reference name="LookingGlass.Framework"/>
+      <Reference name="LookingGlass.Radegast"/>
+      <Reference name="LookingGlass.View"/>
       <Reference name="OpenMetaverse.dll"/>
       <Reference name="Radegast.exe"/>
       <Files>
@@ -112,7 +112,7 @@
       <Reference name="System.Data"/>
       <Reference name="System.Drawing"/>
       <Reference name="System.Xml"/>
-      <Reference name="LookingGlass.Framework.dll"/>
+      <Reference name="LookingGlass.Framework"/>
       <Reference name="OpenMetaverse.dll"/>
       <Reference name="OpenMetaverse.Http.dll"/>
       <Reference name="OpenMetaverse.StructuredData.dll"/>
@@ -140,11 +140,11 @@
       <Reference name="System.Drawing"/>
       <Reference name="System.Windows.Forms"/>
       <Reference name="System.Xml"/>
-      <Reference name="LookingGlass.Comm.dll"/>
-      <Reference name="LookingGlass.Comm.LLLP.dll"/>
-      <Reference name="LookingGlass.Framework.dll"/>
-      <Reference name="LookingGlass.Renderer.dll"/>
-      <Reference name="LookingGlass.World.dll"/>
+      <Reference name="LookingGlass.Comm"/>
+      <Reference name="LookingGlass.Comm.LLLP"/>
+      <Reference name="LookingGlass.Framework"/>
+      <Reference name="LookingGlass.Renderer"/>
+      <Reference name="LookingGlass.World"/>
       <Reference name="Radegast.exe"/>
       <Reference name="OpenMetaverse.dll"/>
       <Reference name="OpenMetaverseTypes.dll"/>
@@ -170,13 +170,13 @@
       <Reference name="System"/>
       <Reference name="System.Xml"/>
       <Reference name="System.Data"/>
-      <Reference name="LookingGlass.Comm.dll"/>
-      <Reference name="LookingGlass.Framework.dll"/>
-      <Reference name="LookingGlass.View.dll"/>
-      <Reference name="LookingGlass.Rest.dll"/>
-      <Reference name="LookingGlass.World.dll"/>
-      <Reference name="LookingGlass.World.LL.dll"/>
-      <Reference name="LookingGlass.World.OS.dll"/>
+      <Reference name="LookingGlass.Comm"/>
+      <Reference name="LookingGlass.Framework"/>
+      <Reference name="LookingGlass.View"/>
+      <Reference name="LookingGlass.Rest"/>
+      <Reference name="LookingGlass.World"/>
+      <Reference name="LookingGlass.World.LL"/>
+      <Reference name="LookingGlass.World.OS"/>
       <Reference name="OpenMetaverse.dll"/>
       <Reference name="OpenMetaverse.StructuredData.dll"/>
       <Reference name="OpenMetaverseTypes.dll"/>
@@ -205,8 +205,8 @@
       <Reference name="System.Drawing"/>
       <Reference name="System.Windows.Forms"/>
       <Reference name="System.Xml"/>
-      <Reference name="LookingGlass.Framework.dll"/>
-      <Reference name="LookingGlass.World.dll"/>
+      <Reference name="LookingGlass.Framework"/>
+      <Reference name="LookingGlass.World"/>
       <Reference name="OpenMetaverse.dll"/>
       <Reference name="OpenMetaverseTypes.dll"/>
       <Reference name="PrimMesher.dll"/>
@@ -235,11 +235,11 @@
       <Reference name="System.Drawing"/>
       <Reference name="System.Windows.Forms"/>
       <Reference name="System.Xml"/>
-      <Reference name="LookingGlass.Framework.dll"/>
-      <Reference name="LookingGlass.Renderer.dll"/>
-      <Reference name="LookingGlass.Rest.dll"/>
-      <Reference name="LookingGlass.World.dll"/>
-      <Reference name="LookingGlass.World.LL.dll"/>
+      <Reference name="LookingGlass.Framework"/>
+      <Reference name="LookingGlass.Renderer"/>
+      <Reference name="LookingGlass.Rest"/>
+      <Reference name="LookingGlass.World"/>
+      <Reference name="LookingGlass.World.LL"/>
       <Reference name="OpenMetaverse.dll"/>
       <Reference name="OpenMetaverse.StructuredData.dll"/>
       <Reference name="OpenMetaverseTypes.dll"/>
@@ -263,9 +263,9 @@
       <ReferencePath>../../bin/</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Core"/>
-      <Reference name="LookingGlass.Framework.dll"/>
-      <Reference name="LookingGlass.Renderer.dll"/>
-      <Reference name="LookingGlass.World.dll"/>
+      <Reference name="LookingGlass.Framework"/>
+      <Reference name="LookingGlass.Renderer"/>
+      <Reference name="LookingGlass.World"/>
       <Reference name="OpenMetaverse.dll"/>
       <Reference name="OpenMetaverse.StructuredData.dll"/>
       <Reference name="OpenMetaverseTypes.dll"/>
@@ -292,10 +292,10 @@
       <Reference name="System.Data"/>
       <Reference name="System.Drawing"/>
       <Reference name="System.Windows.Forms"/>
-      <Reference name="LookingGlass.Framework.dll"/>
-      <Reference name="LookingGlass.Renderer.dll"/>
-      <Reference name="LookingGlass.Rest.dll"/>
-      <Reference name="LookingGlass.World.dll"/>
+      <Reference name="LookingGlass.Framework"/>
+      <Reference name="LookingGlass.Renderer"/>
+      <Reference name="LookingGlass.Rest"/>
+      <Reference name="LookingGlass.World"/>
       <Reference name="OpenMetaverse.dll"/>
       <Reference name="OpenMetaverseTypes.dll"/>
       <Reference name="OpenMetaverse.StructuredData.dll"/>
@@ -327,9 +327,9 @@
       <Reference name="System.Web"/>
       <Reference name="System.Windows.Forms"/>
       <Reference name="System.Xml"/>
-      <Reference name="LookingGlass.Framework.dll"/>
-      <Reference name="LookingGlass.Renderer.dll"/>
-      <Reference name="LookingGlass.World.dll"/>
+      <Reference name="LookingGlass.Framework"/>
+      <Reference name="LookingGlass.Renderer"/>
+      <Reference name="LookingGlass.World"/>
       <Reference name="OpenMetaverse.dll"/>
       <Reference name="OpenMetaverseTypes.dll"/>
       <Reference name="OpenMetaverse.StructuredData.dll"/>
@@ -355,8 +355,8 @@
       <ReferencePath>../../bin/</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Drawing"/>
-      <Reference name="LookingGlass.Comm.dll"/>
-      <Reference name="LookingGlass.Framework.dll"/>
+      <Reference name="LookingGlass.Comm"/>
+      <Reference name="LookingGlass.Framework"/>
       <Reference name="OpenMetaverse.dll"/>
       <Reference name="OpenMetaverseTypes.dll"/>
       <Reference name="OpenMetaverse.StructuredData.dll"/>
@@ -383,10 +383,9 @@
       <Reference name="System.Data"/>
       <Reference name="System.Drawing"/>
       <Reference name="System.Xml"/>
-      <Reference name="LookingGlass.Comm.dll"/>
-      <Reference name="LookingGlass.Comm.LLLP.dll"/>
-      <Reference name="LookingGlass.Framework.dll"/>
-      <Reference name="LookingGlass.World.dll"/>
+      <Reference name="LookingGlass.Comm"/>
+      <Reference name="LookingGlass.Framework"/>
+      <Reference name="LookingGlass.World"/>
       <Reference name="OpenMetaverse.dll"/>
       <Reference name="OpenMetaverse.StructuredData.dll"/>
       <Reference name="OpenMetaverseTypes.dll"/>
@@ -410,10 +409,10 @@
       <ReferencePath>../../bin/</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Data"/>
-      <Reference name="LookingGlass.Comm.dll"/>
-      <Reference name="LookingGlass.Framework.dll"/>
-      <Reference name="LookingGlass.World.dll"/>
-      <Reference name="LookingGlass.World.LL.dll"/>
+      <Reference name="LookingGlass.Comm"/>
+      <Reference name="LookingGlass.Framework"/>
+      <Reference name="LookingGlass.World"/>
+      <Reference name="LookingGlass.World.LL"/>
       <Reference name="OpenMetaverse.dll"/>
       <Reference name="OpenMetaverseTypes.dll"/>
       <Files>
@@ -436,10 +435,10 @@
       <ReferencePath>../../bin/</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Data"/>
-      <Reference name="LookingGlass.Comm.dll"/>
-      <Reference name="LookingGlass.Framework.dll"/>
-      <Reference name="LookingGlass.Rest.dll"/>
-      <Reference name="LookingGlass.World.dll"/>
+      <Reference name="LookingGlass.Comm"/>
+      <Reference name="LookingGlass.Framework"/>
+      <Reference name="LookingGlass.Rest"/>
+      <Reference name="LookingGlass.World"/>
       <Reference name="OpenMetaverse.dll"/>
       <Reference name="OpenMetaverseTypes.dll"/>
       <Reference name="OpenMetaverse.StructuredData.dll"/>
