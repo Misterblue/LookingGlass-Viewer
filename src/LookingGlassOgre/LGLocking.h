@@ -36,19 +36,19 @@
 
 namespace LG {
 
-	// Lock wrapper. The usage pattern is:
-	// ...
-	// LGLOCK_MUTEX* m_myLock;
-	// ...
-	// m_myLock = LGLOCK_ALLOCATION_MUTEX("ProtextXQueue");
-	// ...
-	// LGLOCK_LOCK(m_myLock);
-	// ... critical section
-	// LGLOCK_UNLOCK(m_myLock);
-	// ...
-	// LGLOCK_RELEASE_MUTEX(m_myLock);
-	// 
-	// Underlying this wrapper is whatever works on this system
+// Lock wrapper. The usage pattern is:
+// ...
+// LGLOCK_MUTEX* m_myLock;
+// ...
+// m_myLock = LGLOCK_ALLOCATION_MUTEX("ProtextXQueue");
+// ...
+// LGLOCK_LOCK(m_myLock);
+// ... critical section
+// LGLOCK_UNLOCK(m_myLock);
+// ...
+// LGLOCK_RELEASE_MUTEX(m_myLock);
+// 
+// Underlying this wrapper is whatever works on this system
 class LGLock {
 public:
 	LGLock();
@@ -86,10 +86,12 @@ extern int LGLockingThreadInitializeCount;
 #define LGLOCK_ALLOCATE_MUTEX(name) LG::LGLock::LGLock_Allocate_Mutex(name)
 #define LGLOCK_RELEASE_MUTEX(mutex) LG::LGLock::LGLock_Release_Lock(mutex)
 
+// LOCK and UNLOCK OPERATIONS
 #define LGLOCK_MUTEX LG::LGLock*
 #define LGLOCK_LOCK(mutex) (mutex)->Lock()
 #define LGLOCK_UNLOCK(mutex) (mutex)->Unlock()
 
+// WAIT and NOTIFY
 #ifdef LGLOCK_BOOST
 #define LGLOCK_WAIT(mutex) (mutex)->m_condition->wait(*((mutex)->m_mutex));
 #define LGLOCK_NOTIFY_ONE(mutex) (mutex)->m_condition->notify_one();
@@ -102,6 +104,7 @@ extern int LGLockingThreadInitializeCount;
 #define LGLOCK_SLEEP 
 #endif
 
+// CREATE and RELEASE THREADS
 #define LGLOCK_THREAD boost::thread
 #define LGLOCK_ALLOCATE_THREAD(func) boost::thread(func);
 #define LGLOCK_RELEASE_THREAD(thread) ;

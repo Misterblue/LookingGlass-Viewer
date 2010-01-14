@@ -512,18 +512,28 @@ ProcessBetweenFrame::ProcessBetweenFrame() {
 	if (betweenWork == 0) betweenWork = 5000;
 	m_numWorkItemsToDoBetweenFrames = betweenWork;
 
+	// If the following is true, spawn a separate thread and process work items when
+	// the scene graph is not locked. If 'false', process work items on a between
+	// frame callback.
+	m_shouldUseProcessingThread = false;
+
 	m_workItemMutex = LGLOCK_ALLOCATE_MUTEX("ProcessBetweenFrames");
-	// this is the number of work items to do when between two frames
 	m_modified = false;
 	// link into the renderer.
-	LG::GetOgreRoot()->addFrameListener(this);
-	// m_processingThread = LGLOCK_ALLOCATE_THREAD(&ProcessThreadRoutine);
+	if (m_shouldUseProcessingThread) {
+		m_processingThread = LGLOCK_ALLOCATE_THREAD(&ProcessThreadRoutine);
+	}
+	else {
+		LG::GetOgreRoot()->addFrameListener(this);
+	}
 	LG::ProcessBetweenFrame::m_keepProcessing = true;
 }
 
 ProcessBetweenFrame::~ProcessBetweenFrame() {
 	LGLOCK_RELEASE_MUTEX(m_workItemMutex);
-	LG::GetOgreRoot()->removeFrameListener(this);
+	if (!m_shouldUseProcessingThread) {
+		LG::GetOgreRoot()->removeFrameListener(this);
+	}
 	m_keepProcessing = false;
 }
 
@@ -547,7 +557,7 @@ void ProcessBetweenFrame::CreateMaterialResource2(float priority,
 			  const char* matName, const char* texName, const float* parms) {
 	LGLOCK_LOCK(m_workItemMutex);
 	CreateMaterialResourceQc* cmrq = new CreateMaterialResourceQc(priority, matName, matName, texName, parms);
-	QueueWork((GenericQc*)cmrq);
+	QueueWork((GenericQc*)cmrq, &m_betweenFrameMaterialWork);
 	LGLOCK_UNLOCK(m_workItemMutex);
 	LG::IncStat(LG::StatBetweenFrameWorkItems);
 	LG::IncStat(LG::StatBetweenFrameCreateMaterialResource);
@@ -565,7 +575,7 @@ void ProcessBetweenFrame::CreateMaterialResource7(float priority, const char* un
 			matName1, matName2, matName3, matName4, matName5, matName6, matName7,
 			textureName1, textureName2, textureName3, textureName4, textureName5, textureName6, textureName7,
 			parms);
-	QueueWork((GenericQc*)cmr7q);
+	QueueWork((GenericQc*)cmr7q, &m_betweenFrameMaterialWork);
 	LGLOCK_UNLOCK(m_workItemMutex);
 	LG::IncStat(LG::StatBetweenFrameWorkItems);
 	LG::IncStat(LG::StatBetweenFrameCreateMaterialResource);
@@ -640,7 +650,7 @@ void ProcessBetweenFrame::UpdateCamera(double px, double py, double pz,
 					float farClipP, float nearClipP, float aspectP) {
 	LGLOCK_LOCK(m_workItemMutex);
 	UpdateCameraQc* ucq = new UpdateCameraQc(0.0, Ogre::String(""), px, py, pz, ow, ox, oy, oz, farClipP, nearClipP, aspectP);
-	QueueWork((GenericQc*)ucq);
+	QueueWork((GenericQc*)ucq, &m_betweenFrameCameraWork);
 	LGLOCK_UNLOCK(m_workItemMutex);
 	LG::IncStat(LG::StatBetweenFrameWorkItems);
 }
@@ -687,34 +697,41 @@ bool ProcessBetweenFrame::frameEnded(const Ogre::FrameEvent& evt) {
 //  thread so all these between frame operations cannot be done by this
 //  thread. Someday test DirectX
 void ProcessBetweenFrame::ProcessThreadRoutine() {
+	LG::Log("ProcessBetweenFrame::ProcessThreadRoutine: entering");
 	while (LG::ProcessBetweenFrame::m_keepProcessing) {
 		LGLOCK_LOCK(LG::RendererOgre::Instance()->SceneGraphLock());
 		if (!LG::ProcessBetweenFrame::Instance()->HasWorkItems()) {
 			LGLOCK_WAIT(LG::RendererOgre::Instance()->SceneGraphLock());
 		}
-		LG::ProcessBetweenFrame::Instance()->ProcessWorkItems(100);
+		LG::ProcessBetweenFrame::Instance()->ProcessWorkItems(milliSecondsToProcess);
 		LGLOCK_UNLOCK(LG::RendererOgre::Instance()->SceneGraphLock());
 	}
+	LG::Log("ProcessBetweenFrame::ProcessThreadRoutine: leaving");
 	return;
 }
 
 // Add the work itemt to the work list
 void ProcessBetweenFrame::QueueWork(GenericQc* wi) {
+	QueueWork(wi, &m_betweenFrameWork);
+}
+
+// Add the work itemt to the work list
+void ProcessBetweenFrame::QueueWork(GenericQc* wi, std::list<GenericQc*>*queue) {
 	// Check to see if uniq is specified and remove any duplicates
 	if (!wi->uniq.empty()) {
 		// There will be duplicate requests for things. If we already have a request, delete the old
 		std::list<GenericQc*>::iterator li;
-		for (li = m_betweenFrameWork.begin(); li != m_betweenFrameWork.end(); li++) {
+		for (li = queue->begin(); li != queue->end(); li++) {
 			if (!li._Ptr->_Myval->uniq.empty()) {
 				if (wi->uniq == li._Ptr->_Myval->uniq) {
-					m_betweenFrameWork.erase(li);
+					queue->erase(li);
 					LG::IncStat(LG::StatBetweenFrameDiscardedDups);
 					break;
 				}
 			}
 		}
 	}
-	m_betweenFrameWork.push_back(wi);
+	queue->push_back(wi);
 	m_modified = true;
 }
 
@@ -741,16 +758,32 @@ void ProcessBetweenFrame::ProcessWorkItems(int millisToProcess) {
 		if (--repriorityCount < 0) {
 			// periodically ask the items to recalc their priority
 			repriorityCount = 10;
+			/*
 			std::list<GenericQc*>::iterator li;
 			for (li = m_betweenFrameWork.begin(); li != m_betweenFrameWork.end(); li++) {
 				li._Ptr->_Myval->RecalculatePriority();
 			}
+			*/
 			m_betweenFrameWork.sort(XXCompareElements);
 		}
 		LGLOCK_UNLOCK(m_workItemMutex);
 		m_modified = false;
 	}
 	int loopCost = millisToProcess;
+	while (!m_betweenFrameCameraWork.empty()) {
+		LGLOCK_LOCK(m_workItemMutex);
+		GenericQc* workCameraGeneric = (GenericQc*)m_betweenFrameCameraWork.front();
+		m_betweenFrameCameraWork.pop_front();
+		LGLOCK_UNLOCK(m_workItemMutex);
+		ProcessOneWorkItem(workCameraGeneric);
+	}
+	while (!m_betweenFrameMaterialWork.empty()) {
+		LGLOCK_LOCK(m_workItemMutex);
+		GenericQc* workCameraGeneric = (GenericQc*)m_betweenFrameMaterialWork.front();
+		m_betweenFrameMaterialWork.pop_front();
+		LGLOCK_UNLOCK(m_workItemMutex);
+		ProcessOneWorkItem(workCameraGeneric);
+	}
 	// Several schemes have been tried to control the between frame processing.
 	// while (!m_betweenFrameWork.empty() && (loopCost > 0) ) {
 	// while (!m_betweenFrameWork.empty() && (loopCost > 0) && (betweenFrameTimeKeeper->getMilliseconds() < endTime) ) {
@@ -762,20 +795,25 @@ void ProcessBetweenFrame::ProcessWorkItems(int millisToProcess) {
 		LG::SetStat(LG::StatBetweenFrameWorkItems, m_betweenFrameWork.size());
 		LG::IncStat(LG::StatBetweenFrameTotalProcessed);
 		//1 unsigned long checkTimeBegin = betweenFrameTimeKeeper->getMicroseconds();
-		try {
-			workGeneric->Process();
-		}
-		catch (...) {
-			LG::Log("ProcessBetweenFrame: EXCEPTION PROCESSING: %s", workGeneric->uniq.c_str());
-		}
 		loopCost -= workGeneric->cost;
-		//1 unsigned long checkTimeEnd = betweenFrameTimeKeeper->getMicroseconds();
-		//1 LG::Log("PBF: c=%d, m=%d, lc=%d, t=%d, t=%s, u=%s", 
-		//1  	repriorityCount, millisToProcess, loopCost,
-		//1 	(int)(checkTimeEnd-checkTimeBegin), workGeneric->type.c_str(), workGeneric->uniq.c_str());
-		delete(workGeneric);
+		ProcessOneWorkItem(workGeneric);
 	}
 	return;
 }
+
+void ProcessBetweenFrame::ProcessOneWorkItem(GenericQc* workGeneric) {
+	try {
+		workGeneric->Process();
+	}
+	catch (...) {
+		LG::Log("ProcessBetweenFrame: EXCEPTION PROCESSING: %s", workGeneric->uniq.c_str());
+	}
+	//1 unsigned long checkTimeEnd = betweenFrameTimeKeeper->getMicroseconds();
+	//1 LG::Log("PBF: c=%d, m=%d, lc=%d, t=%d, t=%s, u=%s", 
+	//1  	repriorityCount, millisToProcess, loopCost,
+	//1 	(int)(checkTimeEnd-checkTimeBegin), workGeneric->type.c_str(), workGeneric->uniq.c_str());
+	delete(workGeneric);
+}
+
 
 }

@@ -5,6 +5,7 @@
 // "Log.FilterLevel": "1073744896",	// 0x40000c00: RENDER and RENDERDETAIL
 // "Log.FilterLevel": "1073938432",	// 0x40030000: UPDATE and UPDATEDETAIL
 // "Log.FilterLevel": "1076887552",	// 0x40300000: OGRE and OGREDETAIL
+// "Log.FilterLevel": "1077237077",	// 0x40355555: info and OGREDETAIL
 
 // ====================================================
 // "World.Parameters": "xx",

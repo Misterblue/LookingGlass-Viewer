@@ -109,7 +109,13 @@ private:
 
 	int m_numWorkItemsToDoBetweenFrames;
 	std::list<GenericQc*> m_betweenFrameWork;
+	std::list<GenericQc*> m_betweenFrameCameraWork;
+	std::list<GenericQc*> m_betweenFrameMaterialWork;
 
+	void ProcessOneWorkItem(GenericQc* wi);
+	void QueueWork(GenericQc* wi, std::list<GenericQc*>*queue);
+
+	bool m_shouldUseProcessingThread;
 	LGLOCK_THREAD m_processingThread;
 
 	// Forward definition

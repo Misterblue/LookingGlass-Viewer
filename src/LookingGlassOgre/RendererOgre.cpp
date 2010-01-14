@@ -124,7 +124,7 @@ namespace LG {
 		unsigned long now = rendererTimeKeeper->getMilliseconds();
 		unsigned long timeStartedLastFrame = rendererTimeKeeper->getMilliseconds();
 		if (m_root != NULL) {
-			// LGLOCK_LOCK(m_sceneGraphLock);
+			LGLOCK_LOCK(m_sceneGraphLock);
 			try {
 				ret = m_root->renderOneFrame();
 			}
@@ -134,8 +134,8 @@ namespace LG {
 			catch (...) {
 				LG::Log("RendererOgre::renderOneFrame: m_root->renderOneFrame() threw");
 			}
-			// LGLOCK_UNLOCK(m_sceneGraphLock);
-			// LGLOCK_NOTIFY_ALL(m_sceneGraphLock);
+			LGLOCK_UNLOCK(m_sceneGraphLock);
+			LGLOCK_NOTIFY_ALL(m_sceneGraphLock);
 			try {
 				if (pump) Ogre::WindowEventUtilities::messagePump();
 			}
