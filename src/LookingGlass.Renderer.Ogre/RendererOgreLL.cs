@@ -186,7 +186,7 @@ public class RendererOgreLL : IWorldRenderConv {
                 ri.scale = new OMV.Vector3(m_sceneMagnification, m_sceneMagnification, m_sceneMagnification);
             }
 
-            ri.shapeHash = GetMeshKey(prim, ri.scale, 0);
+            ri.shapeHash = GetMeshKey(prim, prim.Scale, 0);
 
             // while we're in the neighborhood, we can create the materials
             if (m_buildMaterialsAtRenderInfoTime) {
@@ -653,8 +653,8 @@ public class RendererOgreLL : IWorldRenderConv {
     // Routine from OpenSim which creates a hash for the prim shape
     private ulong GetMeshKey(OMV.Primitive prim, OMV.Vector3 size, float lod)
     {
-        ulong hash = (ulong)prim.GetHashCode();
-        // ulong hash = 5381;
+        // ulong hash = (ulong)prim.GetHashCode();
+        ulong hash = 5381;
 
         hash = djb2(hash, (byte)prim.PrimData.PathCurve);
         hash = djb2(hash, prim.PrimData.ProfileHollow);
@@ -678,9 +678,12 @@ public class RendererOgreLL : IWorldRenderConv {
 
         // TODO: Separate scale out from the primitive shape data (after
         // scaling is supported at the physics engine level)
-        byte[] scaleBytes = size.GetBytes();
-        for (int i = 0; i < scaleBytes.Length; i++)
-            hash = djb2(hash, scaleBytes[i]);
+        // byte[] scaleBytes = size.GetBytes();
+        // for (int i = 0; i < scaleBytes.Length; i++)
+        //     hash = djb2(hash, scaleBytes[i]);
+        hash = djb2(hash, size.X);
+        hash = djb2(hash, size.Y);
+        hash = djb2(hash, size.Z);
 
         // Include LOD in hash, accounting for endianness
         byte[] lodBytes = new byte[4];
@@ -693,7 +696,7 @@ public class RendererOgreLL : IWorldRenderConv {
 
         // include sculpt UUID
         if (prim.Sculpt != null) {
-            scaleBytes = prim.Sculpt.SculptTexture.GetBytes();
+            byte[] scaleBytes = prim.Sculpt.SculptTexture.GetBytes();
             for (int i = 0; i < scaleBytes.Length; i++)
                 hash = djb2(hash, scaleBytes[i]);
         }

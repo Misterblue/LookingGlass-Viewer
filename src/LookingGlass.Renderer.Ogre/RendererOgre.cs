@@ -75,7 +75,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     // This makes sure cached copy is the same as server but is also slow
     protected bool m_shouldForceMeshRebuild = false;
     // True if meshes with the same characteristics should be shared
-    protected bool m_shouldShareMeshes = false;
+    protected bool m_shouldShareMeshes = true;
 
     // this shouldn't be here... this is a feature of the LL renderer
     protected float m_sceneMagnification;
