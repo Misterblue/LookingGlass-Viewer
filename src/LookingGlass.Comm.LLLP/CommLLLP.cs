@@ -801,16 +801,18 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         this.m_statObjAttachmentUpdate++;
         m_log.Log(LogLevel.DUPDATEDETAIL, "OnNewAttachment: id={0}, lid={1}", args.Prim.ID.ToString(), args.Prim.LocalID);
         try {
+            UpdateCodes updateFlags = UpdateCodes.FullUpdate;
             IEntity ent;
             if (rcontext.TryGetCreateEntityLocalID(args.Prim.LocalID, out ent, delegate() {
                         IEntity newEnt = new LLEntityPhysical(rcontext.AssetContext,
                                         rcontext, args.Simulator.Handle, args.Prim.LocalID, args.Prim);
+                        updateFlags |= UpdateCodes.New;
                         return newEnt;
                     }) ) {
                 // if new or not, assume everything about this entity has changed
                 IEntityCollection coll;
                 if (rcontext.TryGet<IEntityCollection>(out coll)) {
-                    coll.UpdateEntity(ent, UpdateCodes.FullUpdate | UpdateCodes.New);
+                    coll.UpdateEntity(ent, updateFlags);
                 }
             }
             else {

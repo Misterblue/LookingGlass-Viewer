@@ -866,7 +866,6 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     
     // ==========================================================================
     public void MapRegionIntoView(RegionContextBase rcontext) {
-        Object[] mapParameters = { rcontext, null };
         Ogr.AddRegionBF(0f, EntityNameOgre.ConvertToOgreSceneNodeName(rcontext.Name),
             // rcontext.GlobalPosition.X, rcontext.GlobalPosition.Z, -rcontext.GlobalPosition.Y,
             rcontext.GlobalPosition.X, (double)0, -rcontext.GlobalPosition.Y,

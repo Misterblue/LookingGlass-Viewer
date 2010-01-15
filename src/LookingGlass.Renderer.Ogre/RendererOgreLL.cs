@@ -155,6 +155,11 @@ public class RendererOgreLL : IWorldRenderConv {
             // if the prim has a parent, we must hang this scene node off the parent's scene node
             if (prim.ParentID != 0) {
                 if (ent.ContainingEntity == null) {
+                    // NOTE: in theory, the parent container has been resolved before we get here
+                    // but it is a legacy feature that the comm system does not hold entities
+                    // that don't have their parent so it's possible to get here and find the
+                    // parent entity does not exist. If this is the case, we return 'null' saying
+                    // we cannot yet build this entity.
                     IEntity parentEntity = null;
                     rcontext.TryGetEntityLocalID(prim.ParentID, out parentEntity);
                     if (parentEntity != null) {
@@ -186,6 +191,7 @@ public class RendererOgreLL : IWorldRenderConv {
                 ri.scale = new OMV.Vector3(m_sceneMagnification, m_sceneMagnification, m_sceneMagnification);
             }
 
+            // Get a unique hash code for this shape.
             ri.shapeHash = GetMeshKey(prim, prim.Scale, 0);
 
             // while we're in the neighborhood, we can create the materials
@@ -651,6 +657,8 @@ public class RendererOgreLL : IWorldRenderConv {
     }
 
     // Routine from OpenSim which creates a hash for the prim shape
+    // TODO: Should this hash key include material information since Ogre applies
+    // the material as part of the mesh?
     private ulong GetMeshKey(OMV.Primitive prim, OMV.Vector3 size, float lod)
     {
         // ulong hash = (ulong)prim.GetHashCode();
