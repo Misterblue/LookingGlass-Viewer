@@ -28,10 +28,10 @@ $(document).ready(function() {
     });
 
     // Start the timed functions
-    loginTimerProcessing = false;
     TimerLoginStuff(true);
     loginTimerHandle = setInterval('TimerLoginStuff(false)', 3000);
     avatarTimerHandle = setInterval('TimerAvatarStuff()', 3000);
+    statTimerHandle = setInterval('TimerStatStuff()', 5000);
 });
 
 // Login works by polling the viewer for the status of the user.
@@ -41,7 +41,7 @@ $(document).ready(function() {
 // login state.
 var BASEURL='http://127.0.0.1:9144';
 var loginTimerHandle;
-var loginTimerProcessing;
+var loginTimerProcessing = false;
 // Poll for the user's data. Initialize form if first GET.
 function TimerLoginStuff(firstTime) {
     if (loginTimerProcessing) return;
@@ -127,6 +127,28 @@ function DoTeleport() {
 function DoLogout() {
     $.post(BASEURL + "/api/LLLP/connect/logout", {});
     return false;
+}
+
+var statTimerHandle;
+var statTimerProcessing = false;
+// Poll for the user's data. Initialize form if first GET.
+function TimerStatStuff() {
+    if (statTimerProcessing) return;
+    statTimerProcessing = true;
+    $.getJSON(BASEURL+'/api/stats/Renderer/ogreStats?yy=' + Math.floor(Math.random()*999999),
+        function(data, status) {
+        if (status == 'success') {
+            var dataFPS = data['framespersecond']['value'];
+            var workQueue = data['betweenframeworkitems']['value'];
+            var sceneNodes = data['totalbetweenframecreatemeshscenenode']['value'];
+            $('#LGFooter').empty();
+            $('#LGFooter').append('<span id="LGFooterStats">' + dataFPS 
+                    + '/' + workQueue 
+                    + '/' + sceneNodes 
+                    + '</span>');
+        }
+    });
+    statTimerProcessing = false;
 }
 
 </script>

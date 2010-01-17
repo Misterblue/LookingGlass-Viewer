@@ -90,7 +90,7 @@ namespace LookingGlass.View {
             this.Controls.Add(this.LGWindow);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "ViewWindow";
-            this.Text = "ViewWindow";
+            this.Text = "World -- LookingGlass";
             this.Load += new System.EventHandler(this.ViewWindow_Load);
             this.KeyUp += new System.Windows.Forms.KeyEventHandler(this.LGWindow_KeyUp);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.LGWindow_KeyDown);

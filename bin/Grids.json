@@ -41,7 +41,7 @@
 "ScienceSim.com": {
         "Name": "ScienceSim.com",
         "LoginURL": "http://grid.sciencesim.com/"
-        // ,"OS.AssetServer.V1": "http://island.sciencesim.com:8004"
+        // ,"OS.AssetServer.V1": "http://grid.sciencesim.com:8004"
         // ,"OS.AssetServer.Proxy": "http://proxy.example.com:8080"
     }
 // remember to add the comma if you add a new entry here

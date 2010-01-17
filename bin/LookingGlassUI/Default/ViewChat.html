@@ -34,7 +34,7 @@ function TimerChatStuff() {
         type: "GET",
         url: BASEURL+'/api/chat?yy=' + Math.floor(Math.random()*999999),
         dataType: 'json',
-        timeout: 2000,
+        timeout: 1000,
         success: function(data, status) {
             if (status == 'success') {
                 for (timeCode in data) {

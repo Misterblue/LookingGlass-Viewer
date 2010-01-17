@@ -79,6 +79,7 @@ public:
 
 	// another version with parameters in an array
 	void CreateMaterialResource2(const char*, const char*, const float[]);
+	void CreateMaterialSetTransparancy(Ogre::Pass*);
 	// the order of the parameters in the CreateMaterialResource2 parameter array
 	enum CreateMaterialParams {
 		CreateMaterialColorR,

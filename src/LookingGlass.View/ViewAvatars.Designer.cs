@@ -47,7 +47,7 @@
             this.Controls.Add(this.WindowAvatars);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "FormAvatars";
-            this.Text = "Avatars";
+            this.Text = "Avatars -- LookingGlass";
             this.ResumeLayout(false);
 
         }

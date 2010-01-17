@@ -331,13 +331,8 @@ void OLMaterialTracker::GetMeshesToRefreshForTexture(MeshPtrHashMap* meshes, con
 								// we have the material pass with this texture. Update transparancy flag while here
 								if (hasTransparancy) {
 									// since we know  the texture has transparancy, make sure the pass is good for that
-									// onePass->setDepthWriteEnabled(false);
-									// onePass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
-									onePass->setSceneBlending(Ogre::SBT_REPLACE);
-									onePass->setAlphaRejectSettings(Ogre::CMPF_GREATER_EQUAL, 230);
-									onePass->setCullingMode(Ogre::CULL_NONE);
-									onePass->setManualCullingMode(Ogre::MANUAL_CULL_NONE);
-													}
+									CreateMaterialSetTransparancy(onePass);
+								}
 								else {
 									onePass->setDepthWriteEnabled(true);
 									onePass->setSceneBlending(Ogre::SBT_REPLACE);
@@ -449,16 +444,8 @@ void OLMaterialTracker::CreateMaterialResource2(const char* mName, const char* t
 			pass->setSceneBlending(Ogre::SBT_REPLACE);
 		}
 		else {
-			// next 2 are what most of the forum entries suggest
-			// pass->setDepthWriteEnabled(false);
-			// pass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
-			// next 4 lines found in http://www.ogre3d.org/wiki/index.php/Creating_transparency_based_on_a_key_colour_in_code
-			pass->setSceneBlending(Ogre::SBT_REPLACE);
-			pass->setAlphaRejectSettings(Ogre::CMPF_GREATER_EQUAL, 120);
-			pass->setCullingMode(Ogre::CULL_NONE);
-			pass->setManualCullingMode(Ogre::MANUAL_CULL_NONE);
+			CreateMaterialSetTransparancy(pass);
 			mat->setTransparencyCastsShadows(true);
-
 		}
 		tus->setTextureUScroll(parms[CreateMaterialScrollU]);
 		tus->setTextureVScroll(parms[CreateMaterialScrollV]);
@@ -516,6 +503,17 @@ void OLMaterialTracker::CreateMaterialResource2(const char* mName, const char* t
 	// We're getting errors when this load happens if the textures don't already exist
 	// and things seem to work without it
 	// mat->load();
+}
+
+void OLMaterialTracker::CreateMaterialSetTransparancy(Ogre::Pass* pass) {
+	// next 2 are what most of the forum entries suggest
+	// pass->setDepthWriteEnabled(true);
+	// pass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
+	// next 4 lines found in http://www.ogre3d.org/wiki/index.php/Creating_transparency_based_on_a_key_colour_in_code
+	pass->setSceneBlending(Ogre::SBT_REPLACE);
+	pass->setAlphaRejectSettings(Ogre::CMPF_GREATER_EQUAL, 120);
+	pass->setCullingMode(Ogre::CULL_NONE);
+	pass->setManualCullingMode(Ogre::MANUAL_CULL_NONE);
 }
 
 }

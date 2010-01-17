@@ -142,7 +142,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "File that lists Ogre plugins to load");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.ResourcesFilename", "resources.cfg",
                     "File that lists the Ogre resources to load");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.DefaultNumMipmaps", "6",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.DefaultNumMipmaps", "4",
                     "Default number of mip maps created for a texture (usually 6)");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.CacheDir", Utilities.GetDefaultApplicationStorageDir(null),
                     "Directory to store cached meshs, textures, etc");
@@ -610,14 +610,18 @@ public class RendererOgre : ModuleBase, IRenderProvider {
 
                     // Check to see if something of this mesh shape already exists. Use it if so.
                     EntityName entMeshName = (EntityName)m_ri.basicObject;
-                    if (m_shouldShareMeshes && prebuiltMeshes.ContainsKey(m_ri.shapeHash)) {
-                        entMeshName = prebuiltMeshes[m_ri.shapeHash];
-                        m_log.Log(LogLevel.DRENDERDETAIL, "DorRenderLater: using prebuilt {0}", entMeshName);
-                        m_statShareInstances.Event();
-                    }
-                    else {
-                        // this is a new mesh. Remember that it has been built
-                        prebuiltMeshes.Add(m_ri.shapeHash, entMeshName);
+                    if (m_shouldShareMeshes) {
+                        lock (prebuiltMeshes) {
+                            if (prebuiltMeshes.ContainsKey(m_ri.shapeHash)) {
+                                entMeshName = prebuiltMeshes[m_ri.shapeHash];
+                                m_log.Log(LogLevel.DRENDERDETAIL, "DorRenderLater: using prebuilt {0}", entMeshName);
+                                m_statShareInstances.Event();
+                            }
+                            else {
+                                // this is a new mesh. Remember that it has been built
+                                prebuiltMeshes.Add(m_ri.shapeHash, entMeshName);
+                            }
+                        }
                     }
 
                     // Find a handle to the parent for this node

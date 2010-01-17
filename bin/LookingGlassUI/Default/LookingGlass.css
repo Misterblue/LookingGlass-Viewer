@@ -153,3 +153,13 @@ table.LGDefaultParametersTable td {
 .LGAvatars-Region-class {
     color: #c0c0c0
 }
+/* Stats ======================================= */
+#LGFooter {
+    width: 100%;
+    text-align: right;
+}
+#LGFooterStats {
+    text-align: right;
+    padding: 5px 10px 0px 0px;
+    color: #808080;
+}
