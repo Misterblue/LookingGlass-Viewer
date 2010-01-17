@@ -135,17 +135,26 @@ var statTimerProcessing = false;
 function TimerStatStuff() {
     if (statTimerProcessing) return;
     statTimerProcessing = true;
-    $.getJSON(BASEURL+'/api/stats/Renderer/ogreStats?yy=' + Math.floor(Math.random()*999999),
-        function(data, status) {
-        if (status == 'success') {
-            var dataFPS = data['framespersecond']['value'];
-            var workQueue = data['betweenframeworkitems']['value'];
-            var sceneNodes = data['totalbetweenframecreatemeshscenenode']['value'];
+    $.ajax({
+        type: "GET",
+        url: BASEURL + '/api/stats/Renderer/ogreStats?xx=' + Math.floor(Math.random()*999999),
+        dataType: 'json',
+        timeout: 1000,
+        success: function(data, status) {
+            if (status == 'success') {
+                var dataFPS = data['framespersecond']['value'];
+                var workQueue = data['betweenframeworkitems']['value'];
+                var sceneNodes = data['totalbetweenframecreatemeshscenenode']['value'];
+                $('#LGFooter').empty();
+                $('#LGFooter').append('<span id="LGFooterStats">' + dataFPS 
+                        + '/' + workQueue 
+                        + '/' + sceneNodes 
+                        + '</span>');
+            }
+        },
+        error: function(xmlHTTPRequest, errorType) {
             $('#LGFooter').empty();
-            $('#LGFooter').append('<span id="LGFooterStats">' + dataFPS 
-                    + '/' + workQueue 
-                    + '/' + sceneNodes 
-                    + '</span>');
+            $('#LGFooter').append('../../..');
         }
     });
     statTimerProcessing = false;

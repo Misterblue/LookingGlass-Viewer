@@ -167,9 +167,10 @@ public:
 		this->stringParam.clear();
 	}
 	void Process() {
-		// LG::Log("OLMeshTracker::MakeLoadedQm: loading: %s", meshName.c_str());
-		Ogre::MeshManager::getSingleton().load(this->meshName, this->stringParam);
-		if (stringParam == "visible" && this->entityParam != NULL) {
+		LG::Log("OLMeshTracker::MakeLoadedQm: loading: %s (%s)", meshName.c_str(), this->stringParam.c_str());
+		Ogre::MeshManager::getSingleton().load(this->meshName, OLResourceGroupName);
+		if ((stringParam == "visible") && (this->entityParam != NULL)) {
+			LG::Log("OLMeshTracker::MakeLoadedQm: making visible");
 			this->entityParam->setVisible(true);
 		}
 	}
@@ -283,7 +284,7 @@ void OLMeshTracker::MakeLoaded(Ogre::String meshName, Ogre::String contextEntity
 		LG::Log("OLMeshTracker::MakeLoaded: removing one from unload list: %s", meshName.c_str());
 	}
 	// add this to the loading list
-	// LG::Log("OLMeshTracker::MakeLoaded: queuing loading: %s", meshName.c_str());
+	LG::Log("OLMeshTracker::MakeLoaded: queuing loading: %s (%s)", meshName.c_str(), stringParam.c_str());
 	GenericQm* loadEntry = m_meshesToLoad->Find(meshName);
 	if (loadEntry == NULL) {
 		MakeMeshLoadedQm* mmlq = new MakeMeshLoadedQm(10, meshName, contextEntity, stringParam, entityParam);

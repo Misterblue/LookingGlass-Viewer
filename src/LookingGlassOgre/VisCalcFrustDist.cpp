@@ -176,8 +176,7 @@ void VisCalcFrustDist::calculateEntityVisibility(Ogre::Node* regionNode, Ogre::N
 								sPos.x, sPos.y, sPos.z, 
 								snodeDistance);
 								*/
-						// snodeEntity->setVisible(false);
-						snode->setVisible(false);
+						snodeEntity->setVisible(false);
 						snode->needUpdate(true);
 						visVisToInvis++;
 						if (!snodeEntity->getMesh().isNull()) {
