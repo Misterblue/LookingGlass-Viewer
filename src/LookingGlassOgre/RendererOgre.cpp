@@ -38,6 +38,7 @@
 #include "ShadowBase.h"
 #include "ShadowSimple.h"
 #include "Shadow02.h"
+#include "Shadow06.h"
 #include "SkyBoxSimple.h"
 #include "SkyBoxSkyX.h"
 #include "VisCalcNull.h"
@@ -417,6 +418,9 @@ namespace LG {
 			else if (stricmp(shadowName, "shadow02") == 0) {
 				this->Shadow = new Shadow02(shadowName);
 			}
+			else if (stricmp(shadowName, "shadow06") == 0) {
+				this->Shadow = new Shadow06(shadowName);
+			}
 			else {
 				this->Shadow = new ShadowSimple(shadowName);
 			}
@@ -655,10 +659,13 @@ namespace LG {
 			materialName = baseMaterialName + "-" + faceName + ".material";
 			mo->begin(materialName);
 			fVf = fV + fC[0];
+			const float* vColor = fVf;
+			fVf += 4;
 			// LG::Log("RendererOgre::CreateMeshResource: F%d: vertices %d, %d, %d", iface, fC[0], fC[1], fC[2]);
 			for (iv=0; iv < fC[1]; iv++) {
 				// LG::Log("RendererOgre::CreateMeshResource: %f, %f, %f, %f, %f", fVf[0], fVf[1], fVf[2], fVf[3], fVf[4] );
 				mo->position(fVf[0], fVf[1], fVf[2]);
+				mo->colour(vColor[0], vColor[1], vColor[2], vColor[3]);
 				mo->textureCoord(fVf[3], fVf[4]);
 				mo->normal(fVf[5], fVf[6], fVf[7]);
 				fVf += fC[2];

@@ -167,6 +167,9 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.DefaultTextureResourceName", 
                     "LoadingTexture.png",
                     "Resource name of  the default texture");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.WhiteTextureResourceName", 
+                    "WhiteTexture.png",
+                    "Resource name of a white texture used as default base color");
 
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.LL.SceneMagnification", "1",
                     "Magnification of LL coordinates into Ogre space");
@@ -191,6 +194,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "True if to force the generation a mesh when first rendered (don't rely on cache)");
         ModuleParams.AddDefaultParameter(m_moduleName + ".ShouldShareMeshes", "true",
                     "True if to share meshes with similar characteristics");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.UseShaders", "true",
+                    "Whether to use the new technique of using GPU shaders");
 
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Sky", "Default",
                     "Name of the key system to use");

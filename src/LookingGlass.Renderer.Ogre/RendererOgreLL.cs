@@ -306,14 +306,17 @@ public class RendererOgreLL : IWorldRenderConv {
                 //   faceCounts[9] = number of vertices for face 2
                 //   faceCounts[10] = stride for vertex info for face 2 (= 8)
                 //   etc
-                // The second array contains the vertex info in the order:
-                //   v.X, v.Y, v.Z, t.X, t.Y, n.X, n.Y, n.Z
+                // The second array starts with the vertex color:
+                //   v.R, v.G, v.B, v.A
+                // which is followed by the vertex info in the order:
+                //   v.X, v.Y, v.Z, u.X, u.Y, n.X, n.Y, n.Z
                 // this is repeated for each vertex
                 // This is followed by the list of indices listed as i.X, i.Y, i.Z
-
+                
                 const int faceCountsStride = 6;
                 const int verticesStride = 8;
                 const int indicesStride = 3;
+                const int vertexColorStride = 4;
                 // calculate how many floating point numbers we're pushing over
                 int[] faceCounts = new int[mesh.Faces.Count * faceCountsStride + 2];
                 faceCounts[0] = faceCounts.Length;
@@ -328,7 +331,7 @@ public class RendererOgreLL : IWorldRenderConv {
                     faceCounts[faceBase + 0] = totalVertices;
                     faceCounts[faceBase + 1] = face.Vertices.Count;
                     faceCounts[faceBase + 2] = verticesStride;
-                    totalVertices += face.Vertices.Count * verticesStride;
+                    totalVertices += vertexColorStride + face.Vertices.Count * verticesStride;
                     faceCounts[faceBase + 3] = totalVertices;
                     faceCounts[faceBase + 4] = face.Indices.Count;
                     faceCounts[faceBase + 5] = indicesStride;
@@ -356,6 +359,21 @@ public class RendererOgreLL : IWorldRenderConv {
                         );
                     }
 
+                    // Vertices color for this face
+                    OMV.Primitive.TextureEntryFace tef = prim.Textures.GetFace((uint)j);
+                    if (tef != null) {
+                        faceVertices[vertI + 0] = tef.RGBA.R;
+                        faceVertices[vertI + 1] = tef.RGBA.G;
+                        faceVertices[vertI + 2] = tef.RGBA.B;
+                        faceVertices[vertI + 3] = tef.RGBA.A;
+                    }
+                    else {
+                        faceVertices[vertI + 0] = 1f;
+                        faceVertices[vertI + 1] = 1f;
+                        faceVertices[vertI + 2] = 1f;
+                        faceVertices[vertI + 3] = 1f;
+                    }
+                    vertI += vertexColorStride;
                     // Vertices for this face
                     for (int k = 0; k < face.Vertices.Count; k++) {
                         OMVR.Vertex thisVert = face.Vertices[k];

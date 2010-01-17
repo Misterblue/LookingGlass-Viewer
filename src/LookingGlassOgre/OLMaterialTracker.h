@@ -80,6 +80,8 @@ public:
 	// another version with parameters in an array
 	void CreateMaterialResource2(const char*, const char*, const float[]);
 	void CreateMaterialSetTransparancy(Ogre::Pass*);
+	void CreateMaterialResource3(const char*, const char*, const float[]);
+	void CreateMaterialDecorateTus(Ogre::TextureUnitState* tus, const float[]);
 	// the order of the parameters in the CreateMaterialResource2 parameter array
 	enum CreateMaterialParams {
 		CreateMaterialColorR,
@@ -105,9 +107,11 @@ private:
 	static OLMaterialTracker* m_instance;
 
 	Ogre::String m_defaultTextureName;
+	Ogre::String m_whiteTextureName;
 	Ogre::String m_cacheDir;
 	Ogre::MaterialSerializer* m_serializer;
 	bool m_shouldSerialize;
+	bool m_shouldUseShaders;
 
 	typedef stdext::hash_map<Ogre::String, unsigned long> RequestedMaterialHashMap;
 	RequestedMaterialHashMap m_requestedMaterials;

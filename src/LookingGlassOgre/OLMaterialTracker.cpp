@@ -67,6 +67,7 @@ OLMaterialTracker* OLMaterialTracker::m_instance = NULL;
 
 OLMaterialTracker::OLMaterialTracker() {
 	m_defaultTextureName = LG::GetParameter("Renderer.Ogre.DefaultTextureResourceName");
+	m_whiteTextureName = LG::GetParameter("Renderer.Ogre.WhiteTextureResourceName");
 	m_cacheDir = LG::GetParameter("Renderer.Ogre.CacheDir");
 	m_shouldSerialize = LG::isTrue(LG::GetParameter("Renderer.Ogre.SerializeMaterials"));
 	m_materialTimeKeeper = new Ogre::Timer();
@@ -76,6 +77,8 @@ OLMaterialTracker::OLMaterialTracker() {
 	if (m_shouldSerialize) {
 		m_serializer = new Ogre::MaterialSerializer();
 	}
+
+	m_shouldUseShaders = LG::isTrue(LG::GetParameter("Renderer.Ogre.UseShaders"));
 
 	// more kludge processing for corrupt data files
 	Ogre::ImageCodec* codec = OGRE_NEW LG::BadImageCodec();
@@ -419,6 +422,10 @@ void OLMaterialTracker::CreateMaterialResource(const char* mName, const char* tN
 }
 
 void OLMaterialTracker::CreateMaterialResource2(const char* mName, const char* tName, const float* parms) {
+	if (m_shouldUseShaders) {
+		CreateMaterialResource3(mName, tName, parms);
+		return;
+	}
 	Ogre::String materialName = mName;
 	Ogre::String textureName = tName;
 	// if (Ogre::MaterialManager::getSingleton().resourceExists(materialName))
@@ -507,13 +514,74 @@ void OLMaterialTracker::CreateMaterialResource2(const char* mName, const char* t
 
 void OLMaterialTracker::CreateMaterialSetTransparancy(Ogre::Pass* pass) {
 	// next 2 are what most of the forum entries suggest
-	// pass->setDepthWriteEnabled(true);
+	// pass->setDepthWriteEnabled(false);
 	// pass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
 	// next 4 lines found in http://www.ogre3d.org/wiki/index.php/Creating_transparency_based_on_a_key_colour_in_code
-	pass->setSceneBlending(Ogre::SBT_REPLACE);
+	// pass->setSceneBlending(Ogre::SBT_REPLACE);
+	pass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
 	pass->setAlphaRejectSettings(Ogre::CMPF_GREATER_EQUAL, 120);
 	pass->setCullingMode(Ogre::CULL_NONE);
 	pass->setManualCullingMode(Ogre::MANUAL_CULL_NONE);
+}
+
+void OLMaterialTracker::CreateMaterialResource3(const char* mName, const char* tName, const float* parms) {
+	Ogre::String materialName = mName;
+	Ogre::String textureName = tName;
+	// if (Ogre::MaterialManager::getSingleton().resourceExists(materialName))
+	Ogre::MaterialManager::ResourceCreateOrRetrieveResult crResult =
+			Ogre::MaterialManager::getSingleton().createOrRetrieve(materialName, OLResourceGroupName);
+	Ogre::MaterialPtr matPtr = crResult.first;
+	Ogre::Material* mat = matPtr.getPointer();
+
+	mat->unload();
+	mat->removeAllTechniques();
+
+	if (textureName.length() == 0) {
+		textureName = m_whiteTextureName;
+	}
+	
+	Ogre::Technique* tech = mat->createTechnique();
+	Ogre::Pass* pass = tech->createPass();
+	Ogre::String vertexProgram = "UnlitTexturedVColVP";
+	Ogre::String fragmentProgram = "UnlitTexturedVColFP";
+	if (parms[CreateMaterialFullBright] > 0.5) {
+		Ogre::String vertexProgram = "LitTexturedVColVP";
+		Ogre::String fragmentProgram = "LitTexturedVColFP";
+	}
+	pass->setVertexProgram(vertexProgram);
+	pass->setFragmentProgram(fragmentProgram);
+	if (parms[CreateMaterialTransparancy] != 1.0) {
+		CreateMaterialSetTransparancy(pass);
+		mat->setTransparencyCastsShadows(true);
+	}
+	pass->setDiffuse(parms[CreateMaterialColorR], parms[CreateMaterialColorG], 
+					parms[CreateMaterialColorB], parms[CreateMaterialColorA] );
+	Ogre::TextureUnitState* tus = pass->createTextureUnitState(textureName);
+	CreateMaterialDecorateTus(tus, parms);
+
+	LG::RendererOgre::Instance()->Shadow->AddReceiverShadow(mat);
+
+	// Ogre::TextureUnitState* tus1b = pass->createTextureUnitState();
+	// tus1b->setContentType(Ogre::TextureUnitState::CONTENT_SHADOW);
+
+	// secondary, fallback technique
+	Ogre::Technique* tech2 = mat->createTechnique();
+	Ogre::Pass* pass2 = tech2->createPass();
+	Ogre::TextureUnitState* tus2 = pass2->createTextureUnitState(textureName);
+	if (parms[CreateMaterialTransparancy] != 1.0) {
+		CreateMaterialSetTransparancy(pass2);
+	}
+	pass2->setDiffuse(parms[CreateMaterialColorR], parms[CreateMaterialColorG], 
+					parms[CreateMaterialColorB], parms[CreateMaterialColorA] );
+	CreateMaterialDecorateTus(tus2, parms);
+}
+
+void OLMaterialTracker::CreateMaterialDecorateTus(Ogre::TextureUnitState* tus, const float* parms) {
+	tus->setTextureUScroll(parms[CreateMaterialScrollU]);
+	tus->setTextureVScroll(parms[CreateMaterialScrollV]);
+	tus->setTextureUScale(parms[CreateMaterialScaleU]);
+	tus->setTextureVScale(parms[CreateMaterialScaleV]);
+	tus->setTextureRotate(Ogre::Radian(parms[CreateMaterialRotate]));
 }
 
 }
