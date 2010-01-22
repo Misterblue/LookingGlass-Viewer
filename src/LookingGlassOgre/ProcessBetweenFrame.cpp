@@ -763,8 +763,8 @@ void ProcessBetweenFrame::ProcessWorkItems(int millisToProcess) {
 			for (li = m_betweenFrameWork.begin(); li != m_betweenFrameWork.end(); li++) {
 				li._Ptr->_Myval->RecalculatePriority();
 			}
-			m_betweenFrameWork.sort(XXCompareElements);
 			*/
+			m_betweenFrameWork.sort(XXCompareElements);
 		}
 		LGLOCK_UNLOCK(m_workItemMutex);
 		m_modified = false;

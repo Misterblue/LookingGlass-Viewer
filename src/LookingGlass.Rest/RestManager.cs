@@ -212,6 +212,7 @@ public class RestManager : ModuleBase, IInstance<RestManager>, HttpServer.ILogWr
         try {
             context.ContentType = MIMEDEFAULT;
             context.AddHeader("Server", LookingGlassBase.ApplicationName);
+            context.AddHeader("Cache-Control", "no-cache");
             // context.Connection = ConnectionType.Close;
             
             buff.Append("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\r\n");
@@ -279,6 +280,7 @@ public class RestManager : ModuleBase, IInstance<RestManager>, HttpServer.ILogWr
         try {
             context.ContentType = contentType == null ? MIMEDEFAULT : contentType;
             context.AddHeader("Server", LookingGlassBase.ApplicationName);
+            context.AddHeader("Cache-Control", "no-cache");
             // context.Connection = ConnectionType.Close;
 
             if (addContent != null) addContent(ref buff);

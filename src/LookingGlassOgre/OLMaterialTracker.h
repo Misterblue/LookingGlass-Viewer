@@ -79,7 +79,7 @@ public:
 
 	// another version with parameters in an array
 	void CreateMaterialResource2(const char*, const char*, const float[]);
-	void CreateMaterialSetTransparancy(Ogre::Pass*);
+	void CreateMaterialSetTransparancy(Ogre::Pass*, float);
 	void CreateMaterialResource3(const char*, const char*, const float[]);
 	void CreateMaterialDecorateTus(Ogre::TextureUnitState* tus, const float[]);
 	// the order of the parameters in the CreateMaterialResource2 parameter array

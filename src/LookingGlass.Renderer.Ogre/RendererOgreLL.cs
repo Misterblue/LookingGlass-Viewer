@@ -512,8 +512,16 @@ public class RendererOgreLL : IWorldRenderConv {
             textureParams[pBase + (int)Ogr.CreateMaterialParam.mappingType] = (float)textureFace.TexMapType;
             textureParams[pBase + (int)Ogr.CreateMaterialParam.mediaFlags] = textureFace.MediaFlags ? 1f : 0f;
             // since we can't calculate whether material is transparent or not (actually
-            //   we don't have that information at this instant), assume transparent
-            textureParams[pBase + (int)Ogr.CreateMaterialParam.textureHasTransparent] = 0f;
+            //   we don't have that information at this instant), assume color transparent
+            if (textureFace.RGBA.A == 1.0) {
+                // The vertex color doesn't have alpha. Assume the texture that goes on here does.
+                // We do this because we don't have the texture at the moment
+                textureParams[pBase + (int)Ogr.CreateMaterialParam.textureHasTransparent] = 2f;
+            }
+            else {
+                // Pass the overall transparancy
+                textureParams[pBase + (int)Ogr.CreateMaterialParam.textureHasTransparent] = textureFace.RGBA.A;
+            }
             textureID = textureFace.TextureID;
             // wish I could pass the texture animation information here but that's
             //    in the texture entry and not in the face description

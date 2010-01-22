@@ -334,7 +334,8 @@ void OLMaterialTracker::GetMeshesToRefreshForTexture(MeshPtrHashMap* meshes, con
 								// we have the material pass with this texture. Update transparancy flag while here
 								if (hasTransparancy) {
 									// since we know  the texture has transparancy, make sure the pass is good for that
-									CreateMaterialSetTransparancy(onePass);
+									LG::Log("GetMeshesToRefreshForTexture: setting transparancy for %s", texName.c_str());
+									CreateMaterialSetTransparancy(onePass, 2.0);
 								}
 								else {
 									onePass->setDepthWriteEnabled(true);
@@ -447,13 +448,8 @@ void OLMaterialTracker::CreateMaterialResource2(const char* mName, const char* t
 		Ogre::TextureUnitState* tus = pass->createTextureUnitState(textureName);
 
 		// use SceneBlendType to add the alpha information
-		if (parms[CreateMaterialTransparancy] == 1.0) {
-			pass->setSceneBlending(Ogre::SBT_REPLACE);
-		}
-		else {
-			CreateMaterialSetTransparancy(pass);
-			mat->setTransparencyCastsShadows(true);
-		}
+		// Values are the alpha of the vertex color or 2.0 if to assume transparent
+		CreateMaterialSetTransparancy(pass, parms[CreateMaterialTransparancy]);
 		tus->setTextureUScroll(parms[CreateMaterialScrollU]);
 		tus->setTextureVScroll(parms[CreateMaterialScrollV]);
 		tus->setTextureUScale(parms[CreateMaterialScaleU]);
@@ -512,19 +508,31 @@ void OLMaterialTracker::CreateMaterialResource2(const char* mName, const char* t
 	// mat->load();
 }
 
-void OLMaterialTracker::CreateMaterialSetTransparancy(Ogre::Pass* pass) {
-	// next 2 are what most of the forum entries suggest
-	// pass->setDepthWriteEnabled(false);
+// Passed an alpha code which is either the overall item alpha (usually from the vertex color)
+// or 2.0 if we are to assume the texture has transparancy
+void OLMaterialTracker::CreateMaterialSetTransparancy(Ogre::Pass* pass, float alphaCode) {
+	if (alphaCode == 1.0) {
+		pass->setSceneBlending(Ogre::SBT_REPLACE);
+	}
+	else {
+		if (alphaCode == 2.0) {
+			// next 4 lines found in http://www.ogre3d.org/wiki/index.php/Creating_transparency_based_on_a_key_colour_in_code
+			pass->setSceneBlending(Ogre::SBT_REPLACE);
+			pass->setAlphaRejectSettings(Ogre::CMPF_GREATER_EQUAL, 120);
+			pass->setCullingMode(Ogre::CULL_NONE);
+			pass->setManualCullingMode(Ogre::MANUAL_CULL_NONE);
+			// mat->setTransparencyCastsShadows(true);
+		}
+		else {
+			// next 2 are what most of the forum entries suggest
+			pass->setDepthWriteEnabled(false);
+			pass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
+		}
+	}
+	// Next 3 are another try
 	// pass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
-	// next 4 lines found in http://www.ogre3d.org/wiki/index.php/Creating_transparency_based_on_a_key_colour_in_code
-	// pass->setSceneBlending(Ogre::SBT_REPLACE);
-	// pass->setAlphaRejectSettings(Ogre::CMPF_GREATER_EQUAL, 120);
 	// pass->setCullingMode(Ogre::CULL_NONE);
 	// pass->setManualCullingMode(Ogre::MANUAL_CULL_NONE);
-	// Next 2 are another try
-	pass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
-	pass->setCullingMode(Ogre::CULL_NONE);
-	pass->setManualCullingMode(Ogre::MANUAL_CULL_NONE);
 }
 
 void OLMaterialTracker::CreateMaterialResource3(const char* mName, const char* tName, const float* parms) {
@@ -553,10 +561,7 @@ void OLMaterialTracker::CreateMaterialResource3(const char* mName, const char* t
 	}
 	pass->setVertexProgram(vertexProgram);
 	pass->setFragmentProgram(fragmentProgram);
-	if (parms[CreateMaterialTransparancy] != 1.0) {
-		CreateMaterialSetTransparancy(pass);
-		mat->setTransparencyCastsShadows(true);
-	}
+	CreateMaterialSetTransparancy(pass, parms[CreateMaterialTransparancy]);
 	pass->setDiffuse(parms[CreateMaterialColorR], parms[CreateMaterialColorG], 
 					parms[CreateMaterialColorB], parms[CreateMaterialColorA] );
 	Ogre::TextureUnitState* tus = pass->createTextureUnitState(textureName);
@@ -571,9 +576,7 @@ void OLMaterialTracker::CreateMaterialResource3(const char* mName, const char* t
 	Ogre::Technique* tech2 = mat->createTechnique();
 	Ogre::Pass* pass2 = tech2->createPass();
 	Ogre::TextureUnitState* tus2 = pass2->createTextureUnitState(textureName);
-	if (parms[CreateMaterialTransparancy] != 1.0) {
-		CreateMaterialSetTransparancy(pass2);
-	}
+	CreateMaterialSetTransparancy(pass2, parms[CreateMaterialTransparancy]);
 	pass2->setDiffuse(parms[CreateMaterialColorR], parms[CreateMaterialColorG], 
 					parms[CreateMaterialColorB], parms[CreateMaterialColorA] );
 	CreateMaterialDecorateTus(tus2, parms);

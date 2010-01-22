@@ -181,9 +181,9 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "Preload/00000000-0000-2222-3333-112200000001",
                     "Entity name of mesh to use for avatars");
 
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.BetweenFrame.WorkMilliSecondsMax", "1000",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.BetweenFrame.WorkMilliSecondsMax", "300",
                     "Cost of queued C++ work items to do between each frame");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.BetweenFrame.Costs.Total", "1000",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.BetweenFrame.Costs.Total", "200",
                     "The total cost of C# operations to do between each frame");
 
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.SerializeMaterials", "false",
