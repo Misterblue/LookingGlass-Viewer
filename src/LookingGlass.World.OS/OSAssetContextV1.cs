@@ -42,6 +42,10 @@ public class OSAssetContextV1 : AssetContextBase {
     string m_basePath;
     string m_proxyPath = null;
 
+    // Some of the asset servers will return just the data if you put 'data' on the
+    // end of the URL. That is happening if this is 'true'.
+    bool m_dataFetch = false;
+
     public OSAssetContextV1() : base() {
         m_Name = "Unknown";
     }
@@ -52,10 +56,33 @@ public class OSAssetContextV1 : AssetContextBase {
 
     public override void InitializeContextFinish() {
         m_basePath = World.Instance.Grids.GridParameter(Grids.Current, "OS.AssetServer.V1");
+        string requestFormat = World.Instance.Grids.GridParameter(Grids.Current, "OS.AssetServer.V1.Request");
+        if (requestFormat != null) {
+            // does the parameters specify the 'data' binary data request?
+            if (requestFormat.ToLower().Equals("data")) {
+                m_dataFetch = true;
+            }
+        }
+        if (m_basePath == null) {
+            m_log.Log(LogLevel.DBADERROR, "OSAssetContextV1::InitializeContextFinish: NOT BASE PATH SPECIFIED: NOT INITIALIZING");
+            return;
+        }
         while (m_basePath.EndsWith("/")) {
             m_basePath = m_basePath.Substring(0, m_basePath.Length-1);
         }
         m_proxyPath = World.Instance.Grids.GridParameter(Grids.Current, "OS.AssetServer.Proxy");
+        try {
+            string maxRequests = World.Instance.Grids.GridParameter(Grids.Current, "OS.AssetServer.MaxRequests");
+            if (maxRequests == null) {
+                m_maxOutstandingTextureRequests = 4;
+            }
+            else {
+                m_maxOutstandingTextureRequests = Int32.Parse(maxRequests);
+            }
+        }
+        catch {
+            m_maxOutstandingTextureRequests = 4;
+        }
         if (m_proxyPath != null && m_proxyPath.Length == 0) m_proxyPath = null;
         m_log.Log(LogLevel.DINIT, "InitializeContextFinish: base={0}, proxy={1}", m_basePath,
                         m_proxyPath == null ? "NULL" : m_proxyPath);
@@ -71,6 +98,8 @@ public class OSAssetContextV1 : AssetContextBase {
         EntityNameLL textureEnt = new EntityNameLL(textureEntityName);
         string worldID = textureEnt.EntityPart;
         OMV.UUID binID = new OMV.UUID(worldID);
+
+        if (m_basePath == null) return;
 
         // do we already have the file?
         string textureFilename = Path.Combine(CacheDirBase, textureEnt.CacheFilename);
@@ -116,7 +145,7 @@ public class OSAssetContextV1 : AssetContextBase {
     // some routines to throttle the number of outstand textures requetst to see if 
     //  libomv is getting overwhelmed by thousands of requests
     Queue<OMV.UUID> m_textureQueue = new Queue<OpenMetaverse.UUID>();
-    int m_maxOutstandingTextureRequests = 1;
+    int m_maxOutstandingTextureRequests = 4;
     int m_currentOutstandingTextureRequests = 0;
     BasicWorkQueue m_doThrottledTextureRequest = new BasicWorkQueue("ThrottledTexture");
     private void ThrottleTextureRequests(OMV.UUID binID) {
@@ -147,7 +176,7 @@ public class OSAssetContextV1 : AssetContextBase {
     private bool ThrottleTextureMakeRequest(DoLaterBase qInstance, Object obinID) {
         OMV.UUID binID = (OMV.UUID)obinID;
 
-        Uri assetPath = new Uri(m_basePath + "/assets/" + binID.ToString());
+        Uri assetPath = new Uri(m_basePath + "/assets/" + binID.ToString() + (m_dataFetch ? "/data" : ""));
         HttpWebRequest request = (HttpWebRequest)WebRequest.Create(assetPath);
         request.MaximumAutomaticRedirections = 4;
         request.MaximumResponseHeadersLength = 4;
@@ -165,11 +194,19 @@ public class OSAssetContextV1 : AssetContextBase {
                             response.StatusCode, response.ContentLength);
                 if (response.StatusCode == HttpStatusCode.OK) {
                     using (Stream receiveStream = response.GetResponseStream()) {
-                        XmlSerializer xserial = new XmlSerializer(typeof(OpenSim.Framework.AssetBase));
-                        OpenSim.Framework.AssetBase abase = (OpenSim.Framework.AssetBase)xserial.Deserialize(receiveStream);
-                        // byte[] textureBuff = new byte[response.ContentLength];
-                        // receiveStream.Read(textureBuff, 0, (int)response.ContentLength);
-                        OMV.Assets.AssetTexture at = new OMV.Assets.AssetTexture(binID, abase.Data);
+                        OMV.Assets.AssetTexture at;
+                        if (m_dataFetch) {
+                            // we're getting raw binary data
+                            byte[] textureBuff = new byte[response.ContentLength];
+                            receiveStream.Read(textureBuff, 0, (int)response.ContentLength);
+                            at = new OMV.Assets.AssetTexture(binID, textureBuff);
+                        }
+                        else {
+                            // receiving a serialized package
+                            XmlSerializer xserial = new XmlSerializer(typeof(OpenSim.Framework.AssetBase));
+                            OpenSim.Framework.AssetBase abase = (OpenSim.Framework.AssetBase)xserial.Deserialize(receiveStream);
+                            at = new OMV.Assets.AssetTexture(binID, abase.Data);
+                        }
                         ProcessDownloadFinished(OMV.TextureRequestState.Finished, at);
                     }
                 }

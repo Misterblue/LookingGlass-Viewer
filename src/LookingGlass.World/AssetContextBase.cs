@@ -273,31 +273,6 @@ public abstract class AssetContextBase : IDisposable {
     protected void ProcessDownloadFinished(OMV.TextureRequestState state, OMV.Assets.AssetTexture assetTexture) {
         // if texture could not be downloaded, create a fake texture
         OMV.UUID assetWorldID = assetTexture.AssetID;
-        if ((state == OMV.TextureRequestState.NotFound) || (state == OMV.TextureRequestState.Timeout)) {
-            try {
-                // get the name of the entity from the WorldID that we have
-                EntityName tempTexture = ConvertToEntityName(this, assetWorldID.ToString());
-
-                // calculate the filename this entity would have in the cache
-                string tempTextureFilename = Path.Combine(CacheDirBase, tempTexture.CacheFilename);
-                MakeParentDirectoriesExist(tempTextureFilename);
-
-                lock (FileSystemAccessLock) {
-                    string noTextureFilename = LookingGlassBase.Instance.AppParams.ParamString(m_comm.Name + ".Assets.NoTextureFilename");
-                    // if we copy the no texture file into the filesystem, we will never retry to
-                    // fetch the texture. This copy is not a good thing.
-                    if (!File.Exists(tempTextureFilename)) {
-                        File.Copy(noTextureFilename, tempTextureFilename);
-                    }
-                }
-                m_log.Log(LogLevel.DTEXTURE, 
-                    "ProcessDownloadFinished: Texture fetch failed={0}. Using not found texture.", tempTexture.Name);
-            }
-            catch (Exception e) {
-                m_log.Log(LogLevel.DBADERROR, 
-                    "ProcessDownloadFinished: Texture fetch failed. Could not create default texture: " + e.ToString());
-            }
-        }
         List<WaitingInfo> toCall = new List<WaitingInfo>();
         m_log.Log(LogLevel.DTEXTUREDETAIL, "ProcessDownloadFinished: Completion for " + assetWorldID.ToString());
         lock (m_waiting) {
@@ -315,6 +290,30 @@ public abstract class AssetContextBase : IDisposable {
                 }
             }
         }
+
+        // if the texture fetch failed, create the not-found file
+        if ((state == OMV.TextureRequestState.NotFound) || (state == OMV.TextureRequestState.Timeout)) {
+            foreach (WaitingInfo wi in toCall) {
+                try {
+                    lock (FileSystemAccessLock) {
+                        MakeParentDirectoriesExist(wi.filename);
+                        string noTextureFilename = LookingGlassBase.Instance.AppParams.ParamString(m_comm.Name + ".Assets.NoTextureFilename");
+                        // if we copy the no texture file into the filesystem, we will never retry to
+                        // fetch the texture. This copy is not a good thing.
+                        if (!File.Exists(wi.filename)) {
+                            File.Copy(noTextureFilename, wi.filename);
+                        }
+                    }
+                    m_log.Log(LogLevel.DTEXTURE, 
+                        "ProcessDownloadFinished: Texture fetch failed={0}. Using not found texture.", wi.worldID.ToString());
+                }
+                catch (Exception e) {
+                    m_log.Log(LogLevel.DBADERROR, 
+                        "ProcessDownloadFinished: Texture fetch failed. Could not create default texture: " + e.ToString());
+                }
+            }
+        }
+
         // Queue the actual completion call for another thread to let this one return
         Object[] completeDownloadParams = { assetTexture, toCall, m_comm.Name };
         m_completionWork.DoLater(CompleteDownloadLater, completeDownloadParams);
