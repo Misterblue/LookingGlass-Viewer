@@ -25,6 +25,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Text;
+using System.Xml;
+using System.Xml.Serialization;
 using LookingGlass.Comm;
 using LookingGlass.Framework;
 using LookingGlass.Framework.Logging;
@@ -50,6 +52,9 @@ public class OSAssetContextV1 : AssetContextBase {
 
     public override void InitializeContextFinish() {
         m_basePath = World.Instance.Grids.GridParameter(Grids.Current, "OS.AssetServer.V1");
+        while (m_basePath.EndsWith("/")) {
+            m_basePath = m_basePath.Substring(0, m_basePath.Length-1);
+        }
         m_proxyPath = World.Instance.Grids.GridParameter(Grids.Current, "OS.AssetServer.Proxy");
         if (m_proxyPath != null && m_proxyPath.Length == 0) m_proxyPath = null;
         m_log.Log(LogLevel.DINIT, "InitializeContextFinish: base={0}, proxy={1}", m_basePath,
@@ -111,7 +116,7 @@ public class OSAssetContextV1 : AssetContextBase {
     // some routines to throttle the number of outstand textures requetst to see if 
     //  libomv is getting overwhelmed by thousands of requests
     Queue<OMV.UUID> m_textureQueue = new Queue<OpenMetaverse.UUID>();
-    int m_maxOutstandingTextureRequests = 4;
+    int m_maxOutstandingTextureRequests = 1;
     int m_currentOutstandingTextureRequests = 0;
     BasicWorkQueue m_doThrottledTextureRequest = new BasicWorkQueue("ThrottledTexture");
     private void ThrottleTextureRequests(OMV.UUID binID) {
@@ -142,7 +147,7 @@ public class OSAssetContextV1 : AssetContextBase {
     private bool ThrottleTextureMakeRequest(DoLaterBase qInstance, Object obinID) {
         OMV.UUID binID = (OMV.UUID)obinID;
 
-        Uri assetPath = new Uri(m_basePath + "/assets/" + binID.ToString() + "/data");
+        Uri assetPath = new Uri(m_basePath + "/assets/" + binID.ToString());
         HttpWebRequest request = (HttpWebRequest)WebRequest.Create(assetPath);
         request.MaximumAutomaticRedirections = 4;
         request.MaximumResponseHeadersLength = 4;
@@ -160,9 +165,11 @@ public class OSAssetContextV1 : AssetContextBase {
                             response.StatusCode, response.ContentLength);
                 if (response.StatusCode == HttpStatusCode.OK) {
                     using (Stream receiveStream = response.GetResponseStream()) {
-                        byte[] textureBuff = new byte[response.ContentLength];
-                        receiveStream.Read(textureBuff, 0, (int)response.ContentLength);
-                        OMV.Assets.AssetTexture at = new OMV.Assets.AssetTexture(binID, textureBuff);
+                        XmlSerializer xserial = new XmlSerializer(typeof(OpenSim.Framework.AssetBase));
+                        OpenSim.Framework.AssetBase abase = (OpenSim.Framework.AssetBase)xserial.Deserialize(receiveStream);
+                        // byte[] textureBuff = new byte[response.ContentLength];
+                        // receiveStream.Read(textureBuff, 0, (int)response.ContentLength);
+                        OMV.Assets.AssetTexture at = new OMV.Assets.AssetTexture(binID, abase.Data);
                         ProcessDownloadFinished(OMV.TextureRequestState.Finished, at);
                     }
                 }
