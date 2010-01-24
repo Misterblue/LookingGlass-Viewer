@@ -403,10 +403,9 @@ namespace LG {
 		LG::Log("RendererOgre::createScene");
 		try {
 			const char* sceneName = LG::GetParameter("Renderer.Ogre.Name");
-			m_sceneMgr = m_root->createSceneManager(Ogre::ST_EXTERIOR_CLOSE, sceneName);
-			// m_sceneMgr = m_root->createSceneManager(Ogre::ST_GENERIC, sceneName);
+			// m_sceneMgr = m_root->createSceneManager(Ogre::ST_EXTERIOR_CLOSE, sceneName);
+			m_sceneMgr = m_root->createSceneManager(Ogre::ST_GENERIC, sceneName);
 			// ambient has to be adjusted for time of day. Set it initially
-			// m_sceneMgr->setAmbientLight(Ogre::ColourValue(0.5, 0.5, 0.5));
 			SceneAmbientColor = LG::GetParameterColor("Renderer.Ogre.Ambient.Scene");
 			MaterialAmbientColor = LG::GetParameterColor("Renderer.Ogre.Ambient.Material");
 			m_sceneMgr->setAmbientLight(SceneAmbientColor);
