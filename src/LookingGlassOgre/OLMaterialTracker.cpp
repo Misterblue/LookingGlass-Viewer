@@ -564,8 +564,10 @@ void OLMaterialTracker::CreateMaterialResource3(const char* mName, const char* t
 	CreateMaterialSetTransparancy(pass, parms[CreateMaterialTransparancy]);
 	pass->setDiffuse(parms[CreateMaterialColorR], parms[CreateMaterialColorG], 
 					parms[CreateMaterialColorB], parms[CreateMaterialColorA] );
-	Ogre::TextureUnitState* tus = pass->createTextureUnitState(textureName);
-	CreateMaterialDecorateTus(tus, parms);
+	if (textureName.length() != 0) {
+		Ogre::TextureUnitState* tus = pass->createTextureUnitState(textureName);
+		CreateMaterialDecorateTus(tus, parms);
+	}
 
 	LG::RendererOgre::Instance()->Shadow->AddReceiverShadow(mat);
 
@@ -575,11 +577,13 @@ void OLMaterialTracker::CreateMaterialResource3(const char* mName, const char* t
 	// secondary, fallback technique
 	Ogre::Technique* tech2 = mat->createTechnique();
 	Ogre::Pass* pass2 = tech2->createPass();
-	Ogre::TextureUnitState* tus2 = pass2->createTextureUnitState(textureName);
 	CreateMaterialSetTransparancy(pass2, parms[CreateMaterialTransparancy]);
 	pass2->setDiffuse(parms[CreateMaterialColorR], parms[CreateMaterialColorG], 
 					parms[CreateMaterialColorB], parms[CreateMaterialColorA] );
-	CreateMaterialDecorateTus(tus2, parms);
+	if (textureName.length() != 0) {
+		Ogre::TextureUnitState* tus2 = pass2->createTextureUnitState(textureName);
+		CreateMaterialDecorateTus(tus2, parms);
+	}
 }
 
 void OLMaterialTracker::CreateMaterialDecorateTus(Ogre::TextureUnitState* tus, const float* parms) {

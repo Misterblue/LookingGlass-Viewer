@@ -168,7 +168,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "LoadingTexture.png",
                     "Resource name of  the default texture");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.WhiteTextureResourceName", 
-                    "WhiteTexture.png",
+                    "Preload/" + OMV.Primitive.TextureEntry.WHITE_TEXTURE.ToString().Substring(0,1) 
+                            + "/" + OMV.Primitive.TextureEntry.WHITE_TEXTURE.ToString(),
                     "Resource name of a white texture used as default base color");
 
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.LL.SceneMagnification", "1",
