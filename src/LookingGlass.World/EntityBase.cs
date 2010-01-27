@@ -153,13 +153,26 @@ public abstract class EntityBase : IEntity {
         foreach (KeyValuePair<Type, object> kvp in m_moduleInterfaces) {
             try {
                 IDisposable idis = (IDisposable)kvp.Value;
-                idis.Dispose();
+                // is this right? How to tell object it's done here but don't need to zap oneself
+                // idis.Dispose();
             }
             catch {
                 // if it won't dispose it's not our problem
             }
         }
         m_moduleInterfaces.Clear();
+
+        // clean out references in the additions table
+        for (int ii = 0; ii < Additions.Length; ii++) {
+            try {
+                IDisposable idisp = (IDisposable)Additions[ii];
+            }
+            catch {
+            }
+            finally {
+                Additions[ii] = null;
+            }
+        }
     }
 
 

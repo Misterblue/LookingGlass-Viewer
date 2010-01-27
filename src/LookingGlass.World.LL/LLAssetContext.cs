@@ -67,12 +67,14 @@ public sealed class LLAssetContext : AssetContextBase {
         // m_client.Assets.OnImageReceived += new OMV.AssetManager.ImageReceivedCallback(OnImageReceived);
         m_comm.GridClient.Assets.Cache.ComputeAssetCacheFilename = ComputeTextureFilename;
 
+        /* Need our own parameters since there can be more than one AssetContext
         m_comm.CommStatistics().Add("TexturesWaitingFor",
             delegate(string xx) { return new OMVSD.OSDString(m_waiting.Count.ToString()); },
             "Number of unique textures requests outstanding");
         m_comm.CommStatistics().Add("CurrentOutstandingTextureRequests",
             delegate(string xx) { return new OMVSD.OSDString(m_currentOutstandingTextureRequests.ToString()); },
             "Number of texture requests that have been passed to libomv");
+         */
     }
 
     public string ComputeTextureFilename(string cacheDir, OMV.UUID textureID) {

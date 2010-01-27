@@ -58,12 +58,6 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     public static OgreSceneNode GetRegionSceneNode(IEntity ent) {
         return (OgreSceneNode)ent.Addition(RendererOgre.AddRegionSceneNode);
     }
-    // SceneNode of  the  terrain if this is an ITerrainInfo
-    public static int AddTerrainSceneNode;
-    public static string AddTerrainSceneNodeName = "OgreTerrainSceneNode";
-    public static OgreSceneNode GetTerrainSceneNode(IEntity ent) {
-        return (OgreSceneNode)ent.Addition(RendererOgre.AddTerrainSceneNode);
-    }
 
     protected IUserInterfaceProvider m_userInterface = null;
 
@@ -244,7 +238,6 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         // renderer keeps rendering specific data in an entity's addition/subsystem slots
         AddSceneNodeName = EntityBase.AddAdditionSubsystem(RendererOgre.AddSceneNodeNameName);
         AddRegionSceneNode = EntityBase.AddAdditionSubsystem(RendererOgre.AddRegionSceneNodeName);
-        AddTerrainSceneNode = EntityBase.AddAdditionSubsystem(RendererOgre.AddTerrainSceneNodeName);
     }
 
     // these exist to keep one managed pointer to the delegates so they don't get garbage collected
@@ -742,8 +735,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         if (m_lastCameraPosition != null && m_lastCameraOrientation != null) {
             double dist = OMV.Vector3d.Distance(ent.GlobalPosition, m_lastCameraPosition);
             // if (entity is behind the camera) dist += 200;
-            // OMV.Vector3 dir = OMV.Vector3.UnitX * m_lastCameraOrientation;
-            // if (dir.X < 0) dist += 200;
+            OMV.Vector3 dir = OMV.Vector3.UnitX * m_lastCameraOrientation;
+            if (dir.X < 0) dist += 200;
             if (dist < 0) dist = -dist;
             if (dist > 1000.0) dist = 1000.0;
             // m_log.Log(LogLevel.DRENDERDETAIL, "CalcualteInterestOrder: ent={0}, cam={1}, d={2}", 
@@ -912,63 +905,14 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             m_log.Log(LogLevel.DBADERROR, "UpdateTerrainLater: mesh creation failure: " + e.ToString());
         }
 
-
-            /*
-        OgreSceneNode sn;
-        // see if there is a terrain SceneNode already allocated
-        if (RendererOgre.GetTerrainSceneNode(m_rcontext) != null) {
-            sn = RendererOgre.GetTerrainSceneNode(m_rcontext);
-        }
-        else {
-            OgreSceneNode regionSceneNode = RendererOgre.GetRegionSceneNode(m_rcontext);
-            // no existing scene node, create one
-            if (regionSceneNode == null) {
-                // we have to wait until there is a region root before placing texture
-                m_log.Log(LogLevel.DRENDERDETAIL, "RendererOgre: UpdateTerrain: waiting for region root");
-                return false;
-            }
-            else {
-                // m_log.Log(LogLevel.DRENDERDETAIL, "RenderOgre: UpdateTerrain: Using world specific root node");
-                string terrainNodeName = "Terrain/" + m_rcontext.Name + "/" + OMV.UUID.Random().ToString();
-                sn = m_sceneMgr.CreateSceneNode(terrainNodeName, regionSceneNode, 
-                            false, true, 
-                            // the terrain is attached to the region node so it's at relative address
-                            0f, 0f, 0f,
-                            // scaling matches the LL to Ogre map
-                            this.SceneMagnification, this.SceneMagnification, this.SceneMagnification,
-                            OMV.Quaternion.Identity.W, OMV.Quaternion.Identity.X,
-                            OMV.Quaternion.Identity.Y, OMV.Quaternion.Identity.Z
-                );
-                m_rcontext.SetAddition(RendererOgre.AddTerrainSceneNode, sn);
-                m_log.Log(LogLevel.DRENDERDETAIL, "Creating terrain " + sn.Name);
-            }
-        }
-
-        try {
-            float[,] hm = m_rcontext.TerrainInfo.HeightMap;
-            int hmWidth = m_rcontext.TerrainInfo.HeightMapWidth;
-            int hmLength = m_rcontext.TerrainInfo.HeightMapLength;
-
-            int loc = 0;
-            float[] passingHM = new float[hmWidth * hmLength];
-            for (int xx = 0; xx < hmWidth; xx++) {
-                for (int yy = 0; yy < hmLength; yy++) {
-                    passingHM[loc++] = hm[xx, yy];
-                }
-            }
-
-            Ogr.GenTerrainMesh(m_sceneMgr.BasePtr, sn.BasePtr, hmWidth, hmLength, passingHM);
-        }
-        catch (Exception e) {
-            m_log.Log(LogLevel.DBADERROR, "UpdateTerrainLater: mesh creation failure: " + e.ToString());
-        }
-             */
-
         return;
     }
     #endregion IRenderProvider
 
     // ==========================================================================
+    // Called from the Ogre side asking for a resource to be created. Depending on the
+    // type of resource requested, we load the resource and inform Ogre it's there.
+    // This call is from the unmanaged code so most of the work is queued.
     private void RequestResource(string resourceContext, string resourceName, int resourceType) {
         switch (resourceType) {
             case Ogr.ResourceTypeMesh:
