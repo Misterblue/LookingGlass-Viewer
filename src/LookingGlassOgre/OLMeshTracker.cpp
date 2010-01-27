@@ -82,7 +82,10 @@ void OLMeshTracker::Shutdown() {
 // ====================================================================
 // we're between frames, on our own thread so we can do the work without locking
 bool OLMeshTracker::frameEnded(const Ogre::FrameEvent& evt) {
+	LG::OLMeshTracker* inst = LG::OLMeshTracker::Instance();
+	LGLOCK_LOCK(inst->MeshTrackerLock);
 	ProcessWorkItems(100);
+	LGLOCK_UNLOCK(inst->MeshTrackerLock);
 	return true;
 }
 

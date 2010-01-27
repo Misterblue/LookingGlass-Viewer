@@ -148,7 +148,19 @@ public abstract class EntityBase : IEntity {
     }
 #endregion IRegistryCore
 
-    public abstract void Dispose();
+    public virtual void Dispose() {
+        // tell all the interfaces we're done with them
+        foreach (KeyValuePair<Type, object> kvp in m_moduleInterfaces) {
+            try {
+                IDisposable idis = (IDisposable)kvp.Value;
+                idis.Dispose();
+            }
+            catch {
+                // if it won't dispose it's not our problem
+            }
+        }
+        m_moduleInterfaces.Clear();
+    }
 
 
     #region CONTEXTS

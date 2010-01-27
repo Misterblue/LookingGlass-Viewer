@@ -179,6 +179,7 @@ void OLMaterialTracker::MakeMaterialDefault(Ogre::MaterialPtr matPtr) {
 }
 
 // Internal request to refresh a resource
+// BETWEEN FRAME OPERATION
 void OLMaterialTracker::RefreshResource(const Ogre::String& resName, const int rType) {
 	if (rType == LG::ResourceTypeMesh) {
 		Ogre::MeshPtr theMesh = (Ogre::MeshPtr)Ogre::MeshManager::getSingleton().getByName(resName);
