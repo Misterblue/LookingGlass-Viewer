@@ -30,6 +30,8 @@
 #include "pthreads.h"
 #endif
 #ifdef LGLOCK_BOOST
+#undef NOMINMAX
+#define NOMINMAX
 #include "boost/thread/mutex.hpp"
 #include "boost/thread/condition.hpp"
 #endif

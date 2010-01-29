@@ -60,11 +60,12 @@ OLMeshTracker::OLMeshTracker() {
 	MeshSerializer = new Ogre::MeshSerializer();
 	m_meshTimeKeeper = new Ogre::Timer();
 	// for the moment, don't try to use an extra thread
-#if OGRE_THREAD_SUPPORT > 0
 	LGLOCK_THREAD_INITIALIZING;
+#if OGRE_THREAD_SUPPORT > 0
 	m_processingThread = LGLOCK_ALLOCATE_THREAD(&ProcessThreadRoutine);
 #else
 	LG::GetOgreRoot()->addFrameListener(this);
+	LGLOCK_THREAD_INITIALIZED;
 #endif
 	LG::OLMeshTracker::KeepProcessing = true;
 }
@@ -139,6 +140,8 @@ void OLMeshTracker::ProcessWorkItems(int totalCost) {
 				LG::Log("ProcessBetweenFrame: EXCEPTION PROCESSING: %s", operate->uniq.c_str());
 			}
 			runningCost -= operate->cost;
+			LG::Log("OLMeshTracker::ProcessWorkItems: c=%d, u=%s", runningCost, operate->uniq.c_str());
+
 			delete(operate);
 		}
 		else {

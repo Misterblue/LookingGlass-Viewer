@@ -46,7 +46,7 @@ cp RenderSystem_GL.dll          "${LGLIBDIR}/Ogre/bin/Release"
 
 
 echo "rsyncing include: $OGREDIR/OgreMain/include => $LGLIBDIR/Ogre/include"
-rsync -aqv "${OGREDIR}/OgreMain/include" "${LGLIBDIR}/Ogre"
+rsync -av "${OGREDIR}/OgreMain/include" "${LGLIBDIR}/Ogre"
 
 echo "Bin files to bin: $OGREDIR/lib -> $LGBINDIR"
 cd "${OGREDIR}/lib"

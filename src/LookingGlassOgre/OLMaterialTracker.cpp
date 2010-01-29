@@ -251,6 +251,10 @@ void OLMaterialTracker::MarkTextureModified(const Ogre::String materialName, boo
 // between frames, if there were material modified, refresh their containing entities
 bool OLMaterialTracker::frameEnded(const Ogre::FrameEvent&) {
 	if (this->m_slowCount-- < 0) {
+		if (m_materialsModified.size() > 0 || m_texturesModified.size() > 0) {
+			LG::Log("OLMaterialTracker::frameEnded: m=%d, t=%d", 
+				m_materialsModified.size(), m_texturesModified.size());
+		}
 		try {
 			this->m_slowCount = 10;
 			Ogre::String matName;

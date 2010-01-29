@@ -485,7 +485,8 @@ public:
 		this->type = "UpdateTerrain";
 		this->regionName = Ogre::String(regionNm);
 		this->uniq = this->regionName + "/UpdateTerrain";
-		this->width = w; this->length = l;
+		this->width = w; 
+		this->length = l;
 		this->heightMap = (float*)malloc(w * l * sizeof(float));
 		memcpy(this->heightMap, hm, w * l * sizeof(float));
 	}
@@ -746,9 +747,8 @@ bool XXCompareElements(const GenericQc* e1, const GenericQc* e2) {
 }
 
 int repriorityCount = 10;
+Ogre::Timer* betweenFrameTimeKeeper = new Ogre::Timer();
 void ProcessBetweenFrame::ProcessWorkItems(int millisToProcess) {
-	//1 Lines commented with '1' were used to figure out processing times
-	Ogre::Timer* betweenFrameTimeKeeper = new Ogre::Timer();
 	unsigned long startTime = betweenFrameTimeKeeper->getMilliseconds();
 	unsigned long endTime = startTime + millisToProcess;
 	// This sort is intended to put the highest priority (ones with lowest numbers) at
@@ -779,7 +779,7 @@ void ProcessBetweenFrame::ProcessWorkItems(int millisToProcess) {
 			m_betweenFrameCameraWork.pop_front();
 		}
 		LGLOCK_UNLOCK(m_workItemMutex);
-		if (workCameraGeneric != NULL) ProcessOneWorkItem(workCameraGeneric);
+		if (workCameraGeneric != NULL) ProcessOneWorkItem(workCameraGeneric, loopCost, millisToProcess);
 	}
 	while (!m_betweenFrameMaterialWork.empty()) {
 		GenericQc* workMaterialGeneric = NULL;
@@ -789,7 +789,7 @@ void ProcessBetweenFrame::ProcessWorkItems(int millisToProcess) {
 			m_betweenFrameMaterialWork.pop_front();
 		}
 		LGLOCK_UNLOCK(m_workItemMutex);
-		if (workMaterialGeneric != NULL) ProcessOneWorkItem(workMaterialGeneric);
+		if (workMaterialGeneric != NULL) ProcessOneWorkItem(workMaterialGeneric, loopCost, millisToProcess);
 	}
 	// Several schemes have been tried to control the between frame processing.
 	// while (!m_betweenFrameWork.empty() && (loopCost > 0) ) {
@@ -805,24 +805,25 @@ void ProcessBetweenFrame::ProcessWorkItems(int millisToProcess) {
 			loopCost -= workGeneric->cost;
 		}
 		LGLOCK_UNLOCK(m_workItemMutex);
-		//1 unsigned long checkTimeBegin = betweenFrameTimeKeeper->getMicroseconds();
-		if (workGeneric != NULL) ProcessOneWorkItem(workGeneric);
-
+		if (workGeneric != NULL) ProcessOneWorkItem(workGeneric, loopCost, millisToProcess);
 	}
 	return;
 }
 
-void ProcessBetweenFrame::ProcessOneWorkItem(GenericQc* workGeneric) {
+void ProcessBetweenFrame::ProcessOneWorkItem(GenericQc* workGeneric, int loopCost, int millisToProcess) {
+	//1 Lines commented with '1' were used to figure out processing times
+	unsigned long checkTimeBegin = betweenFrameTimeKeeper->getMicroseconds();
 	try {
 		workGeneric->Process();
 	}
 	catch (...) {
 		LG::Log("ProcessBetweenFrame: EXCEPTION PROCESSING: %s", workGeneric->uniq.c_str());
 	}
-	//1 unsigned long checkTimeEnd = betweenFrameTimeKeeper->getMicroseconds();
-	//1 LG::Log("PBF: c=%d, m=%d, lc=%d, t=%d, t=%s, u=%s", 
-	//1  	repriorityCount, millisToProcess, loopCost,
-	//1 	(int)(checkTimeEnd-checkTimeBegin), workGeneric->type.c_str(), workGeneric->uniq.c_str());
+	unsigned long checkTimeEnd = betweenFrameTimeKeeper->getMicroseconds();
+	LG::Log("PBF: c=%d, m=%d, lc=%d, t=%d, t=%s, u=%s", 
+			 	repriorityCount, millisToProcess, loopCost, (int)(checkTimeEnd-checkTimeBegin), 
+				workGeneric->type.c_str(), workGeneric->uniq.c_str());
+
 	delete(workGeneric);
 }
 

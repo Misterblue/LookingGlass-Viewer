@@ -318,22 +318,18 @@ namespace LG {
 
 		// Force the creation of the singleton classes
 		// The singleton classes might create threads so let the render system know that's coming
-#if OGRE_THREAD_SUPPORT > 0
 		LG::Log("RendererOgre::createLookingGlassResourceGroups: THREAD SUPPORT ON = %d", OGRE_THREAD_SUPPORT);
 		m_root->getRenderSystem()->preExtraThreadsStarted();
-#endif
 		LG::ProcessBetweenFrame::Instance();
 		// LG::ProcessAnyTime::Instance();
 		LG::OLMaterialTracker::Instance();
 		LG::OLMeshTracker::Instance();
 		LG::RegionTracker::Instance();
-#if OGRE_THREAD_SUPPORT > 0
 		while (!LGLOCK_THREADS_AREINITIALIZED) {
 			// wait for any initializing threads to do their thing before doing post...
 			LGLOCK_SLEEP(1);
 		}
 		m_root->getRenderSystem()->postExtraThreadsStarted();
-#endif
 
 		// listener to catch references to materials in meshes when they are read in
 		Ogre::MeshManager::getSingleton().setListener(new LG::OLMeshSerializerListener());

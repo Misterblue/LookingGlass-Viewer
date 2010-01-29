@@ -112,7 +112,7 @@ private:
 	std::list<GenericQc*> m_betweenFrameCameraWork;
 	std::list<GenericQc*> m_betweenFrameMaterialWork;
 
-	void ProcessOneWorkItem(GenericQc* wi);
+	void ProcessOneWorkItem(GenericQc* wi, int lc, int m);
 	void QueueWork(GenericQc* wi, std::list<GenericQc*>*queue);
 
 	bool m_shouldUseProcessingThread;

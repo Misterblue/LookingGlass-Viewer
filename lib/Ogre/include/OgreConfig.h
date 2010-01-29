@@ -105,7 +105,7 @@ Torus Knot Software Ltd.
 */
 #define OGRE_MAX_MULTIPLE_RENDER_TARGETS 8
 
-#define OGRE_THREAD_SUPPORT 1
+#define OGRE_THREAD_SUPPORT 2
 /** Support for multithreading, there are 3 options
 
 OGRE_THREAD_SUPPORT = 0
