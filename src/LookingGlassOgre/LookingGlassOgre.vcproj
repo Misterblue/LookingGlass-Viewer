@@ -316,10 +316,6 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\UserIO.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\VisCalcFrustDist.cpp"
 				>
 			</File>

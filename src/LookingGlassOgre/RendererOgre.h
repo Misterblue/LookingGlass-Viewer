@@ -25,11 +25,11 @@
 #include "LGOCommon.h"
 #include "LGLocking.h"
 #include "LGCamera.h"
-#include "UserIO.h"
 #include "OLMaterialTracker.h"
 #include "OLMeshTracker.h"
 #include "SkyBoxBase.h"
 #include "ShadowBase.h"
+#include "UserIO.h"
 #include "VisCalcBase.h"
 
 namespace LG {

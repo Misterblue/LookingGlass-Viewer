@@ -480,7 +480,7 @@ namespace LG {
 	}
 
 	void RendererOgre::createInput() {
-		m_userio = new UserIO();
+		// m_userio = new UserIO();
 	}
 
 	// ========== Ogre::FrameListener

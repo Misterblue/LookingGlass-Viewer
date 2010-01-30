@@ -87,7 +87,6 @@ Ogre::Codec::DecodeResult BadImageCodec::decode(Ogre::DataStreamPtr& dstrm) cons
 	Ogre::Codec::DecodeResult ret = 
 		std::make_pair(Ogre::MemoryDataStreamPtr(new Ogre::MemoryDataStream(pData, sizeof(pData), true)), 
 						Ogre::Codec::CodecDataPtr(imgData));
-	LG::Log("BadImageCodec::decode: built return result");
 	return ret;
 }
 

@@ -174,7 +174,7 @@ void OLMaterialTracker::MakeMaterialDefault(Ogre::MaterialPtr matPtr) {
 	LG::RendererOgre::Instance()->Shadow->AddReceiverShadow(mat);
 
 #if OGRE_THREAD_SUPPORT != 1
-	// mat->load();
+	mat->load();
 #endif
 }
 
