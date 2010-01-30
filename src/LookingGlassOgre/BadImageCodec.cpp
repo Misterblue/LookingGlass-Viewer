@@ -82,9 +82,13 @@ Ogre::Codec::DecodeResult BadImageCodec::decode(Ogre::DataStreamPtr& dstrm) cons
 	imgData->depth = 1;
 	imgData->format = Ogre::PF_BYTE_RGBA;
 	int colors[4] = { 0x40808080, 0x40808080, 0x40808080, 0x40808080 };
-	int * pData = (int *)OGRE_MALLOC(sizeof(colors), Ogre::MEMCATEGORY_GENERAL);
+	int* pData = (int *)OGRE_MALLOC(sizeof(colors), Ogre::MEMCATEGORY_GENERAL);
 	memcpy(pData, colors, sizeof(colors));
-	return std::make_pair(Ogre::MemoryDataStreamPtr(new Ogre::MemoryDataStream(pData, 1, true)), Ogre::Codec::CodecDataPtr(imgData));
+	Ogre::Codec::DecodeResult ret = 
+		std::make_pair(Ogre::MemoryDataStreamPtr(new Ogre::MemoryDataStream(pData, sizeof(pData), true)), 
+						Ogre::Codec::CodecDataPtr(imgData));
+	LG::Log("BadImageCodec::decode: built return result");
+	return ret;
 }
 
 }

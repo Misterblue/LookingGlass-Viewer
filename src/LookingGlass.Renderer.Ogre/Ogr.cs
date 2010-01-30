@@ -162,6 +162,7 @@ static class Ogr {
                             [MarshalAs(UnmanagedType.LPArray)] int[] faceCounts, 
                             [MarshalAs(UnmanagedType.LPArray)] float[] faceVertices);
     [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
+    /*
     public static extern void CreateMaterialResource([MarshalAs(UnmanagedType.LPStr)]string resourceName,
                             [MarshalAs(UnmanagedType.LPStr)]string textureName,
                             float colorR, float colorG, float colorB, float colorA,
@@ -171,6 +172,7 @@ static class Ogr {
                             [MarshalAs(UnmanagedType.LPStr)]string textureName,
                             [MarshalAs(UnmanagedType.LPArray)] float[] parms);
     [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
+     */
     // queue and do between frame version of above
     public static extern void CreateMaterialResource2BF(float pri,
                             [MarshalAs(UnmanagedType.LPStr)]string resourceName,
@@ -225,6 +227,7 @@ static class Ogr {
     public static extern System.IntPtr GetSceneMgr();
     [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
     public static extern System.IntPtr RootNode(System.IntPtr sceneMgr);
+    /*
     [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
     public static extern System.IntPtr CreateSceneNode(
                 System.IntPtr sceneMgr,
@@ -234,6 +237,7 @@ static class Ogr {
                 float px, float py, float pz, float sx, float sy, float sz,
                 float rw, float rx, float ry, float rz
         );
+     */
     [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
     public static extern void UpdateSceneNodeBF(float pri,
                 [MarshalAs(UnmanagedType.LPStr)]string entityName,

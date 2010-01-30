@@ -72,7 +72,6 @@ void VisCalcFrustDist::RecalculateVisibility() {
 
 // we're between frames, on our own thread so we can do the work without locking
 bool VisCalcFrustDist::frameEnded(const Ogre::FrameEvent& evt) {
-	LG::Log("VisCalcFrustDist: frameEnded:");
 	try {
 		if (m_recalculateVisibility) {
 			calculateEntityVisibility();
