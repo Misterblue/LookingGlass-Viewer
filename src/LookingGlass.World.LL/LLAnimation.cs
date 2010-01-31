@@ -1,4 +1,4 @@
-/* Copyright (c) Robert Adams
+﻿/* Copyright (c) Robert Adams
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *     * Redistributions of source code must retain the above copyright
@@ -20,28 +20,19 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include "StdAfx.h"
-#include "Animat.h"
-#include "AnimTracker.h"
+using System;
+using System.Collections.Generic;
+using OMV = OpenMetaverse;
 
-namespace LG {
+namespace LookingGlass.World.LL {
+public class LLAnimation : IAnimation {
 
-Animat::Animat() {
-	this->SceneNodeName.clear();
-};
-Animat::Animat(Ogre::String sNodeName) {
-	this->SceneNodeName = sNodeName;
-};
-Animat::~Animat() {
-};
+    // for the moment, there is not much to an animation
+    private OMV.Vector3 m_angularVelocity = OMV.Vector3.Zero;
+    public OMV.Vector3 AngularVelocity {
+        get { return m_angularVelocity; }
+        set { m_angularVelocity = value; }
+    }
 
-// start a rotation on a scene node
-void Animat::Rotation(float X, float Y, float Z) {
 }
-
-void Animat::Process(float timeSinceLastFrame) {
-	return;
-} 
-
-
 }

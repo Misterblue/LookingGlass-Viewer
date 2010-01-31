@@ -205,12 +205,26 @@ static class Ogr {
         scrollU, scrollV, scaleU, scaleV, rotate,
         mappingType, mediaFlags,
         textureHasTransparent,
+        animationFlag, animSizeX, animSizeY, animStart, animLength, animRate,
         maxParam
     };
+    public const int CreateMaterialAnimFlagOff  = 0x00;
+    public const int CreateMaterialAnimFlagOn   = 0x01;
+    public const int CreateMaterialAnimFlagLoop = 0x02;
+    public const int CreateMaterialAnimReverse  = 0x04;
+    public const int CreateMaterialAnimPingPong = 0x08;
+    public const int CreateMaterialAnimSmooth   = 0x10;
+    public const int CreateMaterialAnimRotate   = 0x20;
+    public const int CreateMaterialAnimScale    = 0x40;
     // unload all resources associated with our resource groups
     [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
     public static extern void DiagnosticAction(int flag);
 
+    // ======================================================================
+    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
+    public static extern bool UpdateAnimationBF(float prio,
+            [MarshalAs(UnmanagedType.LPStr)]string sceneNodeName,
+            float X, float Y, float Z);
     // ======================================================================
     [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
     public static extern void AddRegionBF(float prio,

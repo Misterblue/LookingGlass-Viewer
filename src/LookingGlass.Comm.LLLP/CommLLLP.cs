@@ -775,6 +775,34 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
                         m_log.Log(LogLevel.DUPDATEDETAIL, "Can't assign parent. Entity not found. ent={0}", updatedEntity.Name);
                     }
                 }
+                // DEBUGGGING. REMOVE WHEN YOU KNOW WHAT THE NAME VALUES ARE
+                if (args.Prim.NameValues != null) {
+                    foreach (OMV.NameValue nv in args.Prim.NameValues) {
+                        m_log.Log(LogLevel.DRENDERDETAIL, "NAMEVALUE: {0}={1} on {2}", nv.Name, nv.Value, updatedEntity.Name);
+                    }
+                }
+                // if  there is an angular velocity and this is not an avatar, pass the information
+                // along as an animation (llTargetOmega)
+                IEntityAvatar av;
+                if (!updatedEntity.TryGet<IEntityAvatar>(out av)) {
+                    if (args.Prim.AngularVelocity != OMV.Vector3.Zero) {
+                        IAnimation anim;
+                        if (updatedEntity.TryGet<IAnimation>(out anim)) {
+                            if (args.Prim.AngularVelocity != anim.AngularVelocity) {
+                                anim.AngularVelocity = args.Prim.AngularVelocity;
+                                updateFlags |= UpdateCodes.Animation;
+                                m_log.Log(LogLevel.DUPDATEDETAIL, "Updating prim animation on {0}", updatedEntity.Name);
+                            }
+                        }
+                        else {
+                            anim = new LLAnimation();
+                            anim.AngularVelocity = args.Prim.AngularVelocity;
+                            updatedEntity.RegisterInterface<IAnimation>(anim);
+                            updateFlags |= UpdateCodes.Animation;
+                            m_log.Log(LogLevel.DUPDATEDETAIL, "Created prim animation on {0}", updatedEntity.Name);
+                        }
+                    }
+                }
             }
             catch (Exception e) {
                 m_log.Log(LogLevel.DBADERROR, "FAILED CREATION OF NEW PRIM: " + e.ToString());
@@ -817,6 +845,15 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
             }
             else {
                 m_log.Log(LogLevel.DBADERROR, "FAILED CREATION OF NEW ATTACHMENT");
+            }
+            string attachmentIDs = null;
+            if (args.Prim.NameValues != null) {
+                foreach (OMV.NameValue nv in args.Prim.NameValues) {
+                    if (nv.Name == "AttachItemID") {
+                        attachmentIDs = nv.Value.ToString();
+                        break;
+                    }
+                }
             }
         }
         catch (Exception e) {

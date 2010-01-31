@@ -47,6 +47,7 @@ public interface IWorldRenderConv {
     /// this routine to try and do some implementation specific thing to fix the
     /// problem. For LLLP, this is usually asking for the parent to be loaded.
     /// </summary>
+    /// <param name="priority"></param>
     /// <param name="sceneMgr"></param>
     /// <param name="ent"></param>
     /// <param name="callCount">zero if do nothing, otherwise the number of times that
@@ -58,6 +59,7 @@ public interface IWorldRenderConv {
     /// If doing mesh creation post processing, this causes the mesh resource to
     /// be created from the passed, world specific entity information.
     /// </summary>
+    /// <param name="priority"></param>
     /// <param name="ent"></param>
     /// <returns>false if we need to wait for resources before completing mesh creation</returns>
     bool CreateMeshResource(float priority, IEntity ent, string meshName, EntityName contextEntityName);
@@ -66,6 +68,7 @@ public interface IWorldRenderConv {
     /// If doing material creation post processing, this causes the mesh resource to
     /// be created from the passed, world specific entity information.
     /// </summary>
+    /// <param name="priority"></param>
     /// <param name="ent"></param>
     void CreateMaterialResource(float priority, IEntity ent, string materialName);
 
@@ -81,8 +84,20 @@ public interface IWorldRenderConv {
     /// Given a new region context and a scene, convert the world specific region
     /// info into renderer coordinates.
     /// </summary>
+    /// <param name="priority"></param>
     /// <param name="sceneMgr"></param>
     /// <param name="rcontext"></param>
     void MapRegionIntoView(float priority, Object sceneMgr, IRegionContext rcontext);
+
+    /// <summary>
+    /// Given an animation. Update the view of the entity with that animation. If teh
+    /// entity is an avatar, the action will be different than if the entity is just
+    /// a thing.
+    /// </summary>
+    /// <param name="priority"></param>
+    /// <param name="ent"></param>
+    /// <param name="sceneNodeName"></param>
+    /// <param name="anim"></param>
+    bool UpdateAnimation(float priority, IEntity ent, string sceneNodeName, IAnimation anim);
 }
 }

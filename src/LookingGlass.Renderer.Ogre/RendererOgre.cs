@@ -764,6 +764,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             DoRenderQueued(ent);
             fullUpdate = true;
         }
+        // some things we don't do if it's a new entry since building the new entry will do these already
         if ((what & UpdateCodes.New) == 0) {
             // don't do these checks if the entity is new
             if ((what & UpdateCodes.ParentID) != 0) {
@@ -793,14 +794,28 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     Ogr.RefreshResourceBF(priority, Ogr.ResourceTypeMesh, EntityNameOgre.ConvertToOgreMeshName(ent.Name).Name);
                 }
             }
-            if ((what & UpdateCodes.Text) != 0) {
-                // text associated with the prim changed
-                m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: text changed");
+        }
+        if ((what & UpdateCodes.Animation) != 0) {
+            // the prim has changed its rotation
+            IAnimation anim;
+            if (ent.TryGet<IAnimation>(out anim)) {
+                IWorldRenderConv conver;
+                if (ent.TryGet<IWorldRenderConv>(out conver)) {
+                    m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: update animation");
+                    // since the entity might not have been rendererd yet, we need to queue this operstion
+                    Object[] parms = { 0f, ent, conver, anim };
+                    m_workQueueRender.DoLater(CalculateInterestOrder(ent), DoUpdateAnimationLater, parms);
+                    
+                }
             }
-            if ((what & UpdateCodes.Particles) != 0) {
-                // particles associated with the prim changed
-                m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: particles changed");
-            }
+        }
+        if ((what & UpdateCodes.Text) != 0) {
+            // text associated with the prim changed
+            m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: text changed");
+        }
+        if ((what & UpdateCodes.Particles) != 0) {
+            // particles associated with the prim changed
+            m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: particles changed");
         }
         if (!fullUpdate && (what & (UpdateCodes.Scale | UpdateCodes.Position | UpdateCodes.Rotation)) != 0) {
             // world position has changed. Tell Ogre they have changed
@@ -814,6 +829,21 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                 ent.Heading.W, ent.Heading.X, ent.Heading.Y, ent.Heading.Z);
         }
         return;
+    }
+
+    private bool DoUpdateAnimationLater(DoLaterBase qInstance, Object parms) {
+        Object[] loadParams = (Object[])parms;
+        float prio = (float)loadParams[0];
+        IEntity m_ent = (IEntity)loadParams[1];
+        IWorldRenderConv m_conver = (IWorldRenderConv)loadParams[2];
+        IAnimation m_anim = (IAnimation)loadParams[3];
+
+        string sceneNodeName = RendererOgre.GetSceneNodeName(m_ent);
+        if (sceneNodeName == null) {
+            // prim does not yet have a scene node. Try again later.
+            return false;
+        }
+        return m_conver.UpdateAnimation(0, m_ent, sceneNodeName, m_anim);
     }
 
     // ==========================================================================

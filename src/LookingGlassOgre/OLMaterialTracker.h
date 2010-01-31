@@ -100,8 +100,22 @@ public:
 		CreateMaterialMappingType,
 		CreateMaterialMediaFlags,
 		CreateMaterialTransparancy,
+		CreateMaterialAnimationFlag,
+		CreateMaterialAnimSizeX,
+		CreateMaterialAnimSizeY,
+		CreateMaterialAnimStart,
+		CreateMaterialAnimLength,
+		CreateMaterialAnimRate,
 		CreateMaterialSize
 	};
+#define CreateMaterialAnimFlagOff (0x00)
+#define CreateMaterialAnimFlagOn (0x01)
+#define CreateMaterialAnimFlagLoop (0x02)
+#define CreateMaterialAnimFlagReverse (0x04)
+#define CreateMaterialAnimFlagPingPong (0x08)
+#define CreateMaterialAnimFlagSmooth (0x10)
+#define CreateMaterialAnimFlagRotate (0x20)
+#define CreateMaterialAnimFlagScale (0x40)
 
 private:
 	static OLMaterialTracker* m_instance;

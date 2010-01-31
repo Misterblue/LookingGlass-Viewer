@@ -21,10 +21,63 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "StdAfx.h"
+#include "LGOCommon.h"
+#include "LookingGlassOgre.h"
 #include "AnimTracker.h"
 
 namespace LG {
-AnimTracker::AnimTracker() {};
-AnimTracker::~AnimTracker() {};
+AnimTracker* AnimTracker::m_instance = NULL;
+
+AnimTracker::AnimTracker() {
+	m_animationsMutex = LGLOCK_ALLOCATE_MUTEX("AnimTracker");
+	LG::GetOgreRoot()->addFrameListener(this);
+};
+AnimTracker::~AnimTracker() {
+	LG::GetOgreRoot()->removeFrameListener(this);
+};
+
+// Between frame, update all the animations
+bool AnimTracker::frameStarted(const Ogre::FrameEvent& evt) {
+	LGLOCK_LOCK(m_animationsMutex);
+	std::list<Animat*>::iterator li;
+	for (li = m_animations.begin(); li != m_animations.end(); li++) {
+		li._Ptr->_Myval->Process(evt.timeSinceLastFrame);
+	}
+	for (li = m_removeAnimations.begin(); li != m_removeAnimations.end(); li++) {
+		Animat* anim = li._Ptr->_Myval;
+		delete anim;
+	}
+	m_removeAnimations.clear();
+	LGLOCK_UNLOCK(m_animationsMutex);
+	return true;
+}
+void AnimTracker::RotateSceneNode(Ogre::String sceneNodeName, float X, float Y, float Z) {
+	LGLOCK_LOCK(m_animationsMutex);
+	RemoveAnimations(sceneNodeName);
+	Animat* anim = new Animat(sceneNodeName);
+	m_animations.push_back(anim);
+	LGLOCK_UNLOCK(m_animationsMutex);
+	anim->Rotation(X, Y, Z);
 }
 
+void AnimTracker::RemoveAnimations(Ogre::String sceneNodeName) {
+	LGLOCK_LOCK(m_animationsMutex);
+	std::list<Animat*>::iterator li;
+	for (li = m_animations.begin(); li != m_animations.end(); li++) {
+		if (!li._Ptr->_Myval->SceneNodeName.empty()) {
+			if (li._Ptr->_Myval->SceneNodeName == sceneNodeName) {
+				m_animations.erase(li);
+				m_removeAnimations.push_back(li._Ptr->_Myval);
+			}
+		}
+	}
+	LGLOCK_UNLOCK(m_animationsMutex);
+}
+
+// Called by an animation to say it is complete. This will cause the animat to
+// be deleted after processing is complete.
+void AnimTracker::AnimationComplete(Animat* anim) {
+	m_removeAnimations.push_back(anim);
+}
+
+}

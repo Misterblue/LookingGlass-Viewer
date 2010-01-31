@@ -29,6 +29,7 @@
 #include "LGLocking.h"
 #include "RendererOgre.h"
 #include "LookingGlassOgre.h"
+#include "AnimTracker.h"
 #include "OLArchive.h"
 #include "OLPreloadArchive.h"
 #include "RegionTracker.h"
@@ -325,6 +326,7 @@ namespace LG {
 		LG::OLMaterialTracker::Instance();
 		LG::OLMeshTracker::Instance();
 		LG::RegionTracker::Instance();
+		LG::AnimTracker::Instance();
 		while (!LGLOCK_THREADS_AREINITIALIZED) {
 			// wait for any initializing threads to do their thing before doing post...
 			LGLOCK_SLEEP(1);

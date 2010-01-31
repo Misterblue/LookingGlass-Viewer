@@ -75,6 +75,7 @@ public enum UpdateCodes : uint {
     Terrain =         1 << 23,  
     Focus =           1 << 24, 
     Light =           1 << 25, 
+    Animation =       1 << 26, 
     New =             1 << 30,  // a new item
     FullUpdate =      0x0fffffff
 }

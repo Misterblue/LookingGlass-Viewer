@@ -28,7 +28,14 @@ namespace LG {
 	class Animat {
 	public:
 		Animat();
+		Animat(Ogre::String);
 		~Animat();
+
+		void Process(float);
+
+		void Rotation(float, float, float);
+
+		Ogre::String SceneNodeName;
 
 	private:
 };

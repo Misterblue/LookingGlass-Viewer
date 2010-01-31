@@ -426,6 +426,31 @@ public:
 					this->setRotation, this->ow, this->ox, this->oy, this->oz);
 	}
 };
+// ====================================================================
+class UpdateAnimationQc : public GenericQc {
+	// This only supports the rotation animation of scene nodes. Someday
+	// extend to be more general.
+public:
+	Ogre::String sceneNodeName;
+	float vx; float vy; float vz;
+	UpdateAnimationQc(float prio, Ogre::String uni,
+					char* sNodeName,
+					float px, float py, float pz) {
+		this->priority = prio;
+		this->cost = 3;
+		this->type = "UpdateAnimation";
+		this->uniq = uni + "/UpdateAnimation";
+		this->sceneNodeName = Ogre::String(sNodeName);
+		this->vx = px; this->vy = py; this->vz = pz;
+	}
+	~UpdateAnimationQc(void) {
+		this->uniq.clear();
+		this->sceneNodeName.clear();
+	}
+	void Process() {
+		return;
+	}
+};
 
 // ====================================================================
 class UpdateCameraQc : public GenericQc {
@@ -677,6 +702,13 @@ void ProcessBetweenFrame::UpdateSceneNode(float priority, char* entName,
 	LG::IncStat(LG::StatBetweenFrameUpdateSceneNode);
 }
 
+void ProcessBetweenFrame::UpdateAnimation(float prio, char * sceneNodeName, float X, float Y, float Z){
+	LGLOCK_LOCK(m_workItemMutex);
+	UpdateAnimationQc* uaq = new UpdateAnimationQc(prio, Ogre::String(sceneNodeName), sceneNodeName, X, Y, Z);
+	QueueWork((GenericQc*)uaq, &m_betweenFrameCameraWork);
+	LGLOCK_UNLOCK(m_workItemMutex);
+	LG::IncStat(LG::StatBetweenFrameWorkItems);
+}
 void ProcessBetweenFrame::UpdateCamera(double px, double py, double pz,
 					float ow, float ox, float oy, float oz,
 					float farClipP, float nearClipP, float aspectP) {

@@ -23,15 +23,35 @@
 #pragma once
 
 #include "LGOCommon.h"
-// forward definition
-namespace RendererOgre { class RendererOgre; }
+#include "SingletonInstance.h"
+#include "Animat.h"
+#include "LGLocking.h"
 
 namespace LG {
-	class AnimTracker {
-	public:
-		AnimTracker();
-		~AnimTracker();
+class AnimTracker : Ogre::FrameListener, public SingletonInstance {
+public:
+	AnimTracker();
+	~AnimTracker();
+
+	static AnimTracker* Instance() { 
+		if (LG::AnimTracker::m_instance == NULL) {
+			LG::AnimTracker::m_instance = new AnimTracker();
+		}
+		return LG::AnimTracker::m_instance; 
+	}
+
+	void RotateSceneNode(Ogre::String sceneNodeName, float X, float Y, float Z);
+	void RemoveAnimations(Ogre::String sceneNodeName);
+	void AnimationComplete(Animat*);
+
+	// Ogre::FrameListener
+	bool frameStarted(const Ogre::FrameEvent&);
 
 	private:
+	static AnimTracker* m_instance;
+
+	LGLOCK_MUTEX m_animationsMutex;
+	std::list<Animat*> m_animations;
+	std::list<Animat*> m_removeAnimations;
 };
 }

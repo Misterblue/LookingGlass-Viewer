@@ -213,11 +213,15 @@ extern "C" DLLExport void RemoveSceneNodeBF(float prio, char* sceneNodeName) {
 	LG::ProcessBetweenFrame::Instance()->RemoveSceneNode(prio, sceneNodeName);
 }
 // ================================================================
+extern "C" DLLExport void UpdateAnimationBF(float prio, char* sceneNodeName, float X, float Y, float Z) {
+	LG::ProcessBetweenFrame::Instance()->UpdateAnimation(prio, sceneNodeName, X, Y, Z);
+}
+
+// ================================================================
 Ogre::Root* GetOgreRoot() {
 	return LG::RendererOgre::Instance()->m_root;
 }
 
-// ================================================================
 // ================================================================
 void LG::SetStat(int cod, int val) {
 	if (LG::statsBlock != NULL) {

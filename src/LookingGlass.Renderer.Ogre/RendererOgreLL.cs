@@ -511,6 +511,19 @@ public class RendererOgreLL : IWorldRenderConv {
             textureParams[pBase + (int)Ogr.CreateMaterialParam.fullBright] = textureFace.Fullbright ? 1f : 0f;
             textureParams[pBase + (int)Ogr.CreateMaterialParam.mappingType] = (float)textureFace.TexMapType;
             textureParams[pBase + (int)Ogr.CreateMaterialParam.mediaFlags] = textureFace.MediaFlags ? 1f : 0f;
+
+            textureParams[pBase + (int)Ogr.CreateMaterialParam.animationFlag] = 0f;
+            if (prim.TextureAnim.Face == faceNum 
+                        && ((prim.TextureAnim.Flags & OpenMetaverse.Primitive.TextureAnimMode.ANIM_ON) != 0)) {
+                m_log.Log(LogLevel.DRENDERDETAIL, "Adding animation for material texture");
+                textureParams[pBase + (int)Ogr.CreateMaterialParam.animationFlag] = (float)prim.TextureAnim.Flags;
+                textureParams[pBase + (int)Ogr.CreateMaterialParam.animSizeX] = (float)prim.TextureAnim.SizeX;
+                textureParams[pBase + (int)Ogr.CreateMaterialParam.animSizeY] = (float)prim.TextureAnim.SizeY;
+                textureParams[pBase + (int)Ogr.CreateMaterialParam.animStart] = prim.TextureAnim.Start;
+                textureParams[pBase + (int)Ogr.CreateMaterialParam.animRate] = prim.TextureAnim.Rate;
+                textureParams[pBase + (int)Ogr.CreateMaterialParam.animLength] = prim.TextureAnim.Length;
+            }
+
             // since we can't calculate whether material is transparent or not (actually
             //   we don't have that information at this instant), assume color transparent
             if (textureFace.RGBA.A == 1.0) {
@@ -680,6 +693,19 @@ public class RendererOgreLL : IWorldRenderConv {
         }
          */
         return;
+    }
+
+    // Called to animate something in the renderer.
+    // The only animation so far is the rotation animation.
+    // Return 'true' if animation set. false if not set and try again later.
+    public bool UpdateAnimation(float prio, IEntity ent, string sceneNodeName, IAnimation anim) {
+        m_log.Log(LogLevel.DRENDERDETAIL, "Update animation for {0}", ent.Name);
+        if (anim is LLAnimation) {
+            LLAnimation animLL = (LLAnimation)anim;
+            Ogr.UpdateAnimationBF(prio, sceneNodeName,
+                anim.AngularVelocity.X, anim.AngularVelocity.Y, anim.AngularVelocity.Z);
+        }
+        return true;
     }
 
     // Routine from OpenSim which creates a hash for the prim shape
