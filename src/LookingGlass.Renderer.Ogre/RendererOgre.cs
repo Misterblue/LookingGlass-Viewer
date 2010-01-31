@@ -313,6 +313,9 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         m_ogreStats.Add("TotalBetweenFrameRefreshResource", delegate(string xx) {
                 return new OMVSD.OSDString(m_ogreStatsPinned[Ogr.StatBetweenFrameRefreshResource].ToString()); },
                 "Number of 'refresh resource' work items queued");
+        m_ogreStats.Add("TotalBetweenFrameRemoveSceneNode", delegate(string xx) {
+                return new OMVSD.OSDString(m_ogreStatsPinned[Ogr.StatBetweenFrameRemoveSceneNode].ToString()); },
+                "Number of 'remove scene node' work items queued");
         m_ogreStats.Add("TotalBetweenFrameCreateMaterialResource", delegate(string xx) {
                 return new OMVSD.OSDString(m_ogreStatsPinned[Ogr.StatBetweenFrameCreateMaterialResource].ToString()); },
                 "Number of 'create material resource' work items queued");
@@ -815,6 +818,17 @@ public class RendererOgre : ModuleBase, IRenderProvider {
 
     // ==========================================================================
     public void UnRender(IEntity ent) {
+        lock (ent) {
+            // if a parent, the children go too
+            IEntityCollection coll = null;
+            if (ent.TryGet<IEntityCollection>(out coll)) {
+                coll.ForEach(delegate(IEntity entt) { this.UnRender(entt); });
+            }
+            if (RendererOgre.GetSceneNodeName(ent) != null) {
+                string sNodeName = RendererOgre.GetSceneNodeName(ent);
+                Ogr.RemoveSceneNodeBF(0, sNodeName);
+            }
+        }
         return;
     }
 

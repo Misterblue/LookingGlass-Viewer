@@ -80,6 +80,8 @@ public:
 					bool updatePosition, float px, float py, float pz, 
 					bool updateScale, float sx, float sy, float sz,
 					bool updateRotation, float ow, float ox, float oy, float oz);
+	void RemoveSceneNode(const Ogre::String sNodeName);
+	void RemoveSceneNodeR(Ogre::SceneNode* parentNode, Ogre::SceneNode* sNodeName);
 	void CreateMeshResource(const char*, const int[], const float[]);
 	void CreateMeshResource2(const char*, const int[], const float[]);	// experimental
 	

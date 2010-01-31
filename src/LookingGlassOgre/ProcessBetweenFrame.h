@@ -70,6 +70,7 @@ public:
 	bool frameEnded(const Ogre::FrameEvent&);
 
 	void RefreshResource(float, char*, int);
+	void RemoveSceneNode(float, char*);
 	void CreateMaterialResource2(float, const char*, const char*, const float*);
 	void CreateMaterialResource7(float, const char*, 
 			const char* matName1, const char* matName2, const char* matName3, 

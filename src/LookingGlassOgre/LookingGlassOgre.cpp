@@ -209,6 +209,9 @@ extern "C" DLLExport void UpdateSceneNodeBF(float pri,
 					setRotation, ow, ox, oy, oz);
 	return;
 }
+extern "C" DLLExport void RemoveSceneNodeBF(float prio, char* sceneNodeName) {
+	LG::ProcessBetweenFrame::Instance()->RemoveSceneNode(prio, sceneNodeName);
+}
 // ================================================================
 Ogre::Root* GetOgreRoot() {
 	return LG::RendererOgre::Instance()->m_root;

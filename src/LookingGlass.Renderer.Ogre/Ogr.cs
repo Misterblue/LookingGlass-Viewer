@@ -49,6 +49,7 @@ static class Ogr {
     // between frame work
     public const int StatBetweenFrameWorkItems = 1;
     public const int StatBetweenFrameRefreshResource = 8;
+    public const int StatBetweenFrameRemoveSceneNode = 30;
     public const int StatBetweenFrameCreateMaterialResource = 9;
     public const int StatBetweenFrameCreateMeshResource = 10;
     public const int StatBetweenFrameCreateMeshSceneNode = 11;
@@ -238,6 +239,9 @@ static class Ogr {
                 float rw, float rx, float ry, float rz
         );
      */
+    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
+    public static extern void RemoveSceneNodeBF(float prio,
+                [MarshalAs(UnmanagedType.LPStr)]string sceneNodeName );
     [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
     public static extern void UpdateSceneNodeBF(float pri,
                 [MarshalAs(UnmanagedType.LPStr)]string entityName,

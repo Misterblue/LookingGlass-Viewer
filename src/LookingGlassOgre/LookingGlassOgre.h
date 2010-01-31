@@ -61,6 +61,7 @@ static const int StatCullMeshesUnloaded = 13;
 static const int StatCullTexturesUnloaded = 14;
 static const int StatCullMeshesQueuedToLoad = 15;
 static const int StatBetweenFrameRefreshResource = 8;
+static const int StatBetweenFrameRemoveSceneNode = 30;
 static const int StatBetweenFrameCreateMaterialResource = 9;
 static const int StatBetweenFrameCreateMeshResource = 10;
 static const int StatBetweenFrameCreateMeshSceneNode = 11;

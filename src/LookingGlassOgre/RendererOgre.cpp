@@ -627,6 +627,38 @@ namespace LG {
 		return;
 	}
 
+	// BETWEEN FRAME OPERATION
+	void RendererOgre::RemoveSceneNode(const Ogre::String sNodeName) {
+		if (m_sceneMgr->hasSceneNode(sNodeName)) {
+			try {
+				Ogre::SceneNode* sNode = m_sceneMgr->getSceneNode(sNodeName);
+				Ogre::SceneNode* parentNode = sNode->getParentSceneNode();
+				RemoveSceneNodeR(parentNode, sNode);
+			}
+			catch (...) {
+				LG::Log("RemoveSceneNode: exception removing node");
+			}
+		}
+	}
+	void RendererOgre::RemoveSceneNodeR(Ogre::SceneNode* parent, Ogre::SceneNode* snode) {
+		parent->removeChild(snode);
+		if (snode->numChildren() > 0) {
+			Ogre::SceneNode::ChildNodeIterator nodeChildIterator = snode->getChildIterator();
+			while (nodeChildIterator.hasMoreElements()) {
+				Ogre::SceneNode* nodeChild = (Ogre::SceneNode*)nodeChildIterator.getNext();
+				RemoveSceneNodeR(snode, nodeChild);
+			}
+		}
+		// release animations associated with scene node
+		// release objects attached to this scenenode
+		for (int ii=snode->numChildren(); ii>=0; ii--) {
+			Ogre::MovableObject* nodeObject = snode->getAttachedObject(ii);
+			snode->detachObject(ii);
+			m_sceneMgr->destroyMovableObject(nodeObject);
+		}
+		m_sceneMgr->destroySceneNode(snode);
+	}
+
 	// Passed a bunch of vertices and index information, create the mesh that goes with it.
 	// The mesh is created and serialized to a .mesh file which just happens to be in the 
 	// same spot as the resource looker-upper will look to find it when the mesh is reloaded.

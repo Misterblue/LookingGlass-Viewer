@@ -61,6 +61,27 @@ public:
 };
 
 // ====================================================================
+// RemoveSceneNode
+class RemoveSceneNodeQc : public GenericQc {
+public:
+	Ogre::String sNodeName;
+	RemoveSceneNodeQc(float prio, Ogre::String uni, char* sNodeN) {
+		this->priority = prio;
+		this->cost = 20;
+		this->type = "RemoveSceneNode";
+		this->uniq = uni + "/RemoveSceneNode";
+		this->sNodeName = Ogre::String(sNodeN);
+	}
+	~RemoveSceneNodeQc(void) {
+		this->uniq.clear();
+		this->sNodeName.clear();
+	}
+	void Process() {
+		LG::RendererOgre::Instance()->RemoveSceneNode(this->sNodeName);
+	}
+};
+
+// ====================================================================
 class CreateMaterialResourceQc : public GenericQc {
 public:
 	Ogre::String matName;
@@ -552,6 +573,16 @@ void ProcessBetweenFrame::RefreshResource(float priority, char* resourceName, in
 	LGLOCK_UNLOCK(m_workItemMutex);
 	LG::IncStat(LG::StatBetweenFrameWorkItems);
 	LG::IncStat(LG::StatBetweenFrameRefreshResource);
+}
+
+// remove scene node
+void ProcessBetweenFrame::RemoveSceneNode(float priority, char* sceneNodeName) {
+	LGLOCK_LOCK(m_workItemMutex);
+	RemoveSceneNodeQc* rsnq = new RemoveSceneNodeQc(priority, sceneNodeName, sceneNodeName);
+	QueueWork((GenericQc*)rsnq);
+	LGLOCK_UNLOCK(m_workItemMutex);
+	LG::IncStat(LG::StatBetweenFrameWorkItems);
+	LG::IncStat(LG::StatBetweenFrameRemoveSceneNode);
 }
 
 void ProcessBetweenFrame::CreateMaterialResource2(float priority, 
