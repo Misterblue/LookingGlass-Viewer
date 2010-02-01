@@ -38,5 +38,9 @@ namespace LG {
 		Ogre::String SceneNodeName;
 
 	private:
+		bool m_doingRotation;
+		Ogre::Vector3 m_rotationAxis;
+		float m_rotationLast;
+		float m_rotationScale;
 };
 }

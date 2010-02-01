@@ -652,6 +652,7 @@ namespace LG {
 			}
 		}
 		// release animations associated with scene node
+		LG::AnimTracker::Instance()->RemoveAnimations(snode->getName());
 		// release objects attached to this scenenode
 		for (int ii=snode->numChildren(); ii>=0; ii--) {
 			Ogre::MovableObject* nodeObject = snode->getAttachedObject(ii);

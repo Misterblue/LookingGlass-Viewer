@@ -23,6 +23,7 @@
 #include "StdAfx.h"
 #include "Animat.h"
 #include "LookingGlassOgre.h"
+#include "RendererOgre.h"
 #include "AnimTracker.h"
 
 namespace LG {
@@ -31,6 +32,7 @@ Animat::Animat() {
 	this->SceneNodeName.clear();
 };
 Animat::Animat(Ogre::String sNodeName) {
+	this->m_doingRotation = false;
 	this->SceneNodeName = sNodeName;
 };
 Animat::~Animat() {
@@ -38,10 +40,31 @@ Animat::~Animat() {
 
 // start a rotation on a scene node
 void Animat::Rotation(float X, float Y, float Z) {
-	LG::Log("Animat::Rotation: setting rotation animation for %s", this->SceneNodeName.c_str());
+	Ogre::Vector3 axis = Ogre::Vector3(X, Y, Z);
+	this->m_rotationScale = axis.length();	// rotation in radians per second
+	axis.normalise();
+	this->m_rotationAxis = axis;
+	this->m_rotationLast = 0;
+	this->m_doingRotation = true;
+	LG::Log("Animat::Rotation: setting rotation %f animation for %s", 
+				(double)this->m_rotationScale, this->SceneNodeName.c_str());
 }
 
 void Animat::Process(float timeSinceLastFrame) {
+	if (m_doingRotation) {
+		float nextStep = this->m_rotationScale * timeSinceLastFrame;
+		this->m_rotationLast += nextStep;
+		while (this->m_rotationLast >= Ogre::Math::TWO_PI) this->m_rotationLast -= Ogre::Math::TWO_PI;
+		Ogre::Quaternion newRotation;
+		newRotation.FromAngleAxis(Ogre::Radian(this->m_rotationLast), this->m_rotationAxis);
+		try {
+			Ogre::SceneNode* node = LG::RendererOgre::Instance()->m_sceneMgr->getSceneNode(this->SceneNodeName);
+			node->setOrientation(newRotation);
+		}
+		catch (...) {
+			LG::Log("Animat::Process: exception getting scene node");
+		}
+	}
 	return;
 } 
 
