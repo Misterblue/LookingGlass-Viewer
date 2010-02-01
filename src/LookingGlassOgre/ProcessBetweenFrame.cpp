@@ -29,6 +29,7 @@
 #include "LookingGlassOgre.h"
 #include "RendererOgre.h"
 #include "OLMaterialTracker.h"
+#include "AnimTracker.h"
 #include "RegionTracker.h"
 
 namespace LG {
@@ -448,6 +449,8 @@ public:
 		this->sceneNodeName.clear();
 	}
 	void Process() {
+		LG::AnimTracker::Instance()->RotateSceneNode(this->sceneNodeName, 
+				this->vx, this->vy, this->vz);
 		return;
 	}
 };
@@ -705,7 +708,7 @@ void ProcessBetweenFrame::UpdateSceneNode(float priority, char* entName,
 void ProcessBetweenFrame::UpdateAnimation(float prio, char * sceneNodeName, float X, float Y, float Z){
 	LGLOCK_LOCK(m_workItemMutex);
 	UpdateAnimationQc* uaq = new UpdateAnimationQc(prio, Ogre::String(sceneNodeName), sceneNodeName, X, Y, Z);
-	QueueWork((GenericQc*)uaq, &m_betweenFrameCameraWork);
+	QueueWork((GenericQc*)uaq);
 	LGLOCK_UNLOCK(m_workItemMutex);
 	LG::IncStat(LG::StatBetweenFrameWorkItems);
 }

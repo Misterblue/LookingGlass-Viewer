@@ -22,6 +22,7 @@
  */
 #include "StdAfx.h"
 #include "Animat.h"
+#include "LookingGlassOgre.h"
 #include "AnimTracker.h"
 
 namespace LG {
@@ -37,6 +38,7 @@ Animat::~Animat() {
 
 // start a rotation on a scene node
 void Animat::Rotation(float X, float Y, float Z) {
+	LG::Log("Animat::Rotation: setting rotation animation for %s", this->SceneNodeName.c_str());
 }
 
 void Animat::Process(float timeSinceLastFrame) {

@@ -52,8 +52,9 @@ bool AnimTracker::frameStarted(const Ogre::FrameEvent& evt) {
 	return true;
 }
 void AnimTracker::RotateSceneNode(Ogre::String sceneNodeName, float X, float Y, float Z) {
-	LGLOCK_LOCK(m_animationsMutex);
+	LG::Log("AnimTracker::RotateSceneNode for %s", sceneNodeName.c_str());
 	RemoveAnimations(sceneNodeName);
+	LGLOCK_LOCK(m_animationsMutex);
 	Animat* anim = new Animat(sceneNodeName);
 	m_animations.push_back(anim);
 	LGLOCK_UNLOCK(m_animationsMutex);

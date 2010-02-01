@@ -705,6 +705,9 @@ public class RendererOgreLL : IWorldRenderConv {
             Ogr.UpdateAnimationBF(prio, sceneNodeName,
                 anim.AngularVelocity.X, anim.AngularVelocity.Y, anim.AngularVelocity.Z);
         }
+        else {
+            m_log.Log(LogLevel.DRENDERDETAIL, "Update animation not performed because not LLAnimation");
+        }
         return true;
     }
 
