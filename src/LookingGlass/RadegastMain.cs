@@ -69,11 +69,9 @@ class RadegastMain : IRadegastPlugin {
     public void startLGView(Object parm, EventArgs args) {
         m_log.Log(LogLevel.DRADEGAST, "startLGView()");
         // force a new default parameter files to Radegast specific ones 
-        m_lgb.AppParams.AddDefaultParameter("Settings.File", 
-            Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "RadegastLookingGlass.json"),
+        m_lgb.AppParams.AddDefaultParameter("Settings.File", "RadegastLookingGlass.json",
             "New default for running under Radecast");
-        m_lgb.AppParams.AddDefaultParameter("Settings.Modules", 
-            Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "RadegastModules.json"),
+        m_lgb.AppParams.AddDefaultParameter("Settings.Modules", "RadegastModules.json",
             "Modules configuration file");
         // parameters used by Control view for selection of dialogs to display
         m_lgb.AppParams.AddDefaultParameter("ControlView.WorldView.Enable", "true", "View the world in Radegast");

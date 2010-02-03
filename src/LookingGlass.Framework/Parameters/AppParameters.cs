@@ -56,30 +56,48 @@ public class AppParameters : IAppParameters, IParameterPersist {
         m_userParams = new ParameterSet();
         m_overrideParams = new ParameterSet();
 
-        AddDefaultParameter("Settings.File", 
-            Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "LookingGlass.json"),
+        AddDefaultParameter("Settings.Directory", Utilities.GetDefaultApplicationStorageDir(null),
+            "Directory that holds the user configuration files");
+        AddDefaultParameter("Settings.File", "LookingGlass.json",
             "Persistant settings configuration file");
-        AddDefaultParameter("Settings.Modules", 
-            Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "Modules.json"),
+        AddDefaultParameter("Settings.Modules", "Modules.json",
             "Modules configuration file");
     }
 
     #region IParameterPersist
 
     public void ReadParameterPersist() {
-        string moduleFile = ParamString("Settings.Modules");
+        string moduleFile = Path.Combine(ParamString("Settings.Directory"), ParamString("Settings.Modules"));
+        if (!File.Exists(moduleFile)) {
+            InitializeFromDefault(moduleFile, ParamString("Settings.Modules"));
+        }
         try {
             ParameterSet.ReadParameterSet(moduleFile, m_iniParams.Add);
         }
         catch (Exception e) {
             LogManager.Log.Log(LogLevel.DBADERROR, "AppParameters: COULD NOT READ MODULES FILE: " + e.ToString());
         }
-        string iniFile = ParamString("Settings.File");
+        string iniFile = Path.Combine(ParamString("Settings.Directory"), ParamString("Settings.File"));
+        if (!File.Exists(iniFile)) {
+            InitializeFromDefault(iniFile, ParamString("Settings.File"));
+        }
         try {
             ParameterSet.ReadParameterSet(iniFile, m_iniParams.Add);
         }
         catch (Exception e) {
             LogManager.Log.Log(LogLevel.DBADERROR, "AppParameters: COULD NOT READ CONFIGURATION FILE '" + iniFile + "': " + e.ToString());
+        }
+    }
+
+    // the configuration file does not exist in the per user directory so we try to copy
+    // the default one to the user's place.
+    private void InitializeFromDefault(string dstFile, string filePart) {
+        string defaultFile = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, filePart);
+        if (File.Exists(defaultFile)) {
+            File.Copy(defaultFile, dstFile);
+        }
+        else {
+            LogManager.Log.Log(LogLevel.DBADERROR, "AppParameters: COULD NOT READ DEFAULT FILE '{0}'", defaultFile);
         }
     }
 

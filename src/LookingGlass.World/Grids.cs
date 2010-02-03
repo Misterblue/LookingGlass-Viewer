@@ -40,8 +40,10 @@ public class Grids {
     private string m_currentGrid = "UnknownXXYYZZ";
 
     public Grids() {
-        LookingGlassBase.Instance.AppParams.AddDefaultParameter("Grids.Filename", 
-            Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "Grids.json"),
+        LookingGlassBase.Instance.AppParams.AddDefaultParameter("Grids.Filename.Directory",
+            Utilities.GetDefaultApplicationStorageDir(null),
+            "Directory that should contain the grid filename");
+        LookingGlassBase.Instance.AppParams.AddDefaultParameter("Grids.Filename", "Grids.json",
             "Filename of grid specs");
     }
 
@@ -108,7 +110,20 @@ public class Grids {
             string gridsFilename = "";
             try {
                 m_gridInfo = new ParameterSet();
-                gridsFilename = LookingGlassBase.Instance.AppParams.ParamString("Grids.Filename");
+                gridsFilename = Path.Combine(LookingGlassBase.Instance.AppParams.ParamString("Grids.Filename.Directory"),
+                                    LookingGlassBase.Instance.AppParams.ParamString("Grids.Filename"));
+                if (!File.Exists(gridsFilename)) {
+                    // if the user copy of the config file doesn't exist, copy the default into place
+                    string gridsDefaultFilename = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, 
+                                    LookingGlassBase.Instance.AppParams.ParamString("Grids.Filename"));
+                    if (File.Exists(gridsDefaultFilename)) {
+                        File.Copy(gridsDefaultFilename, gridsFilename);
+                    }
+                    else {
+                        LogManager.Log.Log(LogLevel.DBADERROR, "GridManager: GRIDS FILE DOES NOT EXIST: {0}", gridsFilename);
+                        gridsFilename = null;
+                    }
+                }
                 if (gridsFilename != null) {
                     m_gridInfo.AddFromFile(gridsFilename);
                 }

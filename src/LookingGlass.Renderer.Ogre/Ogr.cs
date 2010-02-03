@@ -22,6 +22,7 @@
  */
 using System;
 using System.Runtime.InteropServices;
+using System.Security;
 using System.Text;
 
 namespace LookingGlass.Renderer.Ogr {
@@ -104,66 +105,66 @@ static class Ogr {
     // =============================================================================
     // Calls  to set the callback routine location.
     // Fetch a configuration parameter
-    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
     public static extern void SetFetchParameterCallback(FetchParameterCallback callback);
     
     // Log a debug message
-    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
     public static extern void SetDebugLogCallback(DebugLogCallback callback);
 
     // check if we should keep running (Obsolete: BetweenFrames returns the flag)
-    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
     public static extern void SetCheckKeepRunningCallback(CheckKeepRunningCallback callback);
 
     // the user did something with the keyboard/mouse
-    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
     public static extern void SetUserIOCallback(UserIOCallback callback);
 
     // ask that a resource (mesh, material, ...) be created by the C# code
-    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
     public static extern void SetRequestResourceCallback(RequestResourceCallback callback);
 
     // we're between frames. Is there C# stuff to do?
-    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
     public static extern void SetBetweenFramesCallback(BetweenFramesCallback callback);
 
     // A pinned statistics block that is updated by Ogre and displayed by LG
-    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
     public static extern void SetStatsBlock(IntPtr block);
 
     // =============================================================================
-    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
     public static extern void InitializeOgre();
 
-    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
     public static extern void ShutdownOgre();
 
-    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
     public static extern bool RenderingThread();
 
-    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
     public static extern bool RenderOneFrame(bool pump, int len);
 
     // =============================================================================
-    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
     public static extern void UpdateCameraBF(
         double px, double py, double pz, 
         float dw, float dx, float dy, float dz,
         float nearClip, float farClip, float aspect);
-    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
     public static extern bool AttachCamera([MarshalAs(UnmanagedType.LPStr)]string parentNodeName,
        float offsetX, float offsetY, float offsetZ, float ow, float ox, float oy, float oz);
 
-    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
     public static extern void RefreshResourceBF(float pri, int type, [MarshalAs(UnmanagedType.LPStr)]string resourceName);
-    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
     public static extern void CreateMeshResourceBF(float pri, 
                             [MarshalAs(UnmanagedType.LPStr)]string resourceName,
                             [MarshalAs(UnmanagedType.LPStr)]string contextSceneNode,
                             [MarshalAs(UnmanagedType.LPArray)] int[] faceCounts, 
                             [MarshalAs(UnmanagedType.LPArray)] float[] faceVertices);
-    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
     /*
+    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
     public static extern void CreateMaterialResource([MarshalAs(UnmanagedType.LPStr)]string resourceName,
                             [MarshalAs(UnmanagedType.LPStr)]string textureName,
                             float colorR, float colorG, float colorB, float colorA,
@@ -172,14 +173,14 @@ static class Ogr {
     public static extern void CreateMaterialResource2([MarshalAs(UnmanagedType.LPStr)]string resourceName,
                             [MarshalAs(UnmanagedType.LPStr)]string textureName,
                             [MarshalAs(UnmanagedType.LPArray)] float[] parms);
-    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
      */
+    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
     // queue and do between frame version of above
     public static extern void CreateMaterialResource2BF(float pri,
                             [MarshalAs(UnmanagedType.LPStr)]string resourceName,
                             [MarshalAs(UnmanagedType.LPStr)]string textureName,
                             [MarshalAs(UnmanagedType.LPArray)] float[] parms);
-    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
     public static extern void CreateMaterialResource7BF(
                             float prio,
                             [MarshalAs(UnmanagedType.LPStr)]string uniq,
@@ -217,33 +218,33 @@ static class Ogr {
     public const int CreateMaterialAnimRotate   = 0x20;
     public const int CreateMaterialAnimScale    = 0x40;
     // unload all resources associated with our resource groups
-    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
     public static extern void DiagnosticAction(int flag);
 
     // ======================================================================
-    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
     public static extern bool UpdateAnimationBF(float prio,
             [MarshalAs(UnmanagedType.LPStr)]string sceneNodeName,
             float X, float Y, float Z);
     // ======================================================================
-    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
     public static extern void AddRegionBF(float prio,
             [MarshalAs(UnmanagedType.LPStr)]string regionNodeName,
             double globalX, double globalY, double globalZ,
             float sizeX, float sizeY,
             float waterHeight);
-    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
     public static extern void UpdateTerrainBF(float prio, 
             [MarshalAs(UnmanagedType.LPStr)]string regionNodeName,
             int width, int length, [MarshalAs(UnmanagedType.LPArray)] float[] heightmap);
     // ======================================================================
     // SceneNode wrapper
-    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
     public static extern System.IntPtr GetSceneMgr();
-    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
     public static extern System.IntPtr RootNode(System.IntPtr sceneMgr);
     /*
-    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
     public static extern System.IntPtr CreateSceneNode(
                 System.IntPtr sceneMgr,
                 [MarshalAs(UnmanagedType.LPStr)]string nodeName,
@@ -253,17 +254,17 @@ static class Ogr {
                 float rw, float rx, float ry, float rz
         );
      */
-    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
     public static extern void RemoveSceneNodeBF(float prio,
                 [MarshalAs(UnmanagedType.LPStr)]string sceneNodeName );
-    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
     public static extern void UpdateSceneNodeBF(float pri,
                 [MarshalAs(UnmanagedType.LPStr)]string entityName,
                 bool updatePosition, float px, float py, float pz,
                 bool updateScale, float sx, float sy, float sz,
                 bool updateRotation, float rw, float rx, float ry, float rz
         );
-    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
     public static extern bool CreateMeshSceneNodeBF(float pri,
                 System.IntPtr sceneMgr,
                 [MarshalAs(UnmanagedType.LPStr)]string sceneNodeName,
