@@ -29,5 +29,12 @@ public interface IAnimation {
     // For the moment, there is not much to an animation. Someday this will
     // contain all the stuff for an avatar animation.
     OMV.Vector3 AngularVelocity { get; set; }
+
+    // fixed rotation
+    bool DoStaticRotation { get; set; }
+    OMV.Vector3 StaticRotationAxis { get; set; }
+    float StaticRotationRotPerSec { get; set; }
+
+
 }
 }

@@ -39,21 +39,39 @@ Animat::~Animat() {
 };
 
 // start a rotation on a scene node
+// A kludge rotation for LL which is specified by a vector where the direction
+// of the vector is the axis to rotate around and the length of the vector
+// is the radians per second to rotate.
 void Animat::Rotation(float X, float Y, float Z) {
 	Ogre::Vector3 axis = Ogre::Vector3(X, Y, Z);
-	this->m_rotationScale = axis.length();	// rotation in radians per second
+	float rotPerSec = axis.length();	// rotation in radians per second
+	rotPerSec = rotPerSec / Ogre::Math::TWO_PI;	// converted into rotations per second
 	axis.normalise();
+	this->Rotation(axis, rotPerSec);
+}
+
+void Animat::Rotation(Ogre::Vector3 axis, float rotationsPerSecond) {
+	this->m_rotationScale = rotationsPerSecond;
 	this->m_rotationAxis = axis;
 	this->m_rotationLast = 0;
-	this->m_doingRotation = true;
+	this->m_doingFixedRotation = true;
 	LG::Log("Animat::Rotation: setting rotation %f animation for %s", 
 				(double)this->m_rotationScale, this->SceneNodeName.c_str());
+	return;
+}
+
+void Animat::Rotation(Ogre::Quaternion from, Ogre::Quaternion to, float seconds) {
+	return;
+}
+
+void Animat::Translate(Ogre::Vector3 from, Ogre::Vector3 to, float seconds) {
+	return;
 }
 
 void Animat::Process(float timeSinceLastFrame) {
-	if (m_doingRotation) {
+	if (m_doingFixedRotation) {
 		float nextStep = this->m_rotationScale * timeSinceLastFrame;
-		this->m_rotationLast += nextStep;
+		this->m_rotationLast += Ogre::Math::TWO_PI * nextStep;
 		while (this->m_rotationLast >= Ogre::Math::TWO_PI) this->m_rotationLast -= Ogre::Math::TWO_PI;
 		Ogre::Quaternion newRotation;
 		newRotation.FromAngleAxis(Ogre::Radian(this->m_rotationLast), this->m_rotationAxis);

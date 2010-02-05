@@ -34,5 +34,22 @@ public class LLAnimation : IAnimation {
         set { m_angularVelocity = value; }
     }
 
+    private bool m_doStaticRotation = false;
+    public bool DoStaticRotation {
+        get { return m_doStaticRotation; }
+        set { m_doStaticRotation = value; }
+    }
+    private OMV.Vector3 m_staticRotationAxis = OMV.Vector3.Zero;
+    public OMV.Vector3 StaticRotationAxis {
+        get { return m_staticRotationAxis; }
+        set { m_staticRotationAxis = value; }
+    }
+    private float m_staticRotationRotPerSec = 0f;
+    public float StaticRotationRotPerSec {
+        get { return m_staticRotationRotPerSec; }
+        set { m_staticRotationRotPerSec = value; }
+    }
+
+
 }
 }

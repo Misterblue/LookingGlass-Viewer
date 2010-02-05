@@ -783,23 +783,26 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
                 }
                 // if  there is an angular velocity and this is not an avatar, pass the information
                 // along as an animation (llTargetOmega)
+                // we convert the information into a standard form
                 IEntityAvatar av;
                 if (!updatedEntity.TryGet<IEntityAvatar>(out av)) {
                     if (args.Prim.AngularVelocity != OMV.Vector3.Zero) {
                         IAnimation anim;
-                        if (updatedEntity.TryGet<IAnimation>(out anim)) {
-                            if (args.Prim.AngularVelocity != anim.AngularVelocity) {
-                                anim.AngularVelocity = args.Prim.AngularVelocity;
-                                updateFlags |= UpdateCodes.Animation;
-                                m_log.Log(LogLevel.DUPDATEDETAIL, "Updating prim animation on {0}", updatedEntity.Name);
-                            }
-                        }
-                        else {
+                        float rotPerSec = args.Prim.AngularVelocity.Length() / Constants.TWOPI;
+                        OMV.Vector3 axis = args.Prim.AngularVelocity;
+                        axis.Normalize();
+                        if (!updatedEntity.TryGet<IAnimation>(out anim)) {
                             anim = new LLAnimation();
-                            anim.AngularVelocity = args.Prim.AngularVelocity;
                             updatedEntity.RegisterInterface<IAnimation>(anim);
-                            updateFlags |= UpdateCodes.Animation;
                             m_log.Log(LogLevel.DUPDATEDETAIL, "Created prim animation on {0}", updatedEntity.Name);
+                        }
+                        if (rotPerSec != anim.StaticRotationRotPerSec || axis != anim.StaticRotationAxis) {
+                            anim.AngularVelocity = args.Prim.AngularVelocity;   // legacy. Remove when other part plumbed
+                            anim.StaticRotationAxis = axis;
+                            anim.StaticRotationRotPerSec = rotPerSec;
+                            anim.DoStaticRotation = true;
+                            updateFlags |= UpdateCodes.Animation;
+                            m_log.Log(LogLevel.DUPDATEDETAIL, "Updating prim animation on {0}", updatedEntity.Name);
                         }
                     }
                 }

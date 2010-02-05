@@ -225,7 +225,7 @@ static class Ogr {
     [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
     public static extern bool UpdateAnimationBF(float prio,
             [MarshalAs(UnmanagedType.LPStr)]string sceneNodeName,
-            float X, float Y, float Z);
+            float X, float Y, float Z, float rate);
     // ======================================================================
     [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
     public static extern void AddRegionBF(float prio,

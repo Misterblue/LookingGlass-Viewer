@@ -40,7 +40,7 @@ public:
 		return LG::AnimTracker::m_instance; 
 	}
 
-	void RotateSceneNode(Ogre::String sceneNodeName, float X, float Y, float Z);
+	void RotateSceneNode(Ogre::String sceneNodeName, Ogre::Vector3 axis, float rate);
 	void RemoveAnimations(Ogre::String sceneNodeName);
 	void AnimationComplete(Animat*);
 

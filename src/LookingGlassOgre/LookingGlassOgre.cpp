@@ -213,8 +213,8 @@ extern "C" DLLExport void RemoveSceneNodeBF(float prio, char* sceneNodeName) {
 	LG::ProcessBetweenFrame::Instance()->RemoveSceneNode(prio, sceneNodeName);
 }
 // ================================================================
-extern "C" DLLExport void UpdateAnimationBF(float prio, char* sceneNodeName, float X, float Y, float Z) {
-	LG::ProcessBetweenFrame::Instance()->UpdateAnimation(prio, sceneNodeName, X, Y, Z);
+extern "C" DLLExport void UpdateAnimationBF(float prio, char* sceneNodeName, float X, float Y, float Z, float rate) {
+	LG::ProcessBetweenFrame::Instance()->UpdateAnimation(prio, sceneNodeName, X, Y, Z, rate);
 }
 
 // ================================================================

@@ -433,24 +433,25 @@ class UpdateAnimationQc : public GenericQc {
 	// extend to be more general.
 public:
 	Ogre::String sceneNodeName;
-	float vx; float vy; float vz;
+	float vx; float vy; float vz, revPerSec;
 	UpdateAnimationQc(float prio, Ogre::String uni,
 					char* sNodeName,
-					float px, float py, float pz) {
+					float px, float py, float pz, float rate) {
 		this->priority = prio;
 		this->cost = 3;
 		this->type = "UpdateAnimation";
 		this->uniq = uni + "/UpdateAnimation";
 		this->sceneNodeName = Ogre::String(sNodeName);
 		this->vx = px; this->vy = py; this->vz = pz;
+		this->revPerSec = rate;
 	}
 	~UpdateAnimationQc(void) {
 		this->uniq.clear();
 		this->sceneNodeName.clear();
 	}
 	void Process() {
-		LG::AnimTracker::Instance()->RotateSceneNode(this->sceneNodeName, 
-				this->vx, this->vy, this->vz);
+		Ogre::Vector3 axis = Ogre::Vector3(this->vx, this->vy, this->vz);
+		LG::AnimTracker::Instance()->RotateSceneNode(this->sceneNodeName, axis, this->revPerSec);
 		return;
 	}
 };
@@ -705,9 +706,9 @@ void ProcessBetweenFrame::UpdateSceneNode(float priority, char* entName,
 	LG::IncStat(LG::StatBetweenFrameUpdateSceneNode);
 }
 
-void ProcessBetweenFrame::UpdateAnimation(float prio, char * sceneNodeName, float X, float Y, float Z){
+void ProcessBetweenFrame::UpdateAnimation(float prio, char * sceneNodeName, float X, float Y, float Z, float rate){
 	LGLOCK_LOCK(m_workItemMutex);
-	UpdateAnimationQc* uaq = new UpdateAnimationQc(prio, Ogre::String(sceneNodeName), sceneNodeName, X, Y, Z);
+	UpdateAnimationQc* uaq = new UpdateAnimationQc(prio, Ogre::String(sceneNodeName), sceneNodeName, X, Y, Z, rate);
 	QueueWork((GenericQc*)uaq);
 	LGLOCK_UNLOCK(m_workItemMutex);
 	LG::IncStat(LG::StatBetweenFrameWorkItems);

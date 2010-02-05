@@ -32,7 +32,7 @@ function TimerChatStuff() {
     chatTimerProcessing = true;
     $.ajax({
         type: "GET",
-        url: BASEURL+'/api/chat?yy=' + Math.floor(Math.random()*999999),
+        url: BASEURL+'/api/chat?xx=' + Math.floor(Math.random()*999999),
         dataType: 'json',
         timeout: 1000,
         success: function(data, status) {

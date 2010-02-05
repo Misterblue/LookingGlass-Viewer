@@ -34,13 +34,20 @@ namespace LG {
 		void Process(float);
 
 		void Rotation(float, float, float);
+		void Rotation(Ogre::Vector3 axis, float rotationsPerSecond);
+		void Rotation(Ogre::Quaternion from, Ogre::Quaternion to, float seconds);
+		void Translate(Ogre::Vector3 from, Ogre::Vector3 to, float seconds);
 
 		Ogre::String SceneNodeName;
 
 	private:
+		bool m_doingFixedRotation;
+		Ogre::Vector3 m_rotationAxis;	// axis doing rotation around
+		float m_rotationLast;			// last radians of rotation
+		float m_rotationScale;			// rotations per second
+
 		bool m_doingRotation;
-		Ogre::Vector3 m_rotationAxis;
-		float m_rotationLast;
-		float m_rotationScale;
+
+		bool m_doingTranslation;
 };
 }

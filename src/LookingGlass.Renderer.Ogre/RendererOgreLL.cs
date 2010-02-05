@@ -700,13 +700,9 @@ public class RendererOgreLL : IWorldRenderConv {
     // Return 'true' if animation set. false if not set and try again later.
     public bool UpdateAnimation(float prio, IEntity ent, string sceneNodeName, IAnimation anim) {
         m_log.Log(LogLevel.DRENDERDETAIL, "Update animation for {0}", ent.Name);
-        if (anim is LLAnimation) {
-            LLAnimation animLL = (LLAnimation)anim;
-            Ogr.UpdateAnimationBF(prio, sceneNodeName,
-                anim.AngularVelocity.X, anim.AngularVelocity.Y, anim.AngularVelocity.Z);
-        }
-        else {
-            m_log.Log(LogLevel.DRENDERDETAIL, "Update animation not performed because not LLAnimation");
+        if (anim.DoStaticRotation) {
+            Ogr.UpdateAnimationBF(prio, sceneNodeName, anim.StaticRotationAxis.X, anim.StaticRotationAxis.Y,
+                    anim.StaticRotationAxis.Z, anim.StaticRotationRotPerSec);
         }
         return true;
     }

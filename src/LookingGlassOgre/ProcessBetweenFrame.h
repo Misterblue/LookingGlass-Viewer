@@ -95,7 +95,7 @@ public:
 					bool setPosition, float px, float py, float pz,
 					bool setScale, float sx, float sy, float sz,
 					bool setRotation, float ow, float ox, float oy, float oz);
-	void UpdateAnimation(float, char *, float, float, float);
+	void UpdateAnimation(float, char *, float, float, float, float);
 	void UpdateCamera(double px, double py, double pz,
 					float ow, float ox, float oy, float oz,
 					float farClipP, float nearClipP, float aspectP);
