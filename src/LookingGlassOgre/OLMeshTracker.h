@@ -203,6 +203,9 @@ public:
 	void MakePersistant(Ogre::String meshName, Ogre::String entName, Ogre::String, Ogre::Entity*);
 	void DeleteMesh(Ogre::MeshPtr mesh);
 
+	void UpdateSceneNodesForMesh(Ogre::String meshName);
+	void UpdateSceneNodesForMesh(Ogre::MeshPtr ptr);
+
 private:
 	static OLMeshTracker* m_instance;
 
@@ -218,8 +221,6 @@ private:
 	typedef stdext::hash_map<Ogre::String, unsigned long> RequestedMeshHashMap;
 	RequestedMeshHashMap m_requestedMeshes;
 	Ogre::Timer* m_meshTimeKeeper;
-	void UpdateSceneNodesForMesh(Ogre::String meshName);
-	void UpdateSceneNodesForMesh(Ogre::MeshPtr ptr);
 	void UpdateSubNodes(Ogre::Node* regionNode, Ogre::Node* node, bool recurse, Ogre::MeshPtr meshP);
 
 	/*

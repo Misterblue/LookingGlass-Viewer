@@ -249,7 +249,7 @@ public:
 		free(this->faceVertices);
 	}
 	void Process() {
-		LG::Log("ProcessBetweenFrame::CreateMeshResourceQc: processing %s", this->meshName.c_str());
+		// LG::Log("ProcessBetweenFrame::CreateMeshResourceQc: processing %s", this->meshName.c_str());
 		LG::RendererOgre::Instance()->CreateMeshResource(this->meshName.c_str(), this->faceCounts, this->faceVertices);
 	}
 
@@ -844,6 +844,7 @@ void ProcessBetweenFrame::ProcessWorkItems(int millisToProcess) {
 		if (!m_betweenFrameCameraWork.empty()) {
 			workCameraGeneric = (GenericQc*)m_betweenFrameCameraWork.front();
 			m_betweenFrameCameraWork.pop_front();
+			LG::IncStat(LG::StatBetweenFrameTotalProcessed);
 		}
 		LGLOCK_UNLOCK(m_workItemMutex);
 		if (workCameraGeneric != NULL) ProcessOneWorkItem(workCameraGeneric, loopCost, millisToProcess);
@@ -854,6 +855,7 @@ void ProcessBetweenFrame::ProcessWorkItems(int millisToProcess) {
 		if (!m_betweenFrameMaterialWork.empty()) {
 			workMaterialGeneric = (GenericQc*)m_betweenFrameMaterialWork.front();
 			m_betweenFrameMaterialWork.pop_front();
+			LG::IncStat(LG::StatBetweenFrameTotalProcessed);
 		}
 		LGLOCK_UNLOCK(m_workItemMutex);
 		if (workMaterialGeneric != NULL) ProcessOneWorkItem(workMaterialGeneric, loopCost, millisToProcess);
@@ -890,7 +892,6 @@ void ProcessBetweenFrame::ProcessOneWorkItem(GenericQc* workGeneric, int loopCos
 	LG::Log("PBF: c=%d, m=%d, lc=%d, t=%d, t=%s, u=%s", 
 			 	repriorityCount, millisToProcess, loopCost, (int)(checkTimeEnd-checkTimeBegin), 
 				workGeneric->type.c_str(), workGeneric->uniq.c_str());
-
 	delete(workGeneric);
 }
 

@@ -616,7 +616,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                         lock (prebuiltMeshes) {
                             if (prebuiltMeshes.ContainsKey(m_ri.shapeHash)) {
                                 entMeshName = prebuiltMeshes[m_ri.shapeHash];
-                                m_log.Log(LogLevel.DRENDERDETAIL, "DorRenderLater: using prebuilt {0}", entMeshName);
+                                // m_log.Log(LogLevel.DRENDERDETAIL, "DorRenderLater: using prebuilt {0}", entMeshName);
                                 m_statShareInstances.Event();
                             }
                             else {
@@ -663,8 +663,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     // and add the definition for the object on to the scene node
                     // This will cause the load function to be called and create all
                     //   the callbacks that will actually create the object
-                    m_log.Log(LogLevel.DRENDERDETAIL, "DoRenderLater: mesh={0}, prio={1}",
-                                    entMeshName.Name, qInstance.priority);
+                    // m_log.Log(LogLevel.DRENDERDETAIL, "DoRenderLater: mesh={0}, prio={1}", entMeshName.Name, qInstance.priority);
                     if (!m_sceneMgr.CreateMeshSceneNodeBF(qInstance.priority,
                                     entitySceneNodeName,
                                     parentSceneNodeName,
@@ -673,9 +672,9 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                                     m_ri.position.X, m_ri.position.Y, m_ri.position.Z,
                                     m_ri.scale.X, m_ri.scale.Y, m_ri.scale.Z,
                                     m_ri.rotation.W, m_ri.rotation.X, m_ri.rotation.Y, m_ri.rotation.Z)) {
-                        m_log.Log(LogLevel.DRENDERDETAIL, "Delaying rendering {0}/{1}. {2} waiting for parent {3}",
-                            qInstance.sequence, qInstance.timesRequeued, m_ent.Name.Name,
-                            (parentSceneNodeName == null ? "NULL" : parentSceneNodeName));
+                        // m_log.Log(LogLevel.DRENDERDETAIL, "Delaying rendering {0}/{1}. {2} waiting for parent {3}",
+                        //     qInstance.sequence, qInstance.timesRequeued, m_ent.Name.Name,
+                        //     (parentSceneNodeName == null ? "NULL" : parentSceneNodeName));
                         return false;   // if I must have parent, requeue if no parent
                     }
 

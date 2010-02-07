@@ -654,7 +654,7 @@ namespace LG {
 		// release animations associated with scene node
 		LG::AnimTracker::Instance()->RemoveAnimations(snode->getName());
 		// release objects attached to this scenenode
-		for (int ii=snode->numChildren(); ii>=0; ii--) {
+		for (int ii=snode->numAttachedObjects()-1; ii>=0; ii--) {
 			Ogre::MovableObject* nodeObject = snode->getAttachedObject(ii);
 			snode->detachObject(ii);
 			m_sceneMgr->destroyMovableObject(nodeObject);
@@ -682,11 +682,9 @@ namespace LG {
 
 		int iface, iv;
 		const float* fVf;
-		char faceName[10];
 		Ogre::String materialName;
 		for (iface = 0; iface < faces; iface++) {
-			itoa(iface, faceName, 10);
-			materialName = baseMaterialName + "-" + faceName + ".material";
+			materialName = PrecomputedMaterialName(baseMaterialName, iface);
 			mo->begin(materialName);
 			fVf = fV + fC[0];
 			const float* vColor = fVf;
@@ -716,14 +714,13 @@ namespace LG {
 		}
 
 		LG::Log("RendererOgre::CreateMeshResource: converting to mesh: %s", entName.c_str());
-		// I thought I should have to find and unload the old mesh but
-		// these do not the right things and don't know why. Removing comments causes crashes.
-		// if (Ogre::MeshManager::getSingleton().resourceExists(entName)) {
-		// 	Ogre::MeshManager::getSingleton().unload(entName);
-		// 	Ogre::MeshManager::getSingleton().remove(entName);
-		// 
 		try {
-			// Ogre::MeshManager::getSingleton().load(entName);
+			if (Ogre::MeshManager::getSingleton().resourceExists(entName)) {
+			 	Ogre::MeshManager::getSingleton().unload(entName);
+			// 	Ogre::MeshManager::getSingleton().remove(entName);
+				// there could be scene nodes pointing to this mesh. Tell them something's up.
+				LG::OLMeshTracker::Instance()->UpdateSceneNodesForMesh(entName);
+			} 
 			Ogre::MeshPtr mesh = mo->convertToMesh(entName , OLResourceGroupName);
 			mo->clear();
 			m_sceneMgr->destroyManualObject(mo);
@@ -762,6 +759,13 @@ namespace LG {
 
 
 		return;
+	}
+
+	Ogre::String RendererOgre::PrecomputedMaterialName(Ogre::String baseMaterialName, int iface) {
+		char faceName[10];
+		itoa(iface, faceName, 10);
+		Ogre::String materialName = baseMaterialName + "-" + faceName + ".material";
+		return materialName;
 	}
 
 	// given an entity, free up it's meshes and pieces and then the entity itself

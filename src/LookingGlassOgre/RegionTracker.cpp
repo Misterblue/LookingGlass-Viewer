@@ -76,16 +76,19 @@ void RegionTracker::UpdateTerrain(const char* regnName, const int width, const i
 	}
 }
 
-// set a focus region and update all region's local coords relative to the focus region
+// Set a focus region and update all region's local coords relative to the focus region
+// BETWEEN FRAME OPERATION
 void RegionTracker::SetFocusRegion(const char* regnName) {
+	for (RegionHashMap::iterator intr = m_regions.begin(); intr != m_regions.end(); intr++) {
+		Region* otherRegn = intr->second;
+		otherRegn->SetFocusRegion(false);
+	}
 	Ogre::String regionName = Ogre::String(regnName);
 	Region* regn = FindRegion(regionName);
 	if (regn != NULL) {
 		m_focusRegion = regn;
-		for (RegionHashMap::iterator intr = m_regions.begin(); intr != m_regions.end(); intr++) {
-			Region* otherRegn = intr->second;
-			otherRegn->CalculateLocal(regn->GlobalX, regn->GlobalY, regn->GlobalZ);
-		}
+		regn->SetFocusRegion(true);
+		RecalculateLocalCoords();
 	}
 }
 
@@ -98,6 +101,8 @@ void RegionTracker::RecalculateLocalCoords() {
 			otherRegn->CalculateLocal(regn->GlobalX, regn->GlobalY, regn->GlobalZ);
 		}
 	}
+	// Do I have to update all the scene nodes to tell them that stuff has changed?
+	LG::RendererOgre::Instance()->m_sceneMgr->getRootSceneNode()->needUpdate();
 }
 
 // return focus region or NULL if none

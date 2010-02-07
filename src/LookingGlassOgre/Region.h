@@ -36,7 +36,7 @@ namespace LG {
 		void Init(double, double, double, float, float, float);
 		void ReleaseRegion();
 		void ChangeRez(RegionRezCode);
-		void SetFocusRegion();
+		void SetFocusRegion(bool);
 		bool IsFocusRegion();
 		void AddRegionSceneNode(Ogre::SceneNode*, RegionRezCode);
 		void UpdateTerrain(const int, const int, const float*);

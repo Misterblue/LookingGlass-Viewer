@@ -140,6 +140,7 @@ private:
 	Ogre::String m_cacheDir; 
 	Ogre::String m_preloadedDir; 
 	bool m_serializeMeshes;
+	Ogre::String PrecomputedMaterialName(Ogre::String, int);
 
 	unsigned long m_lastFrameTime;
 

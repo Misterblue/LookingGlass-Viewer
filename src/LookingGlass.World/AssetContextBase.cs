@@ -300,9 +300,9 @@ public abstract class AssetContextBase : IDisposable {
                         string noTextureFilename = LookingGlassBase.Instance.AppParams.ParamString(m_comm.Name + ".Assets.NoTextureFilename");
                         // if we copy the no texture file into the filesystem, we will never retry to
                         // fetch the texture. This copy is not a good thing.
-                        if (!File.Exists(wi.filename)) {
+                        // if (!File.Exists(wi.filename)) {
                             File.Copy(noTextureFilename, wi.filename);
-                        }
+                        // }
                     }
                     m_log.Log(LogLevel.DTEXTURE, 
                         "ProcessDownloadFinished: Texture fetch failed={0}. Using not found texture.", wi.worldID.ToString());

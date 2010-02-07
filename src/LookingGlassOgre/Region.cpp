@@ -97,7 +97,8 @@ void Region::AddRegionSceneNode(Ogre::SceneNode* nod, RegionRezCode rez) {
 	}
 }
 
-void Region::SetFocusRegion() {
+void Region::SetFocusRegion(bool flag) {
+	this->m_focusRegion = flag;
 }
 
 bool Region::IsFocusRegion() {
@@ -208,7 +209,6 @@ void Region::UpdateTerrain(const int hmWidth, const int hmLength, const float* h
 		mob->setDynamic(true);
 		mob->setCastShadows(true);
 		mob->setVisible(true);
-		mob->setQueryFlags(Ogre::SceneManager::WORLD_GEOMETRY_TYPE_MASK);
 		node->attachObject(mob);
 		// m_visCalc->RecalculateVisibility();
 	}
