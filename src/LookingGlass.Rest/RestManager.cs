@@ -33,8 +33,6 @@ using LookingGlass.Framework.Modules;
 using LookingGlass.Framework.Parameters;
 using LookingGlass.Framework.WorkQueue;
 using OMV = OpenMetaverse;
-using HttpServer;
-using HttpServer.Handlers;
 
 namespace LookingGlass.Rest {
 
@@ -57,15 +55,13 @@ namespace LookingGlass.Rest {
     /// where 'service' is the name of teh service and 'xxx' is whatever it wants.
     /// These implement GET and POST operations of JSON formatted data.
     /// </summary>
-public class RestManager : ModuleBase, IInstance<RestManager>, HttpServer.ILogWriter {
+public class RestManager : ModuleBase, IInstance<RestManager> {
     private ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
 
-    protected HttpServer.HttpListener m_Server;
-    public HttpServer.HttpListener Server { get { return m_Server; } }
 #pragma warning disable 414 // I know these are set and never referenced
-    FileHandler m_staticHandler = null;
-    FileHandler m_stdHandler = null;
-    FileHandler m_faviconHandler = null;
+    RestHandler m_staticHandler = null;
+    RestHandler m_stdHandler = null;
+    RestHandler m_faviconHandler = null;
 #pragma warning restore 414
 
     public const string MIMEDEFAULT = "text/html";
@@ -80,17 +76,9 @@ public class RestManager : ModuleBase, IInstance<RestManager>, HttpServer.ILogWr
     RestHandler m_paramUserRestHandler = null;
     RestHandler m_paramOverrideRestHandler = null;
 
-    protected string m_baseURL;
     // return the full base URL with the port added
-    public string BaseURL { 
-        get { 
-            string ret = m_baseURL;
-            if (m_port != 0) {
-                ret = m_baseURL + ":" + Port.ToString();
-            }
-            return ret;
-        } 
-    }
+    protected string m_baseURL;
+    public string BaseURL { get { return m_baseURL; } }
 
     private static RestManager m_instance = null;
     public static RestManager Instance {
@@ -111,7 +99,7 @@ public class RestManager : ModuleBase, IInstance<RestManager>, HttpServer.ILogWr
         base.OnLoad(modName, lgbase);
         ModuleParams.AddDefaultParameter(m_moduleName + ".Port", "9144",
                     "Local port used for rest interfaces");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".BaseURL", "http://127.0.0.1",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".BaseURL", "http://+",
                     "Base URL for rest interfaces");
         ModuleParams.AddDefaultParameter(m_moduleName + ".CSSLocalURL", "/std/LookingGlass.css",
                     "CSS file for rest display");
@@ -125,34 +113,38 @@ public class RestManager : ModuleBase, IInstance<RestManager>, HttpServer.ILogWr
     override public bool AfterAllModulesLoaded() {
         m_log.Log(LogLevel.DINIT, "entered AfterAllModulesLoaded()");
 
+        // m_baseURL = "http://+:PORT/"
         m_port = ModuleParams.ParamInt(m_moduleName + ".Port");
         m_baseURL = ModuleParams.ParamString(m_moduleName + ".BaseURL");
-        // m_Server = new WebServer(System.Net.IPAddress.Any, Port);
-        m_Server = HttpServer.HttpListener.Create(this, System.Net.IPAddress.Any, Port);
-        m_Server.Start(10);
+        m_baseURL = m_baseURL + ":" + m_port.ToString() + "/";
 
+        // m_baseUIDIR = "/.../bin/LookingGlassUI/"
         string baseUIDir = ModuleParams.ParamString(m_moduleName + ".UIContentDir");
-        if (baseUIDir.EndsWith("/")) baseUIDir = baseUIDir.Substring(0, baseUIDir.Length-1);
+        if (!baseUIDir.EndsWith("/")) baseUIDir += "/";
 
         // things referenced as static are from the skinning directory below the UI dir
+        // m_staticDir = "/.../bin/LookingGlassUI/Default/"
         string staticDir = baseUIDir;
         if (ModuleParams.HasParameter(m_moduleName + ".Skin")) {
             string skinName = ModuleParams.ParamString(m_moduleName + ".Skin");
             skinName.Replace("/", "");  // skin names shouldn't fool with directories
             skinName.Replace("\\", "");
             skinName.Replace("..", "");
-            staticDir = staticDir + "/" + ModuleParams.ParamString(m_moduleName + ".Skin");
+            staticDir = staticDir + skinName;
         }
-        staticDir += "/";
-        m_log.Log(LogLevel.DINITDETAIL, "Registering FileHandler {0} -> {1}", "/static/", staticDir);
-        FileHandler m_staticHandler = new FileHandler(m_Server, "/static/", staticDir, true);
+        if (!staticDir.EndsWith("/")) staticDir += "/";
 
-        string stdDir = baseUIDir + "/std/";
+        // stdDir = "/.../bin/LookingGlassUI/std/";
+        string stdDir = baseUIDir + "std/";
+
+        m_log.Log(LogLevel.DINITDETAIL, "Registering FileHandler {0} -> {1}", "/static/", staticDir);
+        m_staticHandler = new RestHandler("/static/", staticDir);
+
         m_log.Log(LogLevel.DINITDETAIL, "Registering FileHandler {0} -> {1}", "/std/", stdDir);
-        FileHandler m_stdHandler = new FileHandler(m_Server, "/std/", stdDir, true);
+        m_stdHandler = new RestHandler("/std/", stdDir);
 
         m_log.Log(LogLevel.DINITDETAIL, "Registering FileHandler {0} -> {1}", "/favicon.ico", stdDir);
-        FileHandler m_faviconHandler = new FileHandler(m_Server, "/favicon.ico", stdDir, true);
+        m_faviconHandler = new RestHandler("/favicon.ico", stdDir);
 
         // some Framework structures that can be referenced
         m_log.Log(LogLevel.DINITDETAIL, "Registering work queue stats at 'api/stats/workQueues'");
@@ -169,7 +161,7 @@ public class RestManager : ModuleBase, IInstance<RestManager>, HttpServer.ILogWr
     }
 
     // Routine for HttpServer.ILogWriter
-    public void Write(object source, HttpServer.LogPrio prio, string msg) {
+    public void Write(object source, /*HttpServer.LogPrio prio,*/ string msg) {
         /*
         LogLevel level = LogLevel.DREST;
         if (prio == HttpServer.LogPrio.Debug || prio == HttpServer.LogPrio.Info) {
@@ -185,9 +177,6 @@ public class RestManager : ModuleBase, IInstance<RestManager>, HttpServer.ILogWr
     }
 
     override public void Stop() {
-        if (m_Server != null) {
-            m_Server.Stop();
-        }
         return;
     }
     #endregion IModule methods
@@ -197,83 +186,13 @@ public class RestManager : ModuleBase, IInstance<RestManager>, HttpServer.ILogWr
     public delegate void ConstructResponseRoutine(ref StringBuilder buff);
 
     /// <summary>
-    /// Construct and send the HTML response to the request. The two delegates are passed
-    /// the StringBuilder for them to add to.
-    /// </summary>
-    /// <param name="context">The request information</param>
-    /// <param name="title">The title for the HTML page</param>
-    /// <param name="addHeader">Called to add HTML to the header. May be null.</param>
-    /// <param name="addContent">Called to add HTML to the body. May be null.</param>
-    public void ConstructResponse(IHttpResponse context, 
-                    string title, 
-                    ConstructResponseRoutine addHeader, 
-                    ConstructResponseRoutine addContent) {
-        StringBuilder buff = new StringBuilder();
-        try {
-            context.ContentType = MIMEDEFAULT;
-            context.AddHeader("Server", LookingGlassBase.ApplicationName);
-            context.AddHeader("Cache-Control", "no-cache");
-            // context.Connection = ConnectionType.Close;
-            
-            buff.Append("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\r\n");
-            buff.Append("<html xmlns=\"http://www.w3.org/1999/xhtml\">\r\n");
-            buff.Append("<head>\r\n");
-
-            if (title != null) buff.AppendFormat("<title>{0}</title>\r\n", title);
-
-            // if the user specified a CSS file, use that one else the default
-            if (ModuleParams.HasParameter("Rest.Manager.CSSLocalURL")) {
-                buff.AppendFormat("<link rel=\"stylesheet\" href=\"{0}/{1}\" type=\"text/css\">\r\n",
-                        BaseURL, ModuleParams.ParamString("Rest.Manager.CSSLocalURL"));
-            }
-            else {
-                buff.AppendFormat("<link rel=\"stylesheet\" href=\"{0}/{1}\" type=\"text/css\">\r\n",
-                        BaseURL, "/static/Default/LookingGlass.css" );
-            }
-
-            // Always confuse the world with jquery
-            buff.Append("<script type=\"application/javascript\" src=\"/static/std/jquery.js\"></script>\r\n");
-
-            // if the user added a script file (for customized wonderfulness) add that one
-            if (ModuleParams.HasParameter("Rest.Manager.JSLocalURL")) {
-                buff.AppendFormat("<script type=\"application/javascript\" src=\"{0}\"></script>\r\n", 
-                        ModuleParams.ParamString("Rest.Manager.JSLocalURL") );
-            }
-
-            // if the user has other header stuff to add, let them do that
-            if (addHeader != null) addHeader(ref buff);
-            buff.Append("</head>\r\n");
-
-            buff.Append("<body>\r\n");
-            if (addContent != null) addContent(ref buff);
-            buff.Append("</body>\r\n");
-            buff.Append("</html>\r\n\r\n");
-            context.Status = HttpStatusCode.OK;
-        }
-        catch {
-            buff = new StringBuilder();
-            buff.Append("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\r\n");
-            buff.Append("<html xmlns=\"http://www.w3.org/1999/xhtml\">\r\n");
-            buff.Append("<head></head><body></body></html>\r\n");
-            context.Status = HttpStatusCode.InternalServerError;
-        }
-
-        byte[] encodedBuff = System.Text.Encoding.UTF8.GetBytes(buff.ToString());
-        
-        context.ContentLength = encodedBuff.Length;
-        context.SendHeaders();
-        context.SendBody(encodedBuff, 0, encodedBuff.Length);
-        context.Send();
-        return;
-    }
-    /// <summary>
     /// Just like 'ConstructResponse' but has very simplified headers. Good for AJAX reponsses.
     /// </summary>
     /// <param name="context">The request information</param>
     /// <param name="title">The title for the HTML page</param>
     /// <param name="addHeader">Called to add HTML to the header. May be null.</param>
     /// <param name="addContent">Called to add HTML to the body. May be null.</param>
-    public void ConstructSimpleResponse(IHttpResponse context, 
+    public void ConstructSimpleResponse(HttpListenerResponse context, 
                     string contentType,
                     ConstructResponseRoutine addContent) {
         StringBuilder buff = new StringBuilder();
@@ -284,22 +203,22 @@ public class RestManager : ModuleBase, IInstance<RestManager>, HttpServer.ILogWr
             // context.Connection = ConnectionType.Close;
 
             if (addContent != null) addContent(ref buff);
-            context.Status = HttpStatusCode.OK;
+            context.StatusCode = (int)HttpStatusCode.OK;
         }
         catch {
             buff = new StringBuilder();
             buff.Append("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\r\n");
             buff.Append("<html xmlns=\"http://www.w3.org/1999/xhtml\">\r\n");
             buff.Append("<head></head><body></body></html>\r\n");
-            context.Status = HttpStatusCode.InternalServerError;
+            context.StatusCode = (int)HttpStatusCode.InternalServerError;
         }
 
         byte[] encodedBuff = System.Text.Encoding.UTF8.GetBytes(buff.ToString());
         
-        context.ContentLength = encodedBuff.Length;
-        context.SendHeaders();
-        context.SendBody(encodedBuff, 0, encodedBuff.Length);
-        context.Send();
+        context.ContentLength64 = encodedBuff.Length;
+        System.IO.Stream output = context.OutputStream;
+        output.Write(encodedBuff, 0, encodedBuff.Length);
+        output.Close();
         return;
     }
 
@@ -309,7 +228,7 @@ public class RestManager : ModuleBase, IInstance<RestManager>, HttpServer.ILogWr
     /// <param name="context">The request information</param>
     /// <param name="errCode">The HTTP error code toreturn</param>
     /// <param name="addContent">Called to add HTML to the body. May be null.</param>
-    public void ConstructErrorResponse(IHttpResponse context, 
+    public void ConstructErrorResponse(HttpListenerResponse context, 
                     HttpStatusCode errCode, 
                     ConstructResponseRoutine addContent) {
         StringBuilder buff = new StringBuilder();
@@ -322,22 +241,22 @@ public class RestManager : ModuleBase, IInstance<RestManager>, HttpServer.ILogWr
             if (addContent != null) addContent(ref buff);
             buff.Append("</body>\r\n");
             buff.Append("</html>\r\n\r\n");
-            context.Status = errCode;
+            context.StatusCode = (int)errCode;
         }
         catch {
             buff = new StringBuilder();
             buff.Append("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\r\n");
             buff.Append("<html xmlns=\"http://www.w3.org/1999/xhtml\">\r\n");
             buff.Append("<head></head><body></body></html>\r\n");
-            context.Status = HttpStatusCode.InternalServerError;
+            context.StatusCode = (int)HttpStatusCode.InternalServerError;
         }
 
         byte[] encodedBuff = System.Text.Encoding.UTF8.GetBytes(buff.ToString());
         
-        context.ContentLength = encodedBuff.Length;
-        context.SendHeaders();
-        context.SendBody(encodedBuff, 0, encodedBuff.Length);
-        context.Send();
+        context.ContentLength64 = encodedBuff.Length;
+        System.IO.Stream output = context.OutputStream;
+        output.Write(encodedBuff, 0, encodedBuff.Length);
+        output.Close();
         return;
     }
 
