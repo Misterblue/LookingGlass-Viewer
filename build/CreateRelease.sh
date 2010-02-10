@@ -52,7 +52,6 @@ Plugins.cfg
 resources.cfg
 FreeImage.dll
 CSJ2K.dll
-HttpServer.dll
 OpenMetaverse.Http.dll
 OpenMetaverse.StructuredData.dll
 OpenMetaverse.Utilities.dll
@@ -70,6 +69,7 @@ rsync -r --exclude .svn ../bin/LookingGlassUI "$TEMPDIR"
 cat "$FILELIST" | while read filename ; do
     cp "../bin/$filename" "$TEMPDIR"
 done
+cp ../LICENSE.txt "$TEMPDIR"
 find "$TEMPDIR" -type f | xargs chmod --quiet 764
 find "$TEMPDIR" -type d | xargs chmod --quiet 755
 find "$TEMPDIR" -type f -name \*.dll | xargs chmod --quiet +x

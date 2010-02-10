@@ -149,7 +149,7 @@ public class AvatarTracker : IAvatarTrackerService, IModule {
     }
 
 
-    private OMVSD.OSD GetHandler(Uri uri, String after) {
+    private OMVSD.OSD GetHandler(RestHandler handler, Uri uri, String after) {
         OMVSD.OSDMap ret = new OMVSD.OSDMap();
         lock (m_avatars) {
             foreach (KeyValuePair<string, IEntityAvatar> kvp in m_avatars) {
@@ -176,7 +176,7 @@ public class AvatarTracker : IAvatarTrackerService, IModule {
         return ret;
     }
 
-    private OMVSD.OSD PostHandler(Uri uri, String after, OMVSD.OSD body) {
+    private OMVSD.OSD PostHandler(RestHandler handler, Uri uri, String after, OMVSD.OSD body) {
         return new OMVSD.OSDMap();
     }
 

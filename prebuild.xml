@@ -180,7 +180,6 @@
       <Reference name="OpenMetaverse.dll"/>
       <Reference name="OpenMetaverse.StructuredData.dll"/>
       <Reference name="OpenMetaverseTypes.dll"/>
-      <Reference name="HttpServer.dll"/>
       <Files>
         <Match pattern="*.cs" recurse="false"/>
       </Files>
@@ -333,7 +332,6 @@
       <Reference name="OpenMetaverse.dll"/>
       <Reference name="OpenMetaverseTypes.dll"/>
       <Reference name="OpenMetaverse.StructuredData.dll"/>
-      <Reference name="HttpServer.dll"/>
       <Files>
         <Match pattern="*.cs" recurse="false"/>
       </Files>
@@ -443,7 +441,6 @@
       <Reference name="OpenMetaverse.dll"/>
       <Reference name="OpenMetaverseTypes.dll"/>
       <Reference name="OpenMetaverse.StructuredData.dll"/>
-      <Reference name="HttpServer.dll"/>
       <Files>
         <Match pattern="*.cs" recurse="false"/>
       </Files>

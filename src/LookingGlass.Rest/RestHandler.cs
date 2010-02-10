@@ -41,7 +41,7 @@ namespace LookingGlass.Rest {
 public class RestHandler : IDisposable {
     public ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
 
-    public const string APINAME = "api";
+    public const string APINAME = "/api";
 
     public const string RESTREQUESTERRORCODE = "RESTRequestError";
     public const string RESTREQUESTERRORMSG = "RESTRequestMsg";
@@ -54,6 +54,7 @@ public class RestHandler : IDisposable {
     public IDisplayable m_displayable = null;
     public string m_dir = null;
     public bool m_parameterSetWritable = false;
+    public string m_prefix;
 
     public HttpListenerContext m_context;
     public HttpListenerRequest m_request;
@@ -70,12 +71,9 @@ public class RestHandler : IDisposable {
         m_baseUrl = urlBase;
         m_processGet = pget;
         m_processPost = ppost;
-        m_Handler = new HttpListener();
-        string prefix = RestManager.Instance.BaseURL + APINAME + urlBase;
-        m_Handler.Prefixes.Add(prefix);
-        m_Handler.Start();
-        m_Handler.BeginGetContext(new AsyncCallback(GetPostAsync), this);
-        m_log.Log(LogLevel.DRESTDETAIL, "Register GET/POST handler for {0}", prefix);
+        m_prefix = APINAME + urlBase;
+        RestManager.Instance.RegisterListener(this);
+        m_log.Log(LogLevel.DRESTDETAIL, "Register GET/POST handler for {0}", m_prefix);
     }
 
     /// <summary>
@@ -89,12 +87,12 @@ public class RestHandler : IDisposable {
         m_parameterSet = parms;
         m_parameterSetWritable = writable;
         m_processGet = ProcessGetParam;
-        m_Handler = new HttpListener();
-        string prefix = RestManager.Instance.BaseURL + APINAME + urlBase;
-        m_Handler.Prefixes.Add(prefix);
-        m_Handler.Start();
-        m_Handler.BeginGetContext(new AsyncCallback(GetPostAsync), this);
-        m_log.Log(LogLevel.DRESTDETAIL, "Register GET/POST param handler for {0}", prefix);
+        if (writable) {
+            m_processPost = ProcessPostParam;
+        }
+        m_prefix = APINAME + urlBase;
+        RestManager.Instance.RegisterListener(this);
+        m_log.Log(LogLevel.DRESTDETAIL, "RestHandler: parameterset, p={0}", m_prefix);
     }
 
     /// <summary>
@@ -107,12 +105,9 @@ public class RestHandler : IDisposable {
         m_baseUrl = urlBase;
         m_displayable = displayable;
         m_processGet = ProcessGetParam;
-        m_Handler = new HttpListener();
-        string prefix = RestManager.Instance.BaseURL + APINAME + urlBase;
-        m_Handler.Prefixes.Add(prefix);
-        m_Handler.Start();
-        m_Handler.BeginGetContext(new AsyncCallback(GetPostAsync), this);
-        m_log.Log(LogLevel.DRESTDETAIL, "Register GET/POST displayable handler for {0}", prefix);
+        m_prefix = APINAME + urlBase;
+        RestManager.Instance.RegisterListener(this);
+        m_log.Log(LogLevel.DRESTDETAIL, "Register GET/POST displayable handler for {0}", m_prefix);
     }
 
     /// <summary>
@@ -121,13 +116,11 @@ public class RestHandler : IDisposable {
     /// <param name="urlBase"></param>
     /// <param name="directory"></param>
     public RestHandler(string urlBase, string directory) {
+        m_baseUrl = urlBase;
         m_dir = directory;
-        m_Handler = new HttpListener();
-        string prefix = RestManager.Instance.BaseURL + urlBase;
-        m_Handler.Prefixes.Add(prefix);
-        m_Handler.Start();
-        m_Handler.BeginGetContext(new AsyncCallback(GetPostAsync), this);
-        m_log.Log(LogLevel.DRESTDETAIL, "Register GET/POST displayable handler for {0}", prefix);
+        m_prefix = urlBase;
+        RestManager.Instance.RegisterListener(this);
+        m_log.Log(LogLevel.DRESTDETAIL, "Register GET/POST displayable handler for {0}", m_prefix);
     }
     
     public void Dispose() {
@@ -137,53 +130,49 @@ public class RestHandler : IDisposable {
         }
     }
 
-    public static void GetPostAsync(IAsyncResult result) {
-        RestHandler handler = (RestHandler)result.AsyncState;
-        HttpListener listener = handler.m_Handler;
-        handler.m_context = listener.EndGetContext(result);
-        handler.m_request = handler.m_context.Request;
-        handler.m_response = handler.m_context.Response;
-        if (handler.m_request.HttpMethod.ToUpper().Equals("GET")) {
-            if (handler.m_processGet == null && handler.m_dir != null) {
-                handler.m_log.Log(LogLevel.DRESTDETAIL, "GET: file: " + handler.m_request.Url);
-                string absURL = handler.m_request.Url.AbsolutePath.ToLower();
-                int afterPos = absURL.IndexOf(handler.m_baseUrl.ToLower());
-                string afterString = absURL.Substring(afterPos + handler.m_baseUrl.Length);
-                string filename = handler.m_dir + "/" + afterString;
+    public void GetPostAsync(string afterString) {
+        if (m_request.HttpMethod.ToUpper().Equals("GET")) {
+            if (m_processGet == null && m_dir != null) {
+                string filename = m_dir + "/" + afterString;
                 if (File.Exists(filename)) {
-                    RestManager.Instance.ConstructSimpleResponse(handler.m_response, "text/json",
+                    // m_log.Log(LogLevel.DRESTDETAIL, "GET: file: {0}", afterString);
+                    string[] fileContents = File.ReadAllLines(filename);
+                    string mimeType = RestManager.MIMEDEFAULT;
+                    if (filename.EndsWith(".css")) mimeType = "text/css";
+                    if (filename.EndsWith(".json")) mimeType = "text/json";
+                    RestManager.Instance.ConstructSimpleResponse(m_response, mimeType,
                         delegate(ref StringBuilder buff) {
-                            // TODO
-
+                            foreach (string line in fileContents) {
+                                buff.Append(line);
+                                buff.Append("\r\n");
+                            }
                         }
                     );
                 }
                 else {
+                    m_log.Log(LogLevel.DRESTDETAIL, "GET: file does not exist: {0}", filename );
                 }
                 return;
             }
             try {
-                if (handler.m_processGet == null) {
+                if (m_processGet == null) {
                     throw new LookingGlassException("HTTP GET with no processing routine");
                 }
-                handler.m_log.Log(LogLevel.DRESTDETAIL, "GET: " + handler.m_request.Url);
-                string absURL = handler.m_request.Url.AbsolutePath.ToLower();
-                int afterPos = absURL.IndexOf(handler.m_baseUrl.ToLower());
-                string afterString = absURL.Substring(afterPos + handler.m_baseUrl.Length);
-                OMVSD.OSD resp = handler.m_processGet(handler, handler.m_request.Url, afterString);
-                RestManager.Instance.ConstructSimpleResponse(handler.m_response, "text/json",
+                // m_log.Log(LogLevel.DRESTDETAIL, "GET: " + m_request.Url);
+                OMVSD.OSD resp = m_processGet(this, m_request.Url, afterString);
+                RestManager.Instance.ConstructSimpleResponse(m_response, "text/json",
                     delegate(ref StringBuilder buff) {
                         buff.Append(OMVSD.OSDParser.SerializeJsonString(resp));
                     }
                 );
             }
             catch (Exception e) {
-                handler.m_log.Log(LogLevel.DREST, "Failed getHandler: u=" 
-                        + handler.m_request.Url.ToString() + ":" +e.ToString());
-                RestManager.Instance.ConstructErrorResponse(handler.m_response, HttpStatusCode.InternalServerError,
+                m_log.Log(LogLevel.DREST, "Failed getHandler: u=" 
+                        + m_request.Url.ToString() + ":" +e.ToString());
+                RestManager.Instance.ConstructErrorResponse(m_response, HttpStatusCode.InternalServerError,
                     delegate(ref StringBuilder buff) {
                         buff.Append("<div>");
-                        buff.Append("FAILED GETTING '" + handler.m_request.Url.ToString() + "'");
+                        buff.Append("FAILED GETTING '" + m_request.Url.ToString() + "'");
                         buff.Append("</div>");
                         buff.Append("<div>");
                         buff.Append("ERROR = '" + e.ToString() + "'");
@@ -193,45 +182,38 @@ public class RestHandler : IDisposable {
             }
             return;
         }
-        if (handler.m_request.HttpMethod.ToUpper().Equals("POST")) {
-            handler.m_log.Log(LogLevel.DRESTDETAIL, "POST: " + handler.m_request.Url);
-            if (handler.m_processPost == null && handler.m_parameterSet != null) {
-                handler.ParamPostHandler(handler, handler.m_request, handler.m_response);
-                return;
-            }
+        if (m_request.HttpMethod.ToUpper().Equals("POST")) {
+            m_log.Log(LogLevel.DRESTDETAIL, "POST: " + m_request.Url);
             string strBody = "";
-            using (StreamReader rdr = new StreamReader(handler.m_request.InputStream)) {
+            using (StreamReader rdr = new StreamReader(m_request.InputStream)) {
                 strBody = rdr.ReadToEnd();
                 // m_log.Log(LogLevel.DRESTDETAIL, "APIPostHandler: Body: '" + strBody + "'");
             }
             try {
-                if (handler.m_processPost == null) {
+                if (m_processPost == null) {
                     throw new LookingGlassException("HTTP POST with no processing routine");
                 }
-                string absURL = handler.m_request.Url.AbsolutePath.ToLower();
-                int afterPos = absURL.IndexOf(handler.m_baseUrl.ToLower());
-                string afterString = absURL.Substring(afterPos + handler.m_baseUrl.Length);
-                OMVSD.OSD body = handler.MapizeTheBody(strBody);
-                OMVSD.OSD resp = handler.m_processPost(handler, handler.m_request.Url, afterString, body);
+                OMVSD.OSD body = MapizeTheBody(strBody);
+                OMVSD.OSD resp = m_processPost(this, m_request.Url, afterString, body);
                 if (resp != null) {
-                    RestManager.Instance.ConstructSimpleResponse(handler.m_response, "text/json",
+                    RestManager.Instance.ConstructSimpleResponse(m_response, "text/json",
                         delegate(ref StringBuilder buff) {
                             buff.Append(OMVSD.OSDParser.SerializeJsonString(resp));
                         }
                     );
                 }
                 else {
-                    handler.m_log.Log(LogLevel.DREST, "Failure which creating POST response");
+                    m_log.Log(LogLevel.DREST, "Failure which creating POST response");
                     throw new LookingGlassException("Failure processing POST");
                 }
             }
             catch (Exception e) {
-                handler.m_log.Log(LogLevel.DREST, "Failed postHandler: u=" 
-                        + handler.m_request.Url.ToString() + ":" +e.ToString());
-                RestManager.Instance.ConstructErrorResponse(handler.m_response, HttpStatusCode.InternalServerError,
+                m_log.Log(LogLevel.DREST, "Failed postHandler: u=" 
+                        + m_request.Url.ToString() + ":" +e.ToString());
+                RestManager.Instance.ConstructErrorResponse(m_response, HttpStatusCode.InternalServerError,
                     delegate(ref StringBuilder buff) {
                         buff.Append("<div>");
-                        buff.Append("FAILED GETTING '" + handler.m_request.Url.ToString() + "'");
+                        buff.Append("FAILED GETTING '" + m_request.Url.ToString() + "'");
                         buff.Append("</div>");
                         buff.Append("<div>");
                         buff.Append("ERROR = '" + e.ToString() + "'");
@@ -300,6 +282,23 @@ public class RestHandler : IDisposable {
         }
         catch (Exception e) {
             m_log.Log(LogLevel.DREST, "Failed fetching GetParam value: {0}", e);
+        }
+        return ret;
+    }
+
+    public OMVSD.OSD ProcessPostParam(RestHandler handler, Uri uri, string afterString, OMVSD.OSD rawbody) {
+        OMVSD.OSD ret = new OMVSD.OSDMap();
+        try {
+            OMVSD.OSDMap body = (OMVSD.OSDMap)rawbody;
+            foreach (string akey in body.Keys) {
+                if (handler.m_parameterSet.HasParameter(akey)) {
+                    handler.m_parameterSet.Update(akey, body[akey]);
+                }
+            }
+            ret = handler.m_parameterSet.GetDisplayable();
+        }
+        catch (Exception e) {
+            m_log.Log(LogLevel.DREST, "Failed setting param in POST: {0}", e);
         }
         return ret;
     }

@@ -67,7 +67,6 @@ if [[ "$copyOpenMetaverse" == "yes" ]] ; then
     echo "Copying OpenMetaverase into Radegast bin"
     echo "  $SRCDIR -> $DSTDIR"
     cp "$SRCDIR/CSJ2K.dll"                    "$DSTDIR"
-    cp "$SRCDIR/HttpServer.dll"               "$DSTDIR"
     cp "$SRCDIR/OpenMetaverse.Http.dll"       "$DSTDIR"
     cp "$SRCDIR/OpenMetaverse.StructuredData.dll" "$DSTDIR"
     cp "$SRCDIR/OpenMetaverse.Utilities.dll"  "$DSTDIR"

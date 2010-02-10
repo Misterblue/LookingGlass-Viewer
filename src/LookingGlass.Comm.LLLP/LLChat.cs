@@ -177,7 +177,7 @@ public class LLChat : IChatProvider, IModule {
         lock (m_chats) m_chats.Enqueue(ce);
     }
 
-    private OMVSD.OSD GetHandler(Uri uri, String after) {
+    private OMVSD.OSD GetHandler(RestHandler handler, Uri uri, String after) {
         OMVSD.OSDMap ret = new OMVSD.OSDMap();
         string lastDate = "xx";
         lock (m_chats) {
@@ -201,7 +201,7 @@ public class LLChat : IChatProvider, IModule {
         return ret;
     }
 
-    private OMVSD.OSD PostHandler(Uri uri, String after, OMVSD.OSD body) {
+    private OMVSD.OSD PostHandler(RestHandler handler, Uri uri, String after, OMVSD.OSD body) {
         try {
             OMVSD.OSDMap mapBody = (OMVSD.OSDMap)body;
             m_log.Log(LogLevel.DCOMMDETAIL, "PostHandler: received chat '{0}'", mapBody["Message"]);

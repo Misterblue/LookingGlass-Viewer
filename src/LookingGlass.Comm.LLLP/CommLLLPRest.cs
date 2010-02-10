@@ -31,7 +31,6 @@ using LookingGlass.Framework.Parameters;
 using LookingGlass.Rest;
 using OMV = OpenMetaverse;
 using OMVSD = OpenMetaverse.StructuredData;
-using HttpServer;
 
 namespace LookingGlass.Comm.LLLP {
 
@@ -76,8 +75,8 @@ public class CommLLLPRest : ModuleBase, IRestUser {
             m_apiName = ModuleParams.ParamString(ModuleName + ".APIName");
 
             ParameterSet connParams = m_comm.ConnectionParams;
-            m_paramGetHandler = new RestHandler("/" + m_apiName + "/status/", ref connParams, false);
-            m_actionHandler = new RestHandler("/" + m_apiName + "/connect/", null, ProcessPost);
+            m_paramGetHandler = new RestHandler("/" + m_apiName + "/status", ref connParams, false);
+            m_actionHandler = new RestHandler("/" + m_apiName + "/connect", null, ProcessPost);
         }
         catch (Exception e) {
             m_log.Log(LogLevel.DBADERROR, "CommLLLPRest COULD NOT REGISTER REST OPERATION: " + e.ToString());
@@ -114,7 +113,7 @@ public class CommLLLPRest : ModuleBase, IRestUser {
     /// <param name="uri"></param>
     /// <param name="body"></param>
     /// <returns></returns>
-    public OMVSD.OSD ProcessPost(Uri uri, string after, OMVSD.OSD body) {
+    public OMVSD.OSD ProcessPost(RestHandler handler, Uri uri, string after, OMVSD.OSD body) {
         OMVSD.OSDMap ret = new OMVSD.OSDMap();
         if (m_comm == null) {
             m_log.Log(LogLevel.DBADERROR, "POST WITHOUT COMM CONNECTION!! URL=" + uri.ToString());
@@ -122,13 +121,13 @@ public class CommLLLPRest : ModuleBase, IRestUser {
         }
         m_log.Log(LogLevel.DCOMMDETAIL, "Post action: {0}", uri.ToString());
         switch (after) {
-            case "login":
+            case "/login":
                 ret = PostActionLogin(body);
                 break;
-            case "teleport":
+            case "/teleport":
                 ret = PostActionTeleport(body);
                 break;
-            case "logout":
+            case "/logout":
                 ret = PostActionLogout(body);
                 break;
             default:

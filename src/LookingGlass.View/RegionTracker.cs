@@ -81,7 +81,7 @@ protected IWorld m_world;
         }
 
         if (ModuleParams.ParamBool(ModuleName + ".Regions.Enable")) {
-            m_regionRestHandler = new RestHandler("/Tracker/Regions", new RegionInformation(this));
+            m_regionRestHandler = new RestHandler("/Tracker/Regions/", new RegionInformation(this));
         }
         return true;
     }

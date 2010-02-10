@@ -26,6 +26,7 @@ using System.IO;
 using System.Net;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using LookingGlass;
 using LookingGlass.Framework;
 using LookingGlass.Framework.Logging;
@@ -68,6 +69,9 @@ public class RestManager : ModuleBase, IInstance<RestManager> {
 
     protected int m_port;
     public int Port { get { return m_port; } }
+    HttpListener m_listener;
+    Thread m_listenerThread;
+    List<RestHandler> m_handlers = new List<RestHandler>();
 
     // Some system wide rest handlers to make information available
     RestHandler m_workQueueRestHandler = null;
@@ -99,7 +103,7 @@ public class RestManager : ModuleBase, IInstance<RestManager> {
         base.OnLoad(modName, lgbase);
         ModuleParams.AddDefaultParameter(m_moduleName + ".Port", "9144",
                     "Local port used for rest interfaces");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".BaseURL", "http://+",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".BaseURL", "http://127.0.0.1",
                     "Base URL for rest interfaces");
         ModuleParams.AddDefaultParameter(m_moduleName + ".CSSLocalURL", "/std/LookingGlass.css",
                     "CSS file for rest display");
@@ -113,10 +117,13 @@ public class RestManager : ModuleBase, IInstance<RestManager> {
     override public bool AfterAllModulesLoaded() {
         m_log.Log(LogLevel.DINIT, "entered AfterAllModulesLoaded()");
 
-        // m_baseURL = "http://+:PORT/"
+        // m_baseURL = "http://127.0.0.1:PORT/"
         m_port = ModuleParams.ParamInt(m_moduleName + ".Port");
         m_baseURL = ModuleParams.ParamString(m_moduleName + ".BaseURL");
-        m_baseURL = m_baseURL + ":" + m_port.ToString() + "/";
+        m_baseURL = m_baseURL + ":" + m_port.ToString();
+
+        m_listener = new HttpListener();
+        m_listener.Prefixes.Add(m_baseURL + "/");
 
         // m_baseUIDIR = "/.../bin/LookingGlassUI/"
         string baseUIDir = ModuleParams.ParamString(m_moduleName + ".UIContentDir");
@@ -142,9 +149,7 @@ public class RestManager : ModuleBase, IInstance<RestManager> {
 
         m_log.Log(LogLevel.DINITDETAIL, "Registering FileHandler {0} -> {1}", "/std/", stdDir);
         m_stdHandler = new RestHandler("/std/", stdDir);
-
-        m_log.Log(LogLevel.DINITDETAIL, "Registering FileHandler {0} -> {1}", "/favicon.ico", stdDir);
-        m_faviconHandler = new RestHandler("/favicon.ico", stdDir);
+        m_faviconHandler = new RestHandler("/favicon.ico", baseUIDir);
 
         // some Framework structures that can be referenced
         m_log.Log(LogLevel.DINITDETAIL, "Registering work queue stats at 'api/stats/workQueues'");
@@ -174,12 +179,49 @@ public class RestManager : ModuleBase, IInstance<RestManager> {
 
     public override void Start() {
         base.Start();
+        m_log.Log(LogLevel.DRESTDETAIL, "Start(). Starting listening");
+        m_listener.Start();
+        m_listenerThread = new Thread(LoopForInput);
+        m_listenerThread.Name = "REST Input";
+        m_listenerThread.Start();
     }
 
     override public void Stop() {
         return;
     }
     #endregion IModule methods
+
+    public void RegisterListener(RestHandler handler) {
+        m_log.Log(LogLevel.DRESTDETAIL, "Registering prefix {0}", handler.m_prefix);
+        m_handlers.Add(handler);
+    }
+
+    public void LoopForInput() {
+        while (m_lgb.KeepRunning) {
+            HttpListenerContext context = m_listener.GetContext();
+            HttpListenerRequest request = context.Request;
+            HttpListenerResponse response = context.Response;
+            string absURL = request.Url.AbsolutePath.ToLower();
+            RestManager.Instance.m_log.Log(LogLevel.DRESTDETAIL, "HTTP request for {0}", absURL);
+            RestHandler thisHandler = null;
+            foreach (RestHandler rh in RestManager.Instance.m_handlers) {
+                if (absURL.StartsWith(rh.m_prefix.ToLower())) {
+                    thisHandler = rh;
+                    break;
+                }
+            }
+            if (thisHandler != null) {
+                string afterString = absURL.Substring(thisHandler.m_prefix.Length);
+                thisHandler.m_context = context;
+                thisHandler.m_request = request;
+                thisHandler.m_response = response;
+                thisHandler.GetPostAsync(afterString);
+            }
+            else {
+                RestManager.Instance.m_log.Log(LogLevel.DRESTDETAIL, "Request not processed because no matching handler");
+            }
+        }
+    }
 
     #region HTML Helper Routines
 
