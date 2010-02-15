@@ -97,11 +97,17 @@ public partial class ViewWindow : Form {
     }
 
     public void LGWindow_Paint(object sender, PaintEventArgs e) {
-        if (this.InvokeRequired) {
-            BeginInvoke((MethodInvoker)delegate() { m_renderer.RenderOneFrame(false, m_frameAllowanceMs); });
+        try {
+            if (this.InvokeRequired) {
+                BeginInvoke((MethodInvoker)delegate() { m_renderer.RenderOneFrame(false, m_frameAllowanceMs); });
+                m_log.Log(LogLevel.DVIEW, "LGWindow_Paint: did BeginInvoke");
+            }
+            else {
+                m_renderer.RenderOneFrame(false, m_frameAllowanceMs);
+            }
         }
-        else {
-            m_renderer.RenderOneFrame(false, m_frameAllowanceMs);
+        catch (Exception err) {
+            m_log.Log(LogLevel.DBADERROR, "LGWindow_Paint: EXCEPTION: {0}", err);
         }
         if (!m_lgb.KeepRunning) {
             if (this.InvokeRequired) {

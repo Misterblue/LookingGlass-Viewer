@@ -28,6 +28,7 @@ using System.Windows.Forms;
 using LookingGlass.Framework.Logging;
 using LookingGlass.Framework.Modules;
 using LookingGlass.Framework.Parameters;
+using LookingGlass.Framework.WorkQueue;
 using LookingGlass.Renderer;
 using LookingGlass.World;
 using OMV = OpenMetaverse;
@@ -67,6 +68,8 @@ public class Viewer : ModuleBase, IViewProvider {
     private float m_cameraRotationSpeed = 0.1f;     // degrees to rotate
     private float m_agentCameraBehind;
     private float m_agentCameraAbove;
+
+    private BasicWorkQueue m_workQueue = new BasicWorkQueue("Viewer");
 
     /// <summary>
     /// Constructor called in instance of main and not in own thread. This is only
@@ -245,6 +248,17 @@ public class Viewer : ModuleBase, IViewProvider {
     #region user IO
     // called from the renderer when the mouse moves
     private void UserInterface_OnMouseMove(int param, float x, float y) {
+        Object[] moveParams = { param, x, y };
+        m_workQueue.DoLater(UI_MouseMoveLater, moveParams);
+        return;
+    }
+
+    private bool UI_MouseMoveLater(DoLaterBase qInstance, Object parms) {
+        Object[] loadParams = (Object[])parms;
+        int param = (int)loadParams[0];
+        float x = (float)loadParams[1];
+        float y = (float)loadParams[2];
+
         int sinceLastMouse = System.Environment.TickCount - m_lastMouseMoveTime;
         m_lastMouseMoveTime = System.Environment.TickCount;
         m_log.Log(LogLevel.DVIEWDETAIL, "OnMouseMove: x={0}, y={1}, time since last={2}", x, y, sinceLastMouse);
@@ -282,7 +296,7 @@ public class Viewer : ModuleBase, IViewProvider {
                     m_mainCamera.rotate(yMove, 0f, xMove);
             }
         }
-        return;
+        return true;
     }
 
     private void UserInterface_OnMouseButton(MouseButtons param, bool updown) {

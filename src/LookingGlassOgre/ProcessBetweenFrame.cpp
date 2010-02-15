@@ -861,6 +861,7 @@ void ProcessBetweenFrame::ProcessWorkItems(int millisToProcess) {
 		if (workMaterialGeneric != NULL) ProcessOneWorkItem(workMaterialGeneric, loopCost, millisToProcess);
 	}
 	// Several schemes have been tried to control the between frame processing.
+	// while (!m_betweenFrameWork.empty()) {
 	// while (!m_betweenFrameWork.empty() && (loopCost > 0) ) {
 	// while (!m_betweenFrameWork.empty() && (loopCost > 0) && (betweenFrameTimeKeeper->getMilliseconds() < endTime) ) {
 	while (!m_betweenFrameWork.empty() && (betweenFrameTimeKeeper->getMilliseconds() < endTime) ) {

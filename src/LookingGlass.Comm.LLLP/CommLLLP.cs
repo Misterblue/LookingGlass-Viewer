@@ -695,6 +695,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         // this is needed to make the avatar appear
         // TODO: figure out if the linking between agent and appearance is right
         // m_client.Appearance.SetPreviousAppearance(true);
+        m_client.Appearance.RequestSetAppearance(false);
         m_client.Self.Movement.UpdateFromHeading(0.0, true);
     }
 
@@ -838,6 +839,20 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
                         IEntity newEnt = new LLEntityPhysical(rcontext.AssetContext,
                                         rcontext, args.Simulator.Handle, args.Prim.LocalID, args.Prim);
                         updateFlags |= UpdateCodes.New;
+                        LLAttachment att = new LLAttachment();
+                        newEnt.RegisterInterface<LLAttachment>(att);
+                        string attachmentID = null;
+                        if (args.Prim.NameValues != null) {
+                            foreach (OMV.NameValue nv in args.Prim.NameValues) {
+                                m_log.Log(LogLevel.DCOMMDETAIL, "AttachmentUpdate: ent={0}, {1}->{2}", newEnt.Name, nv.Name, nv.Value);
+                                if (nv.Name == "AttachItemID") {
+                                    attachmentID = nv.Value.ToString();
+                                    break;
+                                }
+                            }
+                        }
+                        att.AttachmentID = attachmentID;
+                        att.AttachmentPoint = args.Prim.PrimData.AttachmentPoint;
                         return newEnt;
                     }) ) {
                 // if new or not, assume everything about this entity has changed
@@ -848,15 +863,6 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
             }
             else {
                 m_log.Log(LogLevel.DBADERROR, "FAILED CREATION OF NEW ATTACHMENT");
-            }
-            string attachmentIDs = null;
-            if (args.Prim.NameValues != null) {
-                foreach (OMV.NameValue nv in args.Prim.NameValues) {
-                    if (nv.Name == "AttachItemID") {
-                        attachmentIDs = nv.Value.ToString();
-                        break;
-                    }
-                }
             }
         }
         catch (Exception e) {

@@ -191,6 +191,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "True if to share meshes with similar characteristics");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.UseShaders", "true",
                     "Whether to use the new technique of using GPU shaders");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.CollectOgreStats", "true",
+                    "Whether to collect detailed Ogre stats and make available to web");
 
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Sky", "Default",
                     "Name of the key system to use");
@@ -255,10 +257,12 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         #region OGRE STATS
         // Setup the shared piece of memory that Ogre can place statistics in
         m_ogreStatsPinned = new int[Ogr.StatSize];
-        m_ogreStatsHandle = GCHandle.Alloc(m_ogreStatsPinned, GCHandleType.Pinned);
-        Ogr.SetStatsBlock(m_ogreStatsHandle.AddrOfPinnedObject());
-        // m_ogreStatsPinned = (int[])Marshal.AllocHGlobal(Ogr.StatSize * 4);
-        // Ogr.SetStatsBlock(m_ogreStatsPinned);
+        if (ModuleParams.ParamBool("Renderer.Ogre.CollectOgreStats")) {
+            m_ogreStatsHandle = GCHandle.Alloc(m_ogreStatsPinned, GCHandleType.Pinned);
+            Ogr.SetStatsBlock(m_ogreStatsHandle.AddrOfPinnedObject());
+            // m_ogreStatsPinned = (int[])Marshal.AllocHGlobal(Ogr.StatSize * 4);
+            // Ogr.SetStatsBlock(m_ogreStatsPinned);
+        }
 
         // Create a ParameterSet that can be read externally via REST/JSON
         m_ogreStats = new ParameterSet();
@@ -575,7 +579,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         // NOTE: we pass extra parameters that are later modified by DoRenderLater to remember
         // state (RenderableInfo and if mesh has already been rebuilt)
         Object[] renderParameters = { ent, null, false };
-        m_log.Log(LogLevel.DRENDERDETAIL, "DoRenderQueued: ent={0}", ent.Name.Name);
+        m_log.Log(LogLevel.DRENDERDETAIL, "DoRenderQueued: ent={0}", ent.Name);
         m_workQueueRender.DoLater(CalculateInterestOrder(ent), DoRenderLater, renderParameters);
     }
 
@@ -587,6 +591,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         RenderableInfo m_ri = (RenderableInfo)loadParams[1];
         bool m_hasMesh = (bool)loadParams[2];
         string entitySceneNodeName = EntityNameOgre.ConvertToOgreSceneNodeName(m_ent.Name);
+        m_log.Log(LogLevel.DRENDERDETAIL, "DoRenderLater: ent={0}", m_ent.Name);
 
         lock (m_ent) {
             if (RendererOgre.GetSceneNodeName(m_ent) == null) {
@@ -639,6 +644,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
 
                     // create the mesh we know we need
                     if (m_shouldForceMeshRebuild && !m_hasMesh) {
+
                         // TODO: figure out how to do this without queuing -- do it now
                         //2 RequestMesh(m_ent.Name, entMeshName.Name);
                         //1 Object[] meshLaterParams = { entMeshName.Name, entMeshName };
@@ -722,6 +728,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                 RequestMesh(m_ent.Name, entMeshName.Name);
             }
         }
+        // System.GC.Collect(); // only for debugging
         return true;
     }
 

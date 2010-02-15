@@ -29,33 +29,8 @@ using LookingGlass.World;
 using OMV = OpenMetaverse;
 
 namespace LookingGlass.World.LL {
-    public class LLEntityAttachment : LLEntityBase, IEntityAttachment {
-        private OMV.Avatar m_avatar = null;
-        public OMV.Avatar Avatar { 
-            get { return m_avatar; } 
-            set { m_avatar = value; } 
-        }
-
-        public LLEntityAttachment(AssetContextBase acontext, LLRegionContext rcontext, 
-                ulong regionHandle, OMV.Avatar av) : base(rcontext, acontext) {
-            // let people looking at IEntity's get at my attachment-ness
-            RegisterInterface<IEntityAttachment>(this);
-            this.Sim = rcontext.Simulator;
-            this.RegionHandle = regionHandle;
-            this.Avatar = av;
-            this.LocalID = av.LocalID;
-            this.Name = AttachmentEntityNameFromID(acontext, m_avatar.ID);
-            LogManager.Log.Log(LogLevel.DCOMMDETAIL, "LLEntityAttachment: create id={0}, lid={1}",
-                            av.ID.ToString(), this.LocalID);
-        }
-
-        public static EntityName AttachmentEntityNameFromID(AssetContextBase acontext, OMV.UUID ID) {
-            return new EntityNameLL(acontext, "Attachment/" + ID.ToString());
-        }
-
-
-        public override void Dispose() {
-            return;
-        }
+    public class LLAttachment : IAttachment {
+        public string AttachmentID;
+        public OMV.AttachmentPoint AttachmentPoint;
     }
 }

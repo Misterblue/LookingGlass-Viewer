@@ -125,6 +125,7 @@ public class RendererOgreLL : IWorldRenderConv {
         RenderableInfo ri = new RenderableInfo();
         // figure out what this entity is:
         IEntityAvatar av = null;
+        LLAttachment atch = null;
         if (ent.TryGet<IEntityAvatar>(out av)) {
             // this is an avatar
             ri.basicObject = EntityNameOgre.ConvertToOgreMeshName(new EntityName(m_defaultAvatarMesh));
@@ -134,8 +135,10 @@ public class RendererOgreLL : IWorldRenderConv {
             ri.scale = new OMV.Vector3(m_sceneMagnification, m_sceneMagnification, m_sceneMagnification);
             m_log.Log(LogLevel.DRENDERDETAIL, "RenderingInfo: assigning mesh to avatar: {0}", m_defaultAvatarMesh);
         }
-        // else if (llent.TryGet<LLEntityAttachment>(out atch) {
-        // }
+        else if (llent.TryGet<LLAttachment>(out atch)) {
+            // attachments have a special position on the skeleton of the avatar
+            CalcAttachmentPoint(atch, out ri.position, out ri.rotation);
+        }
         else {
             // must be a regular prim
             if (prim == null) 
@@ -807,6 +810,58 @@ public class RendererOgreLL : IWorldRenderConv {
         hash = ((hash << 5) + hash) + (ulong)asBytes[1];
         hash = ((hash << 5) + hash) + (ulong)asBytes[2];
         return ((hash << 5) + hash) + (ulong)asBytes[3];
+    }
+
+    private void CalcAttachmentPoint(LLAttachment atch, out OMV.Vector3 pos, out OMV.Quaternion rot) {
+        OMV.Vector3 posRet = OMV.Vector3.Zero;
+        OMV.Quaternion rotRet = OMV.Quaternion.Identity;
+
+        switch (atch.AttachmentPoint) {
+            case OMV.AttachmentPoint.Default:
+            case OMV.AttachmentPoint.Chest:
+            case OMV.AttachmentPoint.Skull:
+            case OMV.AttachmentPoint.LeftShoulder:
+            case OMV.AttachmentPoint.RightShoulder:
+            case OMV.AttachmentPoint.LeftHand:
+            case OMV.AttachmentPoint.RightHand:
+            case OMV.AttachmentPoint.LeftFoot:
+            case OMV.AttachmentPoint.RightFoot:
+            case OMV.AttachmentPoint.Spine:
+            case OMV.AttachmentPoint.Pelvis:
+            case OMV.AttachmentPoint.Mouth:
+            case OMV.AttachmentPoint.Chin:
+            case OMV.AttachmentPoint.LeftEar:
+            case OMV.AttachmentPoint.RightEar:
+            case OMV.AttachmentPoint.LeftEyeball:
+            case OMV.AttachmentPoint.RightEyeball:
+            case OMV.AttachmentPoint.Nose:
+            case OMV.AttachmentPoint.RightUpperArm:
+            case OMV.AttachmentPoint.RightForearm:
+            case OMV.AttachmentPoint.LeftUpperArm:
+            case OMV.AttachmentPoint.LeftForearm:
+            case OMV.AttachmentPoint.RightHip:
+            case OMV.AttachmentPoint.RightUpperLeg:
+            case OMV.AttachmentPoint.RightLowerLeg:
+            case OMV.AttachmentPoint.LeftHip:
+            case OMV.AttachmentPoint.LeftUpperLeg:
+            case OMV.AttachmentPoint.LeftLowerLeg:
+            case OMV.AttachmentPoint.Stomach:
+            case OMV.AttachmentPoint.LeftPec:
+            case OMV.AttachmentPoint.RightPec:
+            case OMV.AttachmentPoint.HUDCenter2:
+            case OMV.AttachmentPoint.HUDTopRight:
+            case OMV.AttachmentPoint.HUDTop:
+            case OMV.AttachmentPoint.HUDTopLeft:
+            case OMV.AttachmentPoint.HUDCenter:
+            case OMV.AttachmentPoint.HUDBottomLeft:
+            case OMV.AttachmentPoint.HUDBottom:
+            case OMV.AttachmentPoint.HUDBottomRight:
+                break;
+            default:
+                break;
+        }
+        pos = posRet;
+        rot = rotRet;
     }
 
 }
