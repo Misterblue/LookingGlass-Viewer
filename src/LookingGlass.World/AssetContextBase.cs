@@ -81,6 +81,7 @@ public abstract class AssetContextBase : IDisposable {
     protected int m_maxRequests;
     protected BasicWorkQueue m_completionWork;
     protected Dictionary<OMV.UUID, WaitingInfo> m_waiting;
+    protected static int m_numAssetContextBase = 0;
 
     protected ICommProvider m_comm;       // handle to the underlying comm provider
 
@@ -88,7 +89,9 @@ public abstract class AssetContextBase : IDisposable {
         AssetContexts = new List<AssetContextBase>();
     }
 
-    public AssetContextBase() {
+    public AssetContextBase(string name) {
+        m_numAssetContextBase++;
+        m_Name = name;
         // remember all the contexts
         lock (AssetContexts) {
             if (!AssetContexts.Contains(this)) {
@@ -96,8 +99,9 @@ public abstract class AssetContextBase : IDisposable {
             }
         }
         m_waiting = new Dictionary<OMV.UUID, WaitingInfo>();
-        m_completionWork = new BasicWorkQueue("AssetContextCompletion");
+        m_completionWork = new BasicWorkQueue("AssetCompletion" + m_numAssetContextBase.ToString());
     }
+
 
     public void InitializeContext(ICommProvider comm, string cacheDir, int maxrequests) {
         m_comm = comm;

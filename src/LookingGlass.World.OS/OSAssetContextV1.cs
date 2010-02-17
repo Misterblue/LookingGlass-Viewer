@@ -46,12 +46,10 @@ public class OSAssetContextV1 : AssetContextBase {
     // end of the URL. That is happening if this is 'true'.
     bool m_dataFetch = false;
 
-    public OSAssetContextV1() : base() {
-        m_Name = "Unknown";
+    public OSAssetContextV1() : base("Unknown") {
     }
 
-    public OSAssetContextV1(string name) : base() {
-        m_Name = name;
+    public OSAssetContextV1(string name) : base(name) {
     }
 
     public override void InitializeContextFinish() {
@@ -147,7 +145,7 @@ public class OSAssetContextV1 : AssetContextBase {
     Queue<OMV.UUID> m_textureQueue = new Queue<OpenMetaverse.UUID>();
     int m_maxOutstandingTextureRequests = 4;
     int m_currentOutstandingTextureRequests = 0;
-    BasicWorkQueue m_doThrottledTextureRequest = new BasicWorkQueue("ThrottledTexture");
+    BasicWorkQueue m_doThrottledTextureRequest = null;
     private void ThrottleTextureRequests(OMV.UUID binID) {
         lock (m_textureQueue) {
             m_textureQueue.Enqueue(binID);
@@ -163,6 +161,9 @@ public class OSAssetContextV1 : AssetContextBase {
             }
         }
         if (binID != OMV.UUID.Zero) {
+            if (m_doThrottledTextureRequest == null) {
+                m_doThrottledTextureRequest = new BasicWorkQueue("OSThrottledTexture" + m_numAssetContextBase.ToString());
+            }
             m_doThrottledTextureRequest.DoLater(ThrottleTextureMakeRequest, binID);
         }
     }

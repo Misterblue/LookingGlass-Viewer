@@ -22,6 +22,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -70,6 +71,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     protected bool m_shouldForceMeshRebuild = false;
     // True if meshes with the same characteristics should be shared
     protected bool m_shouldShareMeshes = true;
+    // True if to make sure the mesh exists before creating it's scene node
+    protected bool m_shouldPrebuildMesh = false;
 
     // this shouldn't be here... this is a feature of the LL renderer
     protected float m_sceneMagnification;
@@ -187,6 +190,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "Write out meshes to files");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.ForceMeshRebuild", "false",
                     "True if to force the generation a mesh when first rendered (don't rely on cache)");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.PrebuildMesh", "true",
+                    "True if to make sure the mesh exists before creating the scene node");
         ModuleParams.AddDefaultParameter(m_moduleName + ".ShouldShareMeshes", "true",
                     "True if to share meshes with similar characteristics");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.UseShaders", "true",
@@ -412,6 +417,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         m_sceneMagnification = float.Parse(ModuleParams.ParamString(m_moduleName + ".Ogre.LL.SceneMagnification"));
 
         m_shouldForceMeshRebuild = ModuleParams.ParamBool(m_moduleName + ".Ogre.ForceMeshRebuild");
+        m_shouldPrebuildMesh = ModuleParams.ParamBool(m_moduleName + ".Ogre.PrebuildMesh");
         m_shouldRenderOnMainThread = ModuleParams.ParamBool(m_moduleName + ".ShouldRenderOnMainThread");
         m_shouldShareMeshes = ModuleParams.ParamBool(m_moduleName + ".ShouldShareMeshes");
 
@@ -643,23 +649,31 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     }
 
                     // create the mesh we know we need
-                    if (m_shouldForceMeshRebuild && !m_hasMesh) {
-
-                        // TODO: figure out how to do this without queuing -- do it now
-                        //2 RequestMesh(m_ent.Name, entMeshName.Name);
-                        //1 Object[] meshLaterParams = { entMeshName.Name, entMeshName };
-                        //1 bool worked = RequestMeshLater(qInstance, meshLaterParams);
-                        //1 // if we can't get the mesh now, we'll have to wait until all the pieces are here
-                        //1 if (!worked) return false;
-                        IWorldRenderConv conver;
-                        m_ent.TryGet<IWorldRenderConv>(out conver);
-                        if (!conver.CreateMeshResource(qInstance.priority, m_ent, entMeshName.Name, entMeshName)) {
-                            // we need to wait until some resource exists before we can complete this creation
-                            return false;
+                    if ((m_shouldPrebuildMesh || m_shouldForceMeshRebuild) && !m_hasMesh) {
+                        // way kludgy... but we see if the cached mesh file exists and, if so, we know it exists
+                        string meshFilename = Path.Combine(m_ent.AssetContext.CacheDirBase, entMeshName.CacheFilename);
+                        if (!m_shouldForceMeshRebuild && File.Exists(meshFilename)) {
+                            // if we just want the mesh built, if the file exists that's enough prebuilding
+                            m_log.Log(LogLevel.DRENDERDETAIL, "RendererOgre.DorRenderLater: mesh file exists: {0}", m_ent.Name.CacheFilename);
+                            m_hasMesh = true;
                         }
-                        m_log.Log(LogLevel.DRENDERDETAIL, "RendererOgre.DorRenderLater: forced mesh build for {0}", 
-                            entMeshName.Name);
-                        m_hasMesh = true;
+                        if (!m_hasMesh) {
+                            // TODO: figure out how to do this without queuing -- do it now
+                            //2 RequestMesh(m_ent.Name, entMeshName.Name);
+                            //1 Object[] meshLaterParams = { entMeshName.Name, entMeshName };
+                            //1 bool worked = RequestMeshLater(qInstance, meshLaterParams);
+                            //1 // if we can't get the mesh now, we'll have to wait until all the pieces are here
+                            //1 if (!worked) return false;
+                            IWorldRenderConv conver;
+                            m_ent.TryGet<IWorldRenderConv>(out conver);
+                            if (!conver.CreateMeshResource(qInstance.priority, m_ent, entMeshName.Name, entMeshName)) {
+                                // we need to wait until some resource exists before we can complete this creation
+                                return false; // note that m_hasMesh is still false so we'll do this routine again
+                            }
+                            m_log.Log(LogLevel.DRENDERDETAIL, "RendererOgre.DorRenderLater: prebuild/forced mesh build for {0}",
+                                entMeshName.Name);
+                            m_hasMesh = true;
+                        }
                         // Push that the mesh was crreated into the queued item so if a 'false' is returned
                         // later, we don't create the mesh again.
                         loadParams[2] = m_hasMesh;

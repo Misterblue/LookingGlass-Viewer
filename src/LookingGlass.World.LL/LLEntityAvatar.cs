@@ -66,12 +66,13 @@ namespace LookingGlass.World.LL {
 
         public LLEntityAvatar(AssetContextBase acontext, LLRegionContext rcontext, 
                 ulong regionHandle, OMV.Avatar av) : base(rcontext, acontext) {
+                // base(acontext, rcontext, regionHandle, av.LocalID, null) { // base for EntityPhysical
             // let people looking at IEntity's get at my avatarness
             RegisterInterface<IEntityAvatar>(this);
             this.Sim = rcontext.Simulator;
             this.RegionHandle = regionHandle;
-            this.Avatar = av;
             this.LocalID = av.LocalID;
+            this.Avatar = av;
             this.Name = AvatarEntityNameFromID(acontext, m_avatar.ID);
             LogManager.Log.Log(LogLevel.DCOMMDETAIL, "LLEntityAvatar: create id={0}, lid={1}",
                             av.ID.ToString(), this.LocalID);

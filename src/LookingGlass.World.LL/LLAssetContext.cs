@@ -47,12 +47,10 @@ public sealed class LLAssetContext : AssetContextBase {
     // private const string WorldIDMatch = "^(...)(...)(..)-(.)(.*)$";
     // private const string WorldIDReplace = "Texture/$1/$2/$3$4/$1$2$3-$4$5";
 
-    public LLAssetContext() : base() {
-        m_Name = "Unknown";
+    public LLAssetContext() : base("Unknown") {
     }
 
-    public LLAssetContext(string name) : base() {
-        m_Name = name;
+    public LLAssetContext(string name) : base(name) {
     }
 
     /// <summary>
@@ -160,7 +158,7 @@ public sealed class LLAssetContext : AssetContextBase {
     Queue<OMV.UUID> m_textureQueue = new Queue<OpenMetaverse.UUID>();
     int m_maxOutstandingTextureRequests = 4;
     int m_currentOutstandingTextureRequests = 0;
-    BasicWorkQueue m_doThrottledTextureRequest = new BasicWorkQueue("ThrottledTexture");
+    BasicWorkQueue m_doThrottledTextureRequest = null;
     private void ThrottleTextureRequests(OMV.UUID binID) {
         lock (m_textureQueue) {
             m_textureQueue.Enqueue(binID);
@@ -176,6 +174,9 @@ public sealed class LLAssetContext : AssetContextBase {
             }
         }
         if (binID != OMV.UUID.Zero) {
+            if (m_doThrottledTextureRequest == null) {
+                m_doThrottledTextureRequest = new BasicWorkQueue("LLThrottledTexture" + m_numAssetContextBase.ToString());
+            }
             m_doThrottledTextureRequest.DoLater(ThrottleTextureMakeRequest, binID);
         }
     }

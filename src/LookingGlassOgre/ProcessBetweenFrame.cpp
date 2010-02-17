@@ -883,6 +883,7 @@ void ProcessBetweenFrame::ProcessWorkItems(int millisToProcess) {
 void ProcessBetweenFrame::ProcessOneWorkItem(GenericQc* workGeneric, int loopCost, int millisToProcess) {
 	//1 Lines commented with '1' were used to figure out processing times
 	unsigned long checkTimeBegin = betweenFrameTimeKeeper->getMicroseconds();
+	LG::Log("PBF: About to do: %s, %s", workGeneric->type.c_str(), workGeneric->uniq.c_str());
 	try {
 		workGeneric->Process();
 	}

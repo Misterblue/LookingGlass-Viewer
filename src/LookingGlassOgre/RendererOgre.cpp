@@ -756,6 +756,9 @@ namespace LG {
 			// This will leave the mesh as the default loading shape
 			// and potentially create an ManualObject leak
 		}
+		catch (...) {
+			LG::Log("RendererOgre::CreateMeshResource: failure generating mesh: system exception");
+		}
 
 
 		return;
