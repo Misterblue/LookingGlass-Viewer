@@ -69,7 +69,7 @@ rsync -r --exclude .svn ../bin/LookingGlassUI "$TEMPDIR"
 cat "$FILELIST" | while read filename ; do
     cp "../bin/$filename" "$TEMPDIR"
 done
-cp ../LICENSE.txt "$TEMPDIR"
+cp ../LICENCE.txt "$TEMPDIR"
 cp -r ../THIRDPARTYLICENCES "$TEMPDIR"
 
 find "$TEMPDIR" -type f | xargs chmod --quiet 764
