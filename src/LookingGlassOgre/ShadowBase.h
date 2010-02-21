@@ -37,7 +37,7 @@ namespace LG {
 		virtual void AddTerrainShadow(Ogre::Material* mat) {};
 		virtual void AddLightShadow(Ogre::Light* lit) {};
 		virtual void AddReceiverShadow(Ogre::Material* mat) {};
-		virtual void AddCasterShadow(Ogre::MovableObject* mat) {};
+		virtual void AddCasterShadow(Ogre::MovableObject* mob) {};
 
 	private:
 };

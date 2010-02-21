@@ -22,7 +22,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -605,25 +604,31 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     // m_log.Log(LogLevel.DRENDERDETAIL, "Adding SceneNode to new entity " + m_ent.Name);
                     if (m_ri == null) {
                         IWorldRenderConv conver;
-                        m_ent.TryGet<IWorldRenderConv>(out conver);
-                        m_ri = conver.RenderingInfo(qInstance.priority, m_sceneMgr, m_ent, qInstance.timesRequeued);
-                        if (m_ri == null) {
-                            // The rendering info couldn't be built now. This is usually because
-                            // the parent of this object is not available so we don't know where to put it
-                            m_log.Log(LogLevel.DRENDERDETAIL,
-                                "Delaying rendering {0}/{1}. RenderingInfo not built for {2}",
-                                qInstance.sequence, qInstance.timesRequeued, m_ent.Name.Name);
-                            return false;
+                        if (m_ent.TryGet<IWorldRenderConv>(out conver)) {
+                            m_ri = conver.RenderingInfo(qInstance.priority, m_sceneMgr, m_ent, qInstance.timesRequeued);
+                            if (m_ri == null) {
+                                // The rendering info couldn't be built now. This is usually because
+                                // the parent of this object is not available so we don't know where to put it
+                                m_log.Log(LogLevel.DRENDERDETAIL,
+                                    "Delaying rendering {0}/{1}. RenderingInfo not built for {2}",
+                                    qInstance.sequence, qInstance.timesRequeued, m_ent.Name.Name);
+                                return false;
+                            }
+                            else {
+                                // save the value in the parameter block if we get called again (from a 'return false' below)
+                                loadParams[1] = (Object)m_ri;
+                            }
                         }
                         else {
-                            // save the value in the parameter block if we get called again ('return false' below)
-                            loadParams[1] = (Object)m_ri;
+                            m_log.Log(LogLevel.DBADERROR, "DoRenderLater: NO WORLDRENDERCONV FOR PRIM {0}", m_ent.Name);
+                            // this probably creates infinite retries but other things are clearly broken
+                            return false;
                         }
                     }
 
                     // Check to see if something of this mesh shape already exists. Use it if so.
                     EntityName entMeshName = (EntityName)m_ri.basicObject;
-                    if (m_shouldShareMeshes) {
+                    if (m_shouldShareMeshes && (m_ri.shapeHash != RenderableInfo.NO_HASH_SHARE)) {
                         lock (prebuiltMeshes) {
                             if (prebuiltMeshes.ContainsKey(m_ri.shapeHash)) {
                                 entMeshName = prebuiltMeshes[m_ri.shapeHash];
@@ -651,8 +656,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     // create the mesh we know we need
                     if ((m_shouldPrebuildMesh || m_shouldForceMeshRebuild) && !m_hasMesh) {
                         // way kludgy... but we see if the cached mesh file exists and, if so, we know it exists
-                        string meshFilename = Path.Combine(m_ent.AssetContext.CacheDirBase, entMeshName.CacheFilename);
-                        if (!m_shouldForceMeshRebuild && File.Exists(meshFilename)) {
+                        if (!m_shouldForceMeshRebuild && m_ent.AssetContext.CheckIfCached(m_ent, entMeshName)) {
                             // if we just want the mesh built, if the file exists that's enough prebuilding
                             m_log.Log(LogLevel.DRENDERDETAIL, "RendererOgre.DorRenderLater: mesh file exists: {0}", m_ent.Name.CacheFilename);
                             m_hasMesh = true;

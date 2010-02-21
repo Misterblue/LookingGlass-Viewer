@@ -35,7 +35,7 @@ namespace LG {
     std::string ogreShadowCasterMaterial = "rex/ShadowCaster";
     unsigned short shadowTextureSize = 2048;
     size_t shadowTextureCount = 1;
-    Ogre::ColourValue shadowColor(0.6f, 0.6f, 0.6f);
+    Ogre::ColourValue shadowColor(0.4f, 0.4f, 0.4f);
 	int shadowFarDistance = LG::GetParameterInt("Renderer.Ogre.ShadowFarDistance");
 
     smgr->setShadowColour(shadowColor);
@@ -64,6 +64,7 @@ void Shadow06::AddTerrainShadow(Ogre::Material* mat) {
 }
 
 void Shadow06::AddLightShadow(Ogre::Light* lit) {
+	lit->setCastShadows(true);
 	return;
 }
 

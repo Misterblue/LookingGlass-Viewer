@@ -48,7 +48,7 @@
             this.Controls.Add(this.WindowChat);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "ViewChat";
-            this.Text = "Chat -- LookingGlass";
+            this.Text = "LookingGlass -- Chat";
             this.ResumeLayout(false);
 
         }

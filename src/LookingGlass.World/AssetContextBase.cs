@@ -192,6 +192,25 @@ public abstract class AssetContextBase : IDisposable {
     public abstract bool isTextureOwner(EntityName textureEntityName);
 
     /// <summary>
+    /// Check of the passed resource is already cached. Usually used to see if the cached
+    /// mesh is in the filesystem.
+    /// </summary>
+    /// <param name="ent">Context entity</param>
+    /// <param name="resource">Name of resource to check</param>
+    /// <returns>true if cached, false otherwise</returns>
+    public virtual bool CheckIfCached(IEntity contextEntity, EntityName resource) {
+        string meshFilename = Path.Combine(contextEntity.AssetContext.CacheDirBase, resource.CacheFilename);
+        if (File.Exists(meshFilename)) {
+            return true;
+        }
+        // could it be a preloaded file?
+        if (resource.HostPart.ToLower() == "preload") {
+            return true;
+        }
+        return false;
+    }
+
+    /// <summary>
     /// Given a fully qualified filename, make sure all the parent directies exist
     /// </summary>
     /// <param name="filename"></param>

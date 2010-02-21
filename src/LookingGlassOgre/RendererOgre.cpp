@@ -541,6 +541,7 @@ namespace LG {
 				// it's not scenery
 				ent->removeQueryFlags(Ogre::SceneManager::WORLD_GEOMETRY_TYPE_MASK);	
 				Shadow->AddCasterShadow(ent);
+				Shadow->AddReceiverShadow(ent);
 				sceneNode->attachObject(ent);
 				m_visCalc->RecalculateVisibility();
 			}

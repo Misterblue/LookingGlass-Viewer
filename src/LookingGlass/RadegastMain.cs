@@ -74,6 +74,7 @@ class RadegastMain : IRadegastPlugin {
         m_lgb.AppParams.AddDefaultParameter("Settings.Modules", "RadegastModules.json",
             "Modules configuration file");
         // parameters used by Control view for selection of dialogs to display
+        m_lgb.AppParams.AddDefaultParameter("ControlView.SplashScreen.Enable", "true", "Splash in Radegast");
         m_lgb.AppParams.AddDefaultParameter("ControlView.WorldView.Enable", "true", "View the world in Radegast");
         m_lgb.AppParams.AddDefaultParameter("ControlView.AvatarView.Enable", "false", "Disable avatar view in Radegast");
         m_lgb.AppParams.AddDefaultParameter("ControlView.ChatView.Enable", "false", "Disable avatar view in Radegast");

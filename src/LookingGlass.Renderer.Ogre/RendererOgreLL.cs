@@ -80,10 +80,13 @@ public class RendererOgreLL : IWorldRenderConv {
         }
 
         // magnification of passed World coordinates into Ogre coordinates
+        // NOTE: scene magnification is depricated and probably doesn't work. Leave at 1.0.
         m_sceneMagnification = float.Parse(LookingGlassBase.Instance.AppParams.ParamString("Renderer.Ogre.LL.SceneMagnification"));
         // true if to creat materials while we are creating the mesh
         m_buildMaterialsAtMeshCreationTime = LookingGlassBase.Instance.AppParams.ParamBool("Renderer.Ogre.LL.EarlyMaterialCreate");
+        // true if to create materials while building renderinfo structure
         m_buildMaterialsAtRenderInfoTime = LookingGlassBase.Instance.AppParams.ParamBool("Renderer.Ogre.LL.RenderInfoMaterialCreate");
+        // resource name of the mesh to use for an avatar
         m_defaultAvatarMesh = LookingGlassBase.Instance.AppParams.ParamString("Renderer.Ogre.LL.DefaultAvatarMesh");
     }
 
@@ -132,6 +135,7 @@ public class RendererOgreLL : IWorldRenderConv {
             ri.parentEntity = null;
             ri.rotation = av.Heading;
             ri.position = av.RelativePosition;
+            ri.shapeHash = RenderableInfo.NO_HASH_SHARE;   // a number which says to not share meshes
             ri.scale = new OMV.Vector3(m_sceneMagnification, m_sceneMagnification, m_sceneMagnification);
             m_log.Log(LogLevel.DRENDERDETAIL, "RenderingInfo: assigning mesh to avatar: {0}", m_defaultAvatarMesh);
         }
@@ -194,7 +198,7 @@ public class RendererOgreLL : IWorldRenderConv {
                 ri.scale = new OMV.Vector3(m_sceneMagnification, m_sceneMagnification, m_sceneMagnification);
             }
 
-            // Get a unique hash code for this shape.
+            // Compute a unique hash code for this shape.
             ri.shapeHash = GetMeshKey(prim, prim.Scale, 0);
 
             // while we're in the neighborhood, we can create the materials
@@ -212,11 +216,12 @@ public class RendererOgreLL : IWorldRenderConv {
     /// <param name="ent">The entity the mesh is coming from</param>
     /// <param name="meshName">The name the mesh should take</param>
     public bool CreateMeshResource(float priority, IEntity ent, string meshName, EntityName contextEntity) {
-        LLEntityPhysical llent;
+        LLEntityBase llent;
         OMV.Primitive prim;
 
         try {
-            llent = (LLEntityPhysical)ent;
+            // this will change when we are checking for avatars and other types
+            llent = (LLEntityBase)ent;
             prim = llent.Prim;
             if (prim == null) throw new LookingGlassException("ASSERT: RenderOgreLL: prim is null");
         }

@@ -70,6 +70,8 @@ cat "$FILELIST" | while read filename ; do
     cp "../bin/$filename" "$TEMPDIR"
 done
 cp ../LICENSE.txt "$TEMPDIR"
+cp -r ../THIRDPARTYLICENCES "$TEMPDIR"
+
 find "$TEMPDIR" -type f | xargs chmod --quiet 764
 find "$TEMPDIR" -type d | xargs chmod --quiet 755
 find "$TEMPDIR" -type f -name \*.dll | xargs chmod --quiet +x

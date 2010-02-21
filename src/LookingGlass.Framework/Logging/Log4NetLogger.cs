@@ -120,8 +120,8 @@ namespace LookingGlass.Framework.Logging {
         private void LogIt(LogLevel logLevel, string msg) {
             StringBuilder buf = new StringBuilder(256);
             buf.Append(DateTime.Now.ToString("yyyyMMddHHmmss"));
-            buf.Append(": ");
-            buf.Append(LookingGlassBase.ApplicationName);
+            // buf.Append(": ");
+            // buf.Append(LookingGlassBase.ApplicationName);
             buf.Append(": ");
             if (ModuleName.Length != 0) {
                 buf.Append(ModuleName);

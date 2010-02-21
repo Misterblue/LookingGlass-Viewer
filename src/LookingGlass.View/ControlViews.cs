@@ -33,6 +33,7 @@ namespace LookingGlass.View {
 public class ControlViews : IControlViewProvider, IModule {
     private ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
 
+    ViewSplash m_splashView;
     FormAvatars m_avatarView;
     ViewChat m_chatView;
     ViewWindow m_viewWindow;
@@ -58,6 +59,10 @@ public class ControlViews : IControlViewProvider, IModule {
         m_lgb = lgbase;
 
         // some of these parameters are overridden early. Add defaults if not overridden
+        if (!LGB.AppParams.HasParameter(ModuleName + ".SplashScreen.Enable")) {
+            LGB.AppParams.AddDefaultParameter(ModuleName + ".SplashScreen.Enable", "true",
+                "Default action is to show the splash screen");
+        }
         if (!LGB.AppParams.HasParameter(ModuleName + ".WorldView.Enable")) {
             LGB.AppParams.AddDefaultParameter(ModuleName + ".WorldView.Enable", "true",
                 "Default action is to enable the view window");
@@ -69,6 +74,16 @@ public class ControlViews : IControlViewProvider, IModule {
         if (!LGB.AppParams.HasParameter(ModuleName + ".ChatView.Enable")) {
             LGB.AppParams.AddDefaultParameter(ModuleName + ".ChatView.Enable", "true",
                 "Default action is to enable the view window");
+        }
+
+        // we start the splash screen in 'OnLoad' so it's up while initialization happens
+        if (LGB.AppParams.ParamBool(ModuleName + ".SplashScreen.Enable")) {
+            m_log.Log(LogLevel.DINIT, "ControlViews.Start(): Initializing SplashScreen");
+            m_splashView = new ViewSplash(LGB);
+            m_splashView.Initialize();
+            m_splashView.Visible = true;
+            m_splashView.Show();
+            m_splashView.Update();
         }
 
         if (LGB.AppParams.ParamBool(ModuleName + ".WorldView.Enable")) {
@@ -100,6 +115,7 @@ public class ControlViews : IControlViewProvider, IModule {
     // IModule.AfterAllModulesLoaded
     public virtual bool AfterAllModulesLoaded() {
         m_log.Log(LogLevel.DINIT, "ControlViews.AfterAllModulesLoaded()");
+
         return true;
     }
 
@@ -124,6 +140,11 @@ public class ControlViews : IControlViewProvider, IModule {
             m_chatView = new ViewChat(LGB);
             m_chatView.Initialize();
             m_chatView.Visible = true;
+        }
+
+        // once everything else is up, hide the splash screen
+        if (LGB.AppParams.ParamBool(ModuleName + ".SplashScreen.Enable")) {
+            m_splashView.Visible = false;
         }
         return;
     }
