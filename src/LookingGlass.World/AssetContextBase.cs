@@ -193,21 +193,32 @@ public abstract class AssetContextBase : IDisposable {
 
     /// <summary>
     /// Check of the passed resource is already cached. Usually used to see if the cached
-    /// mesh is in the filesystem.
+    /// mesh is in the filesystem. The underlying implementation of EntityName is used to
+    /// get the cached name of teh file. There is also a check for the hostname 'preload'
+    /// to see if it is something known to exist in the preloaded directory.
     /// </summary>
     /// <param name="ent">Context entity</param>
     /// <param name="resource">Name of resource to check</param>
     /// <returns>true if cached, false otherwise</returns>
     public virtual bool CheckIfCached(IEntity contextEntity, EntityName resource) {
-        string meshFilename = Path.Combine(contextEntity.AssetContext.CacheDirBase, resource.CacheFilename);
-        if (File.Exists(meshFilename)) {
-            return true;
+        bool ret = false;
+        try {
+            string meshFilename = Path.Combine(contextEntity.AssetContext.CacheDirBase, resource.CacheFilename);
+            if (File.Exists(meshFilename)) {
+                ret = true;
+            }
+            else {
+                // could it be a preloaded file?
+                if (resource.HostPart.ToLower() == "preload") {
+                    ret = true;
+                }
+            }
         }
-        // could it be a preloaded file?
-        if (resource.HostPart.ToLower() == "preload") {
-            return true;
+        catch (Exception e) {
+            m_log.Log(LogLevel.DBADERROR, "CheckIfCached: exception: {0}", e);
+            ret = false;
         }
-        return false;
+        return ret;
     }
 
     /// <summary>

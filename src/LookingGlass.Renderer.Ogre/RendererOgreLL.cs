@@ -141,7 +141,40 @@ public class RendererOgreLL : IWorldRenderConv {
         }
         else if (llent.TryGet<LLAttachment>(out atch)) {
             // attachments have a special position on the skeleton of the avatar
+            EntityName newMeshName = EntityNameOgre.ConvertToOgreMeshName(ent.Name);
+            ri.basicObject = newMeshName;   // pass the name of the mesh that should be created
             CalcAttachmentPoint(atch, out ri.position, out ri.rotation);
+            // until CalaAttachementPoint works, go with what the prim says for rotation and position
+            ri.rotation = prim.Rotation;
+            ri.position = prim.Position;
+            ri.scale = new OMV.Vector3(m_sceneMagnification, m_sceneMagnification, m_sceneMagnification);
+            ri.shapeHash = GetMeshKey(prim, prim.Scale, 0);
+            // if the prim has a parent, we must hang this scene node off the parent's scene node
+            if (prim.ParentID != 0) {
+                if (ent.ContainingEntity == null) {
+                    // NOTE: in theory, the parent container has been resolved before we get here
+                    // but it is a legacy feature that the comm system does not hold entities
+                    // that don't have their parent so it's possible to get here and find the
+                    // parent entity does not exist. If this is the case, we return 'null' saying
+                    // we cannot yet build this entity.
+                    IEntity parentEntity = null;
+                    rcontext.TryGetEntityLocalID(prim.ParentID, out parentEntity);
+                    if (parentEntity != null) {
+                        ent.ContainingEntity = parentEntity;
+                        parentEntity.AddEntityToContainer(ent);
+                    }
+                    else {
+                        // we can't find the parent. Can't build render info.
+                        // if we've been waiting for that parent, ask for same
+                        if ((callCount != 0) && ((callCount % 3) == 0)) {
+                            rcontext.RequestLocalID(prim.ParentID);
+                        }
+                        return null;
+                    }
+                }
+                ri.parentEntity = ent.ContainingEntity;
+            }
+            m_log.Log(LogLevel.DRENDERDETAIL, "RenderingInfo: assigning mesh to avatar: {0}", m_defaultAvatarMesh);
         }
         else {
             // must be a regular prim
