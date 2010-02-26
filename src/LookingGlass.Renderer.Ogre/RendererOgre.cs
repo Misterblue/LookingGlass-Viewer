@@ -946,6 +946,12 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     }
 
     // ==========================================================================
+    public void SetFocusRegion(RegionContextBase rcontext) {
+        m_log.Log(LogLevel.DRENDERDETAIL, "SetFocusRegion: setting focus region {0}", rcontext.Name);
+        Ogr.SetFocusRegionBF(EntityNameOgre.ConvertToOgreSceneNodeName(rcontext.Name));
+    }
+
+    // ==========================================================================
     public RenderableInfo RenderingInfo(IEntity ent) {
         return null;
     }

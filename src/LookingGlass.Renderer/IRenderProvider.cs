@@ -61,14 +61,6 @@ namespace LookingGlass.Renderer {
         }
     }
 
-public struct FaceData {
-        public float[] Vertices;
-        public ushort[] Indices;
-        public float[] TexCoords;
-        // public System.Drawing.Image Texture;
-        // TODO: Normals / binormals?
-    }
-
     public enum InputModeCode {
         ModeMainKeys,   // focus on main display, input is keystrokes
         MainKeysMouse,  // focus on main display, input is keystrokes and mouse
@@ -76,7 +68,6 @@ public struct FaceData {
         OverlayNext,    // focus on next overlay
         OverlayLast,    // focus on next overlay
     };
-
 
     public delegate void RendererBeforeFrameCallback();
 
@@ -105,6 +96,8 @@ public struct FaceData {
         // called when a new region is found, decorates the region context with
         // rendering specific information for placing in  the view
         void MapRegionIntoView(RegionContextBase rcontext);
+        // Set a region as the high resolution focus region
+        void SetFocusRegion(RegionContextBase rcontext);
 
         // something about the terrain has changed, do some updating
         void UpdateTerrain(RegionContextBase wcontext);

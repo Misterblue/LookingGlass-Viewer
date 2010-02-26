@@ -682,15 +682,16 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
 
         // a kludge to handle race conditions. We lock the region state while we empty queues
         regionContext.State.State = RegionStateCode.Online;
+
+        // tell the world there is a new region
+        World.World.Instance.AddRegion(regionContext);
+
         // regionContext.State.IfOnline(delegate() {
             // this region is online and here. This can start a lot of IO
 
             // if we'd queued up actions, do them now that it's online
             DoAnyWaitingEvents(regionContext);
         // });
-
-        // tell the world there is a new region
-        World.World.Instance.AddRegion(regionContext);
 
         // this is needed to make the avatar appear
         // TODO: figure out if the linking between agent and appearance is right

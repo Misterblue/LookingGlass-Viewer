@@ -86,6 +86,7 @@ typedef enum {
 	RegionRezCodeMed,
 	RegionRezCodeLow,
 	RegionRezCodeVeryLow,
+	RegionRezCodeMAX,
 } RegionRezCode;
 
 #define OLArchiveTypeName "OLFileSystem"

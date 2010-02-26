@@ -23,6 +23,7 @@
 #pragma once
 
 #include "LGOCommon.h"
+#include "LookingGlassOgre.h"
 #include "LGLocking.h"
 #include "SingletonInstance.h"
 
@@ -102,6 +103,8 @@ public:
 	void AddRegion(float, const char*, const double, const double, const double, 
 					const float, const float, const float);
 	void UpdateTerrain(float, const char*, const int, const int, const float*);
+	void SetFocusRegion(float, const char*);
+	void SetRegionDetail(float, const char*, const RegionRezCode);
 
 	LGLOCK_MUTEX m_workItemMutex;
 	static bool m_keepProcessing;	// true if to keep processing on and on

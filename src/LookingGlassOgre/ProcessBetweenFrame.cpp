@@ -550,6 +550,46 @@ public:
 			this->width, this->length, this->heightMap);
 	}
 };
+// ====================================================================
+class SetFocusRegionQc : public GenericQc {
+public:
+	Ogre::String regionName;
+	SetFocusRegionQc(float prio, const char* rName) {
+		this->priority = prio;
+		this->cost = 0;
+		this->type = "SetFocusRegion";
+		this->regionName = Ogre::String(rName);
+		this->uniq = this->regionName + "/SetFocusRegion";
+	}
+	~SetFocusRegionQc(void) {
+		this->uniq.clear();
+		this->regionName.clear();
+	}
+	void Process() {
+		LG::RegionTracker::Instance()->SetFocusRegion(this->regionName);
+	}
+};
+
+class SetRegionDetailQc : public GenericQc {
+public:
+	Ogre::String regionName;
+	RegionRezCode LODLevel;
+	SetRegionDetailQc(float prio, const char* rName, const RegionRezCode lod) {
+		this->priority = prio;
+		this->cost = 0;
+		this->type = "SetRegionDetail";
+		this->regionName = Ogre::String(rName);
+		this->LODLevel = lod;
+		this->uniq = this->regionName + "/SetRegionDetail";
+	}
+	~SetRegionDetailQc(void) {
+		this->uniq.clear();
+		this->regionName.clear();
+	}
+	void Process() {
+		LG::RegionTracker::Instance()->SetRegionDetail(this->regionName, this->LODLevel);
+	}
+};
 
 // ====================================================================
 // Queue of work to do between frames.
@@ -738,6 +778,22 @@ void ProcessBetweenFrame::UpdateTerrain(float priority, const char* rn,
 	LGLOCK_LOCK(m_workItemMutex);
 	UpdateTerrainQc* utq = new UpdateTerrainQc(priority, rn, w, l, ht);
 	QueueWork((GenericQc*)utq);
+	LGLOCK_UNLOCK(m_workItemMutex);
+	LG::IncStat(LG::StatBetweenFrameWorkItems);
+}
+
+void ProcessBetweenFrame::SetFocusRegion(float priority, const char* rn) {
+	LGLOCK_LOCK(m_workItemMutex);
+	SetFocusRegionQc* sfrq = new SetFocusRegionQc(priority, rn);
+	QueueWork((GenericQc*)sfrq);
+	LGLOCK_UNLOCK(m_workItemMutex);
+	LG::IncStat(LG::StatBetweenFrameWorkItems);
+}
+
+void ProcessBetweenFrame::SetRegionDetail(float priority, const char* rn, const RegionRezCode rc) {
+	LGLOCK_LOCK(m_workItemMutex);
+	SetRegionDetailQc* srdq = new SetRegionDetailQc(priority, rn, rc);
+	QueueWork((GenericQc*)srdq);
 	LGLOCK_UNLOCK(m_workItemMutex);
 	LG::IncStat(LG::StatBetweenFrameWorkItems);
 }

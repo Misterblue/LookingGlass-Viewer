@@ -78,6 +78,12 @@ static class Ogr {
     // the number of stat values (oversized for a fudge factor)
     public const int StatSize = 40;
 
+    // codes for level of details for the tracked regions
+    public const int RegionRezCodeHigh = 0;
+    public const int RegionRezCodeMed = 1;
+    public const int RegionRezCodeLow = 2;
+    public const int RegionRezCodeVeryLow = 3;
+
     // =============================================================================
     // Call from the Ogre C++ code back into  the managed code.
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -237,6 +243,10 @@ static class Ogr {
     public static extern void UpdateTerrainBF(float prio, 
             [MarshalAs(UnmanagedType.LPStr)]string regionNodeName,
             int width, int length, [MarshalAs(UnmanagedType.LPArray)] float[] heightmap);
+    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+    public static extern void SetFocusRegionBF([MarshalAs(UnmanagedType.LPStr)]string regionName);
+    [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+    public static extern void SetRegionDetailBF([MarshalAs(UnmanagedType.LPStr)]string regionName, int LODLevel);
     // ======================================================================
     // SceneNode wrapper
     [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]

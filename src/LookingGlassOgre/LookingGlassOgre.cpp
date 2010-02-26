@@ -150,6 +150,14 @@ extern "C" DLLExport void UpdateTerrainBF(float prio, const char* regionName,
 											const int width, const int length, const float* heights) {
 	 LG::ProcessBetweenFrame::Instance()->UpdateTerrain(prio, regionName, width, length, heights);
 }
+extern "C" DLLExport void SetFocusRegionBF(const char* regionName) {
+	// LG::RegionTracker::Instance()->SetFocusRegion(regionName);
+	 LG::ProcessBetweenFrame::Instance()->SetFocusRegion(0.0, regionName);
+}
+extern "C" DLLExport void SetRegionDetailBF(const char* regionName, const RegionRezCode LODLevel) {
+	// LG::RegionTracker::Instance()->SetFocusRegion(regionName);
+	 LG::ProcessBetweenFrame::Instance()->SetRegionDetail(0.0, regionName, LODLevel);
+}
 
 // ================================================================
 // SceneNode operations

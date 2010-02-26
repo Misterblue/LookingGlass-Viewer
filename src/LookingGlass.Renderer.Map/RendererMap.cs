@@ -125,6 +125,11 @@ public class RendererMap : IModule, IRenderProvider {
         return;
     }
 
+    // Set one region as the focus of display
+    public void SetFocusRegion(RegionContextBase rcontext) {
+        return;
+    }
+
     // something about the terrain has changed, do some updating
     public void UpdateTerrain(RegionContextBase wcontext) {
         return;

@@ -28,21 +28,22 @@ using LookingGlass.Framework.Logging;
 using LookingGlass.Framework.Modules;
 using LookingGlass.Framework.Parameters;
 using LookingGlass.Rest;
+using LookingGlass.Renderer;
 using LookingGlass.World;
 using OMV = OpenMetaverse;
 using OMVSD = OpenMetaverse.StructuredData;
 
 namespace LookingGlass.View {
     /// <summary>
-    /// Watch the comings and goings of entities in the world and create collections
-    /// of entities (regions, avatars, ...) for display. The interface to this is
-    /// through the HTTP interface.
+    /// Watch the comings and goings of the regions and handle the level of detail
+    /// that the regions are displayed in.
     /// </summary>
 public class RegionTracker : IRegionTrackerProvider, IModule {
 
 protected RestHandler m_regionRestHandler;
 
 protected IWorld m_world;
+protected IRenderProvider m_renderer;
 
 #region IMODULE
     protected string m_moduleName;
@@ -63,10 +64,13 @@ protected IWorld m_world;
         LogManager.Log.Log(LogLevel.DINIT, "RegionTracker.OnLoad()");
         m_moduleName = modName;
         m_lgb = lgbase;
+        // set the parameter defaults
         ModuleParams.AddDefaultParameter(ModuleName + ".Regions.Enable", "true",
                     "Whether to make region information available");
         ModuleParams.AddDefaultParameter(ModuleName + ".World.Name", "World",
                     "Name of world module to track entities in");
+        ModuleParams.AddDefaultParameter(ModuleName + ".Renderer.Name", "Renderer",
+                    "Name of renderer module for display of region details");
     }
    
     // IModule.AfterAllModulesLoaded
@@ -74,6 +78,7 @@ protected IWorld m_world;
         LogManager.Log.Log(LogLevel.DINIT, "EntityTracker.AfterAllModulesLoaded()");
         // connect to the world and listen for entity events
         m_world = (IWorld)LGB.ModManager.Module(ModuleParams.ParamString(ModuleName + ".World.Name"));
+        m_renderer = (IRenderProvider)LGB.ModManager.Module(ModuleParams.ParamString(ModuleName + ".Renderer.Name"));
         if (ModuleParams.ParamBool(ModuleName + ".Regions.Enable")) {
             m_world.OnWorldRegionNew += new WorldRegionNewCallback(World_OneWorldRegionNew);
             m_world.OnWorldRegionRemoved += new WorldRegionRemovedCallback(World_OneWorldRegionRemoved);
@@ -109,6 +114,11 @@ protected IWorld m_world;
 
 #region EVENT PROCESSING
     void World_OneWorldRegionNew(RegionContextBase rcontext) {
+        // for the moment, any close by region is good enough for focus
+        if (m_renderer != null) {
+            LogManager.Log.Log(LogLevel.DWORLDDETAIL, "RegionTracker: setting focus region {0}", rcontext.Name);
+            m_renderer.SetFocusRegion(rcontext);
+        }
     }
     void World_OneWorldRegionRemoved(RegionContextBase rcontext) {
     }

@@ -24,6 +24,7 @@
 
 #include "LGOCommon.h"
 #include "SingletonInstance.h"
+#include "LGCamera.h"
 #include "Region.h"
 
 namespace LG {
@@ -40,12 +41,15 @@ public:
 		return LG::RegionTracker::m_instance; 
 	}
 
-	void SetFocusRegion(const char* rName);
+	void SetFocusRegion(Ogre::String rName);
 	Region* GetFocusRegion();
+	void SetRegionDetail(Ogre::String rName, const RegionRezCode LODLevel);
 	void AddRegion(const char* rName, double globalX, double globalY, double globalZ, 
 		const float sizeX, const float sizeY, const float oceanHeight);
 	Region* FindRegion(Ogre::String);
 	void UpdateTerrain(const char*, const int, const int, const float*);
+
+	void PositionCameraForFocusRegion(double px, double py, double pz, LG::LGCamera* cam);
 
 private:
 	static RegionTracker* m_instance;

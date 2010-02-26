@@ -34,11 +34,13 @@ namespace LG {
 		Ogre::String Name;
 
 		void Init(double, double, double, float, float, float);
+		void AddRegionSceneNode(Ogre::SceneNode*, RegionRezCode);
 		void ReleaseRegion();
+		
 		void ChangeRez(RegionRezCode);
 		void SetFocusRegion(bool);
 		bool IsFocusRegion();
-		void AddRegionSceneNode(Ogre::SceneNode*, RegionRezCode);
+
 		void UpdateTerrain(const int, const int, const float*);
 		void CalculateLocal(double X, double Y, double Z);
 
@@ -52,10 +54,12 @@ namespace LG {
 
 		float OceanHeight;
 
+		RegionRezCode CurrentRez;
+		Ogre::SceneNode* Resolutions[RegionRezCodeMAX];
+
 		Ogre::SceneNode* CurrentBaseSceneNode;
 		Ogre::SceneNode* TerrainSceneNode;
 		Ogre::SceneNode* OceanSceneNode;
-		RegionRezCode CurrentRez;
 
 	private:
 		Ogre::SceneNode* m_highRezSceneNode;

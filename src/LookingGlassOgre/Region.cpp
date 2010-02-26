@@ -27,13 +27,13 @@
 namespace LG {
 
 Region::Region() {
-		this->CurrentBaseSceneNode = 0;
 		this->TerrainSceneNode = 0;
 		this->OceanSceneNode = 0;
-		this->m_highRezSceneNode = 0;
-		this->m_medRezSceneNode = 0;
-		this->m_lowRezSceneNode = 0;
-		this->m_veryLowRezSceneNode = 0;
+		this->Resolutions[RegionRezCodeVeryLow] = 0;
+		this->Resolutions[RegionRezCodeLow] = 0;
+		this->Resolutions[RegionRezCodeMed] = 0;
+		this->Resolutions[RegionRezCodeHigh] = 0;
+		this->CurrentRez = RegionRezCodeHigh;
 		this->m_focusRegion = false;
 		this->OceanHeight = 0.0;
 }
@@ -45,56 +45,20 @@ void Region::ReleaseRegion() {
 }
 void Region::ChangeRez(RegionRezCode newRez) {
 	if (newRez != this->CurrentRez) {
-		switch (newRez) {
-			case RegionRezCodeHigh: {
-				DisconnectOldRezAndConnectNew(newRez, m_highRezSceneNode);
-			}
-			case RegionRezCodeMed: {
-				if (this->m_medRezSceneNode == NULL) {
-					// create medium scene node
-				}
-				DisconnectOldRezAndConnectNew(newRez, m_medRezSceneNode);
-			}
-			case RegionRezCodeLow: {
-				if (this->m_lowRezSceneNode == NULL) {
-					// create low rez scene node
-				}
-				DisconnectOldRezAndConnectNew(newRez, m_lowRezSceneNode);
-		   }
-			case RegionRezCodeVeryLow: {
-				if (this->m_veryLowRezSceneNode == NULL) {
-					// create very low rez scene node
-				}
-				DisconnectOldRezAndConnectNew(newRez, m_veryLowRezSceneNode);
-			}
+		if (this->Resolutions[newRez] != 0) {
+			// do anything to release the region
 		}
+		this->CurrentRez = newRez;
+		// set proper local coordinates for this new scene node
+		this->Resolutions[newRez]->setPosition(this->LocalX, this->LocalY, this->LocalZ);
 	}
-}
-
-void Region::DisconnectOldRezAndConnectNew(RegionRezCode newRez, Ogre::SceneNode* newBase) {
-	// disconnect the old base node from the scene graph
-	// connect new base node
-	// point to our new state
-	this->CurrentBaseSceneNode = newBase;
-	this->CurrentRez = newRez;
-	return;
 }
 
 void Region::AddRegionSceneNode(Ogre::SceneNode* nod, RegionRezCode rez) {
-	switch(rez) {
-		case RegionRezCodeHigh: {
-			this->m_highRezSceneNode = nod;
-		}
-		case RegionRezCodeMed: {
-			this->m_medRezSceneNode = nod;
-		}
-		case RegionRezCodeLow: {
-			this->m_lowRezSceneNode = nod;
-	   }
-		case RegionRezCodeVeryLow: {
-			this->m_veryLowRezSceneNode = nod;
-		}
+	if (this->Resolutions[rez] != 0) {
+		// TODO: release  the old scen node and its tree of nodes
 	}
+	this->Resolutions[rez] = nod;
 }
 
 void Region::SetFocusRegion(bool flag) {
@@ -105,13 +69,20 @@ bool Region::IsFocusRegion() {
 	return this->m_focusRegion;
 }
 
+// there is a new global address  that is the center of teh universe. Recalculate our position
+// against this new center.
 void Region::CalculateLocal(double X, double Y, double Z) {
 	this->LocalX = (float)(this->GlobalX - X);
 	this->LocalY = (float)(this->GlobalY - Y);
 	this->LocalZ = (float)(this->GlobalZ - Z);
+	LG::Log("Region::CalculateLocal: %s to %f, %f, %f", this->Name.c_str(), this->LocalX, this->LocalY, this->LocalZ);
+	// set the new position in the scene node
+	this->Resolutions[this->CurrentRez]->setPosition(this->LocalX, this->LocalY, this->LocalZ);
 	return;
 }
 
+// Initialize the region. This takes a global description and creates the scene node that will be
+// the base for the region an, if needed, creates the water level.
 void Region::Init( double globalX, double globalY, double globalZ, float sizeX, float sizeY, float waterHeight) {
 	LG::Log("Region::Init: r=%s, <%lf,%lf,%lf>", this->Name.c_str(), globalX, globalY, globalZ);
 	this->GlobalX = globalX;

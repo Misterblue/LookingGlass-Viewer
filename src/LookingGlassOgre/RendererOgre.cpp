@@ -187,7 +187,9 @@ namespace LG {
 				float nearClip, float farClip, float aspect) {
 		if (m_camera) {
 			LG::Log("RendererOgre::UpdateCamera: pos=<%f, %f, %f>", (double)px, (double)py, (double)pz);
-			m_camera->setPosition(px, py, pz);
+			// passed global parameters, localize the camera for the focus region that was moved to zero
+			LG::RegionTracker::Instance()->PositionCameraForFocusRegion(px, py, pz, m_camera);
+			// m_camera->setPosition(px, py, pz);
 			m_desiredCameraOrientation = Ogre::Quaternion(dw, dx, dy, dz);
 			m_desiredCameraOrientationProgress = 0.0;
 			// to do slerped movement, comment the next line and uncomment "XXXX" below

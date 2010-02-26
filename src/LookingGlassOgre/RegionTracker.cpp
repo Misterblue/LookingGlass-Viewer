@@ -78,12 +78,12 @@ void RegionTracker::UpdateTerrain(const char* regnName, const int width, const i
 
 // Set a focus region and update all region's local coords relative to the focus region
 // BETWEEN FRAME OPERATION
-void RegionTracker::SetFocusRegion(const char* regnName) {
+void RegionTracker::SetFocusRegion(Ogre::String regionName) {
+	LG::Log("RegionTracker::SetFocusRegion: %s", regionName.c_str());
 	for (RegionHashMap::iterator intr = m_regions.begin(); intr != m_regions.end(); intr++) {
 		Region* otherRegn = intr->second;
 		otherRegn->SetFocusRegion(false);
 	}
-	Ogre::String regionName = Ogre::String(regnName);
 	Region* regn = FindRegion(regionName);
 	if (regn != NULL) {
 		m_focusRegion = regn;
@@ -93,6 +93,7 @@ void RegionTracker::SetFocusRegion(const char* regnName) {
 }
 
 // recalcualate the local coords based on the focus region
+// BETWEEN FRAME OPERATION
 void RegionTracker::RecalculateLocalCoords() {
 	Region* regn = GetFocusRegion();
 	if (regn != NULL) {
@@ -105,9 +106,24 @@ void RegionTracker::RecalculateLocalCoords() {
 	LG::RendererOgre::Instance()->m_sceneMgr->getRootSceneNode()->needUpdate();
 }
 
+// Focusing a region causes the coordinate system to be zeroed to that point. Since the camera
+// operates in global coordinates, it must be offset for the focus region.
+void RegionTracker::PositionCameraForFocusRegion(double px, double py, double pz, LG::LGCamera *cam) {
+	Region* fRegion = GetFocusRegion();
+	cam->setPosition(px - fRegion->GlobalX, py - fRegion->GlobalY, pz - fRegion->GlobalZ);
+	return;
+}
+
 // return focus region or NULL if none
 Region* RegionTracker::GetFocusRegion() {
 	return m_focusRegion;
+}
+
+void RegionTracker::SetRegionDetail(Ogre::String regionName, const RegionRezCode LODLevel) {
+	Region* regn = FindRegion(regionName);
+	if (regn != NULL) {
+		regn->ChangeRez(LODLevel);
+	}
 }
 
 }
