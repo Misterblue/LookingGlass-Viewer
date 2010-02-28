@@ -32,7 +32,6 @@ msvcr90.dll
 log4net.dll
 XMLRPC.dll
 SkyX.dll
-openjpeg-dotnet.dll
 LookingGlass.json
 Modules.json
 Grids.json
@@ -58,8 +57,6 @@ OpenMetaverse.Utilities.dll
 OpenMetaverse.dll
 OpenMetaverse.dll.config
 OpenMetaverseTypes.dll
-openjpeg-dotnet.dll
-openjpeg-dotnet-x86_64.dll
 EOLIST
 
 mkdir -p "$TEMPDIR"

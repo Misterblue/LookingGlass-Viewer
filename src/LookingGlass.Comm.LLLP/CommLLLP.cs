@@ -696,7 +696,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         // this is needed to make the avatar appear
         // TODO: figure out if the linking between agent and appearance is right
         // m_client.Appearance.SetPreviousAppearance(true);
-        m_client.Appearance.RequestSetAppearance(false);
+        m_client.Appearance.RequestSetAppearance(true);
         m_client.Self.Movement.UpdateFromHeading(0.0, true);
     }
 
