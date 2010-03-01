@@ -53,7 +53,7 @@ public class LookingGlassBase : IInstance<LookingGlassBase> {
     public LookingGlassBase() {
         m_instance = this;
         AppParams = new AppParameters();
-        // The MaxValue causes everything to be written. When done debugging (ha!), reduce to near zero.
+        // initial debug filter value that is overwritten once the parameters are read in
         AppParams.AddDefaultParameter("Log.FilterLevel", ((int)LogLevel.DNONDETAIL).ToString(),
                     "Default, initial logging level");
     }

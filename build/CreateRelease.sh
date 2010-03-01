@@ -57,6 +57,8 @@ OpenMetaverse.Utilities.dll
 OpenMetaverse.dll
 OpenMetaverse.dll.config
 OpenMetaverseTypes.dll
+openjpeg-dotnet.dll
+openjpeg-dotnet-x86_64.dll
 EOLIST
 
 mkdir -p "$TEMPDIR"

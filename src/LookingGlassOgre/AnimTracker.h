@@ -28,6 +28,12 @@
 #include "LGLocking.h"
 
 namespace LG {
+	// Tracker for animations.
+	// Routine keeps a list of the animations that are in progress and, once
+	// a frame, calls their 'Process' routine. The animation's process routine
+	// could call the 'AnimationComplete' method if it is finished. This will
+	// delete the animation object after all the animations have been processed
+	// (ie, solve the animation deleting itself problem).
 class AnimTracker : Ogre::FrameListener, public SingletonInstance {
 public:
 	AnimTracker();
@@ -40,14 +46,17 @@ public:
 		return LG::AnimTracker::m_instance; 
 	}
 
+	// schedule a constant rotation to a scene node
 	void RotateSceneNode(Ogre::String sceneNodeName, Ogre::Vector3 axis, float rate);
+	// remove all animations associated with a scene node
 	void RemoveAnimations(Ogre::String sceneNodeName);
+	// called by an animation to say it's complete and to delete the animation object
 	void AnimationComplete(Animat*);
 
 	// Ogre::FrameListener
 	bool frameStarted(const Ogre::FrameEvent&);
 
-	private:
+private:
 	static AnimTracker* m_instance;
 
 	LGLOCK_MUTEX m_animationsMutex;

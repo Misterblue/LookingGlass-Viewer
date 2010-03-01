@@ -1,6 +1,7 @@
 {
 "LookingGlass": {
-    "LookingGlass": "<pre>
+    "Short": "Copyright (c) 2008 Robert Adams",
+    "Long": "<pre>
 /* Copyright (c) 2008 Robert Adams
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -25,7 +26,9 @@
  */
 </pre>"
 },
-"Ogre": { "<pre>
+"Ogre": { 
+    "Short": "Copyright (c) 2000-2006 Torus Knot Software Ltd",
+    "Long", "<pre>
 Copyright (c) 2000-2006 Torus Knot Software Ltd
 
 This library is free software; you can redistribute it and/or
@@ -44,7 +47,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 </pre>"
 },
 "PrimMesher": {
-    "PrimMesher": "<pre>
+    "Short": "Copyright (c) Contributors",
+    "Long": "<pre>
 /*
  * Copyright (c) Contributors
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
@@ -74,7 +78,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 </pre>"
 },
 "jquery": {
-    "jquery": "<pre>
+    "Short": "Copyright (c) 2009 John Resig",
+    "Long": "<pre>
 /*
  * jQuery JavaScript Library v1.3.2
  * http://jquery.com/
@@ -89,7 +94,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 </pre>"
 },
 "PreBuild": {
-    "PreBuild": "<pre>
+    "Short": "",
+    "Long": "<pre>
 Prebuild v2.0.4
 Copyright (c) 2004-2008
 Matthew Holmes (matthew@wildfiregames.com),
@@ -100,7 +106,8 @@ C.J. Adams-Collier (cjac@colliertech.org),
 </pre>"
 },
 "Boost": {
-    "Boost": "<pre>
+    "Short": "",
+    "Long": "<pre>
 Boost Software License - Version 1.0 - August 17th, 2003
 
 Permission is hereby granted, free of charge, to any person or organization
@@ -127,7 +134,8 @@ DEALINGS IN THE SOFTWARE.
 </pre>"
 },
 "Another": {
-    "Another": "<pre>
+    "Short": "",
+    "Long": "<pre>
 </pre>"
 }
 }
