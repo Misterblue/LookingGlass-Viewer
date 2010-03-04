@@ -357,6 +357,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
     public virtual void Stop() {
         m_log.Log(LogLevel.DCOMM, "Stopping. Attempting to disconnect");
         Disconnect();
+        Thread.Sleep(3000); // let the logout and disconnect happen
     }
 
     // IModule.PrepareForUnload()
@@ -403,7 +404,6 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
     public virtual bool Disconnect() {
         m_log.Log(LogLevel.DCOMMDETAIL, "Disconnect request -- logout and disconnect");
         m_shouldBeLoggedIn = false;
-        m_isLoggingOut = true;
         return true;
     }
 
@@ -453,18 +453,21 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
     /// </summary>
     protected void KeepLoggedIn() {
         while (m_loaded) {
-            if (m_shouldBeLoggedIn && !IsLoggedIn) {
+            if (LGB.KeepRunning && m_shouldBeLoggedIn && !IsLoggedIn) {
                 // we should be logged in and we are not
                 if (!m_isLoggingIn) {
                     StartLogin();
                 }
             }
-            if (!LGB.KeepRunning && !IsLoggedIn) {
+            if (!LGB.KeepRunning && !IsLoggedIn && IsConnected) {
                 // if we're not supposed to be running, disconnect everything
+                m_log.Log(LogLevel.DCOMM, "KeepLoggedIn: Shutting down the network");
                 m_client.Network.Shutdown(OpenMetaverse.NetworkManager.DisconnectType.ClientInitiated);
+                m_isConnected = false;
             }
             if (!LGB.KeepRunning || (!m_shouldBeLoggedIn && IsLoggedIn)) {
                 // we shouldn't be logged in but it looks like we are
+                m_log.Log(LogLevel.DCOMM, "KeepLoggedIn: Shouldn't be logged in");
                 if (!m_isLoggingIn && !m_isLoggingOut) {
                     // not in logging transistion. start the logout process
                     m_log.Log(LogLevel.DCOMM, "KeepLoggedIn: Starting logout process");
@@ -472,6 +475,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
                     m_isLoggingIn = false;
                     m_isLoggingOut = true;
                     m_isLoggedIn = false;
+                    m_shouldBeLoggedIn = false;
                 }
             }
             // update our login parameters for the UI
