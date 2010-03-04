@@ -111,6 +111,7 @@ void ProcessAnyTime::ProcessThreadRoutine() {
 
 // routine that does  the ogre background loading. Kludge that it is here but a  test
 void ProcessAnyTime::ProcessBackgroundLoading() {
+	/* Commented out for Ogre 1.7.0 . Replace whole routine with Ogre work queue
 	Ogre::ResourceBackgroundQueue::getSingleton()._initThread();
 	while (LG::ProcessAnyTime::Instance()->m_keepProcessing) {
 		if (!Ogre::ResourceBackgroundQueue::getSingleton()._doNextQueuedBackgroundProcess()) {
@@ -118,6 +119,7 @@ void ProcessAnyTime::ProcessBackgroundLoading() {
 			LGLOCK_SLEEP(1);
 		}
 	}
+	*/
 }
 
 

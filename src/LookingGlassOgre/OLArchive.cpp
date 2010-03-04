@@ -66,8 +66,12 @@ void OLArchive::unload() {
 	Ogre::ArchiveManager::getSingleton().unload(m_FSArchive);
 }
 
-// Open a stream on a given file. 
 Ogre::DataStreamPtr OLArchive::open(const Ogre::String& filename) const {
+	return this->open(filename, true);
+}
+
+// Open a stream on a given file. 
+Ogre::DataStreamPtr OLArchive::open(const Ogre::String& filename, bool readonly) const {
 	// LG::Log("OLArchive::open(%s)", filename.c_str());
 	if (m_FSArchive->exists(filename)) {
 		return m_FSArchive->open(filename);

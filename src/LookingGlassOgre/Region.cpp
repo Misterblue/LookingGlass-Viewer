@@ -92,7 +92,7 @@ void Region::Init( double globalX, double globalY, double globalZ, float sizeX, 
 	this->LocalY = (float)globalY;
 	this->LocalZ = (float)globalZ;
 	// create scene Node
-	Ogre::Quaternion orient = Ogre::Quaternion(Ogre::Radian(-3.14159265/2.0), Ogre::Vector3(1.0, 0.0, 0.0));
+	Ogre::Quaternion orient = Ogre::Quaternion(Ogre::Radian(-3.14159265f/2.0f), Ogre::Vector3(1.0f, 0.0f, 0.0f));
 	Ogre::SceneNode* regionNode = LG::RendererOgre::Instance()->CreateSceneNode(this->Name.c_str(), 
 			(Ogre::SceneNode*)NULL, false, true, this->LocalX, this->LocalY, this->LocalZ, 
 			1.0, 1.0, 1.0, orient.w, orient.x, orient.y, orient.z);
@@ -130,7 +130,7 @@ Ogre::SceneNode* Region::CreateOcean(Ogre::SceneNode* regionNode,
 	Ogre::SceneNode* oceanNode = regionNode->createChildSceneNode("WaterSceneNode/" + waterName);
 	oceanNode->setInheritOrientation(true);
 	oceanNode->setInheritScale(false);
-	oceanNode->translate(width/2.0, length/2.0, waterHeight);
+	oceanNode->translate(width/2.0f, length/2.0f, waterHeight);
 	oceanNode->attachObject(oceanEntity);
 	return oceanNode;
 }
@@ -201,7 +201,7 @@ void Region::UpdateTerrain(const int hmWidth, const int hmLength, const float* h
 	int loc = 0;
 	for (int xx = 0; xx < hmWidth; xx++) {
 		for (int yy = 0; yy < hmLength; yy++) {
-			mo->position(xx, yy, hm[loc++]);
+			mo->position((Ogre::Real)xx, (Ogre::Real)yy, hm[loc++]);
 			mo->textureCoord((float)xx / (float)hmWidth, (float)yy / (float)hmLength);
 			mo->normal(0.0, 1.0, 0.0);	// always up (for the moment)
 		}

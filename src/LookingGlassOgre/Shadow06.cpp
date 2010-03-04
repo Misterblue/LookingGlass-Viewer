@@ -39,7 +39,7 @@ namespace LG {
 	int shadowFarDistance = LG::GetParameterInt("Renderer.Ogre.ShadowFarDistance");
 
     smgr->setShadowColour(shadowColor);
-    smgr->setShadowFarDistance(shadowFarDistance);
+	smgr->setShadowFarDistance((Ogre::Real)shadowFarDistance);
     smgr->setShadowTextureSize(shadowTextureSize);
     smgr->setShadowTextureCount(shadowTextureCount);
 

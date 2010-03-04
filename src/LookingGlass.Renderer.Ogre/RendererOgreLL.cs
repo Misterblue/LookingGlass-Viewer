@@ -174,7 +174,11 @@ public class RendererOgreLL : IWorldRenderConv {
                 }
                 ri.parentEntity = ent.ContainingEntity;
             }
-            m_log.Log(LogLevel.DRENDERDETAIL, "RenderingInfo: assigning mesh to avatar: {0}", m_defaultAvatarMesh);
+            // while we're in the neighborhood, we can create the materials
+            if (m_buildMaterialsAtRenderInfoTime) {
+                CreateMaterialResource7X(priority, ent, prim, 7);
+            }
+            m_log.Log(LogLevel.DRENDERDETAIL, "RenderingInfo: assigning attachment to avatar: {0}", m_defaultAvatarMesh);
         }
         else {
             // must be a regular prim

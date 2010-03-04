@@ -82,7 +82,7 @@ namespace SkyX
 				, MieMultiplier(0.000675f)
 				, SunIntensity(30)
 				, WaveLength(Ogre::Vector3(0.57f, 0.54f, 0.44f))
-				, G(-0.991)
+				, G(-0.991f)
 				, Exposure(2.0f)
 				, NumberOfSamples(4)
 			{
@@ -101,7 +101,7 @@ namespace SkyX
 				, MieMultiplier(0.000675f)
 				, SunIntensity(30)
 				, WaveLength(Ogre::Vector3(0.57f, 0.54f, 0.44f))
-				, G(-0.991)
+				, G(-0.991f)
 				, Exposure(2.0f)
 				, NumberOfSamples(4)
 			{

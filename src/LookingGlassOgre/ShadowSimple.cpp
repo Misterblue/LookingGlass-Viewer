@@ -45,7 +45,7 @@ ShadowSimple::ShadowSimple(const char* shadowName) : ShadowBase() {
 	}
 	int shadowFarDistance = LG::GetParameterInt("Renderer.Ogre.ShadowFarDistance");
 	LG::RendererOgre::Instance()->m_sceneMgr->setShadowFarDistance((float)shadowFarDistance);
-	LG::RendererOgre::Instance()->m_sceneMgr->setShadowColour(Ogre::ColourValue(0.2, 0.2, 0.2));
+	LG::RendererOgre::Instance()->m_sceneMgr->setShadowColour(Ogre::ColourValue(0.2f, 0.2f, 0.2f));
 	return;
 }
 

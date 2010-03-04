@@ -59,6 +59,7 @@ public:
 
     // Open a stream on a given file. 
 	Ogre::DataStreamPtr open(const Ogre::String& filename) const;
+	Ogre::DataStreamPtr open(const Ogre::String& filename, bool readonly = true) const;
 
     // List all file names in the archive.
     Ogre::StringVectorPtr list(bool recursive = true, bool dirs = false);

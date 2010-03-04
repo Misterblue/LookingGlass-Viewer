@@ -404,7 +404,6 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         m_log.Log(LogLevel.DCOMMDETAIL, "Disconnect request -- logout and disconnect");
         m_shouldBeLoggedIn = false;
         m_isLoggingOut = true;
-        m_client.Network.Shutdown(OpenMetaverse.NetworkManager.DisconnectType.ClientInitiated);
         return true;
     }
 
@@ -460,6 +459,10 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
                     StartLogin();
                 }
             }
+            if (!LGB.KeepRunning && !IsLoggedIn) {
+                // if we're not supposed to be running, disconnect everything
+                m_client.Network.Shutdown(OpenMetaverse.NetworkManager.DisconnectType.ClientInitiated);
+            }
             if (!LGB.KeepRunning || (!m_shouldBeLoggedIn && IsLoggedIn)) {
                 // we shouldn't be logged in but it looks like we are
                 if (!m_isLoggingIn && !m_isLoggingOut) {
@@ -468,6 +471,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
                     m_client.Network.Logout();
                     m_isLoggingIn = false;
                     m_isLoggingOut = true;
+                    m_isLoggedIn = false;
                 }
             }
             // update our login parameters for the UI
@@ -572,11 +576,6 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         this.m_statNetDisconnected++;
         m_log.Log(LogLevel.DCOMM, "Disconnected");
         m_isConnected = false;
-        //x BeginInvoke(
-        //x     (MethodInvoker)delegate() {
-        //x         cmdTeleport.Enabled = false;
-        //x         DoLogout();
-        //x });
     }
 
     public virtual void Network_EventQueueRunning(Object sender, OMV.EventQueueRunningEventArgs args) {

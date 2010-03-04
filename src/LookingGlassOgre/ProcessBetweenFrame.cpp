@@ -170,7 +170,7 @@ public:
 			this->matName7 = Ogre::String(matName7p);
 			this->textureName7 = Ogre::String(textureName7p);
 		}
-		int blocksize = (*parmsp * 7 + 1 ) * sizeof(float);
+		int blocksize = (((int)*parmsp) * 7 + 1 ) * sizeof(float);
 		this->matParams = (float*)malloc(blocksize);
 		memcpy((void*)this->matParams, parmsp, blocksize);
 	}
@@ -236,10 +236,10 @@ public:
 			py = 128.0;
 			pz = 30.0;
 		}
-		this->faceCounts = (int*)malloc((*faceC) * sizeof(int));
-		memcpy(this->faceCounts, faceC, (*faceC) * sizeof(int));
-		this->faceVertices = (float*)malloc((*faceV) * sizeof(float));
-		memcpy(this->faceVertices, faceV, (*faceV) * sizeof(float));
+		this->faceCounts = (int*)malloc(((size_t)*faceC) * sizeof(int));
+		memcpy(this->faceCounts, faceC, ((int)*faceC) * sizeof(int));
+		this->faceVertices = (float*)malloc(((size_t)*faceV) * sizeof(float));
+		memcpy(this->faceVertices, faceV, ((int)*faceV) * sizeof(float));
 		LG::Log("ProcessBetweenFrame::CreateMeshResourceQc: queuing %s", mName);
 	}
 	~CreateMeshResourceQc(void) {

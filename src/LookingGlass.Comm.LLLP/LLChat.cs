@@ -183,8 +183,8 @@ public class LLChat : IChatProvider, IModule {
         lock (m_chats) {
             while (m_chats.Count > 0) {
                 ChatEntry ce = m_chats.Dequeue();
-                OMVSD.OSDMap chat = new OMVSD.OSDMap();
                 string dateString = ce.time.ToString("yyyyMMddhhmmssfff");
+                OMVSD.OSDMap chat = new OMVSD.OSDMap();
                 chat.Add("Time", new OMVSD.OSDString(dateString));
                 chat.Add("From", new OMVSD.OSDString(ce.fromName));
                 chat.Add("Message", new OMVSD.OSDString(ce.message));
@@ -193,6 +193,10 @@ public class LLChat : IChatProvider, IModule {
                 chat.Add("Position", new OMVSD.OSDString(ce.position.ToString()));
                 if (ce.ownerID != null) {
                     chat.Add("OwnerID", new OMVSD.OSDString(ce.ownerID.ToString()));
+                }
+                if (dateString == lastDate) {
+                    // rare but it occasionally happens
+                    dateString = dateString.Substring(0, dateString.Length - 1) + 'a';
                 }
                 ret.Add(dateString, chat);
                 lastDate = dateString;

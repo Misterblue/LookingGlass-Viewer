@@ -65,7 +65,7 @@ void OLPreloadArchive::unload() {
 
 // The preloaded entities are in a filesystem without the grid name at the beginning.
 // This routine strips the grid name of the beginning and looks for the file.
-Ogre::DataStreamPtr OLPreloadArchive::open(const Ogre::String& filename) const {
+Ogre::DataStreamPtr OLPreloadArchive::open(const Ogre::String& filename, bool readonly) const {
 	LG::Log("OLPreloadArchive::open(%s)", filename.c_str());
 	Ogre::String entityName = ExtractEntityFromFilename(filename);
 	if (m_FSArchive->exists(entityName)) {
@@ -74,6 +74,10 @@ Ogre::DataStreamPtr OLPreloadArchive::open(const Ogre::String& filename) const {
 	// if the file doesn't exist, we shouldn't have been asked for it
 	LG::Log("OLPreloadArchive::open(): the entity didn't exist!!!!. '%s'", entityName.c_str());
 	return Ogre::DataStreamPtr(new Ogre::MemoryDataStream(10));
+}
+
+Ogre::DataStreamPtr OLPreloadArchive::open(const Ogre::String& filename) const {
+	return this->open(filename, true);
 }
 
 // List all file names in the archive.

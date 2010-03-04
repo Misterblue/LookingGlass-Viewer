@@ -208,7 +208,7 @@ namespace LG {
 	}
 
 	// called at the beginning of the frame so we can slrp the camera
-#define SECONDS_TO_SLERP 0.2
+#define SECONDS_TO_SLERP 0.2f
 	void RendererOgre::AdvanceCamera(const Ogre::FrameEvent& evt) {
 		// Say time since last frame is .1s. That's 1/10 sec and if we're trying to
 		//   to the smooth turn in 1/2 sec, this is 1/5 of our way there.
@@ -367,7 +367,7 @@ namespace LG {
 		rs->setConfigOption("Video Mode", LG::GetParameter("Renderer.Ogre.VideoMode"));
 
 		// I am running the background thread
-		Ogre::ResourceBackgroundQueue::getSingleton().setStartBackgroundThread(false);
+		// Ogre::ResourceBackgroundQueue::getSingleton().setStartBackgroundThread(false);
 
 		// Two types of initialization here. Get own window or use a passed window
 		Ogre::String windowHandle = LG::GetParameter("Renderer.Ogre.ExternalWindow.Handle");

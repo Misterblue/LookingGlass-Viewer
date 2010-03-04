@@ -91,7 +91,7 @@ void Shadow03::shadowTextureCasterPreViewProj(Ogre::Light *light, Ogre::Camera *
     // yeah.  simplistic, but it works nicely.  this is the function I was talking
     // about you ignoring above in the Mgr declaration.
     float range = light->getAttenuationRange();
-    cam->setNearClipDistance(range * 0.01);
+    cam->setNearClipDistance(range * 0.01f);
     cam->setFarClipDistance(range);
     // we just use a small near clip so that the light doesn't "miss" anything
     // that can shadow stuff.  and the far clip is equal to the lights' range.
