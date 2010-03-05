@@ -161,6 +161,8 @@ public class LookingGlassBase : IInstance<LookingGlassBase> {
         }
         m_log.Log(LogLevel.DINIT, "KEEPRUNNING OFF. SHUTTING DOWN");
         StopEverything();
+        // Rather blunt but sometime you just need a blunt weapon
+        System.Environment.Exit(0);
     }
     
     public void Stop() {
