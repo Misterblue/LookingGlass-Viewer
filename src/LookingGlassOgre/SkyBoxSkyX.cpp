@@ -45,27 +45,27 @@ void SkyBoxSkyX::Start() {
 	// m_SkyX->getCloudsManager()->add(SkyX::CloudLayer::Options(/* Default options */));
 	// add cloud layer 1. These are the default values
 	m_SkyX->getCloudsManager()->add(SkyX::CloudLayer::Options(
-		100.0,		// height
-		0.001,		// Scale
-		Ogre::Vector2(1.0, 1.0),	// wind direction
-		0.125,		// Time mulitplier
-		0.05,		// distance attenuation
-		1.0,		// detail attenuation
-		2.0,		// normal multiplier
-		0.25,		// height volume
-		0.01		// volumetric displacement
+		100.0f,		// height
+		0.001f,		// Scale
+		Ogre::Vector2(1.0f, 1.0f),	// wind direction
+		0.125f,		// Time mulitplier
+		0.05f,		// distance attenuation
+		1.0f,		// detail attenuation
+		2.0f,		// normal multiplier
+		0.25f,		// height volume
+		0.01f		// volumetric displacement
 		));
 	// add another layer that is a little off
 	m_SkyX->getCloudsManager()->add(SkyX::CloudLayer::Options(
-		130.0,		// height
-		0.001,		// Scale
-		Ogre::Vector2(1.0, 0.8),	// wind direction
-		0.2,		// Time mulitplier
-		0.05,		// distance attenuation
-		1.0,		// detail attenuation
-		2.0,		// normal multiplier
-		0.25,		// height volume
-		0.01		// volumetric displacement
+		130.0f,		// height
+		0.001f,		// Scale
+		Ogre::Vector2(1.0f, 0.8f),	// wind direction
+		0.2f,		// Time mulitplier
+		0.05f,		// distance attenuation
+		1.0f,		// detail attenuation
+		2.0f,		// normal multiplier
+		0.25f,		// height volume
+		0.01f		// volumetric displacement
 		));
 
 	m_sun = LG::RendererOgre::Instance()->m_sceneMgr->createLight("sun");

@@ -175,7 +175,7 @@ public sealed class LLAssetContext : AssetContextBase {
         }
         if (binID != OMV.UUID.Zero) {
             if (m_doThrottledTextureRequest == null) {
-                m_doThrottledTextureRequest = new BasicWorkQueue("LLThrottledTexture" + m_numAssetContextBase.ToString());
+                m_doThrottledTextureRequest = new BasicWorkQueue("LLThrottledTexture" + (++m_numAssetContextBase).ToString());
             }
             m_doThrottledTextureRequest.DoLater(ThrottleTextureMakeRequest, binID);
         }

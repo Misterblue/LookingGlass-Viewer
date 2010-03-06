@@ -169,7 +169,6 @@ public class LookingGlassBase : IInstance<LookingGlassBase> {
         // this causes all threads things to shutdown
         KeepRunning = false;
         Thread.Sleep(3 * 1000);
-        StopEverything();
     }
 
     public delegate bool MainThreadCallback();
@@ -199,7 +198,7 @@ public class LookingGlassBase : IInstance<LookingGlassBase> {
         catch (Exception e) {
             // we don't know how bad things got while shutting down..
             // just exit gracefully
-            m_log.Log(LogLevel.DINIT, "EXCEPTION WHILE SHUTTING DOWN: "+e.ToString());
+            m_log.Log(LogLevel.DINIT, "EXCEPTION WHILE SHUTTING DOWN: {0}", e);
         }
     }
 }
