@@ -32,6 +32,14 @@ using OMV = OpenMetaverse;
 using OMVI = OpenMetaverse.Imaging;
 
 namespace LookingGlass.World {
+    /// <summary>
+    /// Base class for the asset context associated with an entity. This provides
+    /// functions for accessing the contents of the entity (prim info, textures, ...).
+    /// 
+    /// A particular type of asset implmentation extends this with the operations
+    /// that actually find and fetch the data. The information goes into the caching
+    /// system for access by the renderer and other subsystems.
+    /// </summary>
 public abstract class AssetContextBase : IDisposable {
     private ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
 

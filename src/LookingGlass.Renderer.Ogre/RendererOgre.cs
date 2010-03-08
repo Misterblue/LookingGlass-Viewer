@@ -820,7 +820,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             }
         }
         if ((what & UpdateCodes.Animation) != 0) {
-            // the prim has changed its rotation
+            // the prim has changed its rotation animation
             IAnimation anim;
             if (ent.TryGet<IAnimation>(out anim)) {
                 IWorldRenderConv conver;
@@ -855,6 +855,12 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         return;
     }
 
+    /// <summary>
+    /// Current animations are for TargetOmega which causes rotation in the client.
+    /// </summary>
+    /// <param name="qInstance"></param>
+    /// <param name="parms"></param>
+    /// <returns>true if we can do this update now. False if to retry</returns>
     private bool DoUpdateAnimationLater(DoLaterBase qInstance, Object parms) {
         Object[] loadParams = (Object[])parms;
         float prio = (float)loadParams[0];

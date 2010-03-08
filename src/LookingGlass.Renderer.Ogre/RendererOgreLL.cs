@@ -134,6 +134,7 @@ public class RendererOgreLL : IWorldRenderConv {
             ri.basicObject = EntityNameOgre.ConvertToOgreMeshName(new EntityName(m_defaultAvatarMesh));
             ri.parentEntity = null;
             ri.rotation = av.Heading;
+            ri.rotation.Normalize();
             ri.position = av.RelativePosition;
             ri.shapeHash = RenderableInfo.NO_HASH_SHARE;   // a number which says to not share meshes
             ri.scale = new OMV.Vector3(m_sceneMagnification, m_sceneMagnification, m_sceneMagnification);
