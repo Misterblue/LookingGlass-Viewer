@@ -57,7 +57,7 @@ namespace LG {
 		RegionRezCode CurrentRez;
 		Ogre::SceneNode* Resolutions[RegionRezCodeMAX];
 
-		Ogre::SceneNode* CurrentBaseSceneNode;
+		Ogre::SceneNode* CurrentSceneNode() { return Resolutions[CurrentRez]; }
 		Ogre::SceneNode* TerrainSceneNode;
 		Ogre::SceneNode* OceanSceneNode;
 

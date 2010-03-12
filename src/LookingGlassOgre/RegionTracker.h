@@ -49,6 +49,8 @@ public:
 	Region* FindRegion(Ogre::String);
 	void UpdateTerrain(const char*, const int, const int, const float*);
 
+	std::list<Region*> GetRegions();
+
 	void PositionCameraForFocusRegion(double px, double py, double pz, LG::LGCamera* cam);
 
 private:

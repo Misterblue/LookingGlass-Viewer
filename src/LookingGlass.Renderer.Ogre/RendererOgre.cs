@@ -650,6 +650,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                         parentSceneNodeName = EntityNameOgre.ConvertToOgreSceneNodeName(parentEnt.Name);
                     }
                     else {
+                        // if no parent, add it at the top level of the region
                         parentSceneNodeName = EntityNameOgre.ConvertToOgreSceneNodeName(m_ent.RegionContext.Name);
                     }
 

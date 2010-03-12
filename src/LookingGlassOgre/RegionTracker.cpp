@@ -65,6 +65,15 @@ Region* RegionTracker::FindRegion(Ogre::String nam) {
 	return intr->second;
 }
 
+std::list<Region*> RegionTracker::GetRegions() {
+	std::list<Region*> regns;
+	for (RegionHashMap::iterator intr = m_regions.begin(); intr != m_regions.end(); intr++) {
+		Region* otherRegn = intr->second;
+		regns.push_back(otherRegn);
+	}
+	return regns;
+}
+
 void RegionTracker::UpdateTerrain(const char* regnName, const int width, const int length, const float* hm) {
 	Ogre::String regionName = Ogre::String(regnName);
 	Region* regn = FindRegion(regionName);

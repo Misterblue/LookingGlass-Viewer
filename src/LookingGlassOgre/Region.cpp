@@ -77,7 +77,7 @@ void Region::CalculateLocal(double X, double Y, double Z) {
 	this->LocalZ = (float)(this->GlobalZ - Z);
 	LG::Log("Region::CalculateLocal: %s to %f, %f, %f", this->Name.c_str(), this->LocalX, this->LocalY, this->LocalZ);
 	// set the new position in the scene node
-	this->Resolutions[this->CurrentRez]->setPosition(this->LocalX, this->LocalY, this->LocalZ);
+	this->CurrentSceneNode()->setPosition(this->LocalX, this->LocalY, this->LocalZ);
 	return;
 }
 

@@ -25,6 +25,8 @@
 #include "LookingGlassOgre.h"
 #include "RendererOgre.h"
 #include "OLMeshTracker.h"
+#include "RegionTracker.h"
+#include "Region.h"
 
 namespace LG { 
 	
@@ -102,6 +104,7 @@ void VisCalcFrustDist::calculateEntityVisibility() {
 	m_recalculateVisibility = false;
 	visRegions = visChildren = visEntities = visNodes = 0;
 	visVisToVis = visVisToInvis = visInvisToVis = visInvisToInvis = 0;
+	/*
 	Ogre::SceneNode* nodeRoot = LG::RendererOgre::Instance()->m_sceneMgr->getRootSceneNode();
 	if (nodeRoot == NULL) return;
 	// Hanging off the root node will be a node for each 'region'. A region has
@@ -111,6 +114,16 @@ void VisCalcFrustDist::calculateEntityVisibility() {
 		visRegions++;
 		Ogre::Node* nodeRegion = rootChildIterator.getNext();
 		// a region node has the nodes of its contents.
+		calculateEntityVisibility(nodeRegion, nodeRegion, true);
+	}
+	*/
+	std::list<Region*>regns = LG::RegionTracker::Instance()->GetRegions();
+	std::list<Region*>::iterator iter;
+	for (iter = regns.begin(); iter != regns.end(); iter++) {
+		visRegions++;
+		// the region sceneNode is a node
+		Region* aRegion = *iter;
+		Ogre::Node* nodeRegion = aRegion->CurrentSceneNode();
 		calculateEntityVisibility(nodeRegion, nodeRegion, true);
 	}
 	if ((visSlowdown-- < 0) || (visVisToInvis != 0) || (visInvisToVis != 0)) {
