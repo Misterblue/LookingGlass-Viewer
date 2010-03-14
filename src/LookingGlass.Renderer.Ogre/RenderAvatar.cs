@@ -35,16 +35,103 @@ class RenderAvatar : IRenderEntity {
     RendererOgre m_renderer;
     IEntity m_ent;
 
+    string m_defaultAvatarMesh;
+
     public RenderAvatar(RendererOgre contextRenderer, IEntity contextEntity) {
         m_renderer = contextRenderer;
         m_ent = contextEntity;
+        m_defaultAvatarMesh = m_renderer.ModuleParams.ParamString(m_renderer.ModuleName + ".Ogre.LL.DefaultAvatarMesh");
     }
 
     public bool Create(ref RenderableInfo ri, ref bool m_hasMesh, float priority, int retries) {
+        string entitySceneNodeName;
+        string parentSceneNodeName;
+        EntityName entMeshName;
+
+        if (RendererOgre.GetSceneNodeName(m_ent) == null) {
+            entitySceneNodeName = EntityNameOgre.ConvertToOgreSceneNodeName(m_ent.Name);
+            parentSceneNodeName = EntityNameOgre.ConvertToOgreSceneNodeName(m_ent.RegionContext.Name);
+            entMeshName = EntityNameOgre.ConvertToOgreMeshName(new EntityName(m_defaultAvatarMesh));
+
+            IEntityAvatar av;
+            if (m_ent.TryGet<IEntityAvatar>(out av)) {
+                // Create the scene node for this entity
+                // and add the definition for the object on to the scene node
+                // This will cause the load function to be called and create all
+                //   the callbacks that will actually create the object
+                // m_log.Log(LogLevel.DRENDERDETAIL, "RenderAvatar.Create: mesh={0}, prio={1}", entMeshName.Name, priority);
+                if (!m_renderer.m_sceneMgr.CreateMeshSceneNodeBF(priority,
+                                entitySceneNodeName,
+                                parentSceneNodeName,
+                                entMeshName.Name,
+                                false, true,
+                                av.RelativePosition.X, av.RelativePosition.Y, av.RelativePosition.Z,
+                                1f, 1f, 1f,
+                                av.Heading.W, av.Heading.X, av.Heading.Y, av.Heading.Z)) {
+                    // m_log.Log(LogLevel.DRENDERDETAIL, "Delaying avatar rendering. {0} waiting for parent {1}",
+                    //     m_ent.Name.Name, (parentSceneNodeName == null ? "NULL" : parentSceneNodeName));
+                    return false;   // if I must have parent, requeue if no parent
+                }
+                m_ent.SetAddition(RendererOgre.AddSceneNodeName, entitySceneNodeName);
+            }
+            else {
+                // shouldn't be creating an avatar with no avatar info
+            }
+        }
         return true;
     }
 
     public void Update(UpdateCodes what) {
+        float priority = m_renderer.CalculateInterestOrder(m_ent);
+        bool fullUpdate = false;    // true if a full update was done on this entity
+        if ((what & UpdateCodes.New) != 0) {
+            // new entity. Gets the full treatment
+            m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: New entity: {0}", m_ent.Name.Name);
+            m_renderer.DoRenderQueued(m_ent);
+            fullUpdate = true;
+        }
+        if ((what & UpdateCodes.New) == 0) {
+            // if not a new update, see what in particular is changing for this prim
+            if ((what & UpdateCodes.ParentID) != 0) {
+                // prim was detached or attached. Rerender if not the first update
+                m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: parentID changed");
+                if (!fullUpdate) m_renderer.DoRenderQueued(m_ent);
+                fullUpdate = true;
+            }
+            if ((what & UpdateCodes.Material) != 0) {
+                // the materials have changed on this entity. Cause materials to be recalcuated
+                m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: Material changed");
+            }
+            // if (((what & (UpdateCodes.PrimFlags | UpdateCodes.PrimData)) != 0))) {
+            if ((what & (UpdateCodes.PrimFlags | UpdateCodes.PrimData)) != 0) {
+                // the prim parameters were changed. Re-render if this is not the new creation request
+                m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: prim data changed");
+                if (!fullUpdate) m_renderer.DoRenderQueued(m_ent);
+                fullUpdate = true;
+            }
+            if ((what & UpdateCodes.Textures) != 0) {
+                // texure on the prim were updated. Refresh them if not the initial creation update
+                m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: textures changed");
+                // to get the textures to refresh, we must force the situation
+                IWorldRenderConv conver;
+                if (m_ent.TryGet<IWorldRenderConv>(out conver)) {
+                    conver.RebuildEntityMaterials(priority, m_ent);
+                    Ogr.RefreshResourceBF(priority, Ogr.ResourceTypeMesh, 
+                                EntityNameOgre.ConvertToOgreMeshName(m_ent.Name).Name);
+                }
+            }
+        }
+        if (!fullUpdate && (what & (UpdateCodes.Scale | UpdateCodes.Position | UpdateCodes.Rotation)) != 0) {
+            // world position has changed. Tell Ogre they have changed
+            string entitySceneNodeName = EntityNameOgre.ConvertToOgreSceneNodeName(m_ent.Name);
+            m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: Updating position/rotation for {0}", entitySceneNodeName);
+            Ogr.UpdateSceneNodeBF(priority, entitySceneNodeName,
+                ((what & UpdateCodes.Position) != 0),
+                m_ent.RelativePosition.X, m_ent.RelativePosition.Y, m_ent.RelativePosition.Z,
+                false, 1f, 1f, 1f,  // don't pass scale yet
+                ((what & UpdateCodes.Rotation) != 0),
+                m_ent.Heading.W, m_ent.Heading.X, m_ent.Heading.Y, m_ent.Heading.Z);
+        }
     }
 }
 }

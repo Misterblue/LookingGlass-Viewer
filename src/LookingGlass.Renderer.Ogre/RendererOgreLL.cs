@@ -127,6 +127,7 @@ public class RendererOgreLL : IWorldRenderConv {
 
         RenderableInfo ri = new RenderableInfo();
         // figure out what this entity is:
+        /*
         IEntityAvatar av = null;
         LLAttachment atch = null;
         if (ent.TryGet<IEntityAvatar>(out av)) {
@@ -181,7 +182,7 @@ public class RendererOgreLL : IWorldRenderConv {
             }
             m_log.Log(LogLevel.DRENDERDETAIL, "RenderingInfo: assigning attachment to avatar: {0}", m_defaultAvatarMesh);
         }
-        else {
+        else */ {
             // must be a regular prim
             if (prim == null) 
                 throw new LookingGlassException("ASSERT: RenderOgreLL: prim is null");
