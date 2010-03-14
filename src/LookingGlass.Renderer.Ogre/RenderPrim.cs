@@ -31,7 +31,7 @@ using LookingGlass.World;
 
 namespace LookingGlass.Renderer.Ogr {
 
-class RenderPrim {
+class RenderPrim : IRenderEntity {
 
     bool m_shouldForceMeshRebuild;
     bool m_shouldPrebuildMesh;
@@ -203,8 +203,15 @@ class RenderPrim {
     /// <param name="fullUpdate">'true' if a full update (rebuild) has already been done
     ///    (usually a new prim). This means this routine is just decorating the prim and doesn't
     ///    need to rebuild the whole prim if that is necessary.</param>
-    public void Update(UpdateCodes what, bool fullUpdate) {
+    public void Update(UpdateCodes what) {
         float priority = m_renderer.CalculateInterestOrder(m_ent);
+        bool fullUpdate = false;    // true if a full update was done on this entity
+        if ((what & UpdateCodes.New) != 0) {
+            // new entity. Gets the full treatment
+            m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: New entity: {0}", m_ent.Name.Name);
+            m_renderer.DoRenderQueued(m_ent);
+            fullUpdate = true;
+        }
         if ((what & UpdateCodes.New) == 0) {
             // if not a new update, see what in particular is changing for this prim
             if ((what & UpdateCodes.ParentID) != 0) {

@@ -574,9 +574,17 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             ent.RegisterInterface<IWorldRenderConv>(RendererOgreLL.Instance);
         }
         // Depending on type, add a creation/management interface
-        RenderPrim rprim;
-        if (!ent.TryGet<RenderPrim>(out rprim)) {
-            ent.RegisterInterface<RenderPrim>(new RenderPrim(this, ent));
+        IEntityAvatar av;
+        if (ent.TryGet<IEntityAvatar>(out av)) {
+            // if it is an avatar, add the management routines
+            ent.RegisterInterface<IRenderEntity>(new RenderAvatar(this, ent));
+        }
+        else {
+            // It's just a prim. Add it's management routines
+            RenderPrim rprim;
+            if (!ent.TryGet<RenderPrim>(out rprim)) {
+                ent.RegisterInterface<IRenderEntity>(new RenderPrim(this, ent));
+            }
         }
         // We don't create the entity here because an update immediately follows the 'new'
         //    call. That update will create the entity with the new values.
@@ -603,9 +611,9 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         string entitySceneNodeName = EntityNameOgre.ConvertToOgreSceneNodeName(m_ent.Name);
         m_log.Log(LogLevel.DRENDERDETAIL, "DoRenderLater: ent={0}", m_ent.Name);
 
-        RenderPrim rprim;
-        if (m_ent.TryGet<RenderPrim>(out rprim)) {
-            if (!rprim.Create(ref m_ri, ref m_hasMesh, qInstance.priority, qInstance.timesRequeued)) {
+        IRenderEntity rEntity;
+        if (m_ent.TryGet<IRenderEntity>(out rEntity)) {
+            if (!rEntity.Create(ref m_ri, ref m_hasMesh, qInstance.priority, qInstance.timesRequeued)) {
                 // Didn't want to create for some reason.
                 // Remember progress flags and return 'false' so we get retried
                 loadParams[1] = m_ri;
@@ -648,19 +656,10 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     /// <param name="ent"></param>
     /// <param name="what"></param>
     public void RenderUpdate(IEntity ent, UpdateCodes what) {
-        float priority = CalculateInterestOrder(ent);
-        bool fullUpdate = false;    // true if a full update was done on this entity
-        if ((what & UpdateCodes.New) != 0) {
-            // new entity. Gets the full treatment
-            m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: New entity: {0}", ent.Name.Name);
-            DoRenderQueued(ent);
-            fullUpdate = true;
-        }
-        RenderPrim rprim;
-        if (ent.TryGet<RenderPrim>(out rprim)) {
+        IRenderEntity rEntity;
+        if (ent.TryGet<IRenderEntity>(out rEntity)) {
             // just a prim to update
-            m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: Just a prim update");
-            rprim.Update(what, fullUpdate);
+            rEntity.Update(what);
         }
         return;
     }
