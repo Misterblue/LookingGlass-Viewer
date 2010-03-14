@@ -81,7 +81,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     private OMV.Vector3d m_lastCameraPosition;
     private OMV.Quaternion m_lastCameraOrientation;
 
-    protected BasicWorkQueue m_workQueueRender = new BasicWorkQueue("OgreRendererRender");
+    public BasicWorkQueue m_workQueueRender = new BasicWorkQueue("OgreRendererRender");
     protected BasicWorkQueue m_workQueueReqMesh = new BasicWorkQueue("OgreRendererRequestMesh");
     protected BasicWorkQueue m_workQueueReqMaterial = new BasicWorkQueue("OgreRendererRequestMaterial");
     protected BasicWorkQueue m_workQueueReqTexture = new BasicWorkQueue("OgreRendererRequestTexture");
@@ -576,7 +576,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         // Depending on type, add a creation/management interface
         RenderPrim rprim;
         if (!ent.TryGet<RenderPrim>(out rprim)) {
-            ent.RegisterInterface<RenderPrim>(new RenderPrim(this));
+            ent.RegisterInterface<RenderPrim>(new RenderPrim(this, ent));
         }
         // We don't create the entity here because an update immediately follows the 'new'
         //    call. That update will create the entity with the new values.
@@ -585,7 +585,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     }
 
     // wrapper routine for the queuing if rendering work for this entity
-    private void DoRenderQueued(IEntity ent) {
+    public void DoRenderQueued(IEntity ent) {
         // NOTE: we pass extra parameters that are later modified by DoRenderLater to remember
         // state (RenderableInfo and if mesh has already been rebuilt)
         Object[] renderParameters = { ent, null, false };
@@ -605,7 +605,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
 
         RenderPrim rprim;
         if (m_ent.TryGet<RenderPrim>(out rprim)) {
-            if (!rprim.Create(m_ent, ref m_ri, ref m_hasMesh, qInstance.priority, qInstance.timesRequeued)) {
+            if (!rprim.Create(ref m_ri, ref m_hasMesh, qInstance.priority, qInstance.timesRequeued)) {
                 // Didn't want to create for some reason.
                 // Remember progress flags and return 'false' so we get retried
                 loadParams[1] = m_ri;
@@ -614,157 +614,6 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             }
         }
 
-        /*
-        lock (m_ent) {
-            if (RendererOgre.GetSceneNodeName(m_ent) == null) {
-                try {
-                    // m_log.Log(LogLevel.DRENDERDETAIL, "Adding SceneNode to new entity " + m_ent.Name);
-                    if (m_ri == null) {
-                        IWorldRenderConv conver;
-                        if (m_ent.TryGet<IWorldRenderConv>(out conver)) {
-                            m_ri = conver.RenderingInfo(qInstance.priority, m_sceneMgr, m_ent, qInstance.timesRequeued);
-                            if (m_ri == null) {
-                                // The rendering info couldn't be built now. This is usually because
-                                // the parent of this object is not available so we don't know where to put it
-                                m_log.Log(LogLevel.DRENDERDETAIL,
-                                    "Delaying rendering {0}/{1}. RenderingInfo not built for {2}",
-                                    qInstance.sequence, qInstance.timesRequeued, m_ent.Name.Name);
-                                return false;
-                            }
-                            else {
-                                // save the value in the parameter block if we get called again (from a 'return false' below)
-                                loadParams[1] = (Object)m_ri;
-                            }
-                        }
-                        else {
-                            m_log.Log(LogLevel.DBADERROR, "DoRenderLater: NO WORLDRENDERCONV FOR PRIM {0}", m_ent.Name);
-                            // this probably creates infinite retries but other things are clearly broken
-                            return false;
-                        }
-                    }
-
-                    // Check to see if something of this mesh shape already exists. Use it if so.
-                    EntityName entMeshName = (EntityName)m_ri.basicObject;
-                    if (m_shouldShareMeshes && (m_ri.shapeHash != RenderableInfo.NO_HASH_SHARE)) {
-                        lock (prebuiltMeshes) {
-                            if (prebuiltMeshes.ContainsKey(m_ri.shapeHash)) {
-                                entMeshName = prebuiltMeshes[m_ri.shapeHash];
-                                // m_log.Log(LogLevel.DRENDERDETAIL, "DorRenderLater: using prebuilt {0}", entMeshName);
-                                m_statShareInstances.Event();
-                            }
-                            else {
-                                // this is a new mesh. Remember that it has been built
-                                prebuiltMeshes.Add(m_ri.shapeHash, entMeshName);
-                            }
-                        }
-                    }
-
-                    // Find a handle to the parent for this node
-                    string parentSceneNodeName = null;
-                    if (m_ri.parentEntity != null) {
-                        // this entity has a parent entity. create scene node off his
-                        IEntity parentEnt = m_ri.parentEntity;
-                        parentSceneNodeName = EntityNameOgre.ConvertToOgreSceneNodeName(parentEnt.Name);
-                    }
-                    else {
-                        // if no parent, add it at the top level of the region
-                        parentSceneNodeName = EntityNameOgre.ConvertToOgreSceneNodeName(m_ent.RegionContext.Name);
-                    }
-
-                    // create the mesh we know we need
-                    if ((m_shouldPrebuildMesh || m_shouldForceMeshRebuild) && !m_hasMesh) {
-                        // way kludgy... but we see if the cached mesh file exists and, if so, we know it exists
-                        if (!m_shouldForceMeshRebuild && m_ent.AssetContext.CheckIfCached(m_ent, entMeshName)) {
-                            // if we just want the mesh built, if the file exists that's enough prebuilding
-                            m_log.Log(LogLevel.DRENDERDETAIL, "RendererOgre.DorRenderLater: mesh file exists: {0}", m_ent.Name.CacheFilename);
-                            m_hasMesh = true;
-                        }
-                        if (!m_hasMesh) {
-                            // TODO: figure out how to do this without queuing -- do it now
-                            //2 RequestMesh(m_ent.Name, entMeshName.Name);
-                            //1 Object[] meshLaterParams = { entMeshName.Name, entMeshName };
-                            //1 bool worked = RequestMeshLater(qInstance, meshLaterParams);
-                            //1 // if we can't get the mesh now, we'll have to wait until all the pieces are here
-                            //1 if (!worked) return false;
-                            IWorldRenderConv conver;
-                            m_ent.TryGet<IWorldRenderConv>(out conver);
-                            if (!conver.CreateMeshResource(qInstance.priority, m_ent, entMeshName.Name, entMeshName)) {
-                                // we need to wait until some resource exists before we can complete this creation
-                                return false; // note that m_hasMesh is still false so we'll do this routine again
-                            }
-                            m_log.Log(LogLevel.DRENDERDETAIL, "RendererOgre.DorRenderLater: prebuild/forced mesh build for {0}",
-                                entMeshName.Name);
-                            m_hasMesh = true;
-                        }
-                        // Push that the mesh was crreated into the queued item so if a 'false' is returned
-                        // later, we don't create the mesh again.
-                        loadParams[2] = m_hasMesh;
-                    }
-
-                    // Create the scene node for this entity
-                    // and add the definition for the object on to the scene node
-                    // This will cause the load function to be called and create all
-                    //   the callbacks that will actually create the object
-                    // m_log.Log(LogLevel.DRENDERDETAIL, "DoRenderLater: mesh={0}, prio={1}", entMeshName.Name, qInstance.priority);
-                    if (!m_sceneMgr.CreateMeshSceneNodeBF(qInstance.priority,
-                                    entitySceneNodeName,
-                                    parentSceneNodeName,
-                                    entMeshName.Name,
-                                    false, true,
-                                    m_ri.position.X, m_ri.position.Y, m_ri.position.Z,
-                                    m_ri.scale.X, m_ri.scale.Y, m_ri.scale.Z,
-                                    m_ri.rotation.W, m_ri.rotation.X, m_ri.rotation.Y, m_ri.rotation.Z)) {
-                        // m_log.Log(LogLevel.DRENDERDETAIL, "Delaying rendering {0}/{1}. {2} waiting for parent {3}",
-                        //     qInstance.sequence, qInstance.timesRequeued, m_ent.Name.Name,
-                        //     (parentSceneNodeName == null ? "NULL" : parentSceneNodeName));
-                        return false;   // if I must have parent, requeue if no parent
-                    }
-
-                    // Add the name of the created scene node name so we know it's created and
-                    // we can find it later.
-                    m_ent.SetAddition(RendererOgre.AddSceneNodeName, entitySceneNodeName);
-
-                }
-                catch (Exception e) {
-                    m_log.Log(LogLevel.DBADERROR, "Render: Failed conversion of {0}: {1}", m_ent.Name.Name, e.ToString());
-                }
-            }
-            else {
-                // the entity already has a scene node. We're just forcing the rebuild of the prim
-                if (m_ri == null) {
-                    IWorldRenderConv conver;
-                    m_ent.TryGet<IWorldRenderConv>(out conver);
-                    m_ri = conver.RenderingInfo(qInstance.priority, m_sceneMgr, m_ent, qInstance.timesRequeued);
-                    if (m_ri == null) {
-                        // The rendering info couldn't be built now. This is usually because
-                        // the parent of this object is not available so we don't know where to put it
-                        m_log.Log(LogLevel.DRENDERDETAIL,
-                            "Delaying rendering with scene node {0}/{1}. RenderingInfo not built for {2}",
-                            qInstance.sequence, qInstance.timesRequeued, m_ent.Name.Name);
-                        return false;
-                    }
-                    else {
-                        // save the value in the parameter block if we get called again ('return false' below)
-                        loadParams[1] = (Object)m_ri;
-                    }
-                }
-                // Find a handle to the parent for this node
-                string parentSceneNodeName = null;
-                if (m_ri.parentEntity != null) {
-                    // this entity has a parent entity. create scene node off his
-                    IEntity parentEnt = m_ri.parentEntity;
-                    parentSceneNodeName = EntityNameOgre.ConvertToOgreSceneNodeName(parentEnt.Name);
-                }
-                else {
-                    parentSceneNodeName = EntityNameOgre.ConvertToOgreSceneNodeName(m_ent.RegionContext.Name);
-                }
-
-                EntityName entMeshName = (EntityName)m_ri.basicObject;
-                m_log.Log(LogLevel.DRENDERDETAIL, "DoRenderLater: entity has scenenode. Rebuilding mesh: {0}", entMeshName);
-                RequestMesh(m_ent.Name, entMeshName.Name);
-            }
-        }
-         */
         // System.GC.Collect(); // only for debugging
         return true;
     }
@@ -776,7 +625,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     /// </summary>
     /// <param name="ent">Entity we're checking interest in</param>
     /// <returns>Zero to N with larger meaning less interested</returns>
-    private float CalculateInterestOrder(IEntity ent) {
+    public float CalculateInterestOrder(IEntity ent) {
         float ret = 100f;
         if (m_lastCameraPosition != null && m_lastCameraOrientation != null) {
             double dist = OMV.Vector3d.Distance(ent.GlobalPosition, m_lastCameraPosition);
@@ -807,92 +656,13 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             DoRenderQueued(ent);
             fullUpdate = true;
         }
-        // some things we don't do if it's a new entry since building the new entry will do these already
-        if ((what & UpdateCodes.New) == 0) {
-            // don't do these checks if the entity is new
-            if ((what & UpdateCodes.ParentID) != 0) {
-                // prim was detached or attached. Rerender if not the first update
-                m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: parentID changed");
-                if (!fullUpdate) DoRenderQueued(ent);
-                fullUpdate = true;
-            }
-            if ((what & UpdateCodes.Material) != 0) {
-                // the materials have changed on this entity. Cause materials to be recalcuated
-                m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: Material changed");
-            }
-            // if (((what & (UpdateCodes.PrimFlags | UpdateCodes.PrimData)) != 0))) {
-            if ((what & (UpdateCodes.PrimFlags | UpdateCodes.PrimData)) != 0) {
-                // the prim parameters were changed. Re-render if this is not the new creation request
-                m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: prim data changed");
-                if (!fullUpdate) DoRenderQueued(ent);
-                fullUpdate = true;
-            }
-            if ((what & UpdateCodes.Textures) != 0) {
-                // texure on the prim were updated. Refresh them if not the initial creation update
-                m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: textures changed");
-                // to get the textures to refresh, we must force the situation
-                IWorldRenderConv conver;
-                if (ent.TryGet<IWorldRenderConv>(out conver)) {
-                    conver.RebuildEntityMaterials(priority, ent);
-                    Ogr.RefreshResourceBF(priority, Ogr.ResourceTypeMesh, EntityNameOgre.ConvertToOgreMeshName(ent.Name).Name);
-                }
-            }
-        }
-        if ((what & UpdateCodes.Animation) != 0) {
-            // the prim has changed its rotation animation
-            IAnimation anim;
-            if (ent.TryGet<IAnimation>(out anim)) {
-                IWorldRenderConv conver;
-                if (ent.TryGet<IWorldRenderConv>(out conver)) {
-                    m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: update animation");
-                    // since the entity might not have been rendererd yet, we need to queue this operstion
-                    Object[] parms = { 0f, ent, conver, anim };
-                    m_workQueueRender.DoLater(CalculateInterestOrder(ent), DoUpdateAnimationLater, parms);
-                    
-                }
-            }
-        }
-        if ((what & UpdateCodes.Text) != 0) {
-            // text associated with the prim changed
-            m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: text changed");
-        }
-        if ((what & UpdateCodes.Particles) != 0) {
-            // particles associated with the prim changed
-            m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: particles changed");
-        }
-        if (!fullUpdate && (what & (UpdateCodes.Scale | UpdateCodes.Position | UpdateCodes.Rotation)) != 0) {
-            // world position has changed. Tell Ogre they have changed
-            string entitySceneNodeName = EntityNameOgre.ConvertToOgreSceneNodeName(ent.Name);
-            m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: Updating position/rotation for {0}", entitySceneNodeName);
-            Ogr.UpdateSceneNodeBF(priority, entitySceneNodeName,
-                ((what & UpdateCodes.Position) != 0),
-                ent.RelativePosition.X, ent.RelativePosition.Y, ent.RelativePosition.Z,
-                false, 1f, 1f, 1f,  // don't pass scale yet
-                ((what & UpdateCodes.Rotation) != 0),
-                ent.Heading.W, ent.Heading.X, ent.Heading.Y, ent.Heading.Z);
+        RenderPrim rprim;
+        if (ent.TryGet<RenderPrim>(out rprim)) {
+            // just a prim to update
+            m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: Just a prim update");
+            rprim.Update(what, fullUpdate);
         }
         return;
-    }
-
-    /// <summary>
-    /// Current animations are for TargetOmega which causes rotation in the client.
-    /// </summary>
-    /// <param name="qInstance"></param>
-    /// <param name="parms"></param>
-    /// <returns>true if we can do this update now. False if to retry</returns>
-    private bool DoUpdateAnimationLater(DoLaterBase qInstance, Object parms) {
-        Object[] loadParams = (Object[])parms;
-        float prio = (float)loadParams[0];
-        IEntity m_ent = (IEntity)loadParams[1];
-        IWorldRenderConv m_conver = (IWorldRenderConv)loadParams[2];
-        IAnimation m_anim = (IAnimation)loadParams[3];
-
-        string sceneNodeName = RendererOgre.GetSceneNodeName(m_ent);
-        if (sceneNodeName == null) {
-            // prim does not yet have a scene node. Try again later.
-            return false;
-        }
-        return m_conver.UpdateAnimation(0, m_ent, sceneNodeName, m_anim);
     }
 
     // ==========================================================================
