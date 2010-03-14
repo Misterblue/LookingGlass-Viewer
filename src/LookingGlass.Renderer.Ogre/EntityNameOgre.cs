@@ -72,7 +72,7 @@ public class EntityNameOgre : EntityName {
 
     // private const string EntityNameMatch = @"^(...)(...)(..)-(.)(.*)$";
     // private const string OgreNameReplace = @"$1/$2/$3$4/$1$2$3-$4$5";
-    private const string EntityNameMatch = @"^(.)(.*)$";
+    private const string EntityNameMatch = @"^(..)(.*)$";
     private const string OgreNameReplace = @"$1/$1$2";
 
     // Ogre presumes that entity name will be the filename in the cache. Make the
@@ -120,7 +120,7 @@ public class EntityNameOgre : EntityName {
     }
 
     // private const string OgreNameMatch = @"^(.*)/.../.../.../([^/]*)$";
-    private const string OgreNameMatch = @"^(.*)/[0-9a-f]/([^/]*)$";
+    private const string OgreNameMatch = @"^(.*)/[0-9a-f][0-9a-f]/([^/]*)$";
     private const string EntityNameReplace = @"$1/$2";
 
     // Ogre resources have been decorated with extensions and dash numbers which we remove

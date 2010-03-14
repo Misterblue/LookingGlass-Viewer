@@ -195,6 +195,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Avatar.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\BadImageCodec.cpp"
 				>
 			</File>
@@ -340,6 +344,10 @@
 			</File>
 			<File
 				RelativePath=".\AnimTracker.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Avatar.h"
 				>
 			</File>
 			<File

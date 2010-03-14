@@ -42,7 +42,7 @@ using OMVSD = OpenMetaverse.StructuredData;
 namespace LookingGlass.Renderer.Ogr {
 
 public class RendererOgre : ModuleBase, IRenderProvider {
-    private ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
+    public ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
     private ILog m_logOgre = LogManager.GetLogger("RendererCpp");
 
     // we decorate IEntities with SceneNodes. This is our slot in the IEntity addition table
@@ -61,7 +61,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
 
     protected IUserInterfaceProvider m_userInterface = null;
 
-    protected OgreSceneMgr m_sceneMgr;
+    public OgreSceneMgr m_sceneMgr;
 
     protected Thread m_rendererThread = null;
 
@@ -175,7 +175,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.LL.EarlyMaterialCreate", "false",
                     "Create materials while creating mesh rather than waiting");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.LL.DefaultAvatarMesh", 
-                    "Preload/00000000-0000-2222-3333-112200000001",
+                    "Preload/00000000-0000-2222-3333-112200000003",
                     "Entity name of mesh to use for avatars");
 
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.BetweenFrame.WorkMilliSecondsMax", "300",
@@ -573,6 +573,11 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             // TODO: Figure out how to make this dynamic, extendable and runtime
             ent.RegisterInterface<IWorldRenderConv>(RendererOgreLL.Instance);
         }
+        // Depending on type, add a creation/management interface
+        RenderPrim rprim;
+        if (!ent.TryGet<RenderPrim>(out rprim)) {
+            ent.RegisterInterface<RenderPrim>(new RenderPrim(this));
+        }
         // We don't create the entity here because an update immediately follows the 'new'
         //    call. That update will create the entity with the new values.
         // DoRenderQueued(ent);
@@ -598,6 +603,18 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         string entitySceneNodeName = EntityNameOgre.ConvertToOgreSceneNodeName(m_ent.Name);
         m_log.Log(LogLevel.DRENDERDETAIL, "DoRenderLater: ent={0}", m_ent.Name);
 
+        RenderPrim rprim;
+        if (m_ent.TryGet<RenderPrim>(out rprim)) {
+            if (!rprim.Create(m_ent, ref m_ri, ref m_hasMesh, qInstance.priority, qInstance.timesRequeued)) {
+                // Didn't want to create for some reason.
+                // Remember progress flags and return 'false' so we get retried
+                loadParams[1] = m_ri;
+                loadParams[2] = m_hasMesh;
+                return false;
+            }
+        }
+
+        /*
         lock (m_ent) {
             if (RendererOgre.GetSceneNodeName(m_ent) == null) {
                 try {
@@ -747,6 +764,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                 RequestMesh(m_ent.Name, entMeshName.Name);
             }
         }
+         */
         // System.GC.Collect(); // only for debugging
         return true;
     }
@@ -1016,7 +1034,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         return;
     }
 
-    private void RequestMesh(EntityName contextEntity, string meshName) {
+    public void RequestMesh(EntityName contextEntity, string meshName) {
         m_log.Log(LogLevel.DRENDERDETAIL, "Request for mesh " + meshName);
         Object[] meshLaterParams = { meshName, contextEntity };
         m_workQueueReqMesh.DoLater(RequestMeshLater, (object)meshLaterParams);

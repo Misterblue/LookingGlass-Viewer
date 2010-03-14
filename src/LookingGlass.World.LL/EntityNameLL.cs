@@ -60,7 +60,7 @@ public class EntityNameLL : EntityName {
     // this are the same rules as in EntityNameOgre so the file ends up in the cache at the right location
     // private const string EntityNameMatch = @"^(...)(...)(..)-(.)(.*)$";
     // private const string OgreNameReplace = @"$1/$2/$3$4/$1$2$3-$4$5";
-    private const string EntityNameMatch = @"^(.)(.*)$";
+    private const string EntityNameMatch = @"^(..)(.*)$";
     private const string OgreNameReplace = @"$1/$1$2";
 
     // Return the cache filename for this entity. This is not based in the cache directory.
