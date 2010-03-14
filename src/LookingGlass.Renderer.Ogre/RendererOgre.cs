@@ -580,10 +580,16 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             ent.RegisterInterface<IRenderEntity>(new RenderAvatar(this, ent));
         }
         else {
-            // It's just a prim. Add it's management routines
-            RenderPrim rprim;
-            if (!ent.TryGet<RenderPrim>(out rprim)) {
-                ent.RegisterInterface<IRenderEntity>(new RenderPrim(this, ent));
+            IAttachment atch;
+            if (ent.TryGet<IAttachment>(out atch)) {
+                ent.RegisterInterface<IRenderEntity>(new RenderAttach(this, ent));
+            }
+            else {
+                // It's just a prim. Add it's management routines
+                RenderPrim rprim;
+                if (!ent.TryGet<RenderPrim>(out rprim)) {
+                    ent.RegisterInterface<IRenderEntity>(new RenderPrim(this, ent));
+                }
             }
         }
         // We don't create the entity here because an update immediately follows the 'new'
