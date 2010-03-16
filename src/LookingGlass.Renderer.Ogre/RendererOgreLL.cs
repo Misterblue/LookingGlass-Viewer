@@ -23,7 +23,9 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Text;
+using System.Xml;
 using LookingGlass;
 using LookingGlass.Framework.Logging;
 using LookingGlass.Renderer;
@@ -453,18 +455,141 @@ public class RendererOgreLL : IWorldRenderConv {
                 // Ogre. If the scene node is not found, nothing bad happens.
                 string contextSceneNode = EntityNameOgre.ConvertToOgreSceneNodeName(contextEntity);
 
-                m_log.Log(LogLevel.DRENDERDETAIL, "RenderOgreLL: "
-                    + ent.Name
-                    + " f=" + mesh.Faces.Count.ToString()
-                    + " fcs=" + faceCounts.Length
-                    + " fs=" + faceVertices.Length
-                    + " vi=" + vertI
+                m_log.Log(LogLevel.DRENDERDETAIL, 
+                    "RenderOgreLL: {0}, f={1}, fcs={2}, fs={3}",
+                    ent.Name, mesh.Faces.Count, faceCounts.Length, faceVertices.Length
                     );
                 // Now create the mesh
                 Ogr.CreateMeshResourceBF(priority, meshName, contextSceneNode, faceCounts, faceVertices);
             }
         }
         return true;
+    }
+
+    /// <summary>
+    /// Create a mesh in the renderer.
+    /// </summary>
+    /// <param name="sMgr">the scene manager receiving  the mesh</param>
+    /// <param name="ent">The entity the mesh is coming from</param>
+    /// <param name="meshName">The name the mesh should take</param>
+    public bool CreateAvatarMeshResource(float priority, IEntity ent, string meshName, EntityName contextEntity) {
+        string meshInfoDir = "./LookingGlassResources/openmetaverse_data";
+        string meshInfoDefn = "avatar_lad.xml";
+        string meshDescriptionDir = "./LookingGlassResources/character";
+
+        Dictionary<string, OMVR.LindenMesh> meshTypes = new Dictionary<string, OMVR.LindenMesh>();
+
+        XmlDocument lad = new XmlDocument();
+        lad.Load(Path.Combine(meshInfoDir, meshInfoDefn));
+
+        XmlNodeList meshes = lad.GetElementsByTagName("mesh");
+        foreach (XmlNode meshNode in meshes) {
+            string type = meshNode.Attributes.GetNamedItem("type").Value;
+            int lod = Int32.Parse(meshNode.Attributes.GetNamedItem("lod").Value);
+            string fileName = meshNode.Attributes.GetNamedItem("file_name").Value;
+            //string minPixelWidth = meshNode.Attributes.GetNamedItem("min_pixel_width").Value;
+
+            if (lod == 0) {
+                // only collect the meshes with the highest resolution
+                try {
+                    fileName = Path.Combine(meshDescriptionDir, fileName);
+                    if (!meshTypes.ContainsKey(type)) {
+                        OMVR.LindenMesh lmesh = new OMVR.LindenMesh(type);
+                        lmesh.LoadMesh(fileName);
+                        meshTypes.Add(type, lmesh);
+                    }
+                }
+                catch (Exception e) {
+                    m_log.Log(LogLevel.DBADERROR, "Failure reading avatar defn file {0}: {1}", fileName, e);
+                }
+            }
+        }
+
+        // meshTypes now contains the pieces of the avatar.
+        // Assemble into one mesh for passing to lower system
+        // TODO: get and pass the skeleton information
+
+        const int faceCountsStride = 6;
+        const int verticesStride = 8;
+        const int indicesStride = 3;
+        const int vertexColorStride = 4;
+        // calculate how many floating point numbers we're pushing over
+        int[] faceCounts = new int[meshTypes.Count * faceCountsStride + 2];
+        faceCounts[0] = faceCounts.Length;
+        faceCounts[1] = meshTypes.Count;
+        int totalVertices = 0;
+
+        try {
+            int j = 0;
+            foreach (KeyValuePair<string, OMVR.LindenMesh> kvp in meshTypes) {
+                OMVR.LindenMesh lmesh = kvp.Value;
+                int faceBase = j * faceCountsStride + 2;
+                faceCounts[faceBase + 0] = totalVertices;
+                faceCounts[faceBase + 1] = lmesh.NumVertices;
+                faceCounts[faceBase + 2] = verticesStride;
+                totalVertices += vertexColorStride + lmesh.Vertices.Length * verticesStride;
+                faceCounts[faceBase + 3] = totalVertices;
+                faceCounts[faceBase + 4] = lmesh.NumFaces * 3;
+                faceCounts[faceBase + 5] = indicesStride;
+                totalVertices += lmesh.NumFaces * 3;
+                j++;
+            }
+
+            float[] faceVertices = new float[totalVertices + 2];
+            faceVertices[0] = faceVertices.Length;
+            int vertI = 1;
+            j = 0;
+            foreach (KeyValuePair<string, OMVR.LindenMesh> kvp in meshTypes) {
+                OMVR.LindenMesh lmesh = kvp.Value;
+                faceVertices[vertI + 0] = 1f;
+                faceVertices[vertI + 1] = 1f;
+                faceVertices[vertI + 2] = 1f;
+                faceVertices[vertI + 3] = 1f;
+                vertI += vertexColorStride;
+
+                for (int k = 0; k < lmesh.NumVertices; k++) {
+                    OMVR.LindenMesh.Vertex thisVert = lmesh.Vertices[k];
+                    // m_log.Log(LogLevel.DRENDERDETAIL, "CreateMesh: vertices: p={0}, t={1}, n={2}",
+                    //     thisVert.Position.ToString(), thisVert.TexCoord.ToString(), thisVert.Normal.ToString());
+                    faceVertices[vertI + 0] = thisVert.Coord.X;
+                    faceVertices[vertI + 1] = thisVert.Coord.Y;
+                    faceVertices[vertI + 2] = thisVert.Coord.Z;
+                    faceVertices[vertI + 3] = thisVert.TexCoord.X;
+                    faceVertices[vertI + 4] = thisVert.TexCoord.Y;
+                    faceVertices[vertI + 5] = thisVert.Normal.X;
+                    faceVertices[vertI + 6] = thisVert.Normal.Y;
+                    faceVertices[vertI + 7] = thisVert.Normal.Z;
+                    vertI += verticesStride;
+                }
+                for (int k = 0; k < lmesh.NumFaces; k++) {
+                    faceVertices[vertI + 0] = lmesh.Faces[k].Indices[0];
+                    faceVertices[vertI + 1] = lmesh.Faces[k].Indices[1];
+                    faceVertices[vertI + 2] = lmesh.Faces[k].Indices[2];
+                    vertI += indicesStride;
+                }
+            }
+            m_log.Log(LogLevel.DRENDERDETAIL, 
+                "RenderOgreLL.CreateAvatarMeshResource: {0}, fcs={1}, fs={2}, vi={3}",
+                ent.Name, faceCounts.Length, faceVertices.Length, vertI
+                );
+
+            // We were passed a 'context' entity. Create a scene node name to pass to
+            // Ogre. If the scene node is not found, nothing bad happens.
+            string contextSceneNode = EntityNameOgre.ConvertToOgreSceneNodeName(contextEntity);
+
+            // Now create the mesh
+            Ogr.CreateMeshResourceBF(priority, meshName, contextSceneNode, faceCounts, faceVertices);
+        }
+        catch (Exception e) {
+            m_log.Log(LogLevel.DBADERROR, "Failure building avatar mesh: {0}", e);
+        }
+
+        return true;
+    }
+
+    private OMVR.LindenMesh LoadAvatarMeshInfo() {
+        
+        return null;
     }
 
     // Examine the prim and see if it's a standard shape that we can pass to Ogre to implement

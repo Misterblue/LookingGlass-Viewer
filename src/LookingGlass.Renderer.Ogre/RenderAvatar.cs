@@ -44,6 +44,10 @@ class RenderAvatar : IRenderEntity {
     }
 
     public bool Create(ref RenderableInfo ri, ref bool m_hasMesh, float priority, int retries) {
+        // collect mesh info
+        // collect morph data
+        // Ogr.CreateAvatarBF()
+
         string entitySceneNodeName;
         string parentSceneNodeName;
         EntityName entMeshName;
@@ -51,7 +55,15 @@ class RenderAvatar : IRenderEntity {
         if (RendererOgre.GetSceneNodeName(m_ent) == null) {
             entitySceneNodeName = EntityNameOgre.ConvertToOgreSceneNodeName(m_ent.Name);
             parentSceneNodeName = EntityNameOgre.ConvertToOgreSceneNodeName(m_ent.RegionContext.Name);
-            entMeshName = EntityNameOgre.ConvertToOgreMeshName(new EntityName(m_defaultAvatarMesh));
+
+            IWorldRenderConv wrc;
+            if (m_ent.TryGet<IWorldRenderConv>(out wrc)) {
+                entMeshName = EntityNameOgre.ConvertToOgreMeshName(m_ent.Name);
+                wrc.CreateAvatarMeshResource(0f, m_ent, entMeshName.Name, m_ent.Name);
+            }
+            else {
+                entMeshName = EntityNameOgre.ConvertToOgreMeshName(new EntityName(m_defaultAvatarMesh));
+            }
 
             IEntityAvatar av;
             if (m_ent.TryGet<IEntityAvatar>(out av)) {
@@ -59,7 +71,8 @@ class RenderAvatar : IRenderEntity {
                 // and add the definition for the object on to the scene node
                 // This will cause the load function to be called and create all
                 //   the callbacks that will actually create the object
-                // m_log.Log(LogLevel.DRENDERDETAIL, "RenderAvatar.Create: mesh={0}, prio={1}", entMeshName.Name, priority);
+                m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RenderAvatar.Create: mesh={0}, prio={1}", 
+                            entMeshName.Name, priority);
                 if (!m_renderer.m_sceneMgr.CreateMeshSceneNodeBF(priority,
                                 entitySceneNodeName,
                                 parentSceneNodeName,

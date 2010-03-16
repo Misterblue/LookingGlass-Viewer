@@ -33,7 +33,7 @@ LGCamera::LGCamera(Ogre::String nam, Ogre::SceneManager* mgr) {
 	// Cam->setOrientation(Ogre::Quaternion(Ogre::Radian(1.5707963), Ogre::Vector3(1.0, 0.0, 0.0)));
 	// Cam->setOrientation(Ogre::Quaternion());
 	Cam->setNearClipDistance(2.0);
-	Cam->setFarClipDistance(10000.0);
+	Cam->setFarClipDistance(90000.0 * 6);
 	Cam->setAutoAspectRatio(true);
 	if (Cam == NULL) {
 		LG::Log("RendererOgre::createCamera: CAMERA FAILED TO CREATE");

@@ -65,6 +65,14 @@ public interface IWorldRenderConv {
     bool CreateMeshResource(float priority, IEntity ent, string meshName, EntityName contextEntityName);
 
     /// <summary>
+    /// Create a mesh for an avatar. This creates the mesh in the Ogre world of the passed name.
+    /// </summary>
+    /// <param name="priority"></param>
+    /// <param name="ent"></param>
+    /// <returns>false if we need to wait for resources before completing mesh creation</returns>
+    bool CreateAvatarMeshResource(float priority, IEntity ent, string meshName, EntityName contextEntityName);
+
+    /// <summary>
     /// If doing material creation post processing, this causes the mesh resource to
     /// be created from the passed, world specific entity information.
     /// </summary>

@@ -36,6 +36,10 @@ namespace LookingGlass.Renderer {
     /// 
     /// Anyone using the persistant store will reference multiple stores
     /// until the asset is found.
+    /// 
+    /// DEVELOPMENT NOTE: this is unfinished an not linked into any code.
+    /// The idea is to abstract the file storage cache system so it can
+    /// be replaced someday with a database.
     /// </summary>
     public interface IPersistantStore {
         // return 'true' if we have the entity and are returning a stream to its bits
