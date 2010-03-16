@@ -489,6 +489,9 @@ public class RendererOgreLL : IWorldRenderConv {
             string fileName = meshNode.Attributes.GetNamedItem("file_name").Value;
             //string minPixelWidth = meshNode.Attributes.GetNamedItem("min_pixel_width").Value;
 
+            // for the moment, ignore the skirt
+            if (type == "skirtMesh") continue;
+
             if (lod == 0) {
                 // only collect the meshes with the highest resolution
                 try {
@@ -506,6 +509,9 @@ public class RendererOgreLL : IWorldRenderConv {
         }
 
         // meshTypes now contains the pieces of the avatar.
+
+        // TODO: Create the materials for the body parts
+
         // Assemble into one mesh for passing to lower system
         // TODO: get and pass the skeleton information
 
@@ -541,10 +547,10 @@ public class RendererOgreLL : IWorldRenderConv {
             j = 0;
             foreach (KeyValuePair<string, OMVR.LindenMesh> kvp in meshTypes) {
                 OMVR.LindenMesh lmesh = kvp.Value;
-                faceVertices[vertI + 0] = 1f;
-                faceVertices[vertI + 1] = 1f;
-                faceVertices[vertI + 2] = 1f;
-                faceVertices[vertI + 3] = 1f;
+                faceVertices[vertI + 0] = 0.6f;
+                faceVertices[vertI + 1] = 0.6f;
+                faceVertices[vertI + 2] = 0.6f;
+                faceVertices[vertI + 3] = 0.8f;
                 vertI += vertexColorStride;
 
                 for (int k = 0; k < lmesh.NumVertices; k++) {
@@ -614,25 +620,15 @@ public class RendererOgreLL : IWorldRenderConv {
             throw e;
         }
 
-        // figure out what this entity is:
-        IEntityAvatar av = null;
-        if (llent.TryGet<IEntityAvatar>(out av)) {
-            // this is an avatar
-            // materials are done all differently
-        }
-        // else if (llent.TryGet<LLEntityAttachment>(out atch) {
-        // }
-        else {
-            if (prim == null) throw new LookingGlassException("ASSERT: RenderOgreLL: prim is null 2");
+        if (prim == null) throw new LookingGlassException("ASSERT: RenderOgreLL: prim is null 2");
 
-            int faceNum = EntityNameOgre.GetFaceFromOgreMaterialNameX(materialName);
-            if (faceNum < 0) {
-                // no face was found in the material name
-                m_log.Log(LogLevel.DRENDERDETAIL, "CreateMaterialResource: no face number for " + materialName);
-                return;
-            }
-            CreateMaterialResource2(priority, ent, prim, materialName, faceNum);
+        int faceNum = EntityNameOgre.GetFaceFromOgreMaterialNameX(materialName);
+        if (faceNum < 0) {
+            // no face was found in the material name
+            m_log.Log(LogLevel.DRENDERDETAIL, "CreateMaterialResource: no face number for " + materialName);
+            return;
         }
+        CreateMaterialResource2(priority, ent, prim, materialName, faceNum);
     }
 
     /// <summary>
@@ -654,9 +650,16 @@ public class RendererOgreLL : IWorldRenderConv {
         Ogr.CreateMaterialResource2BF(priority, materialName, textureOgreResourceName, textureParams);
     }
 
-    private void CreateMaterialParameters(IEntity ent, OMV.Primitive prim, int pBase, ref float[] textureParams, 
+    private void CreateMaterialParameters(IEntity ent, OMV.Primitive prim, int pBase, ref float[] textureParams,
                     int faceNum, out String texName) {
         OMV.Primitive.TextureEntryFace textureFace = prim.Textures.GetFace((uint)faceNum);
+        CreateMaterialParameters(textureFace, ent, prim, pBase, ref textureParams, faceNum, out texName);
+        return;
+    }
+
+    private void CreateMaterialParameters(OMV.Primitive.TextureEntryFace textureFace, 
+                    IEntity ent, OMV.Primitive prim, int pBase, ref float[] textureParams, 
+                    int faceNum, out String texName) {
         OMV.UUID textureID = OMV.Primitive.TextureEntry.WHITE_TEXTURE;
         if (textureFace != null) {
             textureParams[pBase + (int)Ogr.CreateMaterialParam.colorR] = textureFace.RGBA.R;
@@ -708,8 +711,6 @@ public class RendererOgreLL : IWorldRenderConv {
                 textureParams[pBase + (int)Ogr.CreateMaterialParam.textureHasTransparent] = textureFace.RGBA.A;
             }
             textureID = textureFace.TextureID;
-            // wish I could pass the texture animation information here but that's
-            //    in the texture entry and not in the face description
         }
         else {
             textureParams[pBase + (int)Ogr.CreateMaterialParam.colorR] = 0.4f;
@@ -776,7 +777,7 @@ public class RendererOgreLL : IWorldRenderConv {
     }
 
     /// <summary>
-    /// Create six of the basic materials for this prim. This is passed to Ogre in one big lump
+    /// Create seven of the basic materials for this prim. This is passed to Ogre in one big lump
     /// to make things go a lot quicker.
     /// </summary>
     /// <param name="ent"></param>
