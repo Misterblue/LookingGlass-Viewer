@@ -146,6 +146,14 @@ public abstract class EntityBase : IEntity {
     public T[] RequestModuleInterfaces<T>() {
         return new T[] { default(T) };
     }
+
+    public List<string> ModuleInterfaceTypeNames() {
+        List<string> ret = new List<string>();
+        foreach (Type k in m_moduleInterfaces.Keys) {
+            ret.Add(k.ToString());
+        }
+        return ret;
+    }
 #endregion IRegistryCore
 
     public virtual void Dispose() {

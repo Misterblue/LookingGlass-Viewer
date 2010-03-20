@@ -76,6 +76,7 @@ public enum UpdateCodes : uint {
     Focus =           1 << 24, 
     Light =           1 << 25, 
     Animation =       1 << 26, 
+    Appearance =      1 << 27, 
     New =             1 << 30,  // a new item
     FullUpdate =      0x0fffffff
 }

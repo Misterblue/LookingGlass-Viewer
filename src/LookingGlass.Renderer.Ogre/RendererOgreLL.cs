@@ -507,13 +507,18 @@ public class RendererOgreLL : IWorldRenderConv {
                 }
             }
         }
-
         // meshTypes now contains the pieces of the avatar.
 
         // TODO: Create the materials for the body parts
+        string[] meshOrder = {
+                    "headMesh", "upperBodyMesh", "lowerBodyMesh",
+                    "eyeBallLeftMesh", "hairMesh", "skirtMesh", 
+                    "eyelashMesh", "eyeBallRightMesh"
+        };
 
         // Assemble into one mesh for passing to lower system
         // TODO: get and pass the skeleton information
+        CreateAvatarTextures(ent, false);
 
         const int faceCountsStride = 6;
         const int verticesStride = 8;
@@ -526,10 +531,9 @@ public class RendererOgreLL : IWorldRenderConv {
         int totalVertices = 0;
 
         try {
-            int j = 0;
-            foreach (KeyValuePair<string, OMVR.LindenMesh> kvp in meshTypes) {
-                OMVR.LindenMesh lmesh = kvp.Value;
-                int faceBase = j * faceCountsStride + 2;
+            for (int jj=0; jj < 5; jj++) {
+                OMVR.LindenMesh lmesh = meshTypes[meshOrder[jj]];
+                int faceBase = jj * faceCountsStride + 2;
                 faceCounts[faceBase + 0] = totalVertices;
                 faceCounts[faceBase + 1] = lmesh.NumVertices;
                 faceCounts[faceBase + 2] = verticesStride;
@@ -538,19 +542,17 @@ public class RendererOgreLL : IWorldRenderConv {
                 faceCounts[faceBase + 4] = lmesh.NumFaces * 3;
                 faceCounts[faceBase + 5] = indicesStride;
                 totalVertices += lmesh.NumFaces * 3;
-                j++;
             }
 
             float[] faceVertices = new float[totalVertices + 2];
             faceVertices[0] = faceVertices.Length;
             int vertI = 1;
-            j = 0;
             foreach (KeyValuePair<string, OMVR.LindenMesh> kvp in meshTypes) {
                 OMVR.LindenMesh lmesh = kvp.Value;
                 faceVertices[vertI + 0] = 0.6f;
                 faceVertices[vertI + 1] = 0.6f;
                 faceVertices[vertI + 2] = 0.6f;
-                faceVertices[vertI + 3] = 0.8f;
+                faceVertices[vertI + 3] = 0.5f;
                 vertI += vertexColorStride;
 
                 for (int k = 0; k < lmesh.NumVertices; k++) {
@@ -593,9 +595,68 @@ public class RendererOgreLL : IWorldRenderConv {
         return true;
     }
 
-    private OMVR.LindenMesh LoadAvatarMeshInfo() {
-        
-        return null;
+    /// <summary>
+    /// Create the textures for the avatar.
+    /// </summary>
+    /// <param name="ent">The entity of the avatar being decorated</param>
+    /// <param name="forceUpdateFlag">'true' if to force a redraw. If doing the initial
+    /// creation, a redraw update is not necessary.</param>
+    public void CreateAvatarTextures(IEntity ent, bool forceUpdateFlag) {
+        IEntityAvatar ientav;
+        LLEntityAvatar entav;
+        if (ent.TryGet<IEntityAvatar>(out ientav)) {
+            if (ientav is LLEntityAvatar) {
+                entav = (LLEntityAvatar)ientav;
+                OMV.Avatar av = entav.Avatar;
+                if (av != null && av.Textures != null) {
+                    OMV.Primitive.TextureEntry texEnt = av.Textures;
+                    OMV.Primitive.TextureEntryFace[] texFaces = texEnt.FaceTextures;
+
+                    const int genCount = 7;
+                    float[] textureParams = new float[1 + ((int)Ogr.CreateMaterialParam.maxParam) * genCount];
+                    string[] materialNames = new string[genCount];
+                    string[] textureOgreNames = new string[genCount];
+                    textureParams[0] = (float)Ogr.CreateMaterialParam.maxParam;
+
+                    int[] texIndexes = {
+                        (int)OMV.AvatarTextureIndex.HeadBaked,
+                        (int)OMV.AvatarTextureIndex.UpperBaked,
+                        (int)OMV.AvatarTextureIndex.LowerBaked,
+                        (int)OMV.AvatarTextureIndex.EyesBaked,
+                        (int)OMV.AvatarTextureIndex.HairBaked,
+                        // (int)OMV.AvatarTextureIndex.SkirtBaked
+                    };
+
+                    int pBase = 1;
+                    int jj = 0;
+                    string textureOgreName;
+                    foreach (int baker in texIndexes) {
+                        CreateMaterialParameters(texFaces[baker],
+                            ent, null, pBase, ref textureParams, jj, out textureOgreName);
+                        materialNames[jj] = EntityNameOgre.ConvertToOgreMaterialNameX(ent.Name, jj);
+                        textureOgreNames[jj] = textureOgreName;
+                        pBase += (int)textureParams[0];
+                        jj++;
+                    }
+
+                    m_log.Log(LogLevel.DRENDERDETAIL, "CreateAvatarTextures: materials for {0}", ent.Name);
+                    Ogr.CreateMaterialResource7BF(0f, materialNames[0],
+                        materialNames[0], materialNames[1], materialNames[2], materialNames[3], 
+                        materialNames[4], materialNames[5], materialNames[6],
+                        textureOgreNames[0], textureOgreNames[1], textureOgreNames[2], textureOgreNames[3], 
+                        textureOgreNames[4], textureOgreNames[5], textureOgreNames[6],
+                        textureParams
+                    );
+                }
+            }
+        }
+        else {
+            string modNames = "";
+            foreach (string mod in ent.ModuleInterfaceTypeNames()) modNames += " " + mod;
+            m_log.Log(LogLevel.DBADERROR, "CreateAvatarTexture: REQUEST FOR TEXTURES FOR NON LL ENTITY. Mod={0}", modNames);
+
+        }
+        return;
     }
 
     // Examine the prim and see if it's a standard shape that we can pass to Ogre to implement
@@ -688,7 +749,7 @@ public class RendererOgreLL : IWorldRenderConv {
             textureParams[pBase + (int)Ogr.CreateMaterialParam.mediaFlags] = textureFace.MediaFlags ? 1f : 0f;
 
             textureParams[pBase + (int)Ogr.CreateMaterialParam.animationFlag] = 0f;
-            if ((prim.TextureAnim.Face == faceNum || (int)prim.TextureAnim.Face == -1)
+            if (prim != null && (prim.TextureAnim.Face == faceNum || (int)prim.TextureAnim.Face == -1)
                         && ((prim.TextureAnim.Flags & OpenMetaverse.Primitive.TextureAnimMode.ANIM_ON) != 0)) {
                 m_log.Log(LogLevel.DRENDERDETAIL, "Adding animation for material texture");
                 textureParams[pBase + (int)Ogr.CreateMaterialParam.animationFlag] = (float)prim.TextureAnim.Flags;

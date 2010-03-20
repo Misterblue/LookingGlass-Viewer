@@ -36,5 +36,6 @@ namespace LookingGlass.Framework {
 
         void StackModuleInterface<M>(M mod);
         T[] RequestModuleInterfaces<T>();
+        List<string> ModuleInterfaceTypeNames();
     }
 }

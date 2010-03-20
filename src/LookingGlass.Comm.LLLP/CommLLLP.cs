@@ -596,16 +596,6 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
     public bool AfterAllModulesLoaded() {
         // make my connections for the communication events
         OMV.GridClient gc = m_client;
-        // gc.Network.OnSimConnected += new OMV.NetworkManager.SimConnectedCallback(Network_OnSimConnected);
-        // gc.Network.OnCurrentSimChanged += new OMV.NetworkManager.CurrentSimChangedCallback(Network_OnCurrentSimChanged);
-        // gc.Objects.OnNewPrim += new OMV.ObjectManager.NewPrimCallback(Objects_OnNewPrim);
-        // gc.Objects.OnNewAttachment += new OMV.ObjectManager.NewAttachmentCallback(Objects_OnNewAttachment);
-        // gc.Objects.OnObjectUpdated += new OMV.ObjectManager.ObjectUpdatedCallback(Objects_OnObjectUpdated);
-        // NewAttachmentCallback
-        // gc.Objects.OnNewAvatar += new OMV.ObjectManager.NewAvatarCallback(Objects_OnNewAvatar);
-        // AvatarSitChangedCallback
-        // ObjectPropertiesCallback
-        // gc.Objects.OnObjectKilled += new OMV.ObjectManager.KillObjectCallback(Objects_OnObjectKilled);
 
         gc.Objects.ObjectPropertiesUpdated += Objects_ObjectPropertiesUpdated;
         gc.Objects.ObjectUpdate += Objects_ObjectUpdate;
@@ -613,9 +603,11 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         gc.Objects.TerseObjectUpdate += Objects_TerseObjectUpdate;
         gc.Objects.AvatarUpdate += Objects_AvatarUpdate;
         gc.Objects.KillObject += Objects_KillObject;
+        gc.Avatars.AvatarAppearance += Avatars_AvatarAppearance;
         gc.Settings.STORE_LAND_PATCHES = true;
         gc.Terrain.OnLandPatch += new OMV.TerrainManager.LandPatchCallback(Terrain_OnLandPatch);
 
+        #region COMM REST STATS
         m_commStatistics.Add("WaitingTilOnline", 
             delegate(string xx) { return new OMVSD.OSDString(m_waitTilOnline.Count.ToString()); },
             "Number of event waiting until sim is online");
@@ -657,6 +649,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
             "Number of 'terse object update' messages");
 
         m_commStatsHandler = new RestHandler("/stats/" + m_moduleName + "/stats", m_commStatistics);
+        #endregion COMM REST STATS
 
         return true;
     }
@@ -1001,6 +994,27 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
     }
 
     // ===============================================================
+    public virtual void Avatars_AvatarAppearance(Object sender, OMV.AvatarAppearanceEventArgs args) {
+        LLRegionContext rcontext = FindRegion(args.Simulator);
+        if (rcontext == null) return;
+        if (rcontext.State.IfNotOnline(delegate() {
+                QueueTilOnline(rcontext, CommActionCode.KillObject, sender, args);
+            }) ) return;
+        m_log.Log(LogLevel.DCOMMDETAIL, "AvatarAppearance: id={0}", args.AvatarID.ToString());
+        // the appearance information is stored in the avatar info in libomv
+        // We just kick the system to look at it
+        lock (m_opLock) {
+            EntityName avatarEntityName = LLEntityAvatar.AvatarEntityNameFromID(rcontext.AssetContext, args.AvatarID);
+            IEntityCollection coll;
+            rcontext.TryGet<IEntityCollection>(out coll);
+            IEntity ent;
+            if (coll.TryGetEntity(avatarEntityName, out ent)) {
+                ent.Update(UpdateCodes.Appearance);
+            }
+        }
+        return;
+    }
+    // ===============================================================
     /// <summary>
     /// Called when we just log in. We create our agent and put it into the world
     /// </summary>
@@ -1100,7 +1114,8 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         TerseObjectUpdate,
         OnAttachmentUpdate,
         KillObject,
-        OnAvatarUpdate
+        OnAvatarUpdate,
+        OnAvatarAppearance
     }
 
     struct ParamBlock {
@@ -1185,6 +1200,10 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
             case CommActionCode.OnAvatarUpdate:
                 m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: AvatarUpdate");
                 Objects_AvatarUpdate(p1, (OMV.AvatarUpdateEventArgs)p2);
+                break;
+            case CommActionCode.OnAvatarAppearance:
+                m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: AvatarAppearance");
+                Avatars_AvatarAppearance(p1, (OMV.AvatarAppearanceEventArgs)p2);
                 break;
             default:
                 break;
