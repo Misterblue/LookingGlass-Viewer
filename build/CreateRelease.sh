@@ -63,7 +63,7 @@ EOLIST
 
 mkdir -p "$TEMPDIR"
 
-rsync -r --exclude Shadow0[345] --exclude .svn --exclude openmetaverse_data ../bin/LookingGlassResources "$TEMPDIR"
+rsync -r --exclude Shadow0[345] --exclude .svn ../bin/LookingGlassResources "$TEMPDIR"
 rsync -r --exclude .svn ../bin/LookingGlassUI "$TEMPDIR"
 cat "$FILELIST" | while read filename ; do
     cp "../bin/$filename" "$TEMPDIR"
