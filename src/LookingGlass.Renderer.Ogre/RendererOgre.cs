@@ -614,7 +614,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         IEntity m_ent = (IEntity)loadParams[0];
         RenderableInfo m_ri = (RenderableInfo)loadParams[1];
         bool m_hasMesh = (bool)loadParams[2];
-        m_log.Log(LogLevel.DRENDERDETAIL, "DoRenderLater: ent={0}", m_ent.Name);
+        // m_log.Log(LogLevel.DRENDERDETAIL, "DoRenderLater: ent={0}", m_ent.Name);
 
         IRenderEntity rEntity;
         if (m_ent.TryGet<IRenderEntity>(out rEntity)) {
@@ -911,7 +911,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         return true;
     }
 
-    // ==========================================================================
+    
     /// <summary>
     /// Textures work by the renderer finding it doesn't have the texture. It 
     /// uses a default  texture but then tells us to get the real one. We request

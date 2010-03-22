@@ -869,7 +869,7 @@ bool XXCompareElements(const GenericQc* e1, const GenericQc* e2) {
 	return (e1->priority < e2->priority);
 }
 
-int repriorityCount = 10;
+int repriorityCount = 40;
 Ogre::Timer* betweenFrameTimeKeeper = new Ogre::Timer();
 void ProcessBetweenFrame::ProcessWorkItems(int millisToProcess) {
 	unsigned long startTime = betweenFrameTimeKeeper->getMilliseconds();
@@ -880,7 +880,7 @@ void ProcessBetweenFrame::ProcessWorkItems(int millisToProcess) {
 		LGLOCK_LOCK(m_workItemMutex);
 		if (--repriorityCount < 0) {
 			// periodically ask the items to recalc their priority
-			repriorityCount = 10;
+			repriorityCount = 40;
 			/*
 			std::list<GenericQc*>::iterator li;
 			for (li = m_betweenFrameWork.begin(); li != m_betweenFrameWork.end(); li++) {

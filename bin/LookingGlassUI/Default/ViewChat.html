@@ -20,6 +20,8 @@ $(document).ready(function() {
     $("#LGShoutButton").click(SendChatShout);
 
     // Start the timed functions
+    var now = new Date();
+    Math.random(now.getSeconds()*now.getMilliseconds());
     chatTimerProcessing = false;
     chatTimerHandle = setInterval('TimerChatStuff()', 1500);
 });

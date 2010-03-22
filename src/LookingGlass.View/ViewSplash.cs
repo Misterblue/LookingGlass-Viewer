@@ -24,6 +24,7 @@ namespace LookingGlass.View {
             ContentLines[line++] = "";
             ContentLines[line++] = "Copyright (c) 2008 Robert Adams (LookingGlass)";
             ContentLines[line++] = "Copyright (c) 2000-2006 Torus Knot Software Ltd (Ogre)";
+            ContentLines[line++] = "Copyright (c) 2001 Peter Dimov and Multi Media Ltd. (Boost)";
             ContentLines[line++] = "Copyright (c) OpenSimulator Contributors http://opensimulator.org/ (OpenSimulator)";
             ContentLines[line++] = "Copyright (c) 2007-2009, openmetaverse.org (OpenMetaverse)";
             ContentLines[line++] = "Copyright (c) Contributors, http://idealistviewer.org/ (Idealist)";
@@ -31,8 +32,6 @@ namespace LookingGlass.View {
             ContentLines[line++] = "Copyright (c) 2009 John Resig (jQuery)";
             ContentLines[line++] = "Copyright (c) 2009, Gareth Watts (SparkLines)";
             ContentLines[line++] = "Copyright (c) 2004-2008 Matthew Holmes, Dan Moorehead, Rob Loach, C.J. Adams-Collier (Prebuild v2.0.4)";
-            ContentLines[line++] = "Copyright (c) 2001 Peter Dimov and Multi Media Ltd. (Boost)";
-            ContentLines[line++] = "Copyright (C) 2008 John Hurliman (Avatar code)";
             ContentLines[line++] = "Copyright (C) 2008 Linden Research, Inc. (Avatar mesh/artwork)";
             Array.Resize(ref ContentLines, line);
             this.WindowSplash.Lines = ContentLines;

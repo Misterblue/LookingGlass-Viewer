@@ -531,24 +531,26 @@ public class RendererOgreLL : IWorldRenderConv {
         int totalVertices = 0;
 
         try {
-            for (int jj=0; jj < 5; jj++) {
+            for (int jj=0; jj < meshTypes.Count; jj++) {
+                if (!meshTypes.ContainsKey(meshOrder[jj])) continue;
                 OMVR.LindenMesh lmesh = meshTypes[meshOrder[jj]];
                 int faceBase = jj * faceCountsStride + 2;
                 faceCounts[faceBase + 0] = totalVertices;
                 faceCounts[faceBase + 1] = lmesh.NumVertices;
                 faceCounts[faceBase + 2] = verticesStride;
-                totalVertices += vertexColorStride + lmesh.Vertices.Length * verticesStride;
+                totalVertices += vertexColorStride + lmesh.NumVertices * verticesStride;
                 faceCounts[faceBase + 3] = totalVertices;
-                faceCounts[faceBase + 4] = lmesh.NumFaces * 3;
+                faceCounts[faceBase + 4] = lmesh.NumFaces * indicesStride;
                 faceCounts[faceBase + 5] = indicesStride;
-                totalVertices += lmesh.NumFaces * 3;
+                totalVertices += lmesh.NumFaces * indicesStride;
             }
 
             float[] faceVertices = new float[totalVertices + 2];
             faceVertices[0] = faceVertices.Length;
             int vertI = 1;
-            foreach (KeyValuePair<string, OMVR.LindenMesh> kvp in meshTypes) {
-                OMVR.LindenMesh lmesh = kvp.Value;
+            for (int jj=0; jj < meshTypes.Count; jj++) {
+                if (!meshTypes.ContainsKey(meshOrder[jj])) continue;
+                OMVR.LindenMesh lmesh = meshTypes[meshOrder[jj]];
                 faceVertices[vertI + 0] = 0.6f;
                 faceVertices[vertI + 1] = 0.6f;
                 faceVertices[vertI + 2] = 0.6f;
@@ -635,6 +637,8 @@ public class RendererOgreLL : IWorldRenderConv {
                             ent, null, pBase, ref textureParams, jj, out textureOgreName);
                         materialNames[jj] = EntityNameOgre.ConvertToOgreMaterialNameX(ent.Name, jj);
                         textureOgreNames[jj] = textureOgreName;
+                        m_log.Log(LogLevel.DRENDERDETAIL, "CreateAvatarTextures: mat={0}, tex={1}", 
+                                    materialNames[jj], textureOgreName);
                         pBase += (int)textureParams[0];
                         jj++;
                     }
@@ -814,15 +818,8 @@ public class RendererOgreLL : IWorldRenderConv {
             throw e;
         }
 
-        IEntityAvatar av = null;
-        if (llent.TryGet<IEntityAvatar>(out av)) {
-            // this is an avatar and the material mapping is really different
-        }
-        else {
-            // a standard prim, for the rebulding of it's materials
-            if (prim == null) throw new LookingGlassException("ASSERT: RenderOgreLL: prim is null 3");
-            CreateMaterialResource7X(priority, llent, prim, 6);
-        }
+        if (prim == null) throw new LookingGlassException("ASSERT: RenderOgreLL: prim is null 3");
+        CreateMaterialResource7X(priority, llent, prim, 6);
     }
 
     /// <summary>

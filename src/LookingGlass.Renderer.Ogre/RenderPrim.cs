@@ -64,8 +64,8 @@ class RenderPrim : IRenderEntity {
                             if (ri == null) {
                                 // The rendering info couldn't be built now. This is usually because
                                 // the parent of this object is not available so we don't know where to put it
-                                m_renderer.m_log.Log(LogLevel.DRENDERDETAIL,
-                                    "Delaying rendering. RenderingInfo not built for {0}", m_ent.Name.Name);
+                                // m_renderer.m_log.Log(LogLevel.DRENDERDETAIL,
+                                //     "Delaying rendering. RenderingInfo not built for {0}", m_ent.Name.Name);
                                 return false;
                             }
                         }
@@ -172,8 +172,8 @@ class RenderPrim : IRenderEntity {
                     if (ri == null) {
                         // The rendering info couldn't be built now. This is usually because
                         // the parent of this object is not available so we don't know where to put it
-                        m_renderer.m_log.Log(LogLevel.DRENDERDETAIL,
-                            "Delaying rendering with scene node RenderingInfo not built for {0}", m_ent.Name.Name);
+                        // m_renderer.m_log.Log(LogLevel.DRENDERDETAIL,
+                        //     "Delaying rendering with scene node RenderingInfo not built for {0}", m_ent.Name.Name);
                         return false;
                     }
                 }

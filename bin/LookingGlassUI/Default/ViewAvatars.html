@@ -28,6 +28,8 @@ $(document).ready(function() {
     });
 
     // Start the timed functions
+    var now = new Date();
+    Math.random(now.getSeconds()*now.getMilliseconds());
     TimerLoginStuff(true);
     loginTimerHandle = setInterval('TimerLoginStuff(false)', 3000);
     avatarTimerHandle = setInterval('TimerAvatarStuff()', 3000);
