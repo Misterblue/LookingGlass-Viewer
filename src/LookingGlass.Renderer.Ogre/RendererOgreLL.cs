@@ -128,124 +128,65 @@ public class RendererOgreLL : IWorldRenderConv {
         }
 
         RenderableInfo ri = new RenderableInfo();
-        // figure out what this entity is:
-        /*
-        IEntityAvatar av = null;
-        LLAttachment atch = null;
-        if (ent.TryGet<IEntityAvatar>(out av)) {
-            // this is an avatar
-            ri.basicObject = EntityNameOgre.ConvertToOgreMeshName(new EntityName(m_defaultAvatarMesh));
-            ri.parentEntity = null;
-            ri.rotation = av.Heading;
-            ri.rotation.Normalize();
-            ri.position = av.RelativePosition;
-            ri.shapeHash = RenderableInfo.NO_HASH_SHARE;   // a number which says to not share meshes
-            ri.scale = new OMV.Vector3(m_sceneMagnification, m_sceneMagnification, m_sceneMagnification);
-            m_log.Log(LogLevel.DRENDERDETAIL, "RenderingInfo: assigning mesh to avatar: {0}", m_defaultAvatarMesh);
+        if (prim == null) 
+            throw new LookingGlassException("ASSERT: RenderOgreLL: prim is null");
+
+        EntityName newMeshName = EntityNameOgre.ConvertToOgreMeshName(ent.Name);
+        ri.basicObject = newMeshName;   // pass the name of the mesh that should be created
+
+        // if a standard type (done by Ogre), let the rendering system do the scaling
+        int meshType = 0;
+        int meshFaces = 0;
+        if (CheckStandardMeshType(prim, out meshType, out meshFaces)) {
+            // if a standard mesh type, use Ogre scaling so we can reuse base shapes
+            shouldHaveRendererScale = true;
         }
-        else if (llent.TryGet<LLAttachment>(out atch)) {
-            // attachments have a special position on the skeleton of the avatar
-            EntityName newMeshName = EntityNameOgre.ConvertToOgreMeshName(ent.Name);
-            ri.basicObject = newMeshName;   // pass the name of the mesh that should be created
-            CalcAttachmentPoint(atch, out ri.position, out ri.rotation);
-            // until CalaAttachementPoint works, go with what the prim says for rotation and position
-            ri.rotation = prim.Rotation;
-            ri.position = prim.Position;
-            ri.scale = new OMV.Vector3(m_sceneMagnification, m_sceneMagnification, m_sceneMagnification);
-            ri.shapeHash = GetMeshKey(prim, prim.Scale, 0);
-            // if the prim has a parent, we must hang this scene node off the parent's scene node
-            if (prim.ParentID != 0) {
-                if (ent.ContainingEntity == null) {
-                    // NOTE: in theory, the parent container has been resolved before we get here
-                    // but it is a legacy feature that the comm system does not hold entities
-                    // that don't have their parent so it's possible to get here and find the
-                    // parent entity does not exist. If this is the case, we return 'null' saying
-                    // we cannot yet build this entity.
-                    IEntity parentEntity = null;
-                    rcontext.TryGetEntityLocalID(prim.ParentID, out parentEntity);
-                    if (parentEntity != null) {
-                        ent.ContainingEntity = parentEntity;
-                        parentEntity.AddEntityToContainer(ent);
-                    }
-                    else {
-                        // we can't find the parent. Can't build render info.
-                        // if we've been waiting for that parent, ask for same
-                        if ((callCount != 0) && ((callCount % 3) == 0)) {
-                            rcontext.RequestLocalID(prim.ParentID);
-                        }
-                        return null;
-                    }
+
+        // if the prim has a parent, we must hang this scene node off the parent's scene node
+        if (prim.ParentID != 0) {
+            if (ent.ContainingEntity == null) {
+                // NOTE: in theory, the parent container has been resolved before we get here
+                // but it is a legacy feature that the comm system does not hold entities
+                // that don't have their parent so it's possible to get here and find the
+                // parent entity does not exist. If this is the case, we return 'null' saying
+                // we cannot yet build this entity.
+                IEntity parentEntity = null;
+                rcontext.TryGetEntityLocalID(prim.ParentID, out parentEntity);
+                if (parentEntity != null) {
+                    ent.ContainingEntity = parentEntity;
+                    parentEntity.AddEntityToContainer(ent);
                 }
-                ri.parentEntity = ent.ContainingEntity;
+                else {
+                    // we can't find the parent. Can't build render info.
+                    // if we've been waiting for that parent, ask for same
+                    if ((callCount != 0) && ((callCount % 3) == 0)) {
+                        rcontext.RequestLocalID(prim.ParentID);
+                    }
+                    return null;
+                }
             }
-            // while we're in the neighborhood, we can create the materials
-            if (m_buildMaterialsAtRenderInfoTime) {
-                CreateMaterialResource7X(priority, ent, prim, 7);
-            }
-            m_log.Log(LogLevel.DRENDERDETAIL, "RenderingInfo: assigning attachment to avatar: {0}", m_defaultAvatarMesh);
+            ri.parentEntity = ent.ContainingEntity;
         }
-        else */ {
-            // must be a regular prim
-            if (prim == null) 
-                throw new LookingGlassException("ASSERT: RenderOgreLL: prim is null");
+        
+        ri.rotation = prim.Rotation;
+        ri.position = prim.Position;
 
-            EntityName newMeshName = EntityNameOgre.ConvertToOgreMeshName(ent.Name);
-            ri.basicObject = newMeshName;   // pass the name of the mesh that should be created
+        // If the mesh was scaled just pass the renderer a scale of one
+        // otherwise, if the mesh was not scaled, have the renderer do the scaling
+        // This specifies what we want the renderer to do
+        if (shouldHaveRendererScale) {
+            ri.scale = prim.Scale * m_sceneMagnification;
+        }
+        else {
+            ri.scale = new OMV.Vector3(m_sceneMagnification, m_sceneMagnification, m_sceneMagnification);
+        }
 
-            // if a standard type (done by Ogre), let the rendering system do the scaling
-            int meshType = 0;
-            int meshFaces = 0;
-            if (CheckStandardMeshType(prim, out meshType, out meshFaces)) {
-                // if a standard mesh type, use Ogre scaling so we can reuse base shapes
-                shouldHaveRendererScale = true;
-            }
+        // Compute a unique hash code for this shape.
+        ri.shapeHash = GetMeshKey(prim, prim.Scale, 0);
 
-            // if the prim has a parent, we must hang this scene node off the parent's scene node
-            if (prim.ParentID != 0) {
-                if (ent.ContainingEntity == null) {
-                    // NOTE: in theory, the parent container has been resolved before we get here
-                    // but it is a legacy feature that the comm system does not hold entities
-                    // that don't have their parent so it's possible to get here and find the
-                    // parent entity does not exist. If this is the case, we return 'null' saying
-                    // we cannot yet build this entity.
-                    IEntity parentEntity = null;
-                    rcontext.TryGetEntityLocalID(prim.ParentID, out parentEntity);
-                    if (parentEntity != null) {
-                        ent.ContainingEntity = parentEntity;
-                        parentEntity.AddEntityToContainer(ent);
-                    }
-                    else {
-                        // we can't find the parent. Can't build render info.
-                        // if we've been waiting for that parent, ask for same
-                        if ((callCount != 0) && ((callCount % 3) == 0)) {
-                            rcontext.RequestLocalID(prim.ParentID);
-                        }
-                        return null;
-                    }
-                }
-                ri.parentEntity = ent.ContainingEntity;
-            }
-            
-            ri.rotation = prim.Rotation;
-            ri.position = prim.Position;
-
-            // If the mesh was scaled just pass the renderer a scale of one
-            // otherwise, if the mesh was not scaled, have the renderer do the scaling
-            // This specifies what we want the renderer to do
-            if (shouldHaveRendererScale) {
-                ri.scale = prim.Scale * m_sceneMagnification;
-            }
-            else {
-                ri.scale = new OMV.Vector3(m_sceneMagnification, m_sceneMagnification, m_sceneMagnification);
-            }
-
-            // Compute a unique hash code for this shape.
-            ri.shapeHash = GetMeshKey(prim, prim.Scale, 0);
-
-            // while we're in the neighborhood, we can create the materials
-            if (m_buildMaterialsAtRenderInfoTime) {
-                CreateMaterialResource7X(priority, ent, prim, 7);
-            }
+        // while we're in the neighborhood, we can create the materials
+        if (m_buildMaterialsAtRenderInfoTime) {
+            CreateMaterialResource7X(priority, ent, prim, 7);
         }
         return ri;
     }

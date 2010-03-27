@@ -113,7 +113,9 @@ function TimerAvatarStuff() {
     $.getJSON(BASEURL+'/api/avatars?yy=' + Math.floor(Math.random()*999999),
                 function(data, status) {
         if (status == 'success') {
-            BuildBasicTable('#LGAvatars', data, false, true);
+            // BuildBasicTable('#LGAvatars', data, false, true);
+            BuildColumnTable('#LGAvatars', data, false, true, false,
+                ["Name", "Region", "X", "Y", "Z", "Distance"]);
         }
     });
     avatarTimerProcessing = false;

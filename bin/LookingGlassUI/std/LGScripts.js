@@ -28,22 +28,23 @@
 // ... 
 // |/table|
 //
-// Function takes two additional arguements:
+// Function takes three additional arguments:
 //     addRowName: add a header row of the column names (default=true)
 //     addDisplayCol: add a last column named display (default=false)
-function BuildTableForData(sectID, tableID, data) {
-    var addRowName = true;
-    var addDisplayCol = false;
-    if (arguments.length > 3) addRowName = arguments[3];
-    if (arguments.length > 4) addDisplayCol = arguments[4];
-    // build an array of all the column names
-    var columns = new Array();
-    for (row in data) {
-        for (col in data[row]) {
-            if (columns[col] == undefined) {
-                columns[col] = col;
+//     columns: an array of column names to display. If empty, build
+//       the column names from the data
+function BuildTableForData(sectID, tableID, data, addRowName, addDisplayCol, columns) {
+    var L = 0;
+    for (var K in columns) { L++; }
+    if (L == 0) {
+        // build an array of all the column names
+        for (row in data) {
+            for (col in data[row]) {
+                if (columns[col] == undefined) {
+                    columns[col] = col;
+                }
+                
             }
-            
         }
     }
     if (addDisplayCol) {
@@ -91,25 +92,40 @@ function BuildBasicTable(sect, data /*, addRowName, rebuild, addDisplayCol*/) {
     if (arguments.length > 2) addRowName = arguments[2];
     if (arguments.length > 3) rebuild = arguments[3];
     if (arguments.length > 4) addDisplayCol = arguments[4];
+    var specifyColumns = new Array();
+    if (arguments.length > 5) specifyColumns = arguments[5];
     if ($('#' + tableID).length == 0 || rebuild) {
         // table does not exist. Build same
         $(sect).empty();
-        $(sect).append(BuildTableForData(sectID, tableID, data, addRowName, addDisplayCol));
+        $(sect).append(BuildTableForData(sectID, tableID, data, addRowName, addDisplayCol, specifyColumns));
     }
     // Fill its cells with the text data
     for (row in data) {
         $('#' + MakeID(sectID + '-rowName-' + row)).text(row);
         for (col in data[row]) {
             var cellID = MakeID(sectID + '-' + row + '-' + col);
-            $('#' + cellID).text(data[row][col]);
+            if ($('#' + cellID).length != 0) {
+                $('#' + cellID).text(data[row][col]);
+            }
         }
     }
+}
+// ===========================================
+// do a table and specify which columns to display
+// Note that column names are passed in as a list.
+function BuildColumnTable(sect, data, addRow, rebuild, addDisp, columns) {
+    var colSpec = new Array();
+    for (col in columns) {
+        colSpec[columns[col]] = columns[col];
+    }
+    BuildBasicTable(sect, data, addRow, rebuild, addDisp, colSpec);
 }
 
 // clean up ID so there are no dots
 function MakeID(inID) {
     return inID.replace(/\./g, '-');
 }
+// Appendable string
 function StringBuffer() {
     this.__strings__ = new Array;
 }

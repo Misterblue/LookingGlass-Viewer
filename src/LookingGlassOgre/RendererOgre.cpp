@@ -208,7 +208,7 @@ namespace LG {
 	}
 
 	// called at the beginning of the frame so we can slrp the camera
-#define SECONDS_TO_SLERP 0.2f
+#define SECONDS_TO_SLERP 0.5f
 	void RendererOgre::AdvanceCamera(const Ogre::FrameEvent& evt) {
 		// Say time since last frame is .1s. That's 1/10 sec and if we're trying to
 		//   to the smooth turn in 1/2 sec, this is 1/5 of our way there.

@@ -438,6 +438,7 @@
       <Reference name="LookingGlass.Framework"/>
       <Reference name="LookingGlass.Rest"/>
       <Reference name="LookingGlass.World"/>
+      <Reference name="LookingGlass.World.LL"/>
       <Reference name="OpenMetaverse.dll"/>
       <Reference name="OpenMetaverseTypes.dll"/>
       <Reference name="OpenMetaverse.StructuredData.dll"/>
