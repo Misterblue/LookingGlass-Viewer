@@ -130,9 +130,10 @@ public class RestHandler : IDisposable {
         }
     }
 
-    public void GetPostAsync(string afterString) {
+    public virtual void GetPostAsync(string afterString) {
         if (m_request.HttpMethod.ToUpper().Equals("GET")) {
             if (m_processGet == null && m_dir != null) {
+                // no processor but we have a dir. Return the file in that dir.
                 string filename = m_dir + "/" + afterString;
                 if (File.Exists(filename)) {
                     // m_log.Log(LogLevel.DRESTDETAIL, "GET: file: {0}", afterString);

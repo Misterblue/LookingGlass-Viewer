@@ -1,7 +1,7 @@
 #! /bin/bash
 SRCDIR=/cygdrive/c/dev/lookingglass/trunk/bin
-DSTDIR=/cygdrive/c/dev/radegast/bin
-#DSTDIR="/cygdrive/c/Program Files/Radegast"
+#DSTDIR=/cygdrive/c/dev/radegast/bin
+DSTDIR="/cygdrive/c/Program Files/Radegast"
 RADSRCDIR=/cygdrive/c/dev/lookingglass
 
 copyLookingGlassSrc=no

@@ -59,7 +59,10 @@ class RenderAvatar : IRenderEntity {
             IWorldRenderConv wrc;
             if (m_ent.TryGet<IWorldRenderConv>(out wrc)) {
                 entMeshName = EntityNameOgre.ConvertToOgreMeshName(m_ent.Name);
-                wrc.CreateAvatarMeshResource(0f, m_ent, entMeshName.Name, m_ent.Name);
+                if (!wrc.CreateAvatarMeshResource(0f, m_ent, entMeshName.Name, m_ent.Name)) {
+                    // something about this avatar can't be created yet. Try again later.
+                    return false;
+                }
             }
             else {
                 entMeshName = EntityNameOgre.ConvertToOgreMeshName(new EntityName(m_defaultAvatarMesh));

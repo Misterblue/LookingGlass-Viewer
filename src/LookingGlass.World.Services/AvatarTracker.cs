@@ -46,7 +46,6 @@ public class AvatarTracker : IAvatarTrackerService, IModule {
 
     public IAppParameters ModuleParams { get { return m_lgb.AppParams; } }
 
-    protected RestManager m_restManager;
     protected World m_world;
     protected RestHandler m_restHandler;
 
@@ -76,9 +75,6 @@ public class AvatarTracker : IAvatarTrackerService, IModule {
     // IModule.AfterAllModulesLoaded
     public virtual bool AfterAllModulesLoaded() {
         LogManager.Log.Log(LogLevel.DINIT, "AvatarTracker.AfterAllModulesLoaded()");
-        // Find the rest manager and setup to get web requests
-        String restManagerName = ModuleParams.ParamString(m_moduleName + ".RestManager.Name");
-        m_restManager = (RestManager)LGB.ModManager.Module(restManagerName);
         m_restHandler = new RestHandler("/avatars", GetHandler, PostHandler);
 
         // Find the world and connect to same to hear about all the avatars

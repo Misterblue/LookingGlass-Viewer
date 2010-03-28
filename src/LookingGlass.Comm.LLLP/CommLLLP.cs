@@ -74,8 +74,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
     protected List<LLRegionContext> m_regionList;
 
     // while we wait for a region to be online, we queue requests here
-    protected Dictionary<RegionContextBase, OnDemandWorkQueue> m_waitTilOnline;
-    protected bool m_shouldWaitTilOnline = true;
+    protected List<ParamBlock> m_waitTilOnline;
 
     // There are some messages that come in that are rare but could use some locking.
     // The main paths of prims and updates is pretty solid and multi-threaded but
@@ -147,7 +146,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         m_isLoggingOut = false;
         m_connectionParams = new ParameterSet();
         m_regionList = new List<LLRegionContext>();
-        m_waitTilOnline = new Dictionary<RegionContextBase,OnDemandWorkQueue>();
+        m_waitTilOnline = new List<ParamBlock>();
         m_commStatistics = new ParameterSet();
 
         m_loginGrid = "Unknown";
@@ -502,6 +501,8 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         string loginSetting = null;
         if ((m_loginSim != null) && (m_loginSim.Length > 0)) {
             try {
+                // User specified a sim. In the form of "simname/x/y/z" where the locations
+                // are optional.
                 char sep = '/';
                 string[] parts = System.Uri.UnescapeDataString(m_loginSim).ToLower().Split(sep);
                 if (parts.Length > 0) {
@@ -720,9 +721,9 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         // update the region's view of the terrain
         regionContext.TerrainInfo.UpdatePatch(regionContext, x, y, data);
         // tell the world the earth is moving
-        if (regionContext.State.IfNotOnline(delegate() {
-                QueueTilOnline(regionContext, CommActionCode.RegionStateChange, regionContext, World.UpdateCodes.Terrain);
-            }) ) return;
+        if (QueueTilOnline(sim, CommActionCode.RegionStateChange, regionContext, World.UpdateCodes.Terrain)) {
+            return;
+        }
         regionContext.Update(World.UpdateCodes.Terrain);
     }
 
@@ -732,11 +733,8 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
             Objects_AttachmentUpdate(sender, args);
             return;
         }
+        if (QueueTilOnline(args.Simulator, CommActionCode.OnObjectUpdated, sender, args)) return;
         LLRegionContext rcontext = FindRegion(args.Simulator);
-        if (rcontext == null) return;
-        if (rcontext.State.IfNotOnline(delegate() {
-                QueueTilOnline(rcontext, CommActionCode.OnObjectUpdated, sender, args);
-            }) ) return;
         this.m_statObjObjectUpdate++;
         IEntity updatedEntity = null;
         // a full update says everything changed
@@ -822,11 +820,8 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
     }
     // ===============================================================
     public void Objects_AttachmentUpdate(Object sender, OMV.PrimEventArgs args) {
+        if (QueueTilOnline(args.Simulator, CommActionCode.OnAttachmentUpdate, sender, args)) return;
         LLRegionContext rcontext = FindRegion(args.Simulator);
-        if (rcontext == null) return;
-        if (rcontext.State.IfNotOnline(delegate() {
-                QueueTilOnline(rcontext, CommActionCode.OnAttachmentUpdate, sender, args);
-            }) ) return;
         this.m_statObjAttachmentUpdate++;
         m_log.Log(LogLevel.DUPDATEDETAIL, "OnNewAttachment: id={0}, lid={1}", args.Prim.ID.ToString(), args.Prim.LocalID);
         try {
@@ -869,12 +864,9 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
     }
     // ===============================================================
     private void Objects_TerseObjectUpdate(Object sender, OMV.TerseObjectUpdateEventArgs args) {
+        if (QueueTilOnline(args.Simulator, CommActionCode.TerseObjectUpdate, sender, args)) return;
         LLRegionContext rcontext = FindRegion(args.Simulator);
         OMV.ObjectMovementUpdate update = args.Update;
-        if (rcontext == null) return;
-        if (rcontext.State.IfNotOnline(delegate() {
-                QueueTilOnline(rcontext, CommActionCode.TerseObjectUpdate, sender, args);
-            }) ) return;
         this.m_statObjTerseUpdate++;
         IEntity updatedEntity = null;
         UpdateCodes updateFlags = UpdateCodes.Acceleration | UpdateCodes.AngularVelocity
@@ -921,11 +913,8 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
     }
     // ===============================================================
     public void Objects_AvatarUpdate(Object sender, OMV.AvatarUpdateEventArgs args) {
+        if (QueueTilOnline(args.Simulator, CommActionCode.OnAvatarUpdate, sender, args)) return;
         LLRegionContext rcontext = FindRegion(args.Simulator);
-        if (rcontext == null) return;
-        if (rcontext.State.IfNotOnline(delegate() {
-                QueueTilOnline(rcontext, CommActionCode.OnAvatarUpdate, sender, args);
-            }) ) return;
         this.m_statObjAvatarUpdate++;
         m_log.Log(LogLevel.DUPDATEDETAIL, "Objects_AvatarUpdate: cntl={0}, parent={1}, p={2}, r={3}", 
                     args.Avatar.ControlFlags.ToString("x"), args.Avatar.ParentID, 
@@ -970,11 +959,8 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
 
     // ===============================================================
     public virtual void Objects_KillObject(Object sender, OMV.KillObjectEventArgs args) {
+        if (QueueTilOnline(args.Simulator, CommActionCode.KillObject, sender, args)) return;
         LLRegionContext rcontext = FindRegion(args.Simulator);
-        if (rcontext == null) return;
-        if (rcontext.State.IfNotOnline(delegate() {
-                QueueTilOnline(rcontext, CommActionCode.KillObject, sender, args);
-            }) ) return;
         m_statObjKillObject++;
         m_log.Log(LogLevel.DWORLDDETAIL, "Object killed:");
         try {
@@ -995,11 +981,8 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
 
     // ===============================================================
     public virtual void Avatars_AvatarAppearance(Object sender, OMV.AvatarAppearanceEventArgs args) {
+        if (QueueTilOnline(args.Simulator, CommActionCode.OnAvatarAppearance, sender, args)) return;
         LLRegionContext rcontext = FindRegion(args.Simulator);
-        if (rcontext == null) return;
-        if (rcontext.State.IfNotOnline(delegate() {
-                QueueTilOnline(rcontext, CommActionCode.KillObject, sender, args);
-            }) ) return;
         m_log.Log(LogLevel.DCOMMDETAIL, "AvatarAppearance: id={0}", args.AvatarID.ToString());
         // the appearance information is stored in the avatar info in libomv
         // We just kick the system to look at it
@@ -1052,6 +1035,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
                     }
                 }
                 if (ret == null) {
+                    // we are connected but doen't have a regionContext for this simulator. Build one.
                     LLTerrainInfo llterr = new LLTerrainInfo(null, SelectAssetContextForGrid(sim));
                     llterr.WaterHeight = sim.WaterHeight;
                     // TODO: copy terrain texture IDs
@@ -1070,6 +1054,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         return ret;
     }
 
+    // Use a uniqe test to select a region
     public LLRegionContext FindRegion(Predicate<LLRegionContext> pred) {
         LLRegionContext ret = null;
         lock (m_regionList) {
@@ -1083,6 +1068,13 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         return ret;
     }
 
+    /// <summary>
+    /// Given a simulator, figure out the asset context for same. This very LL operation
+    /// checks the parameters to see if a uniqe context was specified. If not, just use
+    /// the connection to the simulator.
+    /// </summary>
+    /// <param name="sim"></param>
+    /// <returns>the AssetContextBase for this simulator</returns>
     private AssetContextBase SelectAssetContextForGrid(OMV.Simulator sim) {
         AssetContextBase ret = null;
         string otherAssets = World.World.Instance.Grids.GridParameter(World.Grids.Current, "OS.AssetServer.V1");
@@ -1118,59 +1110,66 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         OnAvatarAppearance
     }
 
-    struct ParamBlock {
+    protected struct ParamBlock {
+        public OMV.Simulator sim;
         public CommActionCode cac;
         public Object p1; public Object p2; public Object p3; public Object p4;
-        public ParamBlock(CommActionCode pcac, Object pp1, Object pp2, Object pp3, Object pp4) {
-            cac = pcac;  p1 = pp1; p2 = pp2; p3 = pp3; p4 = pp4;
+        public ParamBlock(OMV.Simulator psim, CommActionCode pcac, Object pp1, Object pp2, Object pp3, Object pp4) {
+            sim = psim;  cac = pcac; p1 = pp1; p2 = pp2; p3 = pp3; p4 = pp4;
         }
     }
-    private void QueueTilOnline(RegionContextBase rcontext, CommActionCode cac, Object p1) {
-        QueueTilOnline(rcontext, cac, p1, null, null, null);
+    private bool QueueTilOnline(OMV.Simulator sim, CommActionCode cac, Object p1) {
+        return QueueTilOnline(sim, cac, p1, null, null, null);
     }
 
-    private void QueueTilOnline(RegionContextBase rcontext, CommActionCode cac, Object p1, Object p2) {
-        QueueTilOnline(rcontext, cac, p1, p2, null, null);
+    private bool QueueTilOnline(OMV.Simulator sim, CommActionCode cac, Object p1, Object p2) {
+        return QueueTilOnline(sim, cac, p1, p2, null, null);
     }
 
-    private void QueueTilOnline(RegionContextBase rcontext, CommActionCode cac, Object p1, Object p2, Object p3) {
-        QueueTilOnline(rcontext, cac, p1, p2, p3, null);
+    private bool QueueTilOnline(OMV.Simulator sim, CommActionCode cac, Object p1, Object p2, Object p3) {
+        return QueueTilOnline(sim, cac, p1, p2, p3, null);
     }
 
-    private void QueueTilOnline(RegionContextBase rcontext, CommActionCode cac, Object p1, Object p2, Object p3, Object p4) {
+    /// <summary>
+    ///  Check to see if this action can happen now or has to be queued for later.
+    /// </summary>
+    /// <param name="rcontext"></param>
+    /// <param name="cac"></param>
+    /// <param name="p1"></param>
+    /// <param name="p2"></param>
+    /// <param name="p3"></param>
+    /// <param name="p4"></param>
+    /// <returns>true if the action was queued, false if the action should be done</returns>
+    private bool QueueTilOnline(OMV.Simulator sim, CommActionCode cac, Object p1, Object p2, Object p3, Object p4) {
+        bool ret = false;
         lock (m_waitTilOnline) {
-            if (m_shouldWaitTilOnline) {
-                if (!m_waitTilOnline.ContainsKey(rcontext)) {
-                    m_log.Log(LogLevel.DCOMMDETAIL, "QueueTilOnline: creating queue for {0}", rcontext.Name);
-                    m_waitTilOnline.Add(rcontext, new OnDemandWorkQueue("QueueTilOnline:" + rcontext.Name));
-                }
-                m_log.Log(LogLevel.DCOMMDETAIL, "QueueTilOnline: queuing action {0} for {1}", cac, rcontext.Name);
-                m_waitTilOnline[rcontext].DoLater(DoCommAction, new ParamBlock(cac, p1, p2, p3, p4));
+            RegionContextBase rcontext = FindRegion(sim);
+            if (rcontext != null && rcontext.State.isOnline) {
+                // not queuing until later
+                ret = false;
+            }
+            else {
+                ParamBlock pb = new ParamBlock(sim, cac, p1, p2, p3, p4);
+                m_waitTilOnline.Add(pb);
+                // return that we queued the action
+                ret = true;
             }
         }
-    }
-
-    private bool DoCommAction(DoLaterBase qInstance, Object oparms) {
-        ParamBlock parms = (ParamBlock)oparms;
-        m_log.Log(LogLevel.DCOMMDETAIL, "DoCommAction: executing queued action {0}", parms.cac);
-        RegionAction(parms.cac, parms.p1, parms.p2, parms.p3, parms.p4);
-        return true;
+        return ret;
     }
 
     private void DoAnyWaitingEvents(RegionContextBase rcontext) {
-        OnDemandWorkQueue q = null;
+        m_log.Log(LogLevel.DCOMMDETAIL, "DoAnyWaitingEvents: examining {0} queued events", m_waitTilOnline.Count);
+        List<ParamBlock> m_queuedActions = new List<ParamBlock>();
         lock (m_waitTilOnline) {
-            m_log.Log(LogLevel.DCOMM, "DoAnyWaitingEvents: unqueuing {0} waiting events for {1}", 
-                        m_waitTilOnline.Count, rcontext.Name);
-            if (m_waitTilOnline.ContainsKey(rcontext)) {
-                q = m_waitTilOnline[rcontext];
-                m_waitTilOnline.Remove(rcontext);
-            }
+            // make a copy of the list and clear the waiting queue
+            foreach (ParamBlock pb in m_waitTilOnline) m_queuedActions.Add(pb);
+            m_waitTilOnline.Clear();
         }
-        if (q != null) {
-            while (q.CurrentQueued > 0) {
-                q.ProcessQueue(1000);
-            }
+        // process each of the actions. If they should stay queued, they will get requeued
+        m_log.Log(LogLevel.DCOMMDETAIL, "DoAnyWaitingEvents: processing {0} queued events", m_queuedActions.Count);
+        foreach (ParamBlock pb in m_queuedActions) {
+            RegionAction(pb.cac, pb.p1, pb.p2, pb.p3, pb.p4);
         }
     }
 
@@ -1178,6 +1177,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         switch (cac) {
             case CommActionCode.RegionStateChange:
                 m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: RegionStateChange");
+                // NOTE that this goes straight to the status update routine
                 ((RegionContextBase)p1).Update((World.UpdateCodes)p2);
                 break;
             case CommActionCode.OnObjectUpdated:

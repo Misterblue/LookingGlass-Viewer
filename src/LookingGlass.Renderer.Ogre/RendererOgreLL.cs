@@ -459,7 +459,10 @@ public class RendererOgreLL : IWorldRenderConv {
 
         // Assemble into one mesh for passing to lower system
         // TODO: get and pass the skeleton information
-        CreateAvatarTextures(ent, false);
+        if (!CreateAvatarTextures(ent, false)) {
+            // something about the textures can't be built yet. Try again later.
+            return false;
+        }
 
         const int faceCountsStride = 6;
         const int verticesStride = 8;
@@ -544,7 +547,7 @@ public class RendererOgreLL : IWorldRenderConv {
     /// <param name="ent">The entity of the avatar being decorated</param>
     /// <param name="forceUpdateFlag">'true' if to force a redraw. If doing the initial
     /// creation, a redraw update is not necessary.</param>
-    public void CreateAvatarTextures(IEntity ent, bool forceUpdateFlag) {
+    public bool CreateAvatarTextures(IEntity ent, bool forceUpdateFlag) {
         IEntityAvatar ientav;
         LLEntityAvatar entav;
         if (ent.TryGet<IEntityAvatar>(out ientav)) {
@@ -578,7 +581,7 @@ public class RendererOgreLL : IWorldRenderConv {
                             ent, null, pBase, ref textureParams, jj, out textureOgreName);
                         materialNames[jj] = EntityNameOgre.ConvertToOgreMaterialNameX(ent.Name, jj);
                         textureOgreNames[jj] = textureOgreName;
-                        m_log.Log(LogLevel.DRENDERDETAIL, "CreateAvatarTextures: mat={0}, tex={1}", 
+                        m_log.Log(LogLevel.DRENDERDETAIL, "CreateAvatarTextures: mat={0}, tex={1}",
                                     materialNames[jj], textureOgreName);
                         pBase += (int)textureParams[0];
                         jj++;
@@ -586,22 +589,28 @@ public class RendererOgreLL : IWorldRenderConv {
 
                     m_log.Log(LogLevel.DRENDERDETAIL, "CreateAvatarTextures: materials for {0}", ent.Name);
                     Ogr.CreateMaterialResource7BF(0f, materialNames[0],
-                        materialNames[0], materialNames[1], materialNames[2], materialNames[3], 
+                        materialNames[0], materialNames[1], materialNames[2], materialNames[3],
                         materialNames[4], materialNames[5], materialNames[6],
-                        textureOgreNames[0], textureOgreNames[1], textureOgreNames[2], textureOgreNames[3], 
+                        textureOgreNames[0], textureOgreNames[1], textureOgreNames[2], textureOgreNames[3],
                         textureOgreNames[4], textureOgreNames[5], textureOgreNames[6],
                         textureParams
                     );
                 }
+                else {
+                    // the avatar is not initialized yet. Try again later.
+                    return false;
+                }
+            }
+            else {
+                m_log.Log(LogLevel.DBADERROR, "CreateAvatarTexture: REQUEST BUT NOT LLAVATAR");
             }
         }
         else {
             string modNames = "";
             foreach (string mod in ent.ModuleInterfaceTypeNames()) modNames += " " + mod;
             m_log.Log(LogLevel.DBADERROR, "CreateAvatarTexture: REQUEST FOR TEXTURES FOR NON LL ENTITY. Mod={0}", modNames);
-
         }
-        return;
+        return true;
     }
 
     // Examine the prim and see if it's a standard shape that we can pass to Ogre to implement
