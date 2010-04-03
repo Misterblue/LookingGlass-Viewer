@@ -988,10 +988,8 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         // We just kick the system to look at it
         lock (m_opLock) {
             EntityName avatarEntityName = LLEntityAvatar.AvatarEntityNameFromID(rcontext.AssetContext, args.AvatarID);
-            IEntityCollection coll;
-            rcontext.TryGet<IEntityCollection>(out coll);
             IEntity ent;
-            if (coll.TryGetEntity(avatarEntityName, out ent)) {
+            if (rcontext.TryGetEntity(avatarEntityName, out ent)) {
                 ent.Update(UpdateCodes.Appearance);
             }
         }

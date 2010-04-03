@@ -42,8 +42,8 @@ public class LLAgent : IAgent {
     private OMV.GridClient m_client = null;
 
     // if 'true', move avatar when we get the outgoing command to move the agent
-    private bool m_shouldPreMoveAvatar = false;
-    private float m_rotFudge = 3f;      // degrees moved per rotation
+    private bool m_shouldPreMoveAvatar = true;
+    private float m_rotFudge = 2f;      // degrees moved per rotation
     private float m_moveFudge = 0.4f;      // meters moved per movement
     private float m_flyFudge = 2.5f;      // meters moved per movement
     private float m_runFudge = 0.8f;      // meters moved per movement

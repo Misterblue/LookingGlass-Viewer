@@ -1,17 +1,27 @@
 {
+"OSGrid.org": {
+        "Name": "OSGrid.org",
+        "LoginURL": "http://osgrid.org:8002/",
+        "LoginPage": "http://osgrid.org/loginscreen.php",
+        "HelperURI": "http://osgrid.org/",
+        "WebSite": "http://osgrid.org/",
+        "SupportURL": "http://osgrid.org",
+        "AccountURL": "http://osgrid.org/index.php?page=create",
+        "PasswordURL": "http://osgrid.org/index.php?page=change"
+        // ,"OS.AssetServer.V1": "http://assets.osgrid.org:8003"
+        // ,"OS.AssetServer.V1.Request": "assetbase"    // "data" or "assetbase"
+    },
+"ScienceSim.com": {
+        "Name": "ScienceSim.com",
+        "LoginURL": "http://grid.sciencesim.com/"
+        // ,"OS.AssetServer.V1": "http://grid.sciencesim.com:8004"
+        // ,"OS.AssetServer.V1.Request": "data"    // "data" or "assetbase"
+        // ,"OS.AssetServer.MaxRequests": "4"
+        // ,"OS.AssetServer.Proxy": "http://proxy.example.com:8080"
+    },
 "SecondLife.com": {
         "Name": "SecondLife.com",
         "LoginURL": "https://login.agni.lindenlab.com/cgi-bin/login.cgi",
-        "LoginPage": "http://secondlife.com/app/login/",
-        "HelperURI": "http://secondlife.com/helpers",
-        "WebSite": "http://secondlife.com/",
-        "SupportURL": "http://secondlife.com/support/",
-        "AccountURL": "http://secondlife.com/registration/",
-        "PasswordURL": "http://secondlife.com/account/request.php"
-    },
-"BetaSecondLife.com": {
-        "Name": "BetaSecondLife.com",
-        "LoginURL": "https://login.aditi.lindenlab.com/cgi-bin/login.cgi",
         "LoginPage": "http://secondlife.com/app/login/",
         "HelperURI": "http://secondlife.com/helpers",
         "WebSite": "http://secondlife.com/",
@@ -26,26 +36,6 @@
 "LocalProxy": {
         "Name": "LocalProxy",
         "LoginURL": "http://127.0.0.1:8080"
-    },
-"OSGrid.org": {
-        "Name": "OSGrid.org",
-        "LoginURL": "http://osgrid.org:8002/",
-        "LoginPage": "http://osgrid.org/loginscreen.php",
-        "HelperURI": "http://osgrid.org/",
-        "WebSite": "http://osgrid.org/",
-        "SupportURL": "http://osgrid.org",
-        "AccountURL": "http://osgrid.org/index.php?page=create",
-        "PasswordURL": "http://osgrid.org/index.php?page=change"
-        ,"OS.AssetServer.V1": "http://assets.osgrid.org:8003"
-        ,"OS.AssetServer.V1.Request": "assetbase"    // "data" or "assetbase"
-    },
-"ScienceSim.com": {
-        "Name": "ScienceSim.com",
-        "LoginURL": "http://grid.sciencesim.com/"
-        // ,"OS.AssetServer.V1": "http://grid.sciencesim.com:8004"
-        // ,"OS.AssetServer.V1.Request": "data"    // "data" or "assetbase"
-        // ,"OS.AssetServer.MaxRequests": "4"
-        // ,"OS.AssetServer.Proxy": "http://proxy.example.com:8080"
     }
 // remember to add the comma if you add a new entry here
 }

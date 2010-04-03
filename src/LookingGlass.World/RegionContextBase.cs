@@ -81,6 +81,21 @@ public abstract class RegionContextBase : EntityBase, IRegionContext, IDisposabl
     protected TerrainInfoBase m_terrainInfo = null;
     public TerrainInfoBase TerrainInfo { get { return m_terrainInfo; } }
 
+    // try and get an entity from the entity collection in this region
+    public virtual bool TryGetEntity(EntityName entName, out IEntity foundEnt) {
+        bool ret = false;
+        foundEnt = null;
+        IEntityCollection coll;
+        if (this.TryGet<IEntityCollection>(out coll)) {
+            IEntity ent;
+            if (coll.TryGetEntity(entName, out ent)) {
+                foundEnt = ent;
+                ret = true;
+            }
+        }
+        return ret;
+    }
+
     public override void Update(UpdateCodes what) {
         base.Update(what);      // this sends an EntityUpdate for the region
         if (OnRegionUpdated != null) OnRegionUpdated(this, what);

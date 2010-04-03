@@ -730,12 +730,13 @@ namespace LG {
 			mo = 0;
 			mesh->buildEdgeList();
 
-			std::vector<Ogre::Real> m_lodDistances(3, 200);
-			m_lodDistances[0] = 100;
-			m_lodDistances[1] = 200;
-			m_lodDistances[2] = 400;
+			// std::vector<Ogre::Real> m_lodDistances(3, 200);
+			Ogre::Mesh::LodValueList m_lodDistances(3);
+			m_lodDistances[0] = 20;
+			m_lodDistances[1] = 50;
+			m_lodDistances[2] = 100;
 			// DEBUG NOTE: uncommenting this causes a crash. Why?
-			// mesh->generateLodLevels(m_lodDistances, Ogre::ProgressiveMesh::VRQ_PROPORTIONAL, 0.75f);
+			// mesh->generateLodLevels(m_lodDistances, Ogre::ProgressiveMesh::VRQ_PROPORTIONAL, 0.5f);
 
 			if (m_serializeMeshes) {
 				// serialize the mesh to the filesystem
