@@ -121,7 +121,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "Name of the skybox resource to use");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.ShadowTechnique", "none",
                     "Shadow technique: none, texture-additive, texture-modulative, stencil-modulative, stencil-additive");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.ShadowFarDistance", "100",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.ShadowFarDistance", "400",
                     "Integer units of distance within which to do shadows (mul by magnification)");
         // cp.AddParameter(m_moduleName + ".Ogre.Renderer", "Direct3D9 Rendering Subsystem",
         //             "Name of the rendering subsystem to use");
@@ -164,7 +164,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "LoadingTexture.png",
                     "Resource name of  the default texture");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.WhiteTextureResourceName", 
-                    "Preload/" + OMV.Primitive.TextureEntry.WHITE_TEXTURE.ToString().Substring(0,1) 
+                    "Preload/" + OMV.Primitive.TextureEntry.WHITE_TEXTURE.ToString().Substring(0,2) 
                             + "/" + OMV.Primitive.TextureEntry.WHITE_TEXTURE.ToString(),
                     "Resource name of a white texture used as default base color");
 

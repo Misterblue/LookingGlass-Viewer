@@ -21,49 +21,51 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "StdAfx.h"
-#include "SkyBoxSimple.h"
+#include "Shadow07.h"
 #include "RendererOgre.h"
 
-namespace LG {
+namespace LG { 
+	
+Shadow07::Shadow07(const char* shadowName) : ShadowBase() {
+	LG::RendererOgre* ro = LG::RendererOgre::Instance();
+	ro->m_sceneMgr->setShadowTextureSize(1024);
+	// ro->m_sceneMgr->setShadowTechnique(Ogre::SHADOWTYPE_TEXTURE_MODULATIVE);
+	ro->m_sceneMgr->setShadowTechnique(Ogre::SHADOWTYPE_TEXTURE_ADDITIVE);
 
-SkyBoxSimple::SkyBoxSimple() {
+	// Ogre::FocusedShadowCameraSetup* focussmSetup = new Ogre::FocusedShadowCameraSetup();
+	// ro->m_sceneMgr->setShadowCameraSetup(Ogre::ShadowCameraSetupPtr(focussmSetup));
+
+	Ogre::LiSPSMShadowCameraSetup* lispsmSetup = new Ogre::LiSPSMShadowCameraSetup();
+	lispsmSetup->setOptimalAdjustFactor(2);
+	ro->m_sceneMgr->setShadowCameraSetup(Ogre::ShadowCameraSetupPtr(lispsmSetup));
+
+	int shadowFarDistance = LG::GetParameterInt("Renderer.Ogre.ShadowFarDistance");
+	ro->m_sceneMgr->setShadowFarDistance((float)shadowFarDistance);
+	ro->m_sceneMgr->setShadowColour(Ogre::ColourValue(0.35f, 0.35f, 0.35f));
+	ro->m_sceneMgr->setAmbientLight(Ogre::ColourValue(0.3f, 0.3f, 0.3f));
+
+	return;
 }
 
-SkyBoxSimple::~SkyBoxSimple() {
+Shadow07::~Shadow07() {
 }
 
-void SkyBoxSimple::Initialize() {
-	LG::Log("DEBUG: LookingGlassOrge: createLight");
-    // TODO: decide if I should connect  this to a scene node
-    //    might make moving and control easier
-	m_sunDistance = 2000.0;
-	m_sun = LG::RendererOgre::Instance()->m_sceneMgr->createLight("sun");
-	m_sun->setType(Ogre::Light::LT_DIRECTIONAL);	// directional and sun-like
-	m_sun->setDiffuseColour(Ogre::ColourValue::White);
-	m_sun->setPosition(0.0f, 1000.0f, 0.0f);
-	Ogre::Vector3 sunDirection(0.0f, -1.0f, 1.0f);
-	sunDirection.normalise();
-	m_sun->setDirection(sunDirection);
-	// m_sun->setDirection(0.0f, 1.0f, 0.0f);
-	m_sun->setCastShadows(true);
-	m_sun->setVisible(true);
-
-	try {
-		// Ogre::String skyboxName = "LookingGlass/CloudyNoonSkyBox";
-		Ogre::String skyboxName = LG::GetParameter("Renderer.Ogre.SkyboxName");
-		LG::RendererOgre::Instance()->m_sceneMgr->setSkyBox(true, skyboxName);
-		LG::Log("createSky: setting skybox to %s", skyboxName.c_str());
-	}
-	catch (Ogre::Exception e) {
-		LG::Log("Failed to set scene skybox");
-		LG::RendererOgre::Instance()->m_sceneMgr->setSkyBox(false, "");
-	}
+void Shadow07::AddTerrainShadow(Ogre::Material* mat) {
+	return;
 }
 
-void SkyBoxSimple::Start() {
+void Shadow07::AddLightShadow(Ogre::Light* lit) {
+	return;
 }
 
-void SkyBoxSimple::Stop() {
+void Shadow07::AddReceiverShadow(Ogre::Material* mat) {
+	mat->setReceiveShadows(true);
+	return;
+}
+
+void Shadow07::AddCasterShadow(Ogre::MovableObject* mob) {
+	mob->setCastShadows(true);
+	return;
 }
 
 }

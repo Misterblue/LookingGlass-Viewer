@@ -20,50 +20,25 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include "StdAfx.h"
-#include "SkyBoxSimple.h"
-#include "RendererOgre.h"
+#pragma once
+
+#include "LGOCommon.h"
+#include "ShadowBase.h"
 
 namespace LG {
 
-SkyBoxSimple::SkyBoxSimple() {
-}
+// Simple shadow  that usees Ogre's built in shadow implementation
+class Shadow07 : public ShadowBase {
+public:
+	Shadow07(const char* shadowType);
+	~Shadow07();
 
-SkyBoxSimple::~SkyBoxSimple() {
-}
+	void AddTerrainShadow(Ogre::Material* mat);
+	void AddLightShadow(Ogre::Light* lit);
+	void AddReceiverShadow(Ogre::Material* mat);
+	void AddCasterShadow(Ogre::MovableObject* mat);
 
-void SkyBoxSimple::Initialize() {
-	LG::Log("DEBUG: LookingGlassOrge: createLight");
-    // TODO: decide if I should connect  this to a scene node
-    //    might make moving and control easier
-	m_sunDistance = 2000.0;
-	m_sun = LG::RendererOgre::Instance()->m_sceneMgr->createLight("sun");
-	m_sun->setType(Ogre::Light::LT_DIRECTIONAL);	// directional and sun-like
-	m_sun->setDiffuseColour(Ogre::ColourValue::White);
-	m_sun->setPosition(0.0f, 1000.0f, 0.0f);
-	Ogre::Vector3 sunDirection(0.0f, -1.0f, 1.0f);
-	sunDirection.normalise();
-	m_sun->setDirection(sunDirection);
-	// m_sun->setDirection(0.0f, 1.0f, 0.0f);
-	m_sun->setCastShadows(true);
-	m_sun->setVisible(true);
-
-	try {
-		// Ogre::String skyboxName = "LookingGlass/CloudyNoonSkyBox";
-		Ogre::String skyboxName = LG::GetParameter("Renderer.Ogre.SkyboxName");
-		LG::RendererOgre::Instance()->m_sceneMgr->setSkyBox(true, skyboxName);
-		LG::Log("createSky: setting skybox to %s", skyboxName.c_str());
-	}
-	catch (Ogre::Exception e) {
-		LG::Log("Failed to set scene skybox");
-		LG::RendererOgre::Instance()->m_sceneMgr->setSkyBox(false, "");
-	}
-}
-
-void SkyBoxSimple::Start() {
-}
-
-void SkyBoxSimple::Stop() {
-}
+private:
+};
 
 }

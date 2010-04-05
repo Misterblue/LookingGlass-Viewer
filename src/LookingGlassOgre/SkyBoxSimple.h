@@ -37,8 +37,6 @@ public:
 	void Stop();
 
 private:
-	// environmental light stuff waiting for the day we have a real sky system
-	Ogre::Vector3 m_sunFocalPoint;	// where the sun is pointing
 	// default if not using some fancy sky system
 	Ogre::Light* m_sun;				// the light that is the sun
 	float m_sunDistance;			// distance sun is from the focal point

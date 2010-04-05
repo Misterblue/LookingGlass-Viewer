@@ -40,6 +40,7 @@
 #include "ShadowSimple.h"
 #include "Shadow02.h"
 #include "Shadow06.h"
+#include "Shadow07.h"
 #include "SkyBoxSimple.h"
 #include "SkyBoxSkyX.h"
 #include "VisCalcNull.h"
@@ -419,6 +420,9 @@ namespace LG {
 			}
 			else if (stricmp(shadowName, "shadow06") == 0) {
 				this->Shadow = new Shadow06(shadowName);
+			}
+			else if (stricmp(shadowName, "shadow07") == 0) {
+				this->Shadow = new Shadow07(shadowName);
 			}
 			else {
 				this->Shadow = new ShadowSimple(shadowName);

@@ -540,6 +540,8 @@ void OLMaterialTracker::CreateMaterialSetTransparancy(Ogre::Pass* pass, float al
 	// pass->setManualCullingMode(Ogre::MANUAL_CULL_NONE);
 }
 
+// This creates materials  that use the shaders.  The code either does
+// CreateMaterialResource2 or CreateMaterialResource3.
 void OLMaterialTracker::CreateMaterialResource3(const char* mName, const char* tName, const float* parms) {
 	Ogre::String materialName = mName;
 	Ogre::String textureName = tName;
@@ -555,7 +557,7 @@ void OLMaterialTracker::CreateMaterialResource3(const char* mName, const char* t
 	if (textureName.length() == 0) {
 		textureName = m_whiteTextureName;
 	}
-	
+
 	Ogre::Technique* tech = mat->createTechnique();
 	Ogre::Pass* pass = tech->createPass();
 	Ogre::String vertexProgram = "UnlitTexturedVColVP";
