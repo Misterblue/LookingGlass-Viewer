@@ -390,6 +390,8 @@ public class Viewer : ModuleBase, IViewProvider {
                     // OMV.Vector3 rotatedOffset = Utilities.RotateVector(agnt.Heading, cameraOffset);
                     OMV.Vector3 rotatedOffset = cameraOffset * OMV.Quaternion.Inverse(agnt.Heading);
                     OMV.Vector3d globalRotatedOffset = new OMV.Vector3d(-rotatedOffset.X, rotatedOffset.Y, rotatedOffset.Z);
+                    // 'kludgeOffset' exists because the above calculation doesn't give the right camera position
+                    // Don't know why, but this extra offset is needed
                     OMV.Vector3d kludgeOffset = new OMV.Vector3d(10d, 10d, 0d);
                     OMV.Vector3d desiredCameraPosition = agnt.GlobalPosition + globalRotatedOffset + kludgeOffset;
 

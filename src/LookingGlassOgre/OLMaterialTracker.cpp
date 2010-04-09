@@ -256,7 +256,7 @@ bool OLMaterialTracker::frameEnded(const Ogre::FrameEvent&) {
 				m_materialsModified.size(), m_texturesModified.size());
 		}
 		try {
-			this->m_slowCount = 10;
+			this->m_slowCount = 30;
 			Ogre::String matName;
 			LGLOCK_LOCK(this->m_modifiedMutex);
 			MeshPtrHashMap m_meshesToChange;
@@ -591,6 +591,9 @@ void OLMaterialTracker::CreateMaterialResource3(const char* mName, const char* t
 		Ogre::TextureUnitState* tus2 = pass2->createTextureUnitState(textureName);
 		CreateMaterialDecorateTus(tus2, parms);
 	}
+
+	mat->compile();
+	mat->load();
 }
 
 void OLMaterialTracker::CreateMaterialDecorateTus(Ogre::TextureUnitState* tus, const float* parms) {

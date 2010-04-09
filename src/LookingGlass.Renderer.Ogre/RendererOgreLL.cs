@@ -83,7 +83,7 @@ public class RendererOgreLL : IWorldRenderConv {
 
         // magnification of passed World coordinates into Ogre coordinates
         // NOTE: scene magnification is depricated and probably doesn't work. Leave at 1.0.
-        m_sceneMagnification = float.Parse(LookingGlassBase.Instance.AppParams.ParamString("Renderer.Ogre.LL.SceneMagnification"));
+        m_sceneMagnification = LookingGlassBase.Instance.AppParams.ParamFloat("Renderer.Ogre.LL.SceneMagnification");
         // true if to creat materials while we are creating the mesh
         m_buildMaterialsAtMeshCreationTime = LookingGlassBase.Instance.AppParams.ParamBool("Renderer.Ogre.LL.EarlyMaterialCreate");
         // true if to create materials while building renderinfo structure
@@ -414,9 +414,9 @@ public class RendererOgreLL : IWorldRenderConv {
     /// <param name="ent">The entity the mesh is coming from</param>
     /// <param name="meshName">The name the mesh should take</param>
     public bool CreateAvatarMeshResource(float priority, IEntity ent, string meshName, EntityName contextEntity) {
-        string meshInfoDir = "./LookingGlassResources/openmetaverse_data";
-        string meshInfoDefn = "avatar_lad.xml";
-        string meshDescriptionDir = "./LookingGlassResources/character";
+        string meshInfoDir = LookingGlassBase.Instance.AppParams.ParamString("Renderer.Avatar.Mesh.InfoDir");
+        string meshInfoDefn = LookingGlassBase.Instance.AppParams.ParamString("Renderer.Avatar.Mesh.Description");
+        string meshDescriptionDir = LookingGlassBase.Instance.AppParams.ParamString("Renderer.Avatar.Mesh.DescriptionDir");
 
         Dictionary<string, OMVR.LindenMesh> meshTypes = new Dictionary<string, OMVR.LindenMesh>();
 
@@ -450,7 +450,6 @@ public class RendererOgreLL : IWorldRenderConv {
         }
         // meshTypes now contains the pieces of the avatar.
 
-        // TODO: Create the materials for the body parts
         string[] meshOrder = {
                     "headMesh", "upperBodyMesh", "lowerBodyMesh",
                     "eyeBallLeftMesh", "hairMesh", "skirtMesh", 
@@ -542,7 +541,9 @@ public class RendererOgreLL : IWorldRenderConv {
     }
 
     /// <summary>
-    /// Create the textures for the avatar.
+    /// Create the textures for the avatar. If this is an LLEntityAvatar, extract the
+    /// texture info from the avatar description and blindly create textures for the
+    /// parts of the body in the order of the faces that were generated above.
     /// </summary>
     /// <param name="ent">The entity of the avatar being decorated</param>
     /// <param name="forceUpdateFlag">'true' if to force a redraw. If doing the initial

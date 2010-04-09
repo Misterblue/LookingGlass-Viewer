@@ -79,6 +79,7 @@ public class LLAgent : IAgent {
 
     // The underlying data has been updated. Forget local things.
     public void DataUpdate(UpdateCodes what) {
+        // Local values are set for dead-reconning but once we have official values, use  them
         if ((what & UpdateCodes.Position) != 0) m_haveLocalPosition = false;
         if ((what & UpdateCodes.Rotation) != 0) m_haveLocalHeading = false;
     }
@@ -285,6 +286,13 @@ public class LLAgent : IAgent {
     #endregion POSITION
 
     #region INTEREST
+    /// <summary>
+    /// Called when the camera is updated so we can tell the simulator where our camera is
+    /// and it can do any optimizations based thereon.
+    /// </summary>
+    /// <param name="position"></param>
+    /// <param name="direction"></param>
+    /// <param name="far"></param>
     public void UpdateCamera(OMV.Vector3d position, OMV.Quaternion direction, float far) {
         float roll;
         float pitch;

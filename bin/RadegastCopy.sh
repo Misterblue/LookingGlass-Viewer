@@ -39,8 +39,8 @@ if [[ "$copyLookingGlassBin" == "yes" ]] ; then
     cp "$SRCDIR/SkyX.dll"                     "$DSTDIR"
     cp "$SRCDIR/openjpeg-dotnet.dll"          "$DSTDIR"
     cp "$SRCDIR/Grids.json"                   "$DSTDIR"
-    rsync -r --exclude .svn "$SRCDIR/LookingGlassResources" "$DSTDIR"
-    rsync -r --exclude .svn "$SRCDIR/LookingGlassUI"        "$DSTDIR"
+    rsync -ra --exclude .svn "$SRCDIR/LookingGlassResources" "$DSTDIR"
+    rsync -ra --exclude .svn "$SRCDIR/LookingGlassUI"        "$DSTDIR"
 fi
 
 if [[ "$copyOgre" == "yes" ]] ; then

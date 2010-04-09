@@ -68,10 +68,6 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     // If true, requesting a mesh causes the mesh to be rebuilt and written out
     // This makes sure cached copy is the same as server but is also slow
     protected bool m_shouldForceMeshRebuild = false;
-    // True if meshes with the same characteristics should be shared
-    protected bool m_shouldShareMeshes = true;
-    // True if to make sure the mesh exists before creating it's scene node
-    protected bool m_shouldPrebuildMesh = false;
 
     // this shouldn't be here... this is a feature of the LL renderer
     protected float m_sceneMagnification;
@@ -197,6 +193,13 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "Whether to use the new technique of using GPU shaders");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.CollectOgreStats", "true",
                     "Whether to collect detailed Ogre stats and make available to web");
+
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Avatar.Mesh.InfoDir", "./LookingGlassResources/openmetaverse_data",
+                    "Directory containing avatar description information");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Avatar.Mesh.Description", "avatar_lad.xml",
+                    "File containing detailed avatar mesh description");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Avatar.Mesh.DescriptionDir", "./LookingGlassResources/character",
+                    "Directory with detailed avatar mesh description info");
 
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Sky", "Default",
                     "Name of the key system to use");
@@ -416,9 +419,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         m_sceneMagnification = float.Parse(ModuleParams.ParamString(m_moduleName + ".Ogre.LL.SceneMagnification"));
 
         m_shouldForceMeshRebuild = ModuleParams.ParamBool(m_moduleName + ".Ogre.ForceMeshRebuild");
-        m_shouldPrebuildMesh = ModuleParams.ParamBool(m_moduleName + ".Ogre.PrebuildMesh");
         m_shouldRenderOnMainThread = ModuleParams.ParamBool(m_moduleName + ".ShouldRenderOnMainThread");
-        m_shouldShareMeshes = ModuleParams.ParamBool(m_moduleName + ".ShouldShareMeshes");
 
         // pick up a bunch of parameterized values
         m_betweenFrameTotalCost = ModuleParams.ParamInt(m_moduleName + ".Ogre.BetweenFrame.Costs.Total");

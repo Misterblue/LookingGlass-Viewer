@@ -33,8 +33,12 @@ namespace LookingGlass.Renderer.Ogr {
 
 class RenderPrim : IRenderEntity {
 
+    // If true, requesting a mesh causes the mesh to be rebuilt and written out
+    // This makes sure cached copy is the same as server but is also slow
     bool m_shouldForceMeshRebuild;
+    // True if to make sure the mesh exists before creating it's scene node
     bool m_shouldPrebuildMesh;
+    // True if meshes with the same characteristics should be shared
     bool m_shouldShareMeshes;
 
     RendererOgre m_renderer;
@@ -81,13 +85,14 @@ class RenderPrim : IRenderEntity {
                     EntityName entMeshName = (EntityName)ri.basicObject;
                     if (m_shouldShareMeshes && (ri.shapeHash != RenderableInfo.NO_HASH_SHARE)) {
                         lock (prebuiltMeshes) {
-                            if (prebuiltMeshes.ContainsKey(ri.shapeHash)) {
-                                entMeshName = prebuiltMeshes[ri.shapeHash];
+                            if (prebuiltMeshes.TryGetValue(ri.shapeHash, out entMeshName)) {
                                 m_hasMesh = true;   // presume someone else created it
                                 // m_log.Log(LogLevel.DRENDERDETAIL, "DorRenderLater: using prebuilt {0}", entMeshName);
                                 // m_statShareInstances.Event();
                             }
                             else {
+                                // reget mesh name since TryGet defaults it if not found
+                                entMeshName = (EntityName)ri.basicObject;
                                 // this is a new mesh. Remember that it has been built
                                 prebuiltMeshes.Add(ri.shapeHash, entMeshName);
                             }
