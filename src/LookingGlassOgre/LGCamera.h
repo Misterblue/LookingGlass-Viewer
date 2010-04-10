@@ -32,6 +32,12 @@ namespace LG {
 		LGCamera(Ogre::String nam, Ogre::SceneManager* mgr);
 		~LGCamera();
 
+
+		void updateCamera(double px, double py, double pz, 
+			float dw, float dx, float dy, float dz,
+			float nearClip, float farClip, float aspect);
+		void AdvanceCamera(const Ogre::FrameEvent& evt);
+
 		void setOrientation(Ogre::Quaternion qq);
 		void setOrientation(float ww, float xx, float yy, float zz);
 		Ogre::Quaternion getOrientation();
@@ -61,5 +67,10 @@ namespace LG {
 		Ogre::SceneNode* CamSceneNode2;		// handle to the one above camera scene node
 
 		bool m_cameraAttached;				// true if camera attached to the avatar
+
+		Ogre::Quaternion m_desiredCameraOrientation;
+		Ogre::Vector3 m_desiredPosition;
+		float m_desiredCameraOrientationProgress;
+
 	};
 }

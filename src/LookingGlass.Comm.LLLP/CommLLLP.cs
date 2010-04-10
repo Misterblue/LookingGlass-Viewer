@@ -606,7 +606,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         gc.Objects.KillObject += Objects_KillObject;
         gc.Avatars.AvatarAppearance += Avatars_AvatarAppearance;
         gc.Settings.STORE_LAND_PATCHES = true;
-        gc.Terrain.OnLandPatch += new OMV.TerrainManager.LandPatchCallback(Terrain_OnLandPatch);
+        gc.Terrain.LandPatchReceived += Terrain_LandPatchReceived;
 
         #region COMM REST STATS
         m_commStatistics.Add("WaitingTilOnline", 
@@ -713,15 +713,15 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
     }
 
     // ===============================================================
-    public virtual void Terrain_OnLandPatch(OMV.Simulator sim, int x, int y, int width, float[] data) {
+    public virtual void Terrain_LandPatchReceived(object sender, OMV.LandPatchReceivedEventArgs args) {
         // m_log.Log(LogLevel.DWORLDDETAIL, "Land patch for {0}: {1}, {2}, {3}", 
-        //             sim.Name, x.ToString(), y.ToString(), width.ToString());
-        LLRegionContext regionContext = FindRegion(sim);
+        //             args.Simulator.Name, args.X, args.Y, args.PatchSize);
+        LLRegionContext regionContext = FindRegion(args.Simulator);
         if (regionContext == null) return;
         // update the region's view of the terrain
-        regionContext.TerrainInfo.UpdatePatch(regionContext, x, y, data);
+        regionContext.TerrainInfo.UpdatePatch(regionContext, args.X, args.Y, args.HeightMap);
         // tell the world the earth is moving
-        if (QueueTilOnline(sim, CommActionCode.RegionStateChange, regionContext, World.UpdateCodes.Terrain)) {
+        if (QueueTilOnline(args.Simulator, CommActionCode.RegionStateChange, regionContext, World.UpdateCodes.Terrain)) {
             return;
         }
         regionContext.Update(World.UpdateCodes.Terrain);
@@ -1075,18 +1075,31 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
     /// <returns>the AssetContextBase for this simulator</returns>
     private AssetContextBase SelectAssetContextForGrid(OMV.Simulator sim) {
         AssetContextBase ret = null;
+        // If user specifies an URL to get textures from, get that asset fetcher
         string otherAssets = World.World.Instance.Grids.GridParameter(World.Grids.Current, "OS.AssetServer.V1");
         if (otherAssets != null && otherAssets.Length != 0) {
-            m_log.Log(LogLevel.DBADERROR, "CommLLLP: creating OSAssetContextV1 for {0}", m_loginGrid);
+            m_log.Log(LogLevel.DCOMM, "CommLLLP: creating OSAssetContextV1 for {0}", m_loginGrid);
             ret = new OSAssetContextV1(LoggedInGridName);
             ret.InitializeContext(this, 
                 ModuleParams.ParamString(ModuleName + ".Assets.CacheDir"),
                 ModuleParams.ParamInt(ModuleName + ".Texture.MaxRequests"));
         }
+
+        // If the simulator has the texture capability, use that
+        Uri textureUri = sim.Caps.CapabilityURI("GetTexture");
+        if (ret == null && textureUri != null) {
+            m_log.Log(LogLevel.DCOMM, "CommLLLP: creating OSAssetContextCap for {0}", m_loginGrid);
+            ret = new OSAssetContextCap(LoggedInGridName, textureUri);
+            ret.InitializeContext(this, 
+                ModuleParams.ParamString(ModuleName + ".Assets.CacheDir"),
+                ModuleParams.ParamInt(ModuleName + ".Texture.MaxRequests"));
+        }
+
+        // default to legacy UDP texture fetch
         if (ret == null) {
             // Create the asset contect for this communication instance
             // this should happen after connected. reconnection is a problem.
-            m_log.Log(LogLevel.DBADERROR, "CommLLLP: creating default asset context for grid {0}", m_loginGrid);
+            m_log.Log(LogLevel.DCOMM, "CommLLLP: creating default asset context for grid {0}", m_loginGrid);
             ret = new LLAssetContext(LoggedInGridName);
             ret.InitializeContext(this,
                 ModuleParams.ParamString(ModuleName + ".Assets.CacheDir"),

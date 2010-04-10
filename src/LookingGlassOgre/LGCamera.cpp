@@ -22,6 +22,7 @@
  */
 #include "StdAfx.h"
 #include "LGCamera.h"
+#include "RegionTracker.h"
 #include "RendererOgre.h"
 
 namespace LG {
@@ -43,6 +44,56 @@ LGCamera::LGCamera(Ogre::String nam, Ogre::SceneManager* mgr) {
 
 LGCamera::~LGCamera() {
 }
+
+// Update the camera position given an location and a direction
+void LGCamera::updateCamera(double px, double py, double pz, 
+			float dw, float dx, float dy, float dz,
+			float nearClip, float farClip, float aspect) {
+	LG::Log("LGCamera::UpdateCamera: pos=<%f, %f, %f>", (double)px, (double)py, (double)pz);
+	// passed global parameters, localize the camera for the focus region that was moved to zero
+	LG::RegionTracker::Instance()->PositionCameraForFocusRegion(px, py, pz, this);
+	// this->setPosition(px, py, pz);
+	m_desiredCameraOrientation = Ogre::Quaternion(dw, dx, dy, dz);
+	m_desiredCameraOrientationProgress = 0.0;
+	// to do slerped movement, comment the next line and uncomment "XXXX" below
+	// this->setOrientation(Ogre::Quaternion(dw, dx, dy, dz));
+	/*	don't fool with far and clip for the moment
+	if (nearClip != this->getNearClipDistance()) {
+		this->setNearClipDistance(nearClip);
+	}
+	if (farClip != this->getFarClipDistance()) {
+		this->setFarClipDistance(farClip);
+	}
+	*/
+	LG::RendererOgre::Instance()->m_visCalc->RecalculateVisibility();
+	return;
+}
+
+// called at the beginning of the frame so we can slrp the camera
+#define SECONDS_TO_SLERP 0.5f
+void LGCamera::AdvanceCamera(const Ogre::FrameEvent& evt) {
+	// Say time since last frame is .1s. That's 1/10 sec and if we're trying to
+	//   to the smooth turn in 1/2 sec, this is 1/5 of our way there.
+	float progress = evt.timeSinceLastFrame / SECONDS_TO_SLERP;
+	m_desiredCameraOrientationProgress += progress;
+	if (m_desiredCameraOrientationProgress > 0) {
+		// if greater than zero we're working on progress
+		if (m_desiredCameraOrientationProgress < 1.0) {
+			// still within the progress area
+			Ogre::Quaternion newOrientation = Ogre::Quaternion::Slerp(m_desiredCameraOrientationProgress, 
+			// Ogre::Quaternion newOrientation = Ogre::Quaternion::nlerp(m_desiredCameraOrientationProgress, 
+				this->getOrientation(), m_desiredCameraOrientation, true);
+			this->setOrientation(newOrientation); // XXXX
+			LG::RendererOgre::Instance()->m_visCalc->RecalculateVisibility(); // XXXX
+		}
+		else {
+			// we've advanced to progress. Make sure we get the last event in
+			this->setOrientation(m_desiredCameraOrientation);
+			m_desiredCameraOrientationProgress = -1.0;	// flag to say done
+		}
+	}
+}
+
 
 void LGCamera::setOrientation(Ogre::Quaternion qq) {
 	// Ogre::Quaternion orient = Ogre::Quaternion(Ogre::Radian(1.5707963), Ogre::Vector3(1.0, 0.0, 0.0));

@@ -21,6 +21,7 @@ namespace LookingGlass.View {
             string[] ContentLines = new String[30];
             int line = 0;
             ContentLines[line++] = LookingGlassBase.ApplicationName + "  " + LookingGlassBase.ApplicationVersion;
+            ContentLines[line++] = "Distributed under BSD License. http://lookingglassviewer.org/";
             ContentLines[line++] = "";
             ContentLines[line++] = "Copyright (c) 2008 Robert Adams (LookingGlass)";
             ContentLines[line++] = "Copyright (c) 2000-2006 Torus Knot Software Ltd (Ogre)";
@@ -50,6 +51,5 @@ namespace LookingGlass.View {
                 this.Close();
             }
         }
-
     }
 }

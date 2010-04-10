@@ -19,16 +19,6 @@
         // ,"OS.AssetServer.MaxRequests": "4"
         // ,"OS.AssetServer.Proxy": "http://proxy.example.com:8080"
     },
-"SecondLife.com": {
-        "Name": "SecondLife.com",
-        "LoginURL": "https://login.agni.lindenlab.com/cgi-bin/login.cgi",
-        "LoginPage": "http://secondlife.com/app/login/",
-        "HelperURI": "http://secondlife.com/helpers",
-        "WebSite": "http://secondlife.com/",
-        "SupportURL": "http://secondlife.com/support/",
-        "AccountURL": "http://secondlife.com/registration/",
-        "PasswordURL": "http://secondlife.com/account/request.php"
-    },
 "Localhost": {
         "Name": "Localhost",
         "LoginURL": "http://127.0.0.1:9000"
