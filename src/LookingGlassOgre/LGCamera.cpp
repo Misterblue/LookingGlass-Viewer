@@ -51,12 +51,13 @@ void LGCamera::updateCamera(double px, double py, double pz,
 			float nearClip, float farClip, float aspect) {
 	LG::Log("LGCamera::UpdateCamera: pos=<%f, %f, %f>", (double)px, (double)py, (double)pz);
 	// passed global parameters, localize the camera for the focus region that was moved to zero
-	LG::RegionTracker::Instance()->PositionCameraForFocusRegion(px, py, pz, this);
-	// this->setPosition(px, py, pz);
+	m_desiredPosition = LG::RegionTracker::Instance()->PositionCameraForFocusRegion(px, py, pz);
 	m_desiredCameraOrientation = Ogre::Quaternion(dw, dx, dy, dz);
 	m_desiredCameraOrientationProgress = 0.0;
-	// to do slerped movement, comment the next line and uncomment "XXXX" below
+	// to do slerped movement, comment the next lines and uncomment "XXXX" below
 	// this->setOrientation(Ogre::Quaternion(dw, dx, dy, dz));
+	// this->setPosition(m_desiredPosition);
+
 	/*	don't fool with far and clip for the moment
 	if (nearClip != this->getNearClipDistance()) {
 		this->setNearClipDistance(nearClip);
@@ -84,11 +85,14 @@ void LGCamera::AdvanceCamera(const Ogre::FrameEvent& evt) {
 			// Ogre::Quaternion newOrientation = Ogre::Quaternion::nlerp(m_desiredCameraOrientationProgress, 
 				this->getOrientation(), m_desiredCameraOrientation, true);
 			this->setOrientation(newOrientation); // XXXX
+			this->setPosition( this->getPosition() // XXXX
+				+ ((m_desiredPosition - this->getPosition()) * (1.0f - m_desiredCameraOrientationProgress))); // XXXX
 			LG::RendererOgre::Instance()->m_visCalc->RecalculateVisibility(); // XXXX
 		}
 		else {
 			// we've advanced to progress. Make sure we get the last event in
 			this->setOrientation(m_desiredCameraOrientation);
+			this->setPosition(m_desiredPosition);
 			m_desiredCameraOrientationProgress = -1.0;	// flag to say done
 		}
 	}

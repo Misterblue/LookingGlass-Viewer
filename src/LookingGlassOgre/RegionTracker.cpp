@@ -117,10 +117,14 @@ void RegionTracker::RecalculateLocalCoords() {
 
 // Focusing a region causes the coordinate system to be zeroed to that point. Since the camera
 // operates in global coordinates, it must be offset for the focus region.
-void RegionTracker::PositionCameraForFocusRegion(double px, double py, double pz, LG::LGCamera *cam) {
+Ogre::Vector3 RegionTracker::PositionCameraForFocusRegion(double px, double py, double pz) {
 	Region* fRegion = GetFocusRegion();
-	cam->setPosition(px - fRegion->GlobalX, py - fRegion->GlobalY, pz - fRegion->GlobalZ);
-	return;
+	Ogre::Vector3 newPos;
+	newPos.x = (Ogre::Real)(px - fRegion->GlobalX);
+	newPos.y = (Ogre::Real)(py - fRegion->GlobalY);
+	newPos.z = (Ogre::Real)(pz - fRegion->GlobalZ);
+	// cam->setPosition(px - fRegion->GlobalX, py - fRegion->GlobalY, pz - fRegion->GlobalZ);
+	return newPos;
 }
 
 // return focus region or NULL if none

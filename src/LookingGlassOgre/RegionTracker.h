@@ -51,7 +51,7 @@ public:
 
 	std::list<Region*> GetRegions();
 
-	void PositionCameraForFocusRegion(double px, double py, double pz, LG::LGCamera* cam);
+	Ogre::Vector3 PositionCameraForFocusRegion(double px, double py, double pz);
 
 private:
 	static RegionTracker* m_instance;
