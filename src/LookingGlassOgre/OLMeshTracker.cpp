@@ -161,7 +161,7 @@ public:
 					Ogre::String stringParm, Ogre::Entity* entityParm) {
 		this->priority = prio;
 		this->meshName = meshNam;
-		this->uniq = meshNam + "/MakeMeshLoaded";
+		this->uniq = meshNam;
 		this->contextEntity = contextEnt;
 		this->stringParam = stringParm;
 		this->entityParam = entityParm;
@@ -191,7 +191,7 @@ public:
 	MakeMeshLoaded2Qm(float prio, Ogre::String uniq, Ogre::SceneNode* sceneNod,
 							Ogre::String meshNam, Ogre::String entNam) {
 		this->priority = prio;
-		this->uniq = uniq + "/MakeMeshLoaded2";
+		this->uniq = uniq;
 		this->sceneNode = sceneNod;
 		this->meshName = meshNam;
 		this->entityName = entNam;
@@ -224,7 +224,7 @@ public:
 					Ogre::String stringParm, Ogre::Entity* entityParm) {
 		this->priority = prio;
 		this->meshName = meshNam;
-		this->uniq = meshNam + "/MakeMeshSerialized";
+		this->uniq = meshNam;
 		this->contextEntity = contextEnt;
 		this->stringParam = stringParm;
 		this->entityParam = entityParm;
@@ -249,6 +249,26 @@ public:
 			// if we're supposed to unload after serializing, schedule that to happen
 			LG::OLMeshTracker::Instance()->MakeUnLoaded(this->meshName, Ogre::String(), NULL);
 		}
+	}
+};
+
+// ===============================================================================
+class ReloadMeshQm : public GenericQm {
+public:
+	Ogre::String meshName;
+	Ogre::MeshPtr meshP;
+	ReloadMeshQm(float prio, Ogre::MeshPtr meshpp) {
+		this->priority = prio;
+		this->meshP = meshpp;
+		this->uniq = meshpp->getName();
+	}
+	~ReloadMeshQm(void) {
+		this->meshName.clear();
+		this->uniq.clear();
+	}
+	void Process() {
+		meshP->reload();
+		LG::OLMeshTracker::Instance()->UpdateSceneNodesForMesh(meshP);
 	}
 };
 
@@ -368,12 +388,29 @@ void OLMeshTracker::DoReload(Ogre::String meshName) {
 }
 
 void OLMeshTracker::DoReload(Ogre::MeshPtr meshP) {
+	LGLOCK_LOCK(MeshTrackerLock);
+	// check to see if in unloaded list, if so, remove it and claim success
+	Ogre::String meshName = meshP->getName();
+	GenericQm* reloadEntry = m_meshesToLoad->Find(meshName);
+	if (reloadEntry != NULL) {
+		// if already being loaded, we're done
+		LG::Log("OLMeshTracker::DoReload: asked to reload but already loading: %s", meshName.c_str());
+		return;
+	}
+	// add this to the loading list
+	LG::Log("OLMeshTracker::DoReload: queuing reloading: %s (%s)", meshName.c_str());
+	ReloadMeshQm* rmq = new ReloadMeshQm(10, meshP);
+	m_meshesToLoad->AddLast(rmq);
+	LGLOCK_UNLOCK(MeshTrackerLock);
+	LGLOCK_NOTIFY_ALL(MeshTrackerLock);
+	/*	OLD CODE
 	// for the moment, don't do anything fancy
 	if (meshP->isLoaded()) {
 		meshP->reload();
 	}
 	UpdateSceneNodesForMesh(meshP);
 	// do we need to call update on all scene nodes that use this mesh?
+	*/
 }
 
 // ===============================================================================

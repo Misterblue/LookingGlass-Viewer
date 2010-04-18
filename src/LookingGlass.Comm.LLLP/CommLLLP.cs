@@ -687,7 +687,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
             // this region is online and here. This can start a lot of IO
 
             // if we'd queued up actions, do them now that it's online
-            DoAnyWaitingEvents(regionContext);
+            DoAnyWaitingEvents(args.Simulator);
         // });
 
         // this is needed to make the avatar appear
@@ -1169,13 +1169,20 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         return ret;
     }
 
-    private void DoAnyWaitingEvents(RegionContextBase rcontext) {
+    private void DoAnyWaitingEvents(OMV.Simulator sim) {
         m_log.Log(LogLevel.DCOMMDETAIL, "DoAnyWaitingEvents: examining {0} queued events", m_waitTilOnline.Count);
         List<ParamBlock> m_queuedActions = new List<ParamBlock>();
         lock (m_waitTilOnline) {
-            // make a copy of the list and clear the waiting queue
-            foreach (ParamBlock pb in m_waitTilOnline) m_queuedActions.Add(pb);
-            m_waitTilOnline.Clear();
+            // get out all of teh actions saved for this sim
+            foreach (ParamBlock pb in m_waitTilOnline) {
+                if (pb.sim == sim) {
+                    m_queuedActions.Add(pb);
+                }
+            }
+            // remove the entries for the sim
+            foreach (ParamBlock pb in m_queuedActions) {
+                m_waitTilOnline.Remove(pb);
+            }
         }
         // process each of the actions. If they should stay queued, they will get requeued
         m_log.Log(LogLevel.DCOMMDETAIL, "DoAnyWaitingEvents: processing {0} queued events", m_queuedActions.Count);
