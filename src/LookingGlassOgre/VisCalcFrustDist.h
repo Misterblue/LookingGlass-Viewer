@@ -55,7 +55,7 @@ protected:
 	void SetVis(Ogre::Entity*);
 
 	void processEntityVisibility();
-	void queueMeshLoad(Ogre::Entity*, Ogre::MeshPtr);
+	// void queueMeshLoad(Ogre::Entity*, Ogre::MeshPtr);
 	void queueMeshUnload(Ogre::MeshPtr);
 	void unloadTheMesh(Ogre::MeshPtr);
 	bool m_shouldCullByFrustrum;			// true if should cull visible objects by the camera frustrum

@@ -70,16 +70,11 @@ public class LLTerrainInfo : TerrainInfoBase {
                 try {
                     LLRegionContext llreg = (LLRegionContext)reg;
                     OMV.Simulator sim = llreg.Simulator;
-                    if (!llreg.Comm.Terrain.SimPatches.ContainsKey(sim.Handle)) {
-                        return;
-                    }
-                    // make a copy. Poor man's locking
-                    OMV.TerrainPatch[] patch = (OMV.TerrainPatch[])llreg.Comm.Terrain.SimPatches[sim.Handle].Clone();
 
                     int nullPatchCount = 0;
                     for (int px = 0; px < stride; px++) {
                         for (int py = 0; py < stride; py++) {
-                            OMV.TerrainPatch pat = patch[px + py * stride];
+                            OMV.TerrainPatch pat = sim.Terrain[px + py * stride];
                             if (pat == null) {
                                 // if no patch, it's all zeros
                                 if (0.0f < minHeight) minHeight = 0.0f;

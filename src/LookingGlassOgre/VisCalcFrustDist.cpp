@@ -78,7 +78,7 @@ bool VisCalcFrustDist::frameEnded(const Ogre::FrameEvent& evt) {
 		if (m_recalculateVisibility) {
 			calculateEntityVisibility();
 		}
-		processEntityVisibility();
+		// processEntityVisibility();
 	}
 	catch (...) {
 		LG::Log("VisCalcFrustDist: EXCEPTION FRAMEENDED:");
@@ -203,7 +203,9 @@ void VisCalcFrustDist::calculateEntityVisibility(Ogre::Node* regionNode, Ogre::N
 					if (shouldBeVisible) {
 						// it should become visible again
 						if (!snodeEntity->getMesh().isNull()) {
-							queueMeshLoad(snodeEntity, snodeEntity->getMesh());
+							// queueMeshLoad(snodeEntity, snodeEntity->getMesh());
+							LG::OLMeshTracker::Instance()->MakeLoaded(snodeEntity->getMesh()->getName(),
+									Ogre::String(""), Ogre::String("visible"), snodeEntity);
 						}
 						// snodeEntity->setVisible(true);	// must happen after mesh loaded
 						visInvisToVis++;
@@ -248,6 +250,7 @@ bool VisCalcFrustDist::calculateScaleVisibility(float dist, float siz) {
 
 }
 
+/*
 // BETWEEN FRAME OPERATION
 stdext::hash_map<Ogre::String, Ogre::Entity*> meshesToLoad;
 stdext::hash_map<Ogre::String, Ogre::Entity*> meshesToUnload;
@@ -274,12 +277,14 @@ void VisCalcFrustDist::processEntityVisibility() {
 	LG::SetStat(LG::StatCullMeshesQueuedToLoad, meshesToLoad.size());
 	return;
 }
+*/
 
 // used as a callback to set the visible property after the mesh is loaded
 void VisCalcFrustDist::SetVis(Ogre::Entity* parent) {
 	parent->setVisible(true);
 }
 
+/*
 void VisCalcFrustDist::queueMeshLoad(Ogre::Entity* parentEntity, Ogre::MeshPtr meshP) {
 	// remove from the unload list if scheduled to do that
 	Ogre::String meshName = meshP->getName();
@@ -291,14 +296,17 @@ void VisCalcFrustDist::queueMeshLoad(Ogre::Entity* parentEntity, Ogre::MeshPtr m
 	meshesToLoad.insert(std::pair<Ogre::String, Ogre::Entity*>(meshName, parentEntity));
 	LG::IncStat(LG::StatCullMeshesQueuedToLoad);
 }
+*/
 
 // BETWEEN FRAME OPERATION
 void VisCalcFrustDist::queueMeshUnload(Ogre::MeshPtr meshP) {
 	Ogre::String meshName = meshP->getName();
 	// if it's in the list to be loaded but we're unloading it, remove from load list
+	/*
 	if (meshesToLoad.find(meshName) != meshesToLoad.end()) {
 		meshesToLoad.erase(meshName);
 	}
+	*/
 	// for the moment, just unload it and don't queue
 	unloadTheMesh(meshP);
 }
