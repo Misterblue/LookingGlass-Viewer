@@ -70,7 +70,8 @@ public abstract class AssetContextBase : IDisposable {
 
     public enum AssetType {
         Texture,
-        SculptieTexture
+        SculptieTexture,
+        BakedTexture
     }
 
     protected string m_Name;
@@ -130,8 +131,6 @@ public abstract class AssetContextBase : IDisposable {
     public abstract void DoTextureLoad(EntityName textureEntityName, AssetType typ, DownloadFinishedCallback finished);
 
     /// <summary>
-    /// Just get the real texture and return it to us. If the texture is not immediately available
-    /// (that is, is not on the local computer's memory or disk) we return a null pointer.
     /// Get the texture right now. If the texture is not immediately available (not on local
     /// computer's disk or memory), return null saying it's not here.
     /// </summary>
@@ -442,7 +441,8 @@ public abstract class AssetContextBase : IDisposable {
                         textureEntityName.Name, e.ToString());
                 }
             }
-            if (wii.type == AssetType.SculptieTexture) {
+            // Sculptie and baked textures get their alpha channels stripped out of them
+            if (wii.type == AssetType.SculptieTexture || wii.type == AssetType.BakedTexture) {
                 // for sculpties, we clear the alpha channel and write out a PNG
                 try {
                     if (OMVI.OpenJPEG.DecodeToImage(m_assetTexture.AssetData, out managedImage)) {

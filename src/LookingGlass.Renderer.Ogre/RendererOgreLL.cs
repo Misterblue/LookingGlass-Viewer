@@ -239,7 +239,7 @@ public class RendererOgreLL : IWorldRenderConv {
                     if (prim.Sculpt != null) {
                         // looks like it's a sculpty. Do it that way
                         EntityNameLL textureEnt = EntityNameLL.ConvertTextureWorldIDToEntityName(ent.AssetContext, prim.Sculpt.SculptTexture);
-                        System.Drawing.Bitmap textureBitmap =ent.AssetContext.GetTexture(textureEnt);
+                        System.Drawing.Bitmap textureBitmap = ent.AssetContext.GetTexture(textureEnt);
                         if (textureBitmap == null) {
                             m_log.Log(LogLevel.DRENDERDETAIL, "CreateMeshResource: waiting for texture for sculpty {0}", ent.Name.Name);
                             // Don't have the texture now so ask for the texture to be loaded.
@@ -582,8 +582,19 @@ public class RendererOgreLL : IWorldRenderConv {
                             ent, null, pBase, ref textureParams, jj, out textureOgreName);
                         materialNames[jj] = EntityNameOgre.ConvertToOgreMaterialNameX(ent.Name, jj);
                         textureOgreNames[jj] = textureOgreName;
-                        m_log.Log(LogLevel.DRENDERDETAIL, "CreateAvatarTextures: mat={0}, tex={1}",
-                                    materialNames[jj], textureOgreName);
+                        // m_log.Log(LogLevel.DRENDERDETAIL, "CreateAvatarTextures: mat={0}, tex={1}",
+                        //             materialNames[jj], textureOgreName);
+                        
+                        // The textures for the baked avatar textures are processed specially
+                        // Here we request they be loaded (if not already available) so we can specify their type
+                        EntityNameOgre textureEnt = EntityNameOgre.ConvertOgreResourceToEntityName(textureOgreName);
+                        System.Drawing.Bitmap textureBitmap = ent.AssetContext.GetTexture(textureEnt);
+                        if (textureBitmap == null) {
+                            // texture is not immediately available. Ask for it in a special way
+                            ent.AssetContext.DoTextureLoad(textureEnt, AssetContextBase.AssetType.BakedTexture,
+                                delegate(string name, bool trans) { return; });
+                        }
+
                         pBase += (int)textureParams[0];
                         jj++;
                     }
