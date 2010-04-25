@@ -761,6 +761,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
                 // first class relations and hide any comm implmentation dependencies from the rest
                 // of the system.
                 if (args.Prim.ParentID != 0 && updatedEntity.ContainingEntity == null) {
+                    updateFlags |= UpdateCodes.ParentID;
                     IEntity parentEntity = null;
                     rcontext.TryGetEntityLocalID(args.Prim.ParentID, out parentEntity);
                     if (parentEntity != null) {
@@ -771,12 +772,17 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
                         m_log.Log(LogLevel.DUPDATEDETAIL, "Can't assign parent. Entity not found. ent={0}", updatedEntity.Name);
                     }
                 }
-                // DEBUGGGING. REMOVE WHEN YOU KNOW WHAT THE NAME VALUES ARE
-                if (args.Prim.NameValues != null) {
-                    foreach (OMV.NameValue nv in args.Prim.NameValues) {
-                        m_log.Log(LogLevel.DRENDERDETAIL, "NAMEVALUE: {0}={1} on {2}", nv.Name, nv.Value, updatedEntity.Name);
-                    }
+                if (args.Prim.ParentID == 0 && updatedEntity.ContainingEntity != null) {
+                    // the prim has been removed from it's parent
+                    updateFlags |= UpdateCodes.ParentID;
+                    updatedEntity.DisconnectFromContainer();
                 }
+                // if (args.Prim.NameValues != null) {
+                //     foreach (OMV.NameValue nv in args.Prim.NameValues) {
+                //         m_log.Log(LogLevel.DRENDERDETAIL, "NAMEVALUE: {0}={1} on {2}", nv.Name, nv.Value, updatedEntity.Name);
+                //     }
+                // }
+
                 // if  there is an angular velocity and this is not an avatar, pass the information
                 // along as an animation (llTargetOmega)
                 // we convert the information into a standard form

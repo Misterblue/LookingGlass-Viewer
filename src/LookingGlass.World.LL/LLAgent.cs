@@ -260,6 +260,13 @@ public class LLAgent : IAgent {
     public OMV.Vector3 RelativePosition {
         get {
             if (m_haveLocalPosition) {
+                if (AssociatedAvatar != null) {
+                    if (AssociatedAvatar.ContainingEntity != null) {
+                        // If the avatar is the child of another entity, add that in
+                        // This happens when the avatar is sitting
+                        return m_relativePosition + AssociatedAvatar.ContainingEntity.RelativePosition;
+                    }
+                }
                 return m_relativePosition;
             }
             return m_client.Self.SimPosition;
@@ -274,7 +281,7 @@ public class LLAgent : IAgent {
         get {
             if (m_haveLocalPosition) {
                 if (AssociatedAvatar != null) {
-                    return AssociatedAvatar.RegionContext.CalculateGlobalPosition(m_relativePosition);
+                    return AssociatedAvatar.RegionContext.CalculateGlobalPosition(RelativePosition);
                 }
             }
             return m_client.Self.GlobalPosition;
