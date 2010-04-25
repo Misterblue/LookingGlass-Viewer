@@ -585,6 +585,7 @@ public class RendererOgreLL : IWorldRenderConv {
                         // m_log.Log(LogLevel.DRENDERDETAIL, "CreateAvatarTextures: mat={0}, tex={1}",
                         //             materialNames[jj], textureOgreName);
                         
+                        /*
                         // The textures for the baked avatar textures are processed specially
                         // Here we request they be loaded (if not already available) so we can specify their type
                         EntityNameOgre textureEnt = EntityNameOgre.ConvertOgreResourceToEntityName(textureOgreName);
@@ -594,6 +595,7 @@ public class RendererOgreLL : IWorldRenderConv {
                             ent.AssetContext.DoTextureLoad(textureEnt, AssetContextBase.AssetType.BakedTexture,
                                 delegate(string name, bool trans) { return; });
                         }
+                         */
 
                         pBase += (int)textureParams[0];
                         jj++;
