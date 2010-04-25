@@ -836,60 +836,6 @@ public class RendererOgreLL : IWorldRenderConv {
         );
     }
 
-    /// <summary>
-    /// We have a new region to place in the view. Create the scene node for the 
-    /// whole region.
-    /// </summary>
-    /// <param name="sMgr"></param>
-    /// <param name="rcontext"></param>
-    public void MapRegionIntoView(float priority, Object sMgr, IRegionContext rcontext) {
-        /*
-        OgreSceneMgr m_sceneMgr = (OgreSceneMgr)sMgr;
-        if (rcontext is LLRegionContext) {
-            // a SL compatible region
-            LLRegionContext llrcontext = (LLRegionContext)rcontext;
-            // if we don't have a region scene node create one
-            if (RendererOgre.GetRegionSceneNode(llrcontext) == null) {
-                // this funny rotation of the region's scenenode causes the region
-                // to be twisted from LL coordinates (Z up) to Ogre coords (Y up)
-                // Anything added under this node will not need to be converted.
-                OMV.Quaternion orient = OMV.Quaternion.CreateFromAxisAngle(OMV.Vector3.UnitX, -Constants.PI / 2);
-
-                m_log.Log(LogLevel.DRENDERDETAIL, "MapRegionIntoView: Region at {0}, {1}, {2}",
-                        (float)rcontext.WorldBase.X * m_sceneMagnification,
-                        (float)rcontext.WorldBase.Z * m_sceneMagnification,
-                        -(float)rcontext.WorldBase.Y * m_sceneMagnification
-                        );
-
-                OgreSceneNode node = m_sceneMgr.CreateSceneNode(EntityNameOgre.ConvertToOgreSceneNodeName(rcontext.Name),
-                        null,        // because NULL, will add to root
-                        false, true,
-                        (float)rcontext.WorldBase.X * m_sceneMagnification,
-                        (float)rcontext.WorldBase.Z * m_sceneMagnification,
-                        -(float)rcontext.WorldBase.Y * m_sceneMagnification,
-                        m_sceneMagnification, m_sceneMagnification, m_sceneMagnification,
-                        // 1f, 1f, 1f,
-                        orient.W, orient.X, orient.Y, orient.Z);
-
-                // the region scene node is saved in the region context additions
-                llrcontext.SetAddition(RendererOgre.AddRegionSceneNode, node);
-
-                // Terrain will be added as we get the messages describing same
-
-                // if the region has water, add that
-                if (rcontext.TerrainInfo.WaterHeight != TerrainInfoBase.NOWATER) {
-                    Ogr.AddOceanToRegion(m_sceneMgr.BasePtr, node.BasePtr,
-                                rcontext.Size.X * m_sceneMagnification, 
-                                rcontext.Size.Y * m_sceneMagnification,
-                                rcontext.TerrainInfo.WaterHeight, 
-                                "Water/" + rcontext.Name);
-                }
-            }
-        }
-         */
-        return;
-    }
-
     // Called to animate something in the renderer.
     // The only animation so far is the rotation animation.
     // Return 'true' if animation set. false if not set and try again later.

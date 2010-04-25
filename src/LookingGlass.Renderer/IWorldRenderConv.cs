@@ -89,15 +89,6 @@ public interface IWorldRenderConv {
     void RebuildEntityMaterials(float priority, IEntity ent);
 
     /// <summary>
-    /// Given a new region context and a scene, convert the world specific region
-    /// info into renderer coordinates.
-    /// </summary>
-    /// <param name="priority"></param>
-    /// <param name="sceneMgr"></param>
-    /// <param name="rcontext"></param>
-    void MapRegionIntoView(float priority, Object sceneMgr, IRegionContext rcontext);
-
-    /// <summary>
     /// Given an animation. Update the view of the entity with that animation. If teh
     /// entity is an avatar, the action will be different than if the entity is just
     /// a thing.

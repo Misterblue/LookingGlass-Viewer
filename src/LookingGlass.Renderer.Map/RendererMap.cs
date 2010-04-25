@@ -119,7 +119,6 @@ public class RendererMap : IModule, IRenderProvider {
         return new OMV.Vector3d(0d, 0d, 0d);
     }
 
-    // called when a new region is found, decorates the region context with
     // rendering specific information for placing in  the view
     public void MapRegionIntoView(RegionContextBase rcontext) {
         return;
