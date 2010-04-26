@@ -55,7 +55,7 @@ public:
 
 	// called to get all the meshes that need to be reloaded for materials
 	// just addes to the passed list
-	typedef stdext::hash_map<Ogre::String, Ogre::MeshPtr> MeshPtrHashMap;
+	typedef std::map<Ogre::String, Ogre::MeshPtr> MeshPtrHashMap;
 	void GetMeshesToRefreshForMaterials(MeshPtrHashMap*, const Ogre::String&);
 	void GetMeshesToRefreshForTexture(MeshPtrHashMap*, const Ogre::String&, bool);
 	void ReloadMeshes(MeshPtrHashMap*);
@@ -127,7 +127,7 @@ private:
 	bool m_shouldSerialize;
 	bool m_shouldUseShaders;
 
-	typedef stdext::hash_map<Ogre::String, unsigned long> RequestedMaterialHashMap;
+	typedef std::map<Ogre::String, unsigned long> RequestedMaterialHashMap;
 	RequestedMaterialHashMap m_requestedMaterials;
 	Ogre::Timer* m_materialTimeKeeper;
 

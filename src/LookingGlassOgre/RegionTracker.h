@@ -56,7 +56,7 @@ public:
 private:
 	static RegionTracker* m_instance;
 
-	typedef stdext::hash_map<Ogre::String, Region*> RegionHashMap;
+	typedef std::map<Ogre::String, Region*> RegionHashMap;
 	RegionHashMap m_regions;
 	Region* m_focusRegion;
 	void RecalculateLocalCoords();

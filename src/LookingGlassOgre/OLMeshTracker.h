@@ -68,7 +68,7 @@ public:
 
 	GenericQm* Find(Ogre::String nam) {
 		GenericQm* ret = NULL;
-		stdext::hash_map<Ogre::String, GenericQm*>::const_iterator intr;
+		std::map<Ogre::String, GenericQm*>::const_iterator intr;
 		intr = m_workQueue.find(nam);
 		if (intr != m_workQueue.end()) {
 			ret = intr->second;
@@ -79,7 +79,7 @@ public:
 		return m_workQueue.empty();
 	}
 	void Remove(Ogre::String nam) {
-		stdext::hash_map<Ogre::String, GenericQm*>::iterator intr;
+		std::map<Ogre::String, GenericQm*>::iterator intr;
 		intr = m_workQueue.find(nam);
 		if (intr != m_workQueue.end()) {
 			m_workQueue.erase(intr);
@@ -95,7 +95,7 @@ public:
 	}
 	GenericQm* GetFirst() {
 		GenericQm* ret = NULL;
-		stdext::hash_map<Ogre::String, GenericQm*>::iterator intr;
+		std::map<Ogre::String, GenericQm*>::iterator intr;
 		intr = m_workQueue.begin();
 		if (intr != m_workQueue.end()) {
 			ret = intr->second;
@@ -109,7 +109,7 @@ public:
 		return ret;
 	}
 private:
-	stdext::hash_map<Ogre::String, GenericQm*> m_workQueue;
+	std::map<Ogre::String, GenericQm*> m_workQueue;
 	int m_statIndex;
 	Ogre::String m_queueName;
 	int m_queueLength;
@@ -218,15 +218,9 @@ private:
 	MeshWorkQueue* m_meshesToUnload;
 	MeshWorkQueue* m_meshesToSerialize;
 
-	typedef stdext::hash_map<Ogre::String, unsigned long> RequestedMeshHashMap;
+	typedef std::map<Ogre::String, unsigned long> RequestedMeshHashMap;
 	RequestedMeshHashMap m_requestedMeshes;
 	Ogre::Timer* m_meshTimeKeeper;
 	void UpdateSubNodes(Ogre::Node* regionNode, Ogre::Node* node, bool recurse, Ogre::MeshPtr meshP);
-
-	/*
-	stdext::hash_map<Ogre::String, MeshInfo*> meshesToLoad;
-	stdext::hash_map<Ogre::String, MeshInfo*> meshesToUnload;
-	stdext::hash_map<Ogre::String, MeshInfo*> meshesToSerialize;
-	*/
 };
 }
