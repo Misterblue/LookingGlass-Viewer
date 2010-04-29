@@ -266,6 +266,12 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         ModuleParams.AddDefaultParameter(ModuleName + ".Settings.MovementUpdateInterval", 
                     "100",
                     "Milliseconds between movement messages sent to server");
+        ModuleParams.AddDefaultParameter(ModuleName + ".Settings.Connection.ApplicationName", 
+                    LookingGlassBase.ApplicationName,
+                    "Application name sent when logging in");
+        ModuleParams.AddDefaultParameter(ModuleName + ".Settings.Connection.Version", 
+                    LookingGlassBase.ApplicationName + " " + LookingGlassBase.ApplicationVersion,
+                    "Version stringsent when logging in");
 
         // This is not the right place for this but there is no World.LL module
         ModuleParams.AddDefaultParameter("World.LL.Agent.PreMoveAvatar", 
@@ -491,8 +497,8 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
             m_loginFirst,
             m_loginLast,
             m_loginPassword,
-            LookingGlassBase.ApplicationName, 
-            LookingGlassBase.ApplicationVersion);
+            ModuleParams.ParamString(ModuleName + ".Settings.Connection.ApplicationName"),
+            ModuleParams.ParamString(ModuleName + ".Settings.Connection.Version"));
 
 
         // Select sim in the grid
