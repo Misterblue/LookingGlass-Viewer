@@ -398,7 +398,7 @@ void OLMeshTracker::DoReload(Ogre::MeshPtr meshP) {
 		return;
 	}
 	// add this to the loading list
-	LG::Log("OLMeshTracker::DoReload: queuing reloading: %s (%s)", meshName.c_str());
+	LG::Log("OLMeshTracker::DoReload: queuing reloading: %s", meshName.c_str());
 	ReloadMeshQm* rmq = new ReloadMeshQm(10, meshP);
 	m_meshesToLoad->AddLast(rmq);
 	LGLOCK_UNLOCK(MeshTrackerLock);

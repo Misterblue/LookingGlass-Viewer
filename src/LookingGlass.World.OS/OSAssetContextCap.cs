@@ -44,7 +44,7 @@ public class OSAssetContextCap : AssetContextBase {
 
     // Some of the asset servers will return just the data if you put 'data' on the
     // end of the URL. That is happening if this is 'true'.
-    bool m_dataFetch = false;
+    bool m_dataFetch = true;
 
     public OSAssetContextCap() : base("Unknown") {
     }
@@ -72,7 +72,9 @@ public class OSAssetContextCap : AssetContextBase {
             m_maxOutstandingTextureRequests = 4;
         }
         if (m_proxyPath != null && m_proxyPath.Length == 0) m_proxyPath = null;
-        m_log.Log(LogLevel.DINIT, "InitializeContextFinish: base={0}, proxy={1}", m_baseUri.AbsolutePath,
+        Uri newbase;
+        
+        m_log.Log(LogLevel.DINIT, "InitializeContextFinish: base={0}, proxy={1}", m_baseUri.ToString(),
                         m_proxyPath == null ? "NULL" : m_proxyPath);
         return;
     }
@@ -163,7 +165,7 @@ public class OSAssetContextCap : AssetContextBase {
     private bool ThrottleTextureMakeRequest(DoLaterBase qInstance, Object obinID) {
         OMV.UUID binID = (OMV.UUID)obinID;
 
-        Uri assetPath = new Uri(m_baseUri.AbsolutePath + "?texture_id=" + binID.ToString());
+        Uri assetPath = new Uri(m_baseUri.ToString() + "?texture_id=" + binID.ToString());
         HttpWebRequest request = (HttpWebRequest)WebRequest.Create(assetPath);
         request.MaximumAutomaticRedirections = 4;
         request.MaximumResponseHeadersLength = 4;

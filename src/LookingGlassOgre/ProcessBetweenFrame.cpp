@@ -888,7 +888,7 @@ void ProcessBetweenFrame::ProcessWorkItems(int millisToProcess) {
 			}
 			*/
 			// comment this out to see if there are ordering bugs (this rearranges the queued actions)
-			m_betweenFrameWork.sort(XXCompareElements);
+			// m_betweenFrameWork.sort(XXCompareElements);
 		}
 		LGLOCK_UNLOCK(m_workItemMutex);
 		m_modified = false;
@@ -938,18 +938,18 @@ void ProcessBetweenFrame::ProcessWorkItems(int millisToProcess) {
 
 void ProcessBetweenFrame::ProcessOneWorkItem(GenericQc* workGeneric, int loopCost, int millisToProcess) {
 	//1 Lines commented with '1' were used to figure out processing times
-	unsigned long checkTimeBegin = betweenFrameTimeKeeper->getMicroseconds();
-	LG::Log("PBF: About to do: %s, %s", workGeneric->type.c_str(), workGeneric->uniq.c_str());
+	//1 unsigned long checkTimeBegin = betweenFrameTimeKeeper->getMicroseconds();
+	//1 LG::Log("PBF: About to do: %s, %s", workGeneric->type.c_str(), workGeneric->uniq.c_str());
 	try {
 		workGeneric->Process();
 	}
 	catch (...) {
 		LG::Log("ProcessBetweenFrame: EXCEPTION PROCESSING: %s", workGeneric->uniq.c_str());
 	}
-	unsigned long checkTimeEnd = betweenFrameTimeKeeper->getMicroseconds();
-	LG::Log("PBF: c=%d, m=%d, lc=%d, t=%d, t=%s, u=%s", 
-			 	repriorityCount, millisToProcess, loopCost, (int)(checkTimeEnd-checkTimeBegin), 
-				workGeneric->type.c_str(), workGeneric->uniq.c_str());
+	//1 unsigned long checkTimeEnd = betweenFrameTimeKeeper->getMicroseconds();
+	//1 LG::Log("PBF: c=%d, m=%d, lc=%d, t=%d, t=%s, u=%s", 
+	//1 		 	repriorityCount, millisToProcess, loopCost, (int)(checkTimeEnd-checkTimeBegin), 
+	//1 			workGeneric->type.c_str(), workGeneric->uniq.c_str());
 	delete(workGeneric);
 }
 

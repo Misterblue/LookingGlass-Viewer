@@ -186,6 +186,8 @@ void OLMaterialTracker::RefreshResource(const Ogre::String& resName, const int r
 		// unload it and let the renderer decide if it needs to be loaded again
 		// NOTE: unload doesn't work here. We get exceptions if we unload while reload doesn't fail
 		if (!theMesh.isNull()) {
+			LG::Log("OLMaterialTracker::RefreshResource: unloading/reloading mesh");
+			// queue it for reload. An attempt to get file read off the frame rendering thread
 			LG::OLMeshTracker::Instance()->DoReload(theMesh);
 		}
 	}
@@ -194,10 +196,12 @@ void OLMaterialTracker::RefreshResource(const Ogre::String& resName, const int r
 		MarkMaterialModified(resName);
 	}
 	if (rType == LG::ResourceTypeTexture) {
+		LG::Log("OLMaterialTracker::RefreshResource: unloading/reloading texture");
 		Ogre::TextureManager::getSingleton().unload(resName);
 		MarkTextureModified(resName, false);
 	}
 	if (rType == LG::ResourceTypeTransparentTexture) {
+		LG::Log("OLMaterialTracker::RefreshResource: unloading/reloading transparent texture");
 		Ogre::TextureManager::getSingleton().unload(resName);
 		MarkTextureModified(resName, true);
 	}
@@ -206,6 +210,7 @@ void OLMaterialTracker::RefreshResource(const Ogre::String& resName, const int r
 // A material has been modified. Remember it's name and, between frames, reload the
 // entities that contain the material.
 void OLMaterialTracker::MarkMaterialModified(const Ogre::String materialName) {
+	LG::Log("OLMaterialTracker::MarkMaterialModified: queuing material modified");
 	LGLOCK_LOCK(this->m_modifiedMutex);
 	bool found = false;
 	std::list<Ogre::String>::const_iterator li;

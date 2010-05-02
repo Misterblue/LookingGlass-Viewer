@@ -52,6 +52,7 @@ namespace LG {
 	RendererOgre* RendererOgre::m_instance = NULL;
 
 	RendererOgre::RendererOgre() {
+		m_alreadyOneFrame = 0;
 	}
 
 	RendererOgre::~RendererOgre() {
@@ -127,7 +128,8 @@ namespace LG {
 		unsigned long now = rendererTimeKeeper->getMilliseconds();
 		unsigned long timeStartedLastFrame = rendererTimeKeeper->getMilliseconds();
 		if (m_root != NULL) {
-			LGLOCK_LOCK(m_sceneGraphLock);
+			// LGLOCK_LOCK(m_sceneGraphLock);
+			if (++m_alreadyOneFrame > 1) return ret;
 			try {
 				ret = m_root->renderOneFrame();
 			}
@@ -137,14 +139,15 @@ namespace LG {
 			catch (...) {
 				LG::Log("RendererOgre::renderOneFrame: m_root->renderOneFrame() threw");
 			}
-			LGLOCK_UNLOCK(m_sceneGraphLock);
-			LGLOCK_NOTIFY_ALL(m_sceneGraphLock);
+			// LGLOCK_UNLOCK(m_sceneGraphLock);
+			// LGLOCK_NOTIFY_ALL(m_sceneGraphLock);
 			try {
 				if (pump) Ogre::WindowEventUtilities::messagePump();
 			}
 			catch (...) {
 				LG::Log("RendererOgre::renderOneFrame: messagePump threw");
 			}
+			m_alreadyOneFrame = 0;
 		}
 
 		/*

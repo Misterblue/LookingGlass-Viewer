@@ -136,6 +136,7 @@ private:
 
 	// Lock for the scene graph. Locked when doing RenderOneFrame.
 	LGLOCK_MUTEX m_sceneGraphLock;
+	int m_alreadyOneFrame;
 
 	Ogre::String m_cacheDir; 
 	Ogre::String m_preloadedDir; 
