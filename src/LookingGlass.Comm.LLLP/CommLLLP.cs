@@ -249,6 +249,9 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         ModuleParams.AddDefaultParameter(ModuleName + ".Assets.CacheDir", 
                     Utilities.GetDefaultApplicationStorageDir(null),
                     "Filesystem location to build the texture cache");
+        ModuleParams.AddDefaultParameter(ModuleName + ".Assets.EnableCaps", 
+                    "false",
+                    "Whether to use the caps asset system if available");
         ModuleParams.AddDefaultParameter(ModuleName + ".Assets.OMVResources",
                     "./LookingGlassResources/openmetaverse_data",
                     "Directory for resources used by libopenmetaverse (mostly for appearance)");
@@ -759,76 +762,108 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
                         }) ) {
                     // new prim created
                 }
-                // The way this is supposed to work is that entities have parents and parents have collections
-                // of entities as children. Occasionally we learn about children before we hear about
-                // the parent. This code just punts that problem. There is code over in Renderer.Ogre
-                // to hold the child until a parent is found. What should really happen is comm should
-                // hold the child until a parent is found. This would make parent/child relatioships 
-                // first class relations and hide any comm implmentation dependencies from the rest
-                // of the system.
-                if (args.Prim.ParentID != 0 && updatedEntity.ContainingEntity == null) {
-                    updateFlags |= UpdateCodes.ParentID;
-                    IEntity parentEntity = null;
-                    rcontext.TryGetEntityLocalID(args.Prim.ParentID, out parentEntity);
-                    if (parentEntity != null) {
-                        updatedEntity.ContainingEntity = parentEntity;
-                        parentEntity.AddEntityToContainer(updatedEntity);
-                    }
-                    else {
-                        m_log.Log(LogLevel.DUPDATEDETAIL, "Can't assign parent. Entity not found. ent={0}", updatedEntity.Name);
-                    }
-                }
-                if (args.Prim.ParentID == 0 && updatedEntity.ContainingEntity != null) {
-                    // the prim has been removed from it's parent
-                    updateFlags |= UpdateCodes.ParentID;
-                    updatedEntity.DisconnectFromContainer();
-                }
-                // if (args.Prim.NameValues != null) {
-                //     foreach (OMV.NameValue nv in args.Prim.NameValues) {
-                //         m_log.Log(LogLevel.DRENDERDETAIL, "NAMEVALUE: {0}={1} on {2}", nv.Name, nv.Value, updatedEntity.Name);
-                //     }
-                // }
-
-                // if  there is an angular velocity and this is not an avatar, pass the information
-                // along as an animation (llTargetOmega)
-                // we convert the information into a standard form
-                IEntityAvatar av;
-                if (!updatedEntity.TryGet<IEntityAvatar>(out av)) {
-                    if (args.Prim.AngularVelocity != OMV.Vector3.Zero) {
-                        IAnimation anim;
-                        float rotPerSec = args.Prim.AngularVelocity.Length() / Constants.TWOPI;
-                        OMV.Vector3 axis = args.Prim.AngularVelocity;
-                        axis.Normalize();
-                        if (!updatedEntity.TryGet<IAnimation>(out anim)) {
-                            anim = new LLAnimation();
-                            updatedEntity.RegisterInterface<IAnimation>(anim);
-                            m_log.Log(LogLevel.DUPDATEDETAIL, "Created prim animation on {0}", updatedEntity.Name);
-                        }
-                        if (rotPerSec != anim.StaticRotationRotPerSec || axis != anim.StaticRotationAxis) {
-                            anim.AngularVelocity = args.Prim.AngularVelocity;   // legacy. Remove when other part plumbed
-                            anim.StaticRotationAxis = axis;
-                            anim.StaticRotationRotPerSec = rotPerSec;
-                            anim.DoStaticRotation = true;
-                            updateFlags |= UpdateCodes.Animation;
-                            m_log.Log(LogLevel.DUPDATEDETAIL, "Updating prim animation on {0}", updatedEntity.Name);
-                        }
-                    }
-                }
+                ProcessEntityContainer(updatedEntity, rcontext, ref updateFlags, args.Prim.ParentID);
+                ProcessEntityAnimation(updatedEntity, ref updateFlags, args.Prim.AngularVelocity);
+                ProcessEntityUpdates(updatedEntity, updateFlags);
             }
             catch (Exception e) {
                 m_log.Log(LogLevel.DBADERROR, "FAILED CREATION OF NEW PRIM: " + e.ToString());
             }
         }
-        // special update for the agent so it knows there is new info from the network
-        // The real logic to push the update through happens in the IEntityAvatar.Update()
-        if (updatedEntity != null) {
-            if (updatedEntity == this.MainAgent.AssociatedAvatar) {
-                this.MainAgent.DataUpdate(updateFlags);
-            }
-            updatedEntity.Update(updateFlags);
-        }
 
         return;
+    }
+
+    // For a new or existing entity, handle the parenting and containers that could hold
+    // this entity.
+    private void ProcessEntityContainer(IEntity ent, LLRegionContext regionContext, 
+                                                ref UpdateCodes updateFlags, uint parentID ) {
+        try {
+            // The way this is supposed to work is that entities have parents and parents have collections
+            // of entities as children. Occasionally we learn about children before we hear about
+            // the parent. This code just punts that problem. There is code over in Renderer.Ogre
+            // to hold the child until a parent is found. What should really happen is comm should
+            // hold the child until a parent is found. This would make parent/child relatioships 
+            // first class relations and hide any comm implmentation dependencies from the rest
+            // of the system.
+            if (parentID != 0 && ent.ContainingEntity == null) {
+                updateFlags |= UpdateCodes.ParentID;
+                IEntity parentEntity = null;
+                regionContext.TryGetEntityLocalID(parentID, out parentEntity);
+                if (parentEntity != null) {
+                    ent.ContainingEntity = parentEntity;
+                    parentEntity.AddEntityToContainer(ent);
+                }
+                else {
+                    m_log.Log(LogLevel.DUPDATEDETAIL, "Can't assign parent. Entity not found. ent={0}", ent.Name);
+                }
+            }
+            if (parentID == 0 && ent.ContainingEntity != null) {
+                // the prim has been removed from it's parent
+                updateFlags |= UpdateCodes.ParentID;
+                ent.DisconnectFromContainer();
+            }
+            // if (args.Prim.NameValues != null) {
+            //     foreach (OMV.NameValue nv in args.Prim.NameValues) {
+            //         m_log.Log(LogLevel.DRENDERDETAIL, "NAMEVALUE: {0}={1} on {2}", nv.Name, nv.Value, ent.Name);
+            //     }
+            // }
+        }
+        catch (Exception e) {
+            m_log.Log(LogLevel.DBADERROR, "FAILED ProcessEntityContainer: " + e.ToString());
+        }
+        return;
+    }
+
+    // For the moment, create only one animation for an entity and that is the angular rotation.
+    private void ProcessEntityAnimation(IEntity ent, ref UpdateCodes updateFlags, OMV.Vector3 angularVelocity) {
+        try {
+            // if  there is an angular velocity and this is not an avatar, pass the information
+            // along as an animation (llTargetOmega)
+            // we convert the information into a standard form
+            IEntityAvatar av;
+            if (!ent.TryGet<IEntityAvatar>(out av)) {
+                if (angularVelocity != OMV.Vector3.Zero) {
+                    IAnimation anim;
+                    float rotPerSec = angularVelocity.Length() / Constants.TWOPI;
+                    OMV.Vector3 axis = angularVelocity;
+                    axis.Normalize();
+                    if (!ent.TryGet<IAnimation>(out anim)) {
+                        anim = new LLAnimation();
+                        ent.RegisterInterface<IAnimation>(anim);
+                        m_log.Log(LogLevel.DUPDATEDETAIL, "Created prim animation on {0}", ent.Name);
+                    }
+                    if (rotPerSec != anim.StaticRotationRotPerSec || axis != anim.StaticRotationAxis) {
+                        anim.AngularVelocity = angularVelocity;   // legacy. Remove when other part plumbed
+                        anim.StaticRotationAxis = axis;
+                        anim.StaticRotationRotPerSec = rotPerSec;
+                        anim.DoStaticRotation = true;
+                        updateFlags |= UpdateCodes.Animation;
+                        m_log.Log(LogLevel.DUPDATEDETAIL, "Updating prim animation on {0}", ent.Name);
+                    }
+                }
+            }
+        }
+        catch (Exception e) {
+            m_log.Log(LogLevel.DBADERROR, "FAILED ProcessEntityAnimation: " + e.ToString());
+        }
+    }
+
+    // Entity has been updated. Tell the world about the updates.
+    private void ProcessEntityUpdates(IEntity ent, UpdateCodes updateFlags) {
+        try {
+            // special update for the agent so it knows there is new info from the network
+            // The real logic to push the update through happens in the IEntityAvatar.Update()
+            if (ent != null) {
+                if (ent == this.MainAgent.AssociatedAvatar) {
+                    this.MainAgent.DataUpdate(updateFlags);
+                }
+                ent.Update(updateFlags);
+            }
+        }
+        catch (Exception e) {
+            m_log.Log(LogLevel.DBADERROR, "FAILED ProcessEntityUpdates: " + e.ToString());
+        }
     }
     // ===============================================================
     public void Objects_AttachmentUpdate(Object sender, OMV.PrimEventArgs args) {
@@ -892,7 +927,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
 
             if (rcontext.TryGetEntityLocalID(update.LocalID, out updatedEntity)) {
                 if ((updateFlags & UpdateCodes.Position) != 0) {
-                    updatedEntity.RelativePosition = update.Position;
+                    updatedEntity.LocalPosition = update.Position;
                 }
                 if ((updateFlags & UpdateCodes.Rotation) != 0) {
                     updatedEntity.Heading = update.Rotation;
@@ -949,7 +984,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
                             updateFlags |= UpdateCodes.New;
                             return (IEntity)newEnt;
                         }) ) {
-                updatedEntity.RelativePosition = args.Avatar.Position;
+                updatedEntity.LocalPosition = args.Avatar.Position;
                 updatedEntity.Heading = args.Avatar.Rotation;
                 // We check here if this avatar goes with the agent in the world
                 // If this av is with the agent, make the connection
@@ -958,7 +993,10 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
                     this.MainAgent.AssociatedAvatar = (IEntityAvatar)updatedEntity;
                 }
             }
+            ProcessEntityContainer(updatedEntity, rcontext, ref updateFlags, args.Avatar.ParentID);
+            ProcessEntityUpdates(updatedEntity, updateFlags);
         }
+        /*
         if (args.Avatar.LocalID == m_client.Self.LocalID) {
             // an extra special update for the agent so it knows things have changed
             this.MainAgent.DataUpdate(updateFlags);
@@ -966,6 +1004,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
 
         // tell the entity it changed. Since this is an avatar entity it will update the agent if necessary.
         if (updatedEntity != null) updatedEntity.Update(updateFlags);
+         */
         return;
     }
 
@@ -1099,7 +1138,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
 
         // If the simulator has the texture capability, use that
         Uri textureUri = sim.Caps.CapabilityURI("GetTexture");
-        if (ret == null && textureUri != null) {
+        if (ret == null && textureUri != null && ModuleParams.ParamBool(ModuleName+".Assets.EnableCaps")) {
             m_log.Log(LogLevel.DCOMM, "CommLLLP: creating OSAssetContextCap for {0}", m_loginGrid);
             ret = new OSAssetContextCap(LoggedInGridName, textureUri);
             ret.InitializeContext(this, 

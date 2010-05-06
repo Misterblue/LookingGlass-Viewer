@@ -888,7 +888,7 @@ void ProcessBetweenFrame::ProcessWorkItems(int millisToProcess) {
 			}
 			*/
 			// comment this out to see if there are ordering bugs (this rearranges the queued actions)
-			// m_betweenFrameWork.sort(XXCompareElements);
+			m_betweenFrameWork.sort(XXCompareElements);
 		}
 		LGLOCK_UNLOCK(m_workItemMutex);
 		m_modified = false;

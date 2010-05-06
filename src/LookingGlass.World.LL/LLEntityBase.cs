@@ -49,51 +49,34 @@ namespace LookingGlass.World.LL {
             }
         }
 
-        public override OMV.Vector3 RelativePosition {
+        public override OMV.Vector3 LocalPosition {
             get {
                 if (Prim != null) {
+                    base.LocalPosition = Prim.Position;
                     return Prim.Position;
                 }
                 else {
-                    return base.RelativePosition;
+                    return base.LocalPosition;
                 }
             }
             set {
+                base.LocalPosition = value;
                 if (Prim != null) {
                     Prim.Position = value;
-                }
-                else {
-                    base.RelativePosition = value;
                 }
             }
         }
 
         public override OMV.Vector3d GlobalPosition {
             get {
+                OMV.Vector3 regionRelative = this.RegionPosition;
                 if (Prim != null) {
-                    return new OMV.Vector3d(
-                        m_regionContext.WorldBase.X + (double)Prim.Position.X,
-                        m_regionContext.WorldBase.Y + (double)Prim.Position.Y,
-                        m_regionContext.WorldBase.Z + (double)Prim.Position.Z);
+                    return m_regionContext.CalculateGlobalPosition(regionRelative);
                 }
                 else {
                     return base.GlobalPosition;
                 }
             }
-            set {
-                if (Prim != null) {
-                    Prim.Position = new OMV.Vector3(
-                        (int)(value.X - m_regionContext.WorldBase.X),
-                        (int)(value.Y - m_regionContext.WorldBase.Y),
-                        (int)(value.Z - m_regionContext.WorldBase.Z)
-                    );
-                }
-                else {
-                    base.GlobalPosition = value;
-                }
-            }
         }
-
-
     }
 }

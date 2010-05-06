@@ -81,7 +81,7 @@ class RenderAvatar : IRenderEntity {
                                 parentSceneNodeName,
                                 entMeshName.Name,
                                 false, true,
-                                av.RelativePosition.X, av.RelativePosition.Y, av.RelativePosition.Z,
+                                av.RegionPosition.X, av.RegionPosition.Y, av.RegionPosition.Z,
                                 1f, 1f, 1f,
                                 av.Heading.W, av.Heading.X, av.Heading.Y, av.Heading.Z)) {
                     // m_log.Log(LogLevel.DRENDERDETAIL, "Delaying avatar rendering. {0} waiting for parent {1}",
@@ -143,7 +143,7 @@ class RenderAvatar : IRenderEntity {
             m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: Updating position/rotation for {0}", entitySceneNodeName);
             Ogr.UpdateSceneNodeBF(priority, entitySceneNodeName,
                 ((what & UpdateCodes.Position) != 0),
-                m_ent.RelativePosition.X, m_ent.RelativePosition.Y, m_ent.RelativePosition.Z,
+                m_ent.RegionPosition.X, m_ent.RegionPosition.Y, m_ent.RegionPosition.Z,
                 false, 1f, 1f, 1f,  // don't pass scale yet
                 ((what & UpdateCodes.Rotation) != 0),
                 m_ent.Heading.W, m_ent.Heading.X, m_ent.Heading.Y, m_ent.Heading.Z);

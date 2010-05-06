@@ -361,6 +361,27 @@ public abstract class AssetContextBase : IDisposable {
         return;
     }
 
+    // For some reason this work item failed. Put the not found texture in it's place
+    private void WriteOutNotFoundTexture(WaitingInfo wi) {
+        try {
+            lock (FileSystemAccessLock) {
+                MakeParentDirectoriesExist(wi.filename);
+                string noTextureFilename = LookingGlassBase.Instance.AppParams.ParamString(m_comm.Name + ".Assets.NoTextureFilename");
+                // if we copy the no texture file into the filesystem, we will never retry to
+                // fetch the texture. This copy is not a good thing.
+                // if (!File.Exists(wi.filename)) {
+                File.Copy(noTextureFilename, wi.filename);
+                // }
+            }
+            m_log.Log(LogLevel.DTEXTURE,
+                "ProcessDownloadFinished: Texture fetch failed={0}. Using not found texture.", wi.worldID.ToString());
+        }
+        catch (Exception e) {
+            m_log.Log(LogLevel.DBADERROR,
+                "ProcessDownloadFinished: Texture fetch failed. Could not create default texture: " + e.ToString());
+        }
+    }
+
     private bool CompleteDownloadLater(DoLaterBase qInstance, Object parms) {
         Object[] lParams = (Object[])parms;
         OMV.Assets.AssetTexture m_assetTexture = (OMV.Assets.AssetTexture)lParams[0];
@@ -408,10 +429,12 @@ public abstract class AssetContextBase : IDisposable {
                             catch (Exception e) {
                                 m_log.Log(LogLevel.DBADERROR, "ProcessDownloadFinished: TEXTURE DOWNLOAD COMPLETE. FAILED PNG FILE CREATION FOR {0}: {1}", 
                                         textureEntityName.Name, e.ToString());
+                                WriteOutNotFoundTexture(wii);
                             }
                         }
                         else {
                             m_log.Log(LogLevel.DBADERROR, "ProcessDownloadFinished: TEXTURE DOWNLOAD COMPLETE. FAILED JPEG2 DECODE FOR {0}", textureEntityName.Name);
+                            WriteOutNotFoundTexture(wii);
                         }
                     }
                     else {
@@ -428,6 +451,7 @@ public abstract class AssetContextBase : IDisposable {
                         catch (Exception e) {
                             m_log.Log(LogLevel.DBADERROR, "ProcessDownloadFinished: TEXTURE DOWNLOAD COMPLETE. ERROR JPEG2000 FILE CREATION FOR {0}: {1}", 
                                         textureEntityName.Name, e.ToString());
+                            WriteOutNotFoundTexture(wii);
                         }
                     }
                     m_log.Log(LogLevel.DTEXTUREDETAIL, "ProcessDownloadFinished: Download finished callback: " + wii.worldID.ToString());
@@ -439,6 +463,7 @@ public abstract class AssetContextBase : IDisposable {
                 catch (Exception e) {
                     m_log.Log(LogLevel.DBADERROR, "ProcessDownloadFinished: TEXTURE DOWNLOAD COMPLETE. UNKNOWN FAILURE CREATING FILE FOR {0}: {1}", 
                         textureEntityName.Name, e.ToString());
+                    WriteOutNotFoundTexture(wii);
                 }
             }
             // Sculptie and baked textures get their alpha channels stripped out of them

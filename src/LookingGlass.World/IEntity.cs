@@ -44,8 +44,9 @@ public interface IEntity : IRegistryCore, IDisposable {
     void RemoveEntityFromContainer( IEntity ent);
 
     OMV.Quaternion Heading { get; set; }
-    OMV.Vector3 RelativePosition { get; set; }   // position relative to RegionContext
-    OMV.Vector3d GlobalPosition { get; set;  }
+    OMV.Vector3 LocalPosition { get; set; }     // position relative to parent (if any)
+    OMV.Vector3 RegionPosition { get; }         // position relative to RegionContext
+    OMV.Vector3d GlobalPosition { get; }
 
     // code to check to see if this thing has changed from before
     int LastEntityHashCode { get; set; }

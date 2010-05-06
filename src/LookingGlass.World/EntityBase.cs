@@ -206,40 +206,39 @@ public abstract class EntityBase : IEntity {
         }
     }
 
-    // position relative to RegionContext
-    protected OMV.Vector3 m_relativePosition = new OMV.Vector3(10f, 10f, 10f);
-    virtual public OMV.Vector3 RelativePosition {
+    virtual public OMV.Vector3 RegionPosition {
         get {
-                return m_relativePosition;
+            if (this.ContainingEntity == null) {
+                return this.LocalPosition;
+            }
+            else {
+                return this.LocalPosition + this.ContainingEntity.RegionPosition;
+            }
+        }
+    }
+
+    // local coodinate position relative to a parent (if exists)
+    protected OMV.Vector3 m_localPosition = new OMV.Vector3(10f, 10f, 10f);
+    virtual public OMV.Vector3 LocalPosition {
+        get {
+                return m_localPosition;
         }
         set {
-            m_relativePosition = value;
+            m_localPosition = value;
         }
     }
 
     protected OMV.Vector3d m_globalPosition;
     virtual public OMV.Vector3d GlobalPosition {
         get {
+            OMV.Vector3 regionRelative = this.RegionPosition;
             if (m_regionContext != null) {
                 return new OMV.Vector3d(
-                    m_regionContext.WorldBase.X + (double)RelativePosition.X,
-                    m_regionContext.WorldBase.Y + (double)RelativePosition.Y,
-                    m_regionContext.WorldBase.Z + (double)RelativePosition.Z);
+                    m_regionContext.WorldBase.X + (double)regionRelative.X,
+                    m_regionContext.WorldBase.Y + (double)regionRelative.Y,
+                    m_regionContext.WorldBase.Z + (double)regionRelative.Z);
             }
             return new OMV.Vector3d(10d, 10d, 10d);
-        }
-        set {
-            if (RegionContext != null) {
-                m_relativePosition = new OMV.Vector3(
-                    (int)(value.X - m_regionContext.WorldBase.X),
-                    (int)(value.Y - m_regionContext.WorldBase.Y),
-                    (int)(value.Z - m_regionContext.WorldBase.Z)
-                );
-            }
-            // if no region. fake a value
-            m_relativePosition = new OMV.Vector3(
-                (int)(value.X % 256d), (int)(value.X % 256d), (int)(value.Z % 256d)
-                );
         }
     }
     #endregion LOCATION

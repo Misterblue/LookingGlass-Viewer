@@ -72,7 +72,6 @@ public class OSAssetContextCap : AssetContextBase {
             m_maxOutstandingTextureRequests = 4;
         }
         if (m_proxyPath != null && m_proxyPath.Length == 0) m_proxyPath = null;
-        Uri newbase;
         
         m_log.Log(LogLevel.DINIT, "InitializeContextFinish: base={0}, proxy={1}", m_baseUri.ToString(),
                         m_proxyPath == null ? "NULL" : m_proxyPath);

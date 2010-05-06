@@ -80,7 +80,7 @@ public class LLAgent : IAgent {
     // The underlying data has been updated. Forget local things.
     public void DataUpdate(UpdateCodes what) {
         // Local values are set for dead-reconning but once we have official values, use  them
-        if ((what & UpdateCodes.Position) != 0) m_haveLocalPosition = false;
+        // if ((what & UpdateCodes.Position) != 0) m_haveLocalPosition = false;
         if ((what & UpdateCodes.Rotation) != 0) m_haveLocalHeading = false;
     }
 
@@ -95,13 +95,13 @@ public class LLAgent : IAgent {
         // TODO: test if running or flying and use other fudges
         if (startstop && m_shouldPreMoveAvatar) {
             if (m_myAvatar != null) {
-                OMV.Vector3 newPos = m_myAvatar.RelativePosition +
+                OMV.Vector3 newPos = m_myAvatar.LocalPosition +
                             new OMV.Vector3(CalcMoveFudge(), 0f, 0f) * m_myAvatar.Heading;
                 m_log.Log(LogLevel.DWORLDDETAIL|LogLevel.DUPDATEDETAIL, "MoveForward: premove from {0} to {1}", 
-                        m_myAvatar.RelativePosition.ToString(), newPos);
-                this.RelativePosition = newPos;
+                        m_myAvatar.LocalPosition.ToString(), newPos);
+                this.LocalPosition = newPos;
                 m_client.Self.RelativePosition = newPos;
-                m_myAvatar.RelativePosition = newPos;
+                m_myAvatar.LocalPosition = newPos;
                 m_myAvatar.Update(UpdateCodes.Position);
             }
         }
@@ -113,12 +113,12 @@ public class LLAgent : IAgent {
         m_client.Self.Movement.SendUpdate();
         if (startstop && m_shouldPreMoveAvatar) {
             if (m_myAvatar != null) {
-                OMV.Vector3 newPos = m_myAvatar.RelativePosition +
+                OMV.Vector3 newPos = m_myAvatar.LocalPosition +
                             new OMV.Vector3(-CalcMoveFudge(), 0f, 0f) * m_myAvatar.Heading;
                 m_log.Log(LogLevel.DWORLDDETAIL|LogLevel.DUPDATEDETAIL, "MoveBackward: premove from {0} to {1}", 
-                        m_myAvatar.RelativePosition.ToString(), newPos);
-                this.RelativePosition = newPos;
-                m_myAvatar.RelativePosition = newPos;
+                        m_myAvatar.LocalPosition.ToString(), newPos);
+                this.LocalPosition = newPos;
+                m_myAvatar.LocalPosition = newPos;
                 m_client.Self.RelativePosition = newPos;
                 m_myAvatar.Update(UpdateCodes.Position);
             }
@@ -130,9 +130,9 @@ public class LLAgent : IAgent {
         m_client.Self.Movement.SendUpdate();
         if (startstop && m_shouldPreMoveAvatar) {
             if (m_myAvatar != null) {
-                this.RelativePosition = m_myAvatar.RelativePosition + new OMV.Vector3(0f, 0f, CalcMoveFudge());
-                m_myAvatar.RelativePosition = this.RelativePosition;
-                m_client.Self.RelativePosition = this.RelativePosition;
+                this.LocalPosition = m_myAvatar.LocalPosition + new OMV.Vector3(0f, 0f, CalcMoveFudge());
+                m_myAvatar.LocalPosition = this.LocalPosition;
+                m_client.Self.RelativePosition = this.LocalPosition;
                 m_myAvatar.Update(UpdateCodes.Position);
             }
         }
@@ -143,9 +143,9 @@ public class LLAgent : IAgent {
         m_client.Self.Movement.SendUpdate();
         if (startstop && m_shouldPreMoveAvatar) {
             if (m_myAvatar != null) {
-                this.RelativePosition = m_myAvatar.RelativePosition + new OMV.Vector3(0f, 0f, -CalcMoveFudge());
-                m_myAvatar.RelativePosition = this.RelativePosition;
-                m_client.Self.RelativePosition = this.RelativePosition;
+                this.LocalPosition = m_myAvatar.LocalPosition + new OMV.Vector3(0f, 0f, -CalcMoveFudge());
+                m_myAvatar.LocalPosition = this.LocalPosition;
+                m_client.Self.RelativePosition = this.LocalPosition;
                 m_myAvatar.Update(UpdateCodes.Position);
             }
         }
@@ -166,7 +166,7 @@ public class LLAgent : IAgent {
             Zturn.Normalize();
             m_client.Self.Movement.BodyRotation = OMV.Quaternion.Normalize(m_client.Self.Movement.BodyRotation* Zturn);
             m_client.Self.Movement.HeadRotation = OMV.Quaternion.Normalize(m_client.Self.Movement.HeadRotation* Zturn);
-            //m_client.Self.RelativeRotation += Zturn;
+            //m_client.Self.LocalPosition += Zturn;
         }
         m_client.Self.Movement.SendUpdate();
         if (startstop && m_shouldPreMoveAvatar) {
@@ -187,7 +187,7 @@ public class LLAgent : IAgent {
             Zturn.Normalize();
             m_client.Self.Movement.BodyRotation = OMV.Quaternion.Normalize(m_client.Self.Movement.BodyRotation* Zturn);
             m_client.Self.Movement.HeadRotation = OMV.Quaternion.Normalize(m_client.Self.Movement.HeadRotation* Zturn);
-            // m_client.Self.RelativeRotation += Zturn;
+            // m_client.Self.LocalPosition += Zturn;
         }
         // Send the movement (the turn) to the simulator. The rotation above will be corrected by the simulator
         m_client.Self.Movement.SendUpdate();
@@ -255,39 +255,30 @@ public class LLAgent : IAgent {
         }
     }
 
-    private bool m_haveLocalPosition = false;
-    private OMV.Vector3 m_relativePosition;
-    public OMV.Vector3 RelativePosition {
+    private OMV.Vector3 m_localPosition;
+    public OMV.Vector3 LocalPosition {
         get {
-            if (m_haveLocalPosition) {
-                if (AssociatedAvatar != null) {
-                    if (AssociatedAvatar.ContainingEntity != null) {
-                        // If the avatar is the child of another entity, add that in
-                        // This happens when the avatar is sitting
-                        return m_relativePosition + AssociatedAvatar.ContainingEntity.RelativePosition;
-                    }
-                }
-                return m_relativePosition;
+            if (AssociatedAvatar != null) {
+                m_localPosition = m_client.Self.SimPosition;
+                return m_client.Self.SimPosition;
             }
-            return m_client.Self.SimPosition;
+            return m_localPosition;
         }
         set {
-            m_relativePosition = value;
-            m_haveLocalPosition = true;
+            m_localPosition = value;
         }
-    }   // position relative to RegionContext
+    }
+
+    public OMV.Vector3 RegionPosition {
+        get {
+            return this.LocalPosition;
+        }
+    }
 
     public OMV.Vector3d GlobalPosition {
         get {
-            if (m_haveLocalPosition) {
-                if (AssociatedAvatar != null) {
-                    return AssociatedAvatar.RegionContext.CalculateGlobalPosition(RelativePosition);
-                }
-            }
             return m_client.Self.GlobalPosition;
-        }
-        set {
-            m_log.Log(LogLevel.DBADERROR, "GlobalPosition.set NOT IMPLEMENTED");
+            // return AssociatedAvatar.RegionContext.CalculateGlobalPosition(RelativePosition);
         }
     }
     #endregion POSITION

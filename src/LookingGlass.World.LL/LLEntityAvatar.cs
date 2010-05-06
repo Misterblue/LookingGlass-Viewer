@@ -97,27 +97,29 @@ namespace LookingGlass.World.LL {
             }
         }
 
-        override public OMV.Vector3 RelativePosition {
+        override public OMV.Vector3 LocalPosition {
             get {
                 if (m_avatar != null) {
-                    base.RelativePosition = m_avatar.Position;
+                    base.LocalPosition = m_avatar.Position;
                     return m_avatar.Position;
                 }
-                return base.RelativePosition;
+                return base.LocalPosition;
             }
             set {
-                base.RelativePosition = value;
-                if (m_avatar != null) m_avatar.Position = base.RelativePosition;
+                base.LocalPosition = value;
+                if (m_avatar != null) {
+                    m_avatar.Position = base.LocalPosition;
+                }
             }
         }
         override public OMV.Vector3d GlobalPosition {
             get {
-                if (m_avatar != null) base.RelativePosition = m_avatar.Position;
+                // this works in conjunction with the base class to calculate region location
+                OMV.Vector3 regionRelative = this.RegionPosition;
+                if (m_avatar != null) {
+                    return m_regionContext.CalculateGlobalPosition(regionRelative);
+                } 
                 return base.GlobalPosition;
-            }
-            set {
-                base.GlobalPosition = value;
-                if (m_avatar != null) m_avatar.Position = base.RelativePosition;
             }
         }
         #endregion POSITION
