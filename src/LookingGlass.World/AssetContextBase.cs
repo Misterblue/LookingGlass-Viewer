@@ -336,15 +336,7 @@ public abstract class AssetContextBase : IDisposable {
         if ((state == OMV.TextureRequestState.NotFound) || (state == OMV.TextureRequestState.Timeout)) {
             foreach (WaitingInfo wi in toCall) {
                 try {
-                    lock (FileSystemAccessLock) {
-                        MakeParentDirectoriesExist(wi.filename);
-                        string noTextureFilename = LookingGlassBase.Instance.AppParams.ParamString(m_comm.Name + ".Assets.NoTextureFilename");
-                        // if we copy the no texture file into the filesystem, we will never retry to
-                        // fetch the texture. This copy is not a good thing.
-                        // if (!File.Exists(wi.filename)) {
-                            File.Copy(noTextureFilename, wi.filename);
-                        // }
-                    }
+                    WriteOutNotFoundTexture(wi);
                     m_log.Log(LogLevel.DTEXTURE, 
                         "ProcessDownloadFinished: Texture fetch failed={0}. Using not found texture.", wi.worldID.ToString());
                 }
@@ -362,16 +354,23 @@ public abstract class AssetContextBase : IDisposable {
     }
 
     // For some reason this work item failed. Put the not found texture in it's place
+    private void WriteOutNotFoundSculpty(WaitingInfo wi) {
+        string noSculptyFilename = LookingGlassBase.Instance.AppParams.ParamString(m_comm.Name + ".Assets.NoSculptyFilename");
+        WriteOutNotFoundFile(wi, noSculptyFilename);
+    }
+
     private void WriteOutNotFoundTexture(WaitingInfo wi) {
+        string noTextureFilename = LookingGlassBase.Instance.AppParams.ParamString(m_comm.Name + ".Assets.NoTextureFilename");
+        WriteOutNotFoundFile(wi, noTextureFilename);
+    }
+
+    private void WriteOutNotFoundFile(WaitingInfo wi, string filename) {
         try {
             lock (FileSystemAccessLock) {
                 MakeParentDirectoriesExist(wi.filename);
-                string noTextureFilename = LookingGlassBase.Instance.AppParams.ParamString(m_comm.Name + ".Assets.NoTextureFilename");
                 // if we copy the no texture file into the filesystem, we will never retry to
                 // fetch the texture. This copy is not a good thing.
-                // if (!File.Exists(wi.filename)) {
-                File.Copy(noTextureFilename, wi.filename);
-                // }
+                File.Copy(filename, wi.filename);
             }
             m_log.Log(LogLevel.DTEXTURE,
                 "ProcessDownloadFinished: Texture fetch failed={0}. Using not found texture.", wi.worldID.ToString());
@@ -518,11 +517,13 @@ public abstract class AssetContextBase : IDisposable {
                     }
                     else {
                         m_log.Log(LogLevel.DBADERROR, "ProcessDownloadFinished: SCULPTIE TEXTURE DOWNLOAD COMPLETE. FAILED JPEG2 DECODE FOR {0}", textureEntityName.Name);
+                        WriteOutNotFoundSculpty(wii);
                     }
                 }
                 catch (Exception e) {
                     m_log.Log(LogLevel.DBADERROR, "ProcessDownloadFinished: SCULPTIE TEXTURE DOWNLOAD COMPLETE. UNKNOWN ERROR PROCESSING {0}: {1}", 
                         textureEntityName.Name, e.ToString());
+                    WriteOutNotFoundSculpty(wii);
                 }
             }
         }

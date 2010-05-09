@@ -258,6 +258,9 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         ModuleParams.AddDefaultParameter(ModuleName + ".Assets.NoTextureFilename", 
                     Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "./LookingGlassResources/NoTexture.png"),
                     "Filename of texture to display when we can't get the real texture");
+        ModuleParams.AddDefaultParameter(ModuleName + ".Assets.NoSculptyFilename", 
+                    Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "./LookingGlassResources/NoSculpty.png"),
+                    "Filename of texture to display when we can't get the real texture");
         ModuleParams.AddDefaultParameter(ModuleName + ".Assets.ConvertPNG", "false",
                     "whether to convert incoming JPEG2000 files to PNG files in the cache");
         ModuleParams.AddDefaultParameter(ModuleName + ".Texture.MaxRequests", 
@@ -762,8 +765,11 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
                         }) ) {
                     // new prim created
                 }
+                // if entity has a parent, set up the containers
                 ProcessEntityContainer(updatedEntity, rcontext, ref updateFlags, args.Prim.ParentID);
+                // if there are animations for this entity
                 ProcessEntityAnimation(updatedEntity, ref updateFlags, args.Prim.AngularVelocity);
+                // send updates for this entity updates
                 ProcessEntityUpdates(updatedEntity, updateFlags);
             }
             catch (Exception e) {
@@ -976,6 +982,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
             EntityName avatarEntityName = LLEntityAvatar.AvatarEntityNameFromID(rcontext.AssetContext, args.Avatar.ID);
             IEntityCollection coll;
             rcontext.TryGet<IEntityCollection>(out coll);
+            // find the entity for this avatar and create if necessary
             if (coll.TryGetCreateEntity(avatarEntityName, out updatedEntity, delegate() {
                             m_log.Log(LogLevel.DUPDATEDETAIL, "AvatarUpdate: creating avatar {0} {1} ({2})",
                                 args.Avatar.FirstName, args.Avatar.LastName, args.Avatar.ID);
@@ -984,6 +991,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
                             updateFlags |= UpdateCodes.New;
                             return (IEntity)newEnt;
                         }) ) {
+                // created new entity. 
                 updatedEntity.LocalPosition = args.Avatar.Position;
                 updatedEntity.Heading = args.Avatar.Rotation;
                 // We check here if this avatar goes with the agent in the world
@@ -993,7 +1001,9 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
                     this.MainAgent.AssociatedAvatar = (IEntityAvatar)updatedEntity;
                 }
             }
+            // if avatar has a parent (sitting) deal with the containing containers
             ProcessEntityContainer(updatedEntity, rcontext, ref updateFlags, args.Avatar.ParentID);
+            // send updates for the updated entity
             ProcessEntityUpdates(updatedEntity, updateFlags);
         }
         /*

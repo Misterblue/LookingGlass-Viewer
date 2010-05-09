@@ -27,40 +27,6 @@
 #include "RendererOgre.h"
 #include "BadImageCodec.h"
 
-// Materials go through several states:
-//  unknown: no definition
-//  waiting to load: waiting for a between from slot to be loaded
-//  waiting for reload: waiting for a between frame slot to be reloaded (refreshed)
-//  loaded:
-//  waiting for unload: waiting for a between frame slot to unload and unmap
-//  unloaded: much the same as 'unknown'
-
-// there are several operations on materials:
-//   load: load/build the material
-//   refresh: reload the material so it is refreshed on the screen
-//   unload for culling: unload but we will want it back soon
-//   unload: unload and remove all pointers
-
-// We build a state machine for materials from these two sets:
-//          unknown	wload	wreload	loaded	wunload	unloaded
-//   load	A		B		B		B		D		A
-// refresh	A		B		B		C		D		A
-// unloadc  E		F		F		D		E		E
-// unload	E		G		G		H		E		E
-// loaddone	I		I		I		E		X		I
-// unloaddn	J		X		X		J		J		E
-// A: queue load request in between frame queue. =>wload
-// B: ignore this request since it's already in the queue.
-// C: queue refresh request on material. =>wreload
-// D: queue an unload request =>wunload
-// E; ignore request 
-// F: remove waiting load request and schedule unload. =>wunload
-// G: remove waiting load request and schedule complete unload request. =>wunload
-// H: queue a complete unload request. =>wunload
-// I: =>loaded
-// J: =>unloaded
-// X: should never get here
-
 namespace LG {
 
 OLMaterialTracker* OLMaterialTracker::m_instance = NULL;

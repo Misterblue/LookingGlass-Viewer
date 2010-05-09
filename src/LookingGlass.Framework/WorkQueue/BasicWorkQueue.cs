@@ -164,7 +164,7 @@ public class BasicWorkQueue : IWorkQueue {
         lock (doEvenLater) {
             int nextTime = Math.Min(w.requeueWait * w.timesRequeued, 10000);
             nextTime = Math.Max(nextTime, 100);     // never less than this
-            w.remainingWait = System.Environment.TickCount + nextTime;
+            w.remainingWait = (System.Environment.TickCount  & 0x3fffffff) + nextTime;
             doEvenLater.Add(w);
             if (doEvenLaterThread == null) {    // is there another thread doing the requeuing?
                 doEvenLaterThread = Thread.CurrentThread;   // no, looks like I'm stuck
@@ -176,7 +176,7 @@ public class BasicWorkQueue : IWorkQueue {
         while ((doEvenLaterThread != null) && (doEvenLaterThread == Thread.CurrentThread)) {
             List<DoLaterBase> doneWaiting = null;
             int sleepTime = 0;
-            int now = System.Environment.TickCount;
+            int now = System.Environment.TickCount & 0x3fffffff;
             lock (doEvenLater) {    // protects both doEvenLater and doEvenLaterThread
                 if (doEvenLater.Count > 0) {
                     // remove the last waiting time from each waiter
@@ -203,6 +203,7 @@ public class BasicWorkQueue : IWorkQueue {
                         sleepTime = Math.Min(sleepTime, jj.remainingWait);
                     }
                     sleepTime -= now;
+                    if (sleepTime < 0) sleepTime = 100;
                 }
                 else {
                     // if no more to wait on, this thread is free

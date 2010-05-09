@@ -903,26 +903,28 @@ public class RendererOgreLL : IWorldRenderConv {
 
         // since these are displayed meshes, we need to include the material
         // information
-        for (uint ii = 0; ii < 7; ii++) {
-            OMV.Primitive.TextureEntryFace texFace = prim.Textures.GetFace(ii);
-            if (texFace != null) {
-                hash = djb2(hash, texFace.RGBA.R);
-                hash = djb2(hash, texFace.RGBA.G);
-                hash = djb2(hash, texFace.RGBA.B);
-                hash = djb2(hash, texFace.RGBA.A);
-                hash = djb2(hash, texFace.RepeatU);
-                hash = djb2(hash, texFace.RepeatV);
-                hash = djb2(hash, texFace.OffsetU);
-                hash = djb2(hash, texFace.OffsetV);
-                hash = djb2(hash, texFace.Rotation);
-                hash = djb2(hash, texFace.Glow);
-                hash = djb2(hash, (byte)texFace.Bump);
-                hash = djb2(hash, (byte)texFace.Shiny);
-                hash = djb2(hash, texFace.Fullbright ? 1.0f : 0.5f);
-                hash = djb2(hash, texFace.Glow);
-                byte[] texIDBytes = texFace.TextureID.GetBytes();
-                for (int jj = 0; jj < texIDBytes.Length; jj++) {
-                    hash = djb2(hash, texIDBytes[jj]);
+        if (prim.Textures != null) {
+            for (uint ii = 0; ii < 7; ii++) {
+                OMV.Primitive.TextureEntryFace texFace = prim.Textures.GetFace(ii);
+                if (texFace != null) {
+                    hash = djb2(hash, texFace.RGBA.R);
+                    hash = djb2(hash, texFace.RGBA.G);
+                    hash = djb2(hash, texFace.RGBA.B);
+                    hash = djb2(hash, texFace.RGBA.A);
+                    hash = djb2(hash, texFace.RepeatU);
+                    hash = djb2(hash, texFace.RepeatV);
+                    hash = djb2(hash, texFace.OffsetU);
+                    hash = djb2(hash, texFace.OffsetV);
+                    hash = djb2(hash, texFace.Rotation);
+                    hash = djb2(hash, texFace.Glow);
+                    hash = djb2(hash, (byte)texFace.Bump);
+                    hash = djb2(hash, (byte)texFace.Shiny);
+                    hash = djb2(hash, texFace.Fullbright ? 1.0f : 0.5f);
+                    hash = djb2(hash, texFace.Glow);
+                    byte[] texIDBytes = texFace.TextureID.GetBytes();
+                    for (int jj = 0; jj < texIDBytes.Length; jj++) {
+                        hash = djb2(hash, texIDBytes[jj]);
+                    }
                 }
             }
         }
