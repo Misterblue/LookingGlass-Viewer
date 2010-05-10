@@ -38,7 +38,9 @@ AnimTracker::~AnimTracker() {
 
 // Between frame, update all the animations
 bool AnimTracker::frameStarted(const Ogre::FrameEvent& evt) {
-	LGLOCK_LOCK(m_animationsMutex);
+	LGLOCK_ALOCK animLock;	// a lock that will be released if we have an exception
+	animLock.Lock(m_animationsMutex);
+	// LGLOCK_LOCK(m_animationsMutex);
 	std::list<Animat*>::iterator li;
 	for (li = m_animations.begin(); li != m_animations.end(); li++) {
 		li._Ptr->_Myval->Process(evt.timeSinceLastFrame);
@@ -48,22 +50,28 @@ bool AnimTracker::frameStarted(const Ogre::FrameEvent& evt) {
 		delete anim;
 	}
 	m_removeAnimations.clear();
-	LGLOCK_UNLOCK(m_animationsMutex);
+	// LGLOCK_UNLOCK(m_animationsMutex);
+	animLock.Unlock();
 	return true;
 }
 
 void AnimTracker::RotateSceneNode(Ogre::String sceneNodeName, Ogre::Vector3 axis, float rate) {
+	LGLOCK_ALOCK animLock;	// a lock that will be released if we have an exception
 	LG::Log("AnimTracker::RotateSceneNode for %s", sceneNodeName.c_str());
 	RemoveAnimations(sceneNodeName);
-	LGLOCK_LOCK(m_animationsMutex);
+	animLock.Lock(m_animationsMutex);
+	// LGLOCK_LOCK(m_animationsMutex);
 	Animat* anim = new Animat(sceneNodeName);
 	m_animations.push_back(anim);
-	LGLOCK_UNLOCK(m_animationsMutex);
+	// LGLOCK_UNLOCK(m_animationsMutex);
+	animLock.Unlock();
 	anim->Rotation(axis, rate);
 }
 
 void AnimTracker::RemoveAnimations(Ogre::String sceneNodeName) {
-	LGLOCK_LOCK(m_animationsMutex);
+	LGLOCK_ALOCK animLock;	// a lock that will be released if we have an exception
+	animLock.Lock(m_animationsMutex);
+	// LGLOCK_LOCK(m_animationsMutex);
 	std::list<Animat*>::iterator li;
 	for (li = m_animations.begin(); li != m_animations.end(); li++) {
 		if (!li._Ptr->_Myval->SceneNodeName.empty()) {
@@ -73,7 +81,8 @@ void AnimTracker::RemoveAnimations(Ogre::String sceneNodeName) {
 			}
 		}
 	}
-	LGLOCK_UNLOCK(m_animationsMutex);
+	// LGLOCK_UNLOCK(m_animationsMutex);
+	animLock.Unlock();
 }
 
 // Called by an animation to say it is complete. This will cause the animat to

@@ -117,3 +117,32 @@ extern int LGLockingThreadInitializeCount;
 #define LGLOCK_THREAD_INITIALIZED (LG::LGLockingThreadInitializeCount--)
 #define LGLOCK_THREADS_AREINITIALIZED (LG::LGLockingThreadInitializeCount == 0)
 
+
+// A wrapper class for a lock that is a local variable so it will get unlocked when
+// destructed.
+class LGLOCK_ALOCK {
+public:
+	LGLOCK_ALOCK() { m_mutex = NULL; };
+	~LGLOCK_ALOCK() {
+		if (m_isLocked && m_mutex != NULL) {
+			LGLOCK_UNLOCK(m_mutex);
+		}
+	}
+	void Mutex(LGLOCK_MUTEX mtx) { m_mutex = mtx; }
+	void Lock() {
+		LGLOCK_LOCK(m_mutex);
+		m_isLocked = true;
+	}
+	void Lock(LGLOCK_MUTEX mtx) { // combine Mutex and Lock methods
+		m_mutex = mtx;
+		LGLOCK_LOCK(m_mutex);
+		m_isLocked = true;
+	}
+	void Unlock() {
+		LGLOCK_UNLOCK(m_mutex);
+		m_isLocked = false;
+	}
+private:
+	LGLOCK_MUTEX m_mutex;
+	bool m_isLocked;
+};

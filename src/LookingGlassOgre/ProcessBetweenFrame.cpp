@@ -874,10 +874,13 @@ Ogre::Timer* betweenFrameTimeKeeper = new Ogre::Timer();
 void ProcessBetweenFrame::ProcessWorkItems(int millisToProcess) {
 	unsigned long startTime = betweenFrameTimeKeeper->getMilliseconds();
 	unsigned long endTime = startTime + millisToProcess;
+	LGLOCK_ALOCK workItemLock;	// lock that will be released when exiting this routine
+	workItemLock.Mutex(m_workItemMutex);
 	// This sort is intended to put the highest priority (ones with lowest numbers) at
 	//   the front of the list for processing first.
 	if (m_modified) {
-		LGLOCK_LOCK(m_workItemMutex);
+		// LGLOCK_LOCK(m_workItemMutex);
+		workItemLock.Lock();
 		if (--repriorityCount < 0) {
 			// periodically ask the items to recalc their priority
 			repriorityCount = 40;
@@ -887,33 +890,38 @@ void ProcessBetweenFrame::ProcessWorkItems(int millisToProcess) {
 				li._Ptr->_Myval->RecalculatePriority();
 			}
 			*/
-			// comment this out to see if there are ordering bugs (this rearranges the queued actions)
+			// sort the items so high priority is at the start
 			m_betweenFrameWork.sort(XXCompareElements);
 		}
-		LGLOCK_UNLOCK(m_workItemMutex);
+		// LGLOCK_UNLOCK(m_workItemMutex);
+		workItemLock.Unlock();
 		m_modified = false;
 	}
 	int loopCost = millisToProcess;
 	while (!m_betweenFrameCameraWork.empty()) {
 		GenericQc* workCameraGeneric = NULL;
-		LGLOCK_LOCK(m_workItemMutex);
+		workItemLock.Lock();
+		// LGLOCK_LOCK(m_workItemMutex);
 		if (!m_betweenFrameCameraWork.empty()) {
 			workCameraGeneric = (GenericQc*)m_betweenFrameCameraWork.front();
 			m_betweenFrameCameraWork.pop_front();
 			LG::IncStat(LG::StatBetweenFrameTotalProcessed);
 		}
-		LGLOCK_UNLOCK(m_workItemMutex);
+		// LGLOCK_UNLOCK(m_workItemMutex);
+		workItemLock.Unlock();
 		if (workCameraGeneric != NULL) ProcessOneWorkItem(workCameraGeneric, loopCost, millisToProcess);
 	}
 	while (!m_betweenFrameMaterialWork.empty()) {
 		GenericQc* workMaterialGeneric = NULL;
-		LGLOCK_LOCK(m_workItemMutex);
+		workItemLock.Lock();
+		// LGLOCK_LOCK(m_workItemMutex);
 		if (!m_betweenFrameMaterialWork.empty()) {
 			workMaterialGeneric = (GenericQc*)m_betweenFrameMaterialWork.front();
 			m_betweenFrameMaterialWork.pop_front();
 			LG::IncStat(LG::StatBetweenFrameTotalProcessed);
 		}
-		LGLOCK_UNLOCK(m_workItemMutex);
+		// LGLOCK_UNLOCK(m_workItemMutex);
+		workItemLock.Unlock();
 		if (workMaterialGeneric != NULL) ProcessOneWorkItem(workMaterialGeneric, loopCost, millisToProcess);
 	}
 	// Several schemes have been tried to control the between frame processing.
@@ -922,7 +930,8 @@ void ProcessBetweenFrame::ProcessWorkItems(int millisToProcess) {
 	// while (!m_betweenFrameWork.empty() && (loopCost > 0) && (betweenFrameTimeKeeper->getMilliseconds() < endTime) ) {
 	while (!m_betweenFrameWork.empty() && (betweenFrameTimeKeeper->getMilliseconds() < endTime) ) {
 		GenericQc* workGeneric = NULL;
-		LGLOCK_LOCK(m_workItemMutex);
+		workItemLock.Lock();
+		// LGLOCK_LOCK(m_workItemMutex);
 		if (!m_betweenFrameWork.empty()) {
 			workGeneric = (GenericQc*)m_betweenFrameWork.front();
 			m_betweenFrameWork.pop_front();
@@ -930,7 +939,8 @@ void ProcessBetweenFrame::ProcessWorkItems(int millisToProcess) {
 			LG::IncStat(LG::StatBetweenFrameTotalProcessed);
 			loopCost -= workGeneric->cost;
 		}
-		LGLOCK_UNLOCK(m_workItemMutex);
+		// LGLOCK_UNLOCK(m_workItemMutex);
+		workItemLock.Unlock();
 		if (workGeneric != NULL) ProcessOneWorkItem(workGeneric, loopCost, millisToProcess);
 	}
 	return;

@@ -194,9 +194,8 @@ public class LLChat : IChatProvider, IModule {
                 if (ce.ownerID != null) {
                     chat.Add("OwnerID", new OMVSD.OSDString(ce.ownerID.ToString()));
                 }
-                if (dateString == lastDate) {
-                    // rare but it occasionally happens
-                    dateString = dateString.Substring(0, dateString.Length - 1) + 'a';
+                while (ret.ContainsKey(dateString)) {
+                    dateString += "1";
                 }
                 ret.Add(dateString, chat);
                 lastDate = dateString;
