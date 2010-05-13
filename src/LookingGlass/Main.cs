@@ -149,10 +149,11 @@ LookingGlass
         --password password
         --grid gridname
         --loginuri loginuri
+        --configFile filename
+        --modulesFile filename
         --cache cacheDirectory
-        --debug
         --param parameter:value
-        --renderer mogre|opengl
+        --debug
 ";
     }
 

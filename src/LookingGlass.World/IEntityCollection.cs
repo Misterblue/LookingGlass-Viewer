@@ -30,6 +30,13 @@ public delegate void EntityNewCallback(IEntity ent);
 public delegate void EntityUpdateCallback(IEntity ent, UpdateCodes what);
 public delegate void EntityRemovedCallback(IEntity ent);
 
+    /// <summary>
+    /// A collection of entities. Any entity that is a 'parent' of a set
+    /// of other entities has one of these collections. The entities
+    /// in teh collection are the 'children' of the entity. Entity collections
+    /// are also kept by regions to hold all the top level entities
+    /// in that region.
+    /// </summary>
     public interface IEntityCollection : IDisposable {
         // when new items are added to the world
         event EntityNewCallback OnEntityNew;
@@ -44,17 +51,38 @@ public delegate void EntityRemovedCallback(IEntity ent);
 
         void RemoveEntity(IEntity entity);
 
+        /// <summary>
+        /// Find an entity based on a LGID.
+        /// </summary>
+        /// <param name="lgid"></param>
+        /// <param name="ent"></param>
+        /// <returns>'true' if the entity was found</returns>
         bool TryGetEntity(ulong lgid, out IEntity ent);
 
+        /// <summary>
+        /// Find an entity based on its name
+        /// </summary>
+        /// <param name="entName"></param>
+        /// <param name="ent"></param>
+        /// <returns>'true' if the entity was found</returns>
         bool TryGetEntity(string entName, out IEntity ent);
 
+        /// <summary>
+        /// Find an entity based on its name
+        /// </summary>
+        /// <param name="entName"></param>
+        /// <param name="ent"></param>
+        /// <returns>'true' if the entity was found</returns>
         bool TryGetEntity(EntityName entName, out IEntity ent);
 
         /// <summary>
+        /// Try to get an entity and create it if it doesn't exist.  If the
+        /// entity is not found, the 'createIt' delegate is called to create
+        /// the entity. Thus this routine always returns an entity.
         /// </summary>
-        /// <param name="localID"></param>
-        /// <param name="ent"></param>
-        /// <param name="createIt"></param>
+        /// <param name="entName">name of entity to search for</param>
+        /// <param name="ent">found entity</param>
+        /// <param name="createIt">delegate called to create the entity if it doesn't exist</param>
         /// <returns>true if we created a new entry</returns>
         bool TryGetCreateEntity(EntityName entName, out IEntity ent, RegionCreateEntityCallback createIt);
 
