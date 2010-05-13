@@ -718,7 +718,8 @@ public class RendererOgreLL : IWorldRenderConv {
 
             textureParams[pBase + (int)Ogr.CreateMaterialParam.animationFlag] = 0f;
             if (prim != null && (prim.TextureAnim.Face == faceNum || (int)prim.TextureAnim.Face == -1)
-                        && ((prim.TextureAnim.Flags & OpenMetaverse.Primitive.TextureAnimMode.ANIM_ON) != 0)) {
+                        // && ((prim.TextureAnim.Flags & OpenMetaverse.Primitive.TextureAnimMode.ANIM_ON) != 0)) {
+                        && ((prim.TextureAnim.Flags != 0)) ) {
                 m_log.Log(LogLevel.DRENDERDETAIL, "Adding animation for material texture");
                 textureParams[pBase + (int)Ogr.CreateMaterialParam.animationFlag] = (float)prim.TextureAnim.Flags;
                 textureParams[pBase + (int)Ogr.CreateMaterialParam.animSizeX] = (float)prim.TextureAnim.SizeX;

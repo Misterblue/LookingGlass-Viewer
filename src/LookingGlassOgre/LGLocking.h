@@ -120,6 +120,19 @@ extern int LGLockingThreadInitializeCount;
 
 // A wrapper class for a lock that is a local variable so it will get unlocked when
 // destructed.
+// Use:
+//  LGLOCK_MUTEX myMutex = LGLOCK_ALLOCATE_MUTEX("myMutex");
+//	...
+// void myMethod() {
+//  LGLOCK_ALOCK myLock;
+//  ...
+//  myLock.Lock(myMutex);
+//  ...
+//  myLock.Unlock();
+//  ...
+//  }
+// If 'myMethod' gets existed without unlocking, the destruction of the local ALOCK
+// variable will unlock the mutex.
 class LGLOCK_ALOCK {
 public:
 	LGLOCK_ALOCK() { m_mutex = NULL; };
@@ -139,7 +152,7 @@ public:
 		m_isLocked = true;
 	}
 	void Unlock() {
-		LGLOCK_UNLOCK(m_mutex);
+		if (m_isLocked) LGLOCK_UNLOCK(m_mutex);
 		m_isLocked = false;
 	}
 private:
