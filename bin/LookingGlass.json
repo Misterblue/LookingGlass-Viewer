@@ -28,7 +28,6 @@
 "Renderer.Ogre.Visibility.Large": "8",
 "Renderer.Ogre.Visibility.Cull.Distance": "true",
 "Renderer.Ogre.Visibility.Cull.Frustrum": "false",
-// currently only works with Direct3D9
 // "Renderer.Ogre.Sky": "SkyX",
 
 // ====================================================

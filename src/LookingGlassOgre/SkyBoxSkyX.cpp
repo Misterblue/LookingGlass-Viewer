@@ -22,6 +22,7 @@
  */
 #include "StdAfx.h"
 #include "SkyBoxSkyX.h"
+#include "RegionTracker.h"
 #include "RendererOgre.h"
 
 namespace LG {
@@ -113,6 +114,7 @@ void SkyBoxSkyX::AddSkyPass(Ogre::MaterialPtr matP) {
 }
 
 
+int sunPositionThrottle = 10;
 bool SkyBoxSkyX::frameStarted(const Ogre::FrameEvent &e) {
 // bool SkyBoxSkyX::frameRenderingQueued(const Ogre::FrameEvent &e) {
 	try {
@@ -134,9 +136,16 @@ bool SkyBoxSkyX::frameStarted(const Ogre::FrameEvent &e) {
         }
 		*/
 
-		m_SkyX->update(e.timeSinceLastFrame);
+		try {
+			m_SkyX->update(e.timeSinceLastFrame);
+		}
+		catch (...) {
+			LG::Log("EXCEPTION updating SkyX");
+		}
 
-		m_sun->setPosition(m_SkyX->getAtmosphereManager()->getSunPosition());
+		Ogre::Vector3 globalSun = m_SkyX->getAtmosphereManager()->getSunPosition();
+		Ogre::Vector3 desiredSun = LG::RegionTracker::Instance()->PositionForFocusRegion(globalSun);
+		m_sun->setPosition(desiredSun);
 		m_sun->setDirection(m_SkyX->getAtmosphereManager()->getSunDirection());
 		// if below the horizon, turn it off
 		if (m_sun->getPosition().y < 0) {
@@ -145,7 +154,9 @@ bool SkyBoxSkyX::frameStarted(const Ogre::FrameEvent &e) {
 		else {
 			m_sun->setVisible(true);
 		}
-		m_moon->setPosition(m_SkyX->getMoonManager()->getMoonSceneNode()->getPosition());
+		Ogre::Vector3 desiredMoon = LG::RegionTracker::Instance()->PositionForFocusRegion(
+								m_SkyX->getMoonManager()->getMoonSceneNode()->getPosition());
+		m_moon->setPosition(desiredMoon);
 		m_moon->setDirection(m_SkyX->getCamera()->getPosition() - m_moon->getPosition());
 		// if below the horizon, turn it off
 		if (m_moon->getPosition().y < 0) {
@@ -153,6 +164,13 @@ bool SkyBoxSkyX::frameStarted(const Ogre::FrameEvent &e) {
 		}
 		else {
 			m_moon->setVisible(true);
+		}
+		if (sunPositionThrottle-- < 0) {
+			sunPositionThrottle = 30;
+			LG::Log("Sun position g=<%f,%f,%f>, d=<%f,%f,%f>",
+				globalSun.x, globalSun.y, globalSun.z,
+				desiredSun.x, desiredSun.y, desiredSun.z
+			);
 		}
 
 		/*

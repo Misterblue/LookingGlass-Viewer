@@ -87,11 +87,9 @@
 
 // The avatar tracker service connects to the world to track
 "AvatarTracker.World.Name": "World",
-"AvatarTracker.RestManager.Name": "RestManager",
 
 // The chat service needs the Comm
 "Chat.Comm.Name": "Comm",
-"Chat.RestManager.Name": "RestManager",
 
 // ====================================================
 "ParameterWithoutAComma2": "Last"

@@ -117,6 +117,12 @@ void RegionTracker::RecalculateLocalCoords() {
 
 // Focusing a region causes the coordinate system to be zeroed to that point. Since the camera
 // operates in global coordinates, it must be offset for the focus region.
+Ogre::Vector3 RegionTracker::PositionForFocusRegion(Ogre::Vector3 pos) {
+	return PositionCameraForFocusRegion(pos.x, pos.y, pos.z);
+}
+
+// Focusing a region causes the coordinate system to be zeroed to that point. Since the camera
+// operates in global coordinates, it must be offset for the focus region.
 Ogre::Vector3 RegionTracker::PositionCameraForFocusRegion(double px, double py, double pz) {
 	Region* fRegion = GetFocusRegion();
 	Ogre::Vector3 newPos;

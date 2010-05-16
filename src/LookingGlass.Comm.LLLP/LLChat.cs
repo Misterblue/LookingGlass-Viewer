@@ -72,7 +72,6 @@ public class LLChat : IChatProvider, IModule {
 
     public IAppParameters ModuleParams { get { return m_lgb.AppParams; } }
 
-    protected RestManager m_restManager;
     protected CommLLLP m_comm;
     protected RestHandler m_restHandler;
 
@@ -93,8 +92,6 @@ public class LLChat : IChatProvider, IModule {
 
         ModuleParams.AddDefaultParameter(m_moduleName + ".Comm.Name", "Comm",
                     "Name of LLLP comm to connect to");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".RestManager.Name", "RestManager",
-                    "Name of REST interface manager to connect to");
     }
 
     // IModule.AfterAllModulesLoaded
@@ -103,8 +100,6 @@ public class LLChat : IChatProvider, IModule {
 
         try {
             // Find the rest manager and setup to get web requests
-            String restManagerName = ModuleParams.ParamString(m_moduleName + ".RestManager.Name");
-            m_restManager = (RestManager)LGB.ModManager.Module(restManagerName);
             m_restHandler = new RestHandler("/chat", GetHandler, PostHandler);
 
             // Find the world and connect to same to hear about all the avatars

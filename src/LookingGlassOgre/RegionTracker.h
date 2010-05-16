@@ -51,6 +51,7 @@ public:
 
 	std::list<Region*> GetRegions();
 
+	Ogre::Vector3 PositionForFocusRegion(Ogre::Vector3 pos);
 	Ogre::Vector3 PositionCameraForFocusRegion(double px, double py, double pz);
 
 private:

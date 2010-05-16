@@ -49,7 +49,7 @@ LGCamera::~LGCamera() {
 void LGCamera::updateCamera(double px, double py, double pz, 
 			float dw, float dx, float dy, float dz,
 			float nearClip, float farClip, float aspect) {
-	LG::Log("LGCamera::UpdateCamera: pos=<%f, %f, %f>", (double)px, (double)py, (double)pz);
+	// LG::Log("LGCamera::UpdateCamera: pos=<%f, %f, %f>", (double)px, (double)py, (double)pz);
 	// passed global parameters, localize the camera for the focus region that was moved to zero
 	m_desiredPosition = LG::RegionTracker::Instance()->PositionCameraForFocusRegion(px, py, pz);
 	m_desiredCameraOrientation = Ogre::Quaternion(dw, dx, dy, dz);

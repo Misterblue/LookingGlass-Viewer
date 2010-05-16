@@ -68,8 +68,6 @@ public class AvatarTracker : IAvatarTrackerService, IModule {
 
         ModuleParams.AddDefaultParameter(m_moduleName + ".World.Name", "World",
                     "Name of world to connect to");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".RestManager.Name", "RestManager",
-                    "Name of REST interface manager to connect to");
     }
 
     // IModule.AfterAllModulesLoaded
