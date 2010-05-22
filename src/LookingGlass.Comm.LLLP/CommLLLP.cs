@@ -759,18 +759,19 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
             return;
         }
         if (QueueTilOnline(args.Simulator, CommActionCode.OnObjectUpdated, sender, args)) return;
-        LLRegionContext rcontext = FindRegion(args.Simulator);
-        if (!ParentExists(rcontext, args.Prim.ParentID)) {
-            // if this requires a parent and the parent isn't here yet, queue this operation til later
-            QueueTilLater(args.Simulator, CommActionCode.OnObjectUpdated, sender, args);
-            return;
-        }
-        this.m_statObjObjectUpdate++;
-        IEntity updatedEntity = null;
-        // a full update says everything changed
-        UpdateCodes updateFlags = UpdateCodes.Acceleration | UpdateCodes.AngularVelocity
-                    | UpdateCodes.Position | UpdateCodes.Rotation | UpdateCodes.Velocity;
         lock (m_opLock) {
+            LLRegionContext rcontext = FindRegion(args.Simulator);
+            if (!ParentExists(rcontext, args.Prim.ParentID)) {
+                // if this requires a parent and the parent isn't here yet, queue this operation til later
+                rcontext.RequestLocalID(args.Prim.ParentID);
+                QueueTilLater(args.Simulator, CommActionCode.OnObjectUpdated, sender, args);
+                return;
+            }
+            this.m_statObjObjectUpdate++;
+            IEntity updatedEntity = null;
+            // a full update says everything changed
+            UpdateCodes updateFlags = UpdateCodes.Acceleration | UpdateCodes.AngularVelocity
+                    | UpdateCodes.Position | UpdateCodes.Rotation | UpdateCodes.Velocity;
             m_log.Log(LogLevel.DUPDATEDETAIL, "Object update: id={0}, p={1}, r={2}", 
                 args.Prim.LocalID, args.Prim.Position.ToString(), args.Prim.Rotation.ToString());
             // assume somethings changed no matter what
@@ -905,6 +906,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         LLRegionContext rcontext = FindRegion(args.Simulator);
         if (!ParentExists(rcontext, args.Prim.ParentID)) {
             // if this requires a parent and the parent isn't here yet, queue this operation til later
+            rcontext.RequestLocalID(args.Prim.ParentID);
             QueueTilLater(args.Simulator, CommActionCode.OnObjectUpdated, sender, args);
             return;
         }
@@ -1000,20 +1002,21 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
     // ===============================================================
     public void Objects_AvatarUpdate(Object sender, OMV.AvatarUpdateEventArgs args) {
         if (QueueTilOnline(args.Simulator, CommActionCode.OnAvatarUpdate, sender, args)) return;
-        LLRegionContext rcontext = FindRegion(args.Simulator);
-        if (!ParentExists(rcontext, args.Avatar.ParentID)) {
-            // if this requires a parent and the parent isn't here yet, queue this operation til later
-            QueueTilLater(args.Simulator, CommActionCode.OnAvatarUpdate, sender, args);
-            return;
-        }
-        this.m_statObjAvatarUpdate++;
-        m_log.Log(LogLevel.DUPDATEDETAIL, "Objects_AvatarUpdate: cntl={0}, parent={1}, p={2}, r={3}", 
-                    args.Avatar.ControlFlags.ToString("x"), args.Avatar.ParentID, 
-                    args.Avatar.Position, args.Avatar.Rotation);
-        IEntity updatedEntity = null;
-        UpdateCodes updateFlags = UpdateCodes.Acceleration | UpdateCodes.AngularVelocity
-                    | UpdateCodes.Position | UpdateCodes.Rotation | UpdateCodes.Velocity;
         lock (m_opLock) {
+            LLRegionContext rcontext = FindRegion(args.Simulator);
+            if (!ParentExists(rcontext, args.Avatar.ParentID)) {
+                // if this requires a parent and the parent isn't here yet, queue this operation til later
+                rcontext.RequestLocalID(args.Avatar.ParentID);
+                QueueTilLater(args.Simulator, CommActionCode.OnAvatarUpdate, sender, args);
+                return;
+            }
+            this.m_statObjAvatarUpdate++;
+            m_log.Log(LogLevel.DUPDATEDETAIL, "Objects_AvatarUpdate: cntl={0}, parent={1}, p={2}, r={3}", 
+                        args.Avatar.ControlFlags.ToString("x"), args.Avatar.ParentID, 
+                        args.Avatar.Position, args.Avatar.Rotation);
+            IEntity updatedEntity = null;
+            UpdateCodes updateFlags = UpdateCodes.Acceleration | UpdateCodes.AngularVelocity
+                        | UpdateCodes.Position | UpdateCodes.Rotation | UpdateCodes.Velocity;
             // This is an avatar, assume somethings changed no matter what
             updateFlags |= UpdateCodes.CollisionPlane;
 
@@ -1249,6 +1252,17 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         QueueTilLater(sim, cac, p1, p2, p3, null);
     }
 
+    /// <summary>
+    /// Queue the operation to be done later. This is used for waiting for the parent of
+    /// a prim. The type of queuing done makes it wait for a default delay before trying
+    /// the operation so this, in theory, waits for the parent.
+    /// </summary>
+    /// <param name="sim"></param>
+    /// <param name="cac"></param>
+    /// <param name="p1"></param>
+    /// <param name="p2"></param>
+    /// <param name="p3"></param>
+    /// <param name="p4"></param>
     private void QueueTilLater(OMV.Simulator sim, CommActionCode cac, Object p1, Object p2, Object p3, Object p4) {
         Object[] parms = { sim, cac, p1, p2, p3, p4 };
         m_waitTilLater.DoLaterInitialDelay(QueueTilLaterDoIt, parms);

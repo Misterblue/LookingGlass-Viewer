@@ -60,12 +60,12 @@ public class BasicWorkQueue : IWorkQueue {
         if (LookingGlassBase.Instance.AppParams.HasParameter(m_queueName+".WorkQueue.MaxThreads")) {
             m_workProcessorsMax = LookingGlassBase.Instance.AppParams.ParamInt(m_queueName+".WorkQueue.MaxThreads");
         }
-        lock (doEvenLater) {
-            if (doEvenLaterThread == null) {
-                doEvenLaterThread = new Thread(DoItEventLaterProcessing);
-                doEvenLaterThread.Name = "DoEvenLaterProcessing";
+        lock (m_doEvenLater) {
+            if (m_doEvenLaterThread == null) {
+                m_doEvenLaterThread = new Thread(DoItEventLaterProcessing);
+                m_doEvenLaterThread.Name = "DoEvenLaterProcessing" + "." + m_queueName;
                 LogManager.Log.Log(LogLevel.DINIT, "Starting do even later thread");
-                doEvenLaterThread.Start();
+                m_doEvenLaterThread.Start();
             }
         }
     }
@@ -176,29 +176,29 @@ public class BasicWorkQueue : IWorkQueue {
     /// doing the Thread.Sleep(). If I just did a sleep for each delayed object,
     /// we could have a situation where all the threads from the pool are waiting.
     /// </summary>
-    private static List<DoLaterBase> doEvenLater = new List<DoLaterBase>();
-    private static Thread doEvenLaterThread = null;
-    private static void DoItEvenLater(DoLaterBase w) {
+    private List<DoLaterBase> m_doEvenLater = new List<DoLaterBase>();
+    private Thread m_doEvenLaterThread = null;
+    private void DoItEvenLater(DoLaterBase w) {
         w.timesRequeued++;
-        lock (doEvenLater) {
+        lock (m_doEvenLater) {
             int nextTime = Math.Min(w.requeueWait * w.timesRequeued, 10000);
             nextTime = Math.Max(nextTime, 100);     // never less than this
             w.remainingWait = (System.Environment.TickCount  & 0x3fffffff) + nextTime;
-            doEvenLater.Add(w);
+            m_doEvenLater.Add(w);
         }
     }
 
     // Thread that keeps going around and processing the thing queued from long ago
-    private static void DoItEventLaterProcessing() {
+    private void DoItEventLaterProcessing() {
         while (LookingGlassBase.Instance.KeepRunning) {
             List<DoLaterBase> doneWaiting = null;
             int sleepTime = 200;
             int now = System.Environment.TickCount & 0x3fffffff;
-            lock (doEvenLater) {
-                if (doEvenLater.Count > 0) {
+            lock (m_doEvenLater) {
+                if (m_doEvenLater.Count > 0) {
                     // remove the last waiting time from each waiter
                     // if waiting is up, remember which ones to remove
-                    foreach (DoLaterBase ii in doEvenLater) {
+                    foreach (DoLaterBase ii in m_doEvenLater) {
                         if (ii.remainingWait < now) {
                             if (doneWaiting == null) doneWaiting = new List<DoLaterBase>();
                             doneWaiting.Add(ii);
@@ -207,16 +207,16 @@ public class BasicWorkQueue : IWorkQueue {
                     // remove and requeue the ones done waiting
                     if (doneWaiting != null) {
                         foreach (DoLaterBase jj in doneWaiting) {
-                            doEvenLater.Remove(jj);
+                            m_doEvenLater.Remove(jj);
                         }
                     }
                 }
                 // LogManager.Log.Log(LogLevel.DRENDERDETAIL, "DoEvenLater: Removing {0} from list of size {1}",
-                //             doneWaiting.Count, doEvenLater.Count);
-                if (doEvenLater.Count > 0) {
+                //             doneWaiting.Count, m_doEvenLater.Count);
+                if (m_doEvenLater.Count > 0) {
                     // find how much time to wait for the remaining
                     sleepTime = int.MaxValue;
-                    foreach (DoLaterBase jj in doEvenLater) {
+                    foreach (DoLaterBase jj in m_doEvenLater) {
                         sleepTime = Math.Min(sleepTime, jj.remainingWait);
                     }
                     sleepTime -= now;
@@ -242,7 +242,7 @@ public class BasicWorkQueue : IWorkQueue {
         aMap.Add("Name", new OMVSD.OSDString(this.Name));
         aMap.Add("Total", new OMVSD.OSDInteger((int)this.TotalQueued));
         aMap.Add("Current", new OMVSD.OSDInteger((int)this.CurrentQueued));
-        aMap.Add("Later", new OMVSD.OSDInteger(doEvenLater.Count));
+        aMap.Add("Later", new OMVSD.OSDInteger(m_doEvenLater.Count));
         aMap.Add("Active", new OMVSD.OSDInteger(this.ActiveWorkProcessors));
         // Logging.LogManager.Log.Log(LogLevel.DRESTDETAIL, "BasicWorkQueue: GetDisplayable: out={0}", aMap.ToString());
         return aMap;
