@@ -60,6 +60,14 @@ public class BasicWorkQueue : IWorkQueue {
         if (LookingGlassBase.Instance.AppParams.HasParameter(m_queueName+".WorkQueue.MaxThreads")) {
             m_workProcessorsMax = LookingGlassBase.Instance.AppParams.ParamInt(m_queueName+".WorkQueue.MaxThreads");
         }
+        lock (doEvenLater) {
+            if (doEvenLaterThread == null) {
+                doEvenLaterThread = new Thread(DoItEventLaterProcessing);
+                doEvenLaterThread.Name = "DoEvenLaterProcessing";
+                LogManager.Log.Log(LogLevel.DINIT, "Starting do even later thread");
+                doEvenLaterThread.Start();
+            }
+        }
     }
 
     // IWorkQueue.DoLater()
@@ -87,6 +95,17 @@ public class BasicWorkQueue : IWorkQueue {
     /// <param name="dlcb"></param>
     public void DoLater(DoLaterCallback dlcb, Object parms) {
         this.DoLater(new DoLaterDelegateCaller(dlcb, parms));
+    }
+
+    // do the item but do  the delay first. This puts it in the wait queue and it will
+    // get done after the work item delay.
+    public void DoLaterInitialDelay(DoLaterCallback dlcb, Object parms) {
+        DoLaterBase w = new DoLaterDelegateCaller(dlcb, parms);
+        w.containingClass = this;
+        w.remainingWait = 0;    // the first time through, do it now
+        w.timesRequeued = 0;
+        DoItEvenLater(w);
+
     }
 
     public void DoLater(float priority, DoLaterCallback dlcb, Object parms) {
@@ -166,18 +185,16 @@ public class BasicWorkQueue : IWorkQueue {
             nextTime = Math.Max(nextTime, 100);     // never less than this
             w.remainingWait = (System.Environment.TickCount  & 0x3fffffff) + nextTime;
             doEvenLater.Add(w);
-            if (doEvenLaterThread == null) {    // is there another thread doing the requeuing?
-                doEvenLaterThread = Thread.CurrentThread;   // no, looks like I'm stuck
-                // LogManager.Log.Log(LogLevel.DRENDERDETAIL, "DoItEvenLater: becoming the one thread");
-            }
         }
+    }
 
-        // if it's me, I have the job of empting the queue
-        while ((doEvenLaterThread != null) && (doEvenLaterThread == Thread.CurrentThread)) {
+    // Thread that keeps going around and processing the thing queued from long ago
+    private static void DoItEventLaterProcessing() {
+        while (LookingGlassBase.Instance.KeepRunning) {
             List<DoLaterBase> doneWaiting = null;
-            int sleepTime = 0;
+            int sleepTime = 200;
             int now = System.Environment.TickCount & 0x3fffffff;
-            lock (doEvenLater) {    // protects both doEvenLater and doEvenLaterThread
+            lock (doEvenLater) {
                 if (doEvenLater.Count > 0) {
                     // remove the last waiting time from each waiter
                     // if waiting is up, remember which ones to remove
@@ -205,10 +222,6 @@ public class BasicWorkQueue : IWorkQueue {
                     sleepTime -= now;
                     if (sleepTime < 0) sleepTime = 100;
                 }
-                else {
-                    // if no more to wait on, this thread is free
-                    doEvenLaterThread = null;
-                }
             }
             // if there are some things done waiting, let them free outside the lock
             if (doneWaiting != null) {
@@ -218,13 +231,8 @@ public class BasicWorkQueue : IWorkQueue {
                 doneWaiting.Clear();
                 doneWaiting = null;
             }
-            // if this thread is still working on sleeping, do the sleeping
-            if (doEvenLaterThread == Thread.CurrentThread) {
-                // wait the remaining time
-                // LogManager.Log.Log(LogLevel.DRENDERDETAIL, "DoEvenLater: Sleep for {0}", sleepTime);
-                if (sleepTime > 0) {
-                    Thread.Sleep(sleepTime);
-                }
+            if (sleepTime > 0) {
+                Thread.Sleep(sleepTime);
             }
         }
     }

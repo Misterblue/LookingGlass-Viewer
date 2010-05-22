@@ -126,9 +126,17 @@ Ogre::Vector3 RegionTracker::PositionForFocusRegion(Ogre::Vector3 pos) {
 Ogre::Vector3 RegionTracker::PositionCameraForFocusRegion(double px, double py, double pz) {
 	Region* fRegion = GetFocusRegion();
 	Ogre::Vector3 newPos;
-	newPos.x = (Ogre::Real)(px - fRegion->GlobalX);
-	newPos.y = (Ogre::Real)(py - fRegion->GlobalY);
-	newPos.z = (Ogre::Real)(pz - fRegion->GlobalZ);
+	if (fRegion != NULL) {
+		newPos.x = (Ogre::Real)(px - fRegion->GlobalX);
+		newPos.y = (Ogre::Real)(py - fRegion->GlobalY);
+		newPos.z = (Ogre::Real)(pz - fRegion->GlobalZ);
+	}
+	else {
+		// if no focus region, just return what they passed
+		newPos.x = (Ogre::Real)px;
+		newPos.y = (Ogre::Real)py;
+		newPos.z = (Ogre::Real)pz;
+	}
 	// cam->setPosition(px - fRegion->GlobalX, py - fRegion->GlobalY, pz - fRegion->GlobalZ);
 	return newPos;
 }

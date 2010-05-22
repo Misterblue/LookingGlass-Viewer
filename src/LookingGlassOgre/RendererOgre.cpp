@@ -578,7 +578,8 @@ namespace LG {
 					bool updateScale, float sx, float sy, float sz,
 					bool updateRotation, float ow, float ox, float oy, float oz) {
 		LG::Log("RendererOgre::UpdateSceneNode: update %s", entName);
-		if (m_sceneMgr->hasSceneNode(entName)) {
+		// if (m_sceneMgr->hasSceneNode(entName)) {
+		try {
 			Ogre::SceneNode* sceneNode = m_sceneMgr->getSceneNode(entName);
 			if (updatePosition) {
 				sceneNode->setPosition(px, py, pz);
@@ -592,9 +593,12 @@ namespace LG {
 			}
 			sceneNode->needUpdate(true);
 		}
-		else {
+		catch (...) {
 			LG::Log("RendererOgre::UpdateSceneNode: entity not found. Did not update entity %s", entName);
 		}
+		// else {
+		// 	LG::Log("RendererOgre::UpdateSceneNode: entity not found. Did not update entity %s", entName);
+		// }
 		return;
 	}
 

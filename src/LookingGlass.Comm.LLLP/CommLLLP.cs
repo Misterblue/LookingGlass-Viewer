@@ -54,10 +54,10 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
     public ParameterSet CommStatistics() { return m_commStatistics; }
     protected RestHandler m_commStatsHandler;
     private int m_statNetDisconnected;
-    private int m_statNetQueueRunning;
     private int m_statNetLoginProgress;
     private int m_statNetSimChanged;
     private int m_statNetSimConnected;
+    private int m_statNetEventQueueRunning;
     private int m_statObjAttachmentUpdate;
     private int m_statObjAvatarUpdate;
     private int m_statObjKillObject;
@@ -75,6 +75,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
 
     // while we wait for a region to be online, we queue requests here
     protected List<ParamBlock> m_waitTilOnline;
+    protected BasicWorkQueue m_waitTilLater;
 
     // There are some messages that come in that are rare but could use some locking.
     // The main paths of prims and updates is pretty solid and multi-threaded but
@@ -148,6 +149,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         m_regionList = new List<LLRegionContext>();
         m_waitTilOnline = new List<ParamBlock>();
         m_commStatistics = new ParameterSet();
+        m_waitTilLater = new BasicWorkQueue("CommDoTilLater");
 
         m_loginGrid = "Unknown";
     }
@@ -333,6 +335,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
             m_client.Network.LoginProgress += Network_LoginProgress;
             m_client.Network.Disconnected += Network_Disconnected;
             m_client.Network.SimConnected += Network_SimConnected;
+            m_client.Network.EventQueueRunning += Network_EventQueueRunning;
             m_client.Network.SimChanged += Network_SimChanged;
             m_client.Network.EventQueueRunning += Network_EventQueueRunning;
 
@@ -595,6 +598,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         m_isConnected = false;
     }
 
+    /*
     public virtual void Network_EventQueueRunning(Object sender, OMV.EventQueueRunningEventArgs args) {
         this.m_statNetQueueRunning++;
         m_log.Log(LogLevel.DCOMM, "Event queue running on {0}", args.Simulator.Name);
@@ -604,7 +608,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         // Now seems like a good time to start requesting parcel information
         m_client.Parcels.RequestAllSimParcels(m_client.Network.CurrentSim, false, 100);
     }
-
+    */
 
     public bool AfterAllModulesLoaded() {
         // make my connections for the communication events
@@ -627,9 +631,9 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         m_commStatistics.Add("Network_Disconnected", 
             delegate(string xx) { return new OMVSD.OSDString(m_statNetDisconnected.ToString()); },
             "Number of 'network disconnected' messages");
-        m_commStatistics.Add("Network_EventQueueRunning", 
-            delegate(string xx) { return new OMVSD.OSDString(m_statNetQueueRunning.ToString()); },
-            "Number of 'event queue running' messages");
+        // m_commStatistics.Add("Network_EventQueueRunning", 
+        //     delegate(string xx) { return new OMVSD.OSDString(m_statNetQueueRunning.ToString()); },
+        //     "Number of 'event queue running' messages");
         m_commStatistics.Add("Network_LoginProgress", 
             delegate(string xx) { return new OMVSD.OSDString(m_statNetLoginProgress.ToString()); },
             "Number of 'login progress' messages");
@@ -639,6 +643,9 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         m_commStatistics.Add("Network_SimConnected", 
             delegate(string xx) { return new OMVSD.OSDString(m_statNetSimConnected.ToString()); },
             "Number of 'sim connected' messages");
+        m_commStatistics.Add("Network_EventQueueRunning", 
+            delegate(string xx) { return new OMVSD.OSDString(m_statNetEventQueueRunning.ToString()); },
+            "Number of 'event queue running' messages");
         m_commStatistics.Add("Objects_AttachmentUpdate", 
             delegate(string xx) { return new OMVSD.OSDString(m_statObjAttachmentUpdate.ToString()); },
             "Number of 'attachment update' messages");
@@ -679,13 +686,19 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
     // ===============================================================
     public virtual void Network_SimConnected(Object sender, OMV.SimConnectedEventArgs args) {
         this.m_statNetSimConnected++;
-        m_isConnected = true;   // good enough reason to think we're connected
-        this.m_statNetSimConnected++;
         m_log.Log(LogLevel.DWORLD, "Network_SimConnected: Simulator connected {0}", args.Simulator.Name);
+    }
+
+    // ===============================================================
+    public virtual void Network_EventQueueRunning(Object sender, OMV.EventQueueRunningEventArgs args) {
+        // the sim isn't really up until the caps queue is running
+        m_isConnected = true;   // good enough reason to think we're connected
+        this.m_statNetEventQueueRunning++;
+        m_log.Log(LogLevel.DWORLD, "Network_EventQueueRunning: Simulator connected {0}", args.Simulator.Name);
 
         LLRegionContext regionContext = FindRegion(args.Simulator);
         if (regionContext == null) {
-            m_log.Log(LogLevel.DWORLD, "Network_SimConnected: NO REGION CONTEXT FOR {0}", args.Simulator.Name);
+            m_log.Log(LogLevel.DWORLD, "Network_EventQueueRunning: NO REGION CONTEXT FOR {0}", args.Simulator.Name);
             return;
         }
 
@@ -747,6 +760,11 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         }
         if (QueueTilOnline(args.Simulator, CommActionCode.OnObjectUpdated, sender, args)) return;
         LLRegionContext rcontext = FindRegion(args.Simulator);
+        if (!ParentExists(rcontext, args.Prim.ParentID)) {
+            // if this requires a parent and the parent isn't here yet, queue this operation til later
+            QueueTilLater(args.Simulator, CommActionCode.OnObjectUpdated, sender, args);
+            return;
+        }
         this.m_statObjObjectUpdate++;
         IEntity updatedEntity = null;
         // a full update says everything changed
@@ -799,9 +817,11 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
                 if (parentEntity != null) {
                     ent.ContainingEntity = parentEntity;
                     parentEntity.AddEntityToContainer(ent);
+                    m_log.Log(LogLevel.DCOMMDETAIL, "ProcessEntityContainer: adding entity {0} to container {1}", 
+                                    ent.Name, parentEntity.Name);
                 }
                 else {
-                    m_log.Log(LogLevel.DUPDATEDETAIL, "Can't assign parent. Entity not found. ent={0}", ent.Name);
+                    m_log.Log(LogLevel.DCOMMDETAIL, "Can't assign parent. Entity not found. ent={0}", ent.Name);
                 }
             }
             if (parentID == 0 && ent.ContainingEntity != null) {
@@ -819,6 +839,14 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
             m_log.Log(LogLevel.DBADERROR, "FAILED ProcessEntityContainer: " + e.ToString());
         }
         return;
+    }
+
+    // return 'true' is the parent of this id exists in the world
+    private bool ParentExists(LLRegionContext regionContext, uint parentID) {
+        if (parentID == 0) return true;
+        IEntity parentEntity = null;
+        regionContext.TryGetEntityLocalID(parentID, out parentEntity);
+        return (parentEntity != null);
     }
 
     // For the moment, create only one animation for an entity and that is the angular rotation.
@@ -875,6 +903,11 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
     public void Objects_AttachmentUpdate(Object sender, OMV.PrimEventArgs args) {
         if (QueueTilOnline(args.Simulator, CommActionCode.OnAttachmentUpdate, sender, args)) return;
         LLRegionContext rcontext = FindRegion(args.Simulator);
+        if (!ParentExists(rcontext, args.Prim.ParentID)) {
+            // if this requires a parent and the parent isn't here yet, queue this operation til later
+            QueueTilLater(args.Simulator, CommActionCode.OnObjectUpdated, sender, args);
+            return;
+        }
         this.m_statObjAttachmentUpdate++;
         m_log.Log(LogLevel.DUPDATEDETAIL, "OnNewAttachment: id={0}, lid={1}", args.Prim.ID.ToString(), args.Prim.LocalID);
         try {
@@ -968,6 +1001,11 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
     public void Objects_AvatarUpdate(Object sender, OMV.AvatarUpdateEventArgs args) {
         if (QueueTilOnline(args.Simulator, CommActionCode.OnAvatarUpdate, sender, args)) return;
         LLRegionContext rcontext = FindRegion(args.Simulator);
+        if (!ParentExists(rcontext, args.Avatar.ParentID)) {
+            // if this requires a parent and the parent isn't here yet, queue this operation til later
+            QueueTilLater(args.Simulator, CommActionCode.OnAvatarUpdate, sender, args);
+            return;
+        }
         this.m_statObjAvatarUpdate++;
         m_log.Log(LogLevel.DUPDATEDETAIL, "Objects_AvatarUpdate: cntl={0}, parent={1}, p={2}, r={3}", 
                     args.Avatar.ControlFlags.ToString("x"), args.Avatar.ParentID, 
@@ -1095,11 +1133,12 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
                 }
                 if (ret == null) {
                     // we are connected but doen't have a regionContext for this simulator. Build one.
-                    LLTerrainInfo llterr = new LLTerrainInfo(null, SelectAssetContextForGrid(sim));
+                    AssetContextBase assetContext = SelectAssetContextForGrid(sim);
+                    LLTerrainInfo llterr = new LLTerrainInfo(null, assetContext);
                     llterr.WaterHeight = sim.WaterHeight;
                     // TODO: copy terrain texture IDs
 
-                    ret = new LLRegionContext(null, SelectAssetContextForGrid(sim), llterr, sim);
+                    ret = new LLRegionContext(null, assetContext, llterr, sim);
                     // ret.Name = new EntityNameLL(LoggedInGridName + "/Region/" + sim.Name.Trim());
                     ret.Name = new EntityNameLL(LoggedInGridName + "/" + sim.Name.Trim());
                     ret.RegionContext = ret;    // since we don't know ourself before
@@ -1134,38 +1173,45 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
     /// </summary>
     /// <param name="sim"></param>
     /// <returns>the AssetContextBase for this simulator</returns>
+    private Dictionary<OMV.Simulator, AssetContextBase> m_assetContexts = new Dictionary<OpenMetaverse.Simulator, AssetContextBase>();
     private AssetContextBase SelectAssetContextForGrid(OMV.Simulator sim) {
         AssetContextBase ret = null;
-        // If user specifies an URL to get textures from, get that asset fetcher
-        string otherAssets = World.World.Instance.Grids.GridParameter(World.Grids.Current, "OS.AssetServer.V1");
-        if (otherAssets != null && otherAssets.Length != 0) {
-            m_log.Log(LogLevel.DCOMM, "CommLLLP: creating OSAssetContextV1 for {0}", m_loginGrid);
-            ret = new OSAssetContextV1(LoggedInGridName);
-            ret.InitializeContext(this, 
-                ModuleParams.ParamString(ModuleName + ".Assets.CacheDir"),
-                ModuleParams.ParamInt(ModuleName + ".Texture.MaxRequests"));
+        lock (m_assetContexts) {
+            if (m_assetContexts.ContainsKey(sim)) {
+                return m_assetContexts[sim];
+            }
+            // If user specifies an URL to get textures from, get that asset fetcher
+            string otherAssets = World.World.Instance.Grids.GridParameter(World.Grids.Current, "OS.AssetServer.V1");
+            if (otherAssets != null && otherAssets.Length != 0) {
+                m_log.Log(LogLevel.DCOMM, "CommLLLP: creating OSAssetContextV1 for {0}/{1}", m_loginGrid, sim.Name);
+                ret = new OSAssetContextV1(LoggedInGridName);
+            }
+
+            // If the simulator has the texture capability, use that
+            Uri textureUri = sim.Caps.CapabilityURI("GetTexture");
+            m_log.Log(LogLevel.DCOMM, "CommLLLP: OSAssetContextCap: fetched 'GetTexture' = {0}",
+                            textureUri == null ? "NULL" : textureUri.ToString());
+            if (ret == null && textureUri != null && ModuleParams.ParamBool(ModuleName + ".Assets.EnableCaps")) {
+                m_log.Log(LogLevel.DCOMM, "CommLLLP: creating OSAssetContextCap for {0}/{1}", m_loginGrid, sim.Name);
+                ret = new OSAssetContextCap(LoggedInGridName, textureUri);
+            }
+
+            // default to legacy UDP texture fetch
+            if (ret == null) {
+                // Create the asset contect for this communication instance
+                // this should happen after connected. reconnection is a problem.
+                m_log.Log(LogLevel.DCOMM, "CommLLLP: creating default asset context for {0}/{1}", m_loginGrid, sim.Name);
+                ret = new LLAssetContext(LoggedInGridName);
+            }
+
+            if (ret != null) {
+                m_assetContexts.Add(sim, ret);
+                ret.InitializeContext(this,
+                    ModuleParams.ParamString(ModuleName + ".Assets.CacheDir"),
+                    ModuleParams.ParamInt(ModuleName + ".Texture.MaxRequests"));
+            }
         }
 
-        // If the simulator has the texture capability, use that
-        Uri textureUri = sim.Caps.CapabilityURI("GetTexture");
-        if (ret == null && textureUri != null && ModuleParams.ParamBool(ModuleName+".Assets.EnableCaps")) {
-            m_log.Log(LogLevel.DCOMM, "CommLLLP: creating OSAssetContextCap for {0}", m_loginGrid);
-            ret = new OSAssetContextCap(LoggedInGridName, textureUri);
-            ret.InitializeContext(this, 
-                ModuleParams.ParamString(ModuleName + ".Assets.CacheDir"),
-                ModuleParams.ParamInt(ModuleName + ".Texture.MaxRequests"));
-        }
-
-        // default to legacy UDP texture fetch
-        if (ret == null) {
-            // Create the asset contect for this communication instance
-            // this should happen after connected. reconnection is a problem.
-            m_log.Log(LogLevel.DCOMM, "CommLLLP: creating default asset context for grid {0}", m_loginGrid);
-            ret = new LLAssetContext(LoggedInGridName);
-            ret.InitializeContext(this,
-                ModuleParams.ParamString(ModuleName + ".Assets.CacheDir"),
-                ModuleParams.ParamInt(ModuleName + ".Texture.MaxRequests"));
-        }
         return ret;
     }
 
@@ -1190,6 +1236,33 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
             sim = psim;  cac = pcac; p1 = pp1; p2 = pp2; p3 = pp3; p4 = pp4;
         }
     }
+    // ======================================================================
+    private void QueueTilLater(OMV.Simulator sim, CommActionCode cac, Object p1) {
+        QueueTilLater(sim, cac, p1, null, null, null);
+    }
+
+    private void QueueTilLater(OMV.Simulator sim, CommActionCode cac, Object p1, Object p2) {
+        QueueTilLater(sim, cac, p1, p2, null, null);
+    }
+
+    private void QueueTilLater(OMV.Simulator sim, CommActionCode cac, Object p1, Object p2, Object p3) {
+        QueueTilLater(sim, cac, p1, p2, p3, null);
+    }
+
+    private void QueueTilLater(OMV.Simulator sim, CommActionCode cac, Object p1, Object p2, Object p3, Object p4) {
+        Object[] parms = { sim, cac, p1, p2, p3, p4 };
+        m_waitTilLater.DoLaterInitialDelay(QueueTilLaterDoIt, parms);
+        return;
+    }
+
+    private bool QueueTilLaterDoIt(DoLaterBase dlb, Object p) {
+        Object[] parms = (Object[])p;
+        CommActionCode cac = (CommActionCode)parms[1];
+        RegionAction(cac, parms[2], parms[3], parms[4], parms[5]);
+        return true;
+    }
+
+    // ======================================================================
     private bool QueueTilOnline(OMV.Simulator sim, CommActionCode cac, Object p1) {
         return QueueTilOnline(sim, cac, p1, null, null, null);
     }
