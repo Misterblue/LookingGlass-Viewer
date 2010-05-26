@@ -52,7 +52,7 @@ namespace LookingGlass.Framework.Logging {
 
         DNONDETAIL    = 0x05555555, // all  the non-detail enables
         DDETAIL       = 0x40000000, // 1073741824
-        DALL          = 0x7fffffff,
+        DALL          = 0x7fffffff, // 2147483647
         DBADERROR     = 0x7fffffff,
 }
 

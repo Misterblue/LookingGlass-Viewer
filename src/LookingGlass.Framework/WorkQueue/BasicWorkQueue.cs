@@ -64,7 +64,7 @@ public class BasicWorkQueue : IWorkQueue {
             if (m_doEvenLaterThread == null) {
                 m_doEvenLaterThread = new Thread(DoItEventLaterProcessing);
                 m_doEvenLaterThread.Name = "DoEvenLaterProcessing" + "." + m_queueName;
-                LogManager.Log.Log(LogLevel.DINIT, "Starting do even later thread");
+                LogManager.Log.Log(LogLevel.DINIT, "Starting do even later thread for '{0}'", m_queueName);
                 m_doEvenLaterThread.Start();
             }
         }
@@ -131,7 +131,7 @@ public class BasicWorkQueue : IWorkQueue {
     // the pool to empty the queue.
     private void AddWorkItemToQueue(DoLaterBase w) {
         if ((m_totalRequests++ % 100) == 0) {
-            LogManager.Log.Log(LogLevel.DRENDERDETAIL, "{0}DoLater: Queuing, c={1}", m_queueName, m_totalRequests);
+            LogManager.Log.Log(LogLevel.DRENDERDETAIL, "{0}.DoLater: Queuing, c={1}", m_queueName, m_totalRequests);
         }
         lock (m_workItems) {
             m_workItems.Enqueue(w);
@@ -156,9 +156,16 @@ public class BasicWorkQueue : IWorkQueue {
                 }
             }
             if (w != null) {
-                if (!w.DoIt()) {
-                    // LogManager.Log.Log(LogLevel.DRENDERDETAIL, "{0}.DoLater: DoWork: DoEvenLater", m_queueName);
-                    DoItEvenLater(w);
+                try {
+                    if (!w.DoIt()) {
+                        // LogManager.Log.Log(LogLevel.DRENDERDETAIL, "{0}.DoLater: DoWork: DoEvenLater", m_queueName);
+                        DoItEvenLater(w);
+                    }
+                }
+                catch (Exception e) {
+                    LogManager.Log.Log(LogLevel.DBADERROR, "{0}.DoLater: DoWork: EXCEPTION: {1}", 
+                                m_queueName, e);
+                    // we drop the work item in  the belief that it will exception again next time
                 }
             }
         }

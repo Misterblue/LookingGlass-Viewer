@@ -891,7 +891,8 @@ void ProcessBetweenFrame::ProcessWorkItems(int millisToProcess) {
 			}
 			*/
 			// sort the items so high priority is at the start
-			m_betweenFrameWork.sort(XXCompareElements);
+			// DEBUG: commented out to keep order of requests
+			// m_betweenFrameWork.sort(XXCompareElements);
 		}
 		// LGLOCK_UNLOCK(m_workItemMutex);
 		workItemLock.Unlock();

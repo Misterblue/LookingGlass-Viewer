@@ -123,15 +123,16 @@ public class RadegastComm : CommLLLP {
      */
 
     public override void Network_LoginProgress(Object sender, OMV.LoginProgressEventArgs args) {
-        switch (m_radInstance.Netcom.LoginOptions.Grid) {
-            case global::Radegast.Netcom.LoginGrid.MainGrid:
+        switch (m_radInstance.Netcom.LoginOptions.Grid.ID) {
+            case "secondlife":
                 m_loginGrid = "SecondLife.com";
                 break;
-            case global::Radegast.Netcom.LoginGrid.BetaGrid:
-                m_loginGrid = "beta.SecondLifeBeta.com";
+            case "secondlifebeta":
+                m_loginGrid = "beta.SecondLife.com";
                 break;
-            case global::Radegast.Netcom.LoginGrid.Custom:
-                Uri loginUri = new Uri(m_radInstance.Netcom.LoginOptions.GridCustomLoginUri);
+            default:
+                Uri loginUri = new Uri(m_radInstance.Netcom.LoginOptions.Grid.LoginURI);
+                // Uri loginUri = new Uri(m_radInstance.Netcom.LoginOptions.GridCustomLoginUri);
                 // extract the login host name as the grid name
                 m_loginGrid = loginUri.GetComponents(UriComponents.Host, UriFormat.Unescaped);
                 break;

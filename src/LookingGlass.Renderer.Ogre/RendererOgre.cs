@@ -187,7 +187,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "True if to force the generation a mesh when first rendered (don't rely on cache)");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.PrebuildMesh", "true",
                     "True if to make sure the mesh exists before creating the scene node");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".ShouldShareMeshes", "true",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".ShouldShareMeshes", "false",
                     "True if to share meshes with similar characteristics");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.UseShaders", "true",
                     "Whether to use the new technique of using GPU shaders");
@@ -627,6 +627,9 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                 return false;
             }
         }
+        else {
+            m_log.Log(LogLevel.DBADERROR, "DoRenderLater: entity had no renderEntity: {0}", m_ent.Name);
+        }
 
         // System.GC.Collect(); // only for debugging
         return true;
@@ -720,7 +723,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             orient.W, orient.X, orient.Z, -orient.Y,
             1.0f, (float)cam.Far*m_sceneMagnification, 1.0f);
 
-        m_log.Log(LogLevel.DRENDERDETAIL, "UpdateCamera: Camera to p={0}, r={1}", pos, orient);
+        // m_log.Log(LogLevel.DRENDERDETAIL, "UpdateCamera: Camera to p={0}, r={1}", pos, orient);
         return;
     }
 

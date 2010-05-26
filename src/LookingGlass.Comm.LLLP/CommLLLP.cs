@@ -65,6 +65,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
     private int m_statObjObjectPropertiesUpdate;
     private int m_statObjObjectUpdate;
     private int m_statObjTerseUpdate;
+    private int m_statRequestLocalID;
 
     // ICommProvider.GridClient
     protected OMV.GridClient m_client;
@@ -251,8 +252,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         ModuleParams.AddDefaultParameter(ModuleName + ".Assets.CacheDir", 
                     Utilities.GetDefaultApplicationStorageDir(null),
                     "Filesystem location to build the texture cache");
-        ModuleParams.AddDefaultParameter(ModuleName + ".Assets.EnableCaps", 
-                    "false",
+        ModuleParams.AddDefaultParameter(ModuleName + ".Assets.EnableCaps", "false",
                     "Whether to use the caps asset system if available");
         ModuleParams.AddDefaultParameter(ModuleName + ".Assets.OMVResources",
                     "./LookingGlassResources/openmetaverse_data",
@@ -667,6 +667,9 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         m_commStatistics.Add("Objects_TerseObjectUpdate", 
             delegate(string xx) { return new OMVSD.OSDString(m_statObjTerseUpdate.ToString()); },
             "Number of 'terse object update' messages");
+        m_commStatistics.Add("RequestLocalID", 
+            delegate(string xx) { return new OMVSD.OSDString(m_statRequestLocalID.ToString()); },
+            "Number of RequestLocalIDs made");
 
         m_commStatsHandler = new RestHandler("/stats/" + m_moduleName + "/stats", m_commStatistics);
         #endregion COMM REST STATS
@@ -764,6 +767,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
             if (!ParentExists(rcontext, args.Prim.ParentID)) {
                 // if this requires a parent and the parent isn't here yet, queue this operation til later
                 rcontext.RequestLocalID(args.Prim.ParentID);
+                m_statRequestLocalID++;
                 QueueTilLater(args.Simulator, CommActionCode.OnObjectUpdated, sender, args);
                 return;
             }

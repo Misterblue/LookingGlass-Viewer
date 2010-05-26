@@ -261,7 +261,7 @@ public class Viewer : ModuleBase, IViewProvider {
 
         int sinceLastMouse = System.Environment.TickCount - m_lastMouseMoveTime;
         m_lastMouseMoveTime = System.Environment.TickCount;
-        m_log.Log(LogLevel.DVIEWDETAIL, "OnMouseMove: x={0}, y={1}, time since last={2}", x, y, sinceLastMouse);
+        // m_log.Log(LogLevel.DVIEWDETAIL, "OnMouseMove: x={0}, y={1}, time since last={2}", x, y, sinceLastMouse);
         if (m_mainCamera != null) {
             if (((Renderer.UserInterface.LastKeyCode & Keys.Control) == 0)
                     && ((Renderer.UserInterface.LastKeyCode & Keys.Alt) != 0)) {
@@ -291,8 +291,8 @@ public class Viewer : ModuleBase, IViewProvider {
                     float xMove = (-x * m_cameraRotationSpeed * Constants.DEGREETORADIAN) % Constants.TWOPI;
                     float yMove = (-y * m_cameraRotationSpeed * Constants.DEGREETORADIAN) % Constants.TWOPI;
                     // rotate around local axis
-                    m_log.Log(LogLevel.DVIEWDETAIL, "OnMouseMove: Rotate camera x={0}, y={1}, lmb={2}", 
-                            xMove, yMove, Renderer.UserInterface.LastMouseButtons);
+                    // m_log.Log(LogLevel.DVIEWDETAIL, "OnMouseMove: Rotate camera x={0}, y={1}, lmb={2}", 
+                    //         xMove, yMove, Renderer.UserInterface.LastMouseButtons);
                     m_mainCamera.rotate(yMove, 0f, xMove);
             }
         }

@@ -65,7 +65,7 @@ public sealed class LLRegionContext : RegionContextBase {
     /// </summary>
     /// <param name="localID"></param>
     public void RequestLocalID(uint localID) {
-        int now = System.Environment.TickCount;
+        int now = System.Environment.TickCount & 0x3fffffff;
         uint requestID = 0;
         lock (m_recentLocalIDRequests) {
             if (m_recentLocalIDRequests.ContainsKey(localID)) {
@@ -77,7 +77,7 @@ public sealed class LLRegionContext : RegionContextBase {
             }
             if (!m_recentLocalIDRequests.ContainsKey(localID)) {
                 // remember the time when we should try again
-                m_recentLocalIDRequests.Add(localID, now + (10 * 1000));
+                m_recentLocalIDRequests.Add(localID, now + (5 * 1000));
                 requestID = localID;
             }
         }

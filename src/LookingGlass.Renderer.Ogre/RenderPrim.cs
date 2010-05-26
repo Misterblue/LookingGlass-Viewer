@@ -111,9 +111,10 @@ class RenderPrim : IRenderEntity {
                         parentSceneNodeName = EntityNameOgre.ConvertToOgreSceneNodeName(m_ent.RegionContext.Name);
                     }
 
-                    // create the mesh we know we need
+                    // Create the mesh if prebilding. The mesh can be either built later on demand or now if
+                    // we're forcing the build.
                     if ((m_shouldPrebuildMesh || m_shouldForceMeshRebuild) && !m_hasMesh) {
-                        // way kludgy... but we see if the cached mesh file exists and, if so, we know it exists
+                        // way kludgy... but we see if the cached mesh file exists and, if so, we don't need to rebuild
                         if (!m_shouldForceMeshRebuild && m_ent.AssetContext.CheckIfCached(m_ent, entMeshName)) {
                             // if we just want the mesh built, if the file exists that's enough prebuilding
                             m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RendererOgre.DorRenderLater: mesh file exists: {0}", 
