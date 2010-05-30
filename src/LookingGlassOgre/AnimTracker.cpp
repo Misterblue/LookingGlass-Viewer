@@ -24,6 +24,8 @@
 #include "LGOCommon.h"
 #include "LookingGlassOgre.h"
 #include "AnimTracker.h"
+#include "Animat.h"
+#include "AnimatFixedRotation.h"
 
 namespace LG {
 AnimTracker* AnimTracker::m_instance = NULL;
@@ -40,30 +42,32 @@ AnimTracker::~AnimTracker() {
 bool AnimTracker::frameStarted(const Ogre::FrameEvent& evt) {
 	LGLOCK_ALOCK animLock;	// a lock that will be released if we have an exception
 	animLock.Lock(m_animationsMutex);
-	// LGLOCK_LOCK(m_animationsMutex);
+
 	std::list<Animat*>::iterator li;
 	for (li = m_animations.begin(); li != m_animations.end(); li++) {
-		li._Ptr->_Myval->Process(evt.timeSinceLastFrame);
+		(*li)->Process(evt.timeSinceLastFrame);
 	}
+
+	// if any of the animations asked to be removed, remove them now
+	// (done since we can't delete it out of the list while iterating to call Process())
 	for (li = m_removeAnimations.begin(); li != m_removeAnimations.end(); li++) {
-		Animat* anim = li._Ptr->_Myval;
+		Animat* anim = *li;
 		delete anim;
 	}
 	m_removeAnimations.clear();
-	// LGLOCK_UNLOCK(m_animationsMutex);
+
 	animLock.Unlock();
 	return true;
 }
 
+// Do a fixed rotation at some rate around some axis
 void AnimTracker::RotateSceneNode(Ogre::String sceneNodeName, Ogre::Vector3 axis, float rate) {
-	LGLOCK_ALOCK animLock;	// a lock that will be released if we have an exception
 	LG::Log("AnimTracker::RotateSceneNode for %s", sceneNodeName.c_str());
+	LGLOCK_ALOCK animLock;	// a lock that will be released if we have an exception
 	RemoveAnimations(sceneNodeName);
 	animLock.Lock(m_animationsMutex);
-	// LGLOCK_LOCK(m_animationsMutex);
-	Animat* anim = new Animat(sceneNodeName);
-	m_animations.push_back(anim);
-	// LGLOCK_UNLOCK(m_animationsMutex);
+	AnimatFixedRotation* anim = new AnimatFixedRotation(sceneNodeName);
+	m_animations.push_back((Animat*)anim);
 	animLock.Unlock();
 	anim->Rotation(axis, rate);
 }
@@ -74,10 +78,10 @@ void AnimTracker::RemoveAnimations(Ogre::String sceneNodeName) {
 	// LGLOCK_LOCK(m_animationsMutex);
 	std::list<Animat*>::iterator li;
 	for (li = m_animations.begin(); li != m_animations.end(); li++) {
-		if (!li._Ptr->_Myval->SceneNodeName.empty()) {
-			if (li._Ptr->_Myval->SceneNodeName == sceneNodeName) {
+		if ( !((*li)->SceneNodeName.empty()) ) {
+			if ((*li)->SceneNodeName == sceneNodeName) {
 				m_animations.erase(li);
-				m_removeAnimations.push_back(li._Ptr->_Myval);
+				m_removeAnimations.push_back(*li);
 			}
 		}
 	}

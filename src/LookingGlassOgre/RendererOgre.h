@@ -77,9 +77,9 @@ public:
 					float px, float py, float pz, float sx, float sy, float sz,
 					float ow, float ox, float oy, float oz);
 	void UpdateSceneNode(const char* entName,
-					bool updatePosition, float px, float py, float pz, 
-					bool updateScale, float sx, float sy, float sz,
-					bool updateRotation, float ow, float ox, float oy, float oz);
+					bool updatePosition, float px, float py, float pz, float pd,
+					bool updateScale, float sx, float sy, float sz, float sd,
+					bool updateRotation, float ow, float ox, float oy, float oz, float od);
 	void RemoveSceneNode(const Ogre::String sNodeName);
 	void RemoveSceneNodeR(Ogre::SceneNode* parentNode, Ogre::SceneNode* sNodeName);
 	void CreateMeshResource(const char*, const int[], const float[]);

@@ -396,14 +396,14 @@ public:
 	bool setPosition;
 	bool setScale;
 	bool setRotation;
-	float px; float py; float pz;
-	float sx; float sy; float sz;
-	float ow; float ox; float oy; float oz;
+	float px; float py; float pz; float pduration;
+	float sx; float sy; float sz; float sduration;
+	float ow; float ox; float oy; float oz; float oduration;
 	UpdateSceneNodeQc(float prio, Ogre::String uni,
 					char* entName,
-					bool setPosition, float px, float py, float pz,
-					bool setScale, float sx, float sy, float sz,
-					bool setRotation, float ow, float ox, float oy, float oz) {
+					bool setPosition, float px, float py, float pz, float pduration,
+					bool setScale, float sx, float sy, float sz, float sduration,
+					bool setRotation, float ow, float ox, float oy, float oz, float oduration) {
 		this->priority = prio;
 		this->cost = 3;
 		this->type = "UpdateSceneNode";
@@ -412,9 +412,9 @@ public:
 		this->setPosition = setPosition;
 		this->setScale = setScale;
 		this->setRotation = setRotation;
-		this->px = px; this->py = py; this->pz = pz;
-		this->sx = sx; this->sy = sy; this->sz = sz;
-		this->ow = ow; this->ox = ox; this->oy = oy; this->oz = oz;
+		this->px = px; this->py = py; this->pz = pz; this->pduration = pduration;
+		this->sx = sx; this->sy = sy; this->sz = sz; this->sduration = sduration;
+		this->ow = ow; this->ox = ox; this->oy = oy; this->oz = oz; this->oduration = oduration;
 	}
 	~UpdateSceneNodeQc(void) {
 		this->uniq.clear();
@@ -422,9 +422,9 @@ public:
 	}
 	void Process() {
 		LG::RendererOgre::Instance()->UpdateSceneNode(this->entName.c_str(),
-					this->setPosition, this->px, this->py, this->pz,
-					this->setScale, this->sx, this->sy, this->sz,
-					this->setRotation, this->ow, this->ox, this->oy, this->oz);
+					this->setPosition, this->px, this->py, this->pz, this->pduration,
+					this->setScale, this->sx, this->sy, this->sz, this->sduration,
+					this->setRotation, this->ow, this->ox, this->oy, this->oz, this->oduration);
 	}
 };
 // ====================================================================
@@ -731,15 +731,15 @@ void ProcessBetweenFrame::AddLoadedMesh(float priority, Ogre::String uniq,
 }
 
 void ProcessBetweenFrame::UpdateSceneNode(float priority, char* entName,
-					bool setPosition, float px, float py, float pz,
-					bool setScale, float sx, float sy, float sz,
-					bool setRotation, float ow, float ox, float oy, float oz) {
+					bool setPosition, float px, float py, float pz, float pd,
+					bool setScale, float sx, float sy, float sz, float sd,
+					bool setRotation, float ow, float ox, float oy, float oz, float od) {
 	LGLOCK_LOCK(m_workItemMutex);
 	UpdateSceneNodeQc* usnq = new UpdateSceneNodeQc(priority, entName,
 					entName,
-					setPosition, px, py, pz,
-					setScale, sx, sy, sz,
-					setRotation, ow, ox, oy, oz);
+					setPosition, px, py, pz, pd,
+					setScale, sx, sy, sz, sd,
+					setRotation, ow, ox, oy, oz, od);
 	QueueWork((GenericQc*)usnq);
 	LGLOCK_UNLOCK(m_workItemMutex);
 	LG::IncStat(LG::StatBetweenFrameWorkItems);

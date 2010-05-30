@@ -93,9 +93,9 @@ public:
 					float ow, float ox, float oy, float oz);
 	void AddLoadedMesh(float, Ogre::String, Ogre::String, Ogre::String, Ogre::SceneNode*);
 	void UpdateSceneNode(float, char* nodeName,
-					bool setPosition, float px, float py, float pz,
-					bool setScale, float sx, float sy, float sz,
-					bool setRotation, float ow, float ox, float oy, float oz);
+					bool setPosition, float px, float py, float pz, float pd,
+					bool setScale, float sx, float sy, float sz, float sd,
+					bool setRotation, float ow, float ox, float oy, float oz, float od);
 	void UpdateAnimation(float, char *, float, float, float, float);
 	void UpdateCamera(double px, double py, double pz,
 					float ow, float ox, float oy, float oz,

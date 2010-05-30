@@ -27,26 +27,19 @@
 namespace LG {
 	class Animat {
 	public:
-		Animat();
-		Animat(Ogre::String);
-		~Animat();
+		// Animat();
+		// Animat(Ogre::String);
+		// ~Animat();
 
-		void Process(float);
-
-		void Rotation(Ogre::Vector3 axis, float rotationsPerSecond);
-		void Rotation(Ogre::Quaternion from, Ogre::Quaternion to, float seconds);
-		void Translate(Ogre::Vector3 from, Ogre::Vector3 to, float seconds);
+		virtual void Process(float);
 
 		Ogre::String SceneNodeName;
+		int AnimatType;
+#define AnimatTypeAny			0
+#define AnimatTypeFixedRotation 1
+#define AnimatTypeRotate		2
+#define AnimatTypePosition		3
 
 	private:
-		bool m_doingFixedRotation;
-		Ogre::Vector3 m_rotationAxis;	// axis doing rotation around
-		float m_rotationLast;			// last radians of rotation
-		float m_rotationScale;			// rotations per second
-
-		bool m_doingRotation;
-
-		bool m_doingTranslation;
 };
 }

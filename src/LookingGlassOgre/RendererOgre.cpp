@@ -574,9 +574,9 @@ namespace LG {
 
 	// BETWEEN FRAME OPERATION
 	void RendererOgre::UpdateSceneNode(const char* entName,
-					bool updatePosition, float px, float py, float pz, 
-					bool updateScale, float sx, float sy, float sz,
-					bool updateRotation, float ow, float ox, float oy, float oz) {
+					bool updatePosition, float px, float py, float pz, float pduration,
+					bool updateScale, float sx, float sy, float sz, float sduration,
+					bool updateRotation, float ow, float ox, float oy, float oz, float oduration) {
 		LG::Log("RendererOgre::UpdateSceneNode: update %s", entName);
 		// if (m_sceneMgr->hasSceneNode(entName)) {
 		try {

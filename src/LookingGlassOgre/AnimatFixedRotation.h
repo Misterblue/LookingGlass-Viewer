@@ -20,17 +20,24 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include "StdAfx.h"
+#pragma once
+
+#include "LGOCommon.h"
 #include "Animat.h"
-#include "LookingGlassOgre.h"
-#include "RendererOgre.h"
-#include "AnimTracker.h"
 
 namespace LG {
+	class AnimatFixedRotation : public Animat {
+	public:
+		AnimatFixedRotation();
+		AnimatFixedRotation(Ogre::String);
+		~AnimatFixedRotation();
 
-void Animat::Process(float timeSinceLastFrame) {
-	return;
-} 
+		void Process(float);
 
+		void Rotation(Ogre::Vector3 axis, float rotationsPerSecond);
 
+	private:
+		Ogre::Vector3 m_rotationAxis;	// axis doing rotation around
+		float m_rotationScale;			// rotations per second
+};
 }

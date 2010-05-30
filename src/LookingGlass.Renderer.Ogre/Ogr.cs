@@ -270,9 +270,9 @@ static class Ogr {
     [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
     public static extern void UpdateSceneNodeBF(float pri,
                 [MarshalAs(UnmanagedType.LPStr)]string entityName,
-                bool updatePosition, float px, float py, float pz,
-                bool updateScale, float sx, float sy, float sz,
-                bool updateRotation, float rw, float rx, float ry, float rz
+                bool updatePosition, float px, float py, float pz, float pd,
+                bool updateScale, float sx, float sy, float sz, float sd,
+                bool updateRotation, float rw, float rx, float ry, float rz, float rd
         );
     [DllImport("LookingGlassOgre", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
     public static extern bool CreateMeshSceneNodeBF(float pri,

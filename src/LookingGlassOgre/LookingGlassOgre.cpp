@@ -208,13 +208,13 @@ extern "C" DLLExport Ogre::SceneNode* CreateSceneNode(
 }
 extern "C" DLLExport void UpdateSceneNodeBF(float pri,
 					char* nodeName,
-					bool setPosition, float px, float py, float pz,
-					bool setScale, float sx, float sy, float sz,
-					bool setRotation, float ow, float ox, float oy, float oz) {
+					bool setPosition, float px, float py, float pz, float pd,
+					bool setScale, float sx, float sy, float sz, float sd,
+					bool setRotation, float ow, float ox, float oy, float oz, float od) {
 	LG::ProcessBetweenFrame::Instance()->UpdateSceneNode(pri, nodeName,
-					setPosition, px, py, pz,
-					setScale, sx, sy, sz,
-					setRotation, ow, ox, oy, oz);
+					setPosition, px, py, pz, pd,
+					setScale, sx, sy, sz, sd,
+					setRotation, ow, ox, oy, oz, od);
 	return;
 }
 extern "C" DLLExport void RemoveSceneNodeBF(float prio, char* sceneNodeName) {

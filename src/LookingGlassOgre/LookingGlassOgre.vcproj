@@ -187,6 +187,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\AnimatFixedRotation.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\AnimSceneNode.cpp"
 				>
 			</File>
@@ -340,6 +344,10 @@
 			>
 			<File
 				RelativePath=".\Animat.h"
+				>
+			</File>
+			<File
+				RelativePath=".\AnimatFixedRotation.h"
 				>
 			</File>
 			<File

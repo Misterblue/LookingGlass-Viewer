@@ -22,13 +22,44 @@
  */
 #include "StdAfx.h"
 #include "Animat.h"
+#include "AnimatFixedRotation.h"
 #include "LookingGlassOgre.h"
 #include "RendererOgre.h"
 #include "AnimTracker.h"
 
 namespace LG {
 
-void Animat::Process(float timeSinceLastFrame) {
+AnimatFixedRotation::AnimatFixedRotation() {
+	this->SceneNodeName.clear();
+};
+AnimatFixedRotation::AnimatFixedRotation(Ogre::String sNodeName) {
+	this->SceneNodeName = sNodeName;
+	this->AnimatType = AnimatTypeFixedRotation;
+};
+AnimatFixedRotation::~AnimatFixedRotation() {
+};
+
+void AnimatFixedRotation::Rotation(Ogre::Vector3 axis, float rotationsPerSecond) {
+	this->m_rotationScale = rotationsPerSecond;
+	this->m_rotationAxis = axis;
+	LG::Log("Animat::Rotation: setting rotation %f animation for %s", 
+				(double)this->m_rotationScale, this->SceneNodeName.c_str());
+	return;
+}
+
+void AnimatFixedRotation::Process(float timeSinceLastFrame) {
+	float nextStep = this->m_rotationScale * timeSinceLastFrame;
+	float nextIncrement = Ogre::Math::TWO_PI * nextStep;
+	while (nextIncrement >= Ogre::Math::TWO_PI) nextIncrement -= Ogre::Math::TWO_PI;
+	Ogre::Quaternion newRotation;
+	newRotation.FromAngleAxis(Ogre::Radian(nextIncrement), this->m_rotationAxis);
+	try {
+		Ogre::SceneNode* node = LG::RendererOgre::Instance()->m_sceneMgr->getSceneNode(this->SceneNodeName);
+		node->setOrientation(newRotation * node->getOrientation());
+	}
+	catch (...) {
+		LG::Log("Animat::Process: exception getting scene node");
+	}
 	return;
 } 
 
