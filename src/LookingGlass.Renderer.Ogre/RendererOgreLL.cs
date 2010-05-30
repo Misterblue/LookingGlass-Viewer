@@ -717,9 +717,9 @@ public class RendererOgreLL : IWorldRenderConv {
             textureParams[pBase + (int)Ogr.CreateMaterialParam.mediaFlags] = textureFace.MediaFlags ? 1f : 0f;
 
             textureParams[pBase + (int)Ogr.CreateMaterialParam.animationFlag] = 0f;
-            if (prim != null && (prim.TextureAnim.Face == faceNum || (int)prim.TextureAnim.Face == -1)
-                        // && ((prim.TextureAnim.Flags & OpenMetaverse.Primitive.TextureAnimMode.ANIM_ON) != 0)) {
-                        && ((prim.TextureAnim.Flags != 0)) ) {
+            if (prim != null && (prim.TextureAnim.Face == faceNum || (int)prim.TextureAnim.Face == 255)
+                // && ((prim.TextureAnim.Flags & OpenMetaverse.Primitive.TextureAnimMode.ANIM_ON) != 0)) {
+                        && ((prim.TextureAnim.Flags != 0))) {
                 m_log.Log(LogLevel.DRENDERDETAIL, "Adding animation for material texture");
                 textureParams[pBase + (int)Ogr.CreateMaterialParam.animationFlag] = (float)prim.TextureAnim.Flags;
                 textureParams[pBase + (int)Ogr.CreateMaterialParam.animSizeX] = (float)prim.TextureAnim.SizeX;
@@ -727,6 +727,9 @@ public class RendererOgreLL : IWorldRenderConv {
                 textureParams[pBase + (int)Ogr.CreateMaterialParam.animStart] = prim.TextureAnim.Start;
                 textureParams[pBase + (int)Ogr.CreateMaterialParam.animRate] = prim.TextureAnim.Rate;
                 textureParams[pBase + (int)Ogr.CreateMaterialParam.animLength] = prim.TextureAnim.Length;
+            }
+            else {
+                textureParams[pBase + (int)Ogr.CreateMaterialParam.animationFlag] = 0f;
             }
 
             // since we can't calculate whether material is transparent or not (actually
@@ -841,10 +844,14 @@ public class RendererOgreLL : IWorldRenderConv {
     // The only animation so far is the rotation animation.
     // Return 'true' if animation set. false if not set and try again later.
     public bool UpdateAnimation(float prio, IEntity ent, string sceneNodeName, IAnimation anim) {
-        m_log.Log(LogLevel.DRENDERDETAIL, "Update animation for {0}", ent.Name);
+        m_log.Log(LogLevel.DRENDERDETAIL, "Update animation for {0}: {1} at {2}", ent.Name, 
+                            anim.StaticRotationAxis, anim.StaticRotationRotPerSec);
         if (anim.DoStaticRotation) {
-            Ogr.UpdateAnimationBF(prio, sceneNodeName, anim.StaticRotationAxis.X, anim.StaticRotationAxis.Y,
-                    anim.StaticRotationAxis.Z, anim.StaticRotationRotPerSec);
+            Ogr.UpdateAnimationBF(prio, sceneNodeName, 
+                    anim.StaticRotationAxis.X, 
+                    anim.StaticRotationAxis.Y,
+                    anim.StaticRotationAxis.Z, 
+                    anim.StaticRotationRotPerSec);
         }
         return true;
     }

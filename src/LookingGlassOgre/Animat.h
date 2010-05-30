@@ -33,7 +33,6 @@ namespace LG {
 
 		void Process(float);
 
-		void Rotation(float, float, float);
 		void Rotation(Ogre::Vector3 axis, float rotationsPerSecond);
 		void Rotation(Ogre::Quaternion from, Ogre::Quaternion to, float seconds);
 		void Translate(Ogre::Vector3 from, Ogre::Vector3 to, float seconds);

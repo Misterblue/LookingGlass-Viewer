@@ -263,7 +263,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         ModuleParams.AddDefaultParameter(ModuleName + ".Assets.NoSculptyFilename", 
                     Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "./LookingGlassResources/NoSculpty.png"),
                     "Filename of texture to display when we can't get the real texture");
-        ModuleParams.AddDefaultParameter(ModuleName + ".Assets.ConvertPNG", "false",
+        ModuleParams.AddDefaultParameter(ModuleName + ".Assets.ConvertPNG", "true",
                     "whether to convert incoming JPEG2000 files to PNG files in the cache");
         ModuleParams.AddDefaultParameter(ModuleName + ".Texture.MaxRequests", 
                     "4",
@@ -861,12 +861,12 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
             // along as an animation (llTargetOmega)
             // we convert the information into a standard form
             IEntityAvatar av;
-            if (!ent.TryGet<IEntityAvatar>(out av)) {
-                if (angularVelocity != OMV.Vector3.Zero) {
-                    IAnimation anim;
+            if (angularVelocity != OMV.Vector3.Zero) {
+                if (!ent.TryGet<IEntityAvatar>(out av)) {
                     float rotPerSec = angularVelocity.Length() / Constants.TWOPI;
                     OMV.Vector3 axis = angularVelocity;
                     axis.Normalize();
+                    IAnimation anim;
                     if (!ent.TryGet<IAnimation>(out anim)) {
                         anim = new LLAnimation();
                         ent.RegisterInterface<IAnimation>(anim);

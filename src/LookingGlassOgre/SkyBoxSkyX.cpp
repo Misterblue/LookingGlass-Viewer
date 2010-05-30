@@ -76,7 +76,7 @@ void SkyBoxSkyX::Start() {
 
 	m_moon = LG::RendererOgre::Instance()->m_sceneMgr->createLight("moon");
 	m_moon->setType(Ogre::Light::LT_DIRECTIONAL);	// directional and sun-like
-	m_moon->setDiffuseColour(Ogre::ColourValue(LG::GetParameterColor("Renderer.Ogre.Moon.Color")));
+	m_moon->setDiffuseColour(LG::GetParameterColor("Renderer.Ogre.Moon.Color"));
 	m_moon->setCastShadows(true);
 
 	if (LG::GetParameterBool("Renderer.Ogre.SkyX.LightingHDR")) {
@@ -154,8 +154,10 @@ bool SkyBoxSkyX::frameStarted(const Ogre::FrameEvent &e) {
 		else {
 			m_sun->setVisible(true);
 		}
-		Ogre::Vector3 desiredMoon = LG::RegionTracker::Instance()->PositionForFocusRegion(
-								m_SkyX->getMoonManager()->getMoonSceneNode()->getPosition());
+
+		Ogre::Vector3 globalMoon = m_SkyX->getMoonManager()->getMoonSceneNode()->getPosition();
+		// Ogre::Vector3 desiredMoon = LG::RegionTracker::Instance()->PositionForFocusRegion(globalMoon);
+		Ogre::Vector3 desiredMoon = globalMoon;
 		m_moon->setPosition(desiredMoon);
 		m_moon->setDirection(m_SkyX->getCamera()->getPosition() - m_moon->getPosition());
 		// if below the horizon, turn it off
@@ -164,13 +166,6 @@ bool SkyBoxSkyX::frameStarted(const Ogre::FrameEvent &e) {
 		}
 		else {
 			m_moon->setVisible(true);
-		}
-		if (sunPositionThrottle-- < 0) {
-			sunPositionThrottle = 30;
-			LG::Log("Sun position g=<%f,%f,%f>, d=<%f,%f,%f>",
-				globalSun.x, globalSun.y, globalSun.z,
-				desiredSun.x, desiredSun.y, desiredSun.z
-			);
 		}
 
 		/*

@@ -187,12 +187,14 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "True if to force the generation a mesh when first rendered (don't rely on cache)");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.PrebuildMesh", "true",
                     "True if to make sure the mesh exists before creating the scene node");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".ShouldShareMeshes", "false",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".ShouldShareMeshes", "true",
                     "True if to share meshes with similar characteristics");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.UseShaders", "true",
                     "Whether to use the new technique of using GPU shaders");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.CollectOgreStats", "true",
                     "Whether to collect detailed Ogre stats and make available to web");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.ShouldQueueMeshOperations", "false",
+                    "True if to try and use threads and delayed mesh load and unload operations");
 
         ModuleParams.AddDefaultParameter(m_moduleName + ".Avatar.Mesh.InfoDir", "./LookingGlassResources/openmetaverse_data",
                     "Directory containing avatar description information");
@@ -206,13 +208,17 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.SkyX.LightingHDR", "true",
                     "Use high resolution lighting shaders");
 
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Camera.NearClip", "2.0",
+                    "Initial camera near clip distance");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Camera.FarClip", "30000.0",
+                    "Initial camera far clip distance");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Ambient.Scene", "<0.4,0.4,0.4>",
                     "color value for scene initial ambient lighting");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Ambient.Material", "<0.4,0.4,0.4>",
                     "color value for material ambient lighting");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Sun.Color", "<1.0,1.0,1.0>",
                     "Color of light from the sun at noon");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Moon.Color", "<0.5,0.5,0.6>",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Moon.Color", "<0.6,0.6,0.8>",
                     "Color of light from the moon");
 
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.Visibility.Processor", "FrustrumDistance",

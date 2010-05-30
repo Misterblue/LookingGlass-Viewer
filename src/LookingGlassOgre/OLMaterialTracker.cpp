@@ -435,11 +435,7 @@ void OLMaterialTracker::CreateMaterialResource2(const char* mName, const char* t
 		// use SceneBlendType to add the alpha information
 		// Values are the alpha of the vertex color or 2.0 if to assume transparent
 		CreateMaterialSetTransparancy(pass, parms[CreateMaterialTransparancy]);
-		tus->setTextureUScroll(parms[CreateMaterialScrollU]);
-		tus->setTextureVScroll(parms[CreateMaterialScrollV]);
-		tus->setTextureUScale(parms[CreateMaterialScaleU]);
-		tus->setTextureVScale(parms[CreateMaterialScaleV]);
-		tus->setTextureRotate(Ogre::Radian(parms[CreateMaterialRotate]));
+		CreateMaterialDecorateTus(tus, parms);
 		pass->setDiffuse(parms[CreateMaterialColorR], parms[CreateMaterialColorG], 
 					parms[CreateMaterialColorB], parms[CreateMaterialColorA] );
 
@@ -582,19 +578,21 @@ void OLMaterialTracker::CreateMaterialDecorateTus(Ogre::TextureUnitState* tus, c
 	tus->setTextureUScale(parms[CreateMaterialScaleU]);
 	tus->setTextureVScale(parms[CreateMaterialScaleV]);
 	tus->setTextureRotate(Ogre::Radian(parms[CreateMaterialRotate]));
-	if ((((int)parms[CreateMaterialAnimationFlag]) & CreateMaterialAnimFlagOn) != 0) {
-		LG::Log("OLMaterialTracker::CreateMaterialDescorateTus: adding texture animation");
+	int animFlags = (int)parms[CreateMaterialAnimationFlag];
+	// the following works if not using the shaders
+	if (animFlags != 0) {
+		LG::Log("OLMaterialTracker::CreateMaterialDescorateTus: adding texture animation. f=%d", animFlags);
 		Ogre::WaveformType waveType = Ogre::WFT_SAWTOOTH;
-		if ((((int)parms[CreateMaterialAnimationFlag]) & CreateMaterialAnimFlagPingPong) != 0) {
-			waveType = Ogre::WFT_TRIANGLE;
-		}
-		if ((((int)parms[CreateMaterialAnimationFlag]) & CreateMaterialAnimFlagSmooth) != 0) {
+		// if ((animFlags & CreateMaterialAnimFlagPingPong) != 0) {
+		// 	waveType = Ogre::WFT_TRIANGLE;
+		// }
+		if ((animFlags & CreateMaterialAnimFlagSmooth) != 0) {
 			tus->setTransformAnimation(Ogre::TextureUnitState::TT_SCALE_U, waveType,
 				0.0, parms[CreateMaterialAnimSizeX], 0.0);
 			tus->setTransformAnimation(Ogre::TextureUnitState::TT_SCALE_V, waveType,
 				0.0, parms[CreateMaterialAnimSizeY], 0.0);
 		}
-		if ((((int)parms[CreateMaterialAnimationFlag]) & CreateMaterialAnimFlagRotate) != 0) {
+		if ((animFlags & CreateMaterialAnimFlagRotate) != 0) {
 			tus->setTransformAnimation(Ogre::TextureUnitState::TT_ROTATE, waveType,
 				0.0, parms[CreateMaterialAnimRate], 0.0);
 		}

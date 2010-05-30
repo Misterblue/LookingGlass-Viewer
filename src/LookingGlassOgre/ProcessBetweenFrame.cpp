@@ -803,6 +803,7 @@ void ProcessBetweenFrame::SetRegionDetail(float priority, const char* rn, const 
 int milliSecondsToProcess;
 bool ProcessBetweenFrame::frameEnded(const Ogre::FrameEvent& evt) {
 	//current cost is number of milliseconds to do the processing
+	/*
 	if (evt.timeSinceLastFrame > 0.25 || m_betweenFrameWork.size() > 4000) {
 		milliSecondsToProcess = milliSecondsToProcess + 50;
 		if (milliSecondsToProcess > m_numWorkItemsToDoBetweenFrames) milliSecondsToProcess = m_numWorkItemsToDoBetweenFrames;
@@ -811,6 +812,8 @@ bool ProcessBetweenFrame::frameEnded(const Ogre::FrameEvent& evt) {
 		milliSecondsToProcess = milliSecondsToProcess - 50;
 	}
 	if (milliSecondsToProcess < 50) milliSecondsToProcess = 50;
+	*/
+	milliSecondsToProcess = 500;
 	ProcessWorkItems(milliSecondsToProcess);
 	return true;
 }

@@ -209,6 +209,8 @@ public:
 private:
 	static OLMeshTracker* m_instance;
 
+	bool m_shouldQueueMeshOperations;	// false if not to queue. Just do it.
+
 	LGLOCK_THREAD m_processingThread;
 	static void ProcessThreadRoutine();
 

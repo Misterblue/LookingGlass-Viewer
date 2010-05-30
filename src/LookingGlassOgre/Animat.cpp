@@ -38,18 +38,6 @@ Animat::Animat(Ogre::String sNodeName) {
 Animat::~Animat() {
 };
 
-// start a rotation on a scene node
-// A kludge rotation for LL which is specified by a vector where the direction
-// of the vector is the axis to rotate around and the length of the vector
-// is the radians per second to rotate.
-void Animat::Rotation(float X, float Y, float Z) {
-	Ogre::Vector3 axis = Ogre::Vector3(X, Y, Z);
-	float rotPerSec = axis.length();	// rotation in radians per second
-	rotPerSec = rotPerSec / Ogre::Math::TWO_PI;	// converted into rotations per second
-	axis.normalise();
-	this->Rotation(axis, rotPerSec);
-}
-
 void Animat::Rotation(Ogre::Vector3 axis, float rotationsPerSecond) {
 	this->m_rotationScale = rotationsPerSecond;
 	this->m_rotationAxis = axis;
@@ -71,13 +59,13 @@ void Animat::Translate(Ogre::Vector3 from, Ogre::Vector3 to, float seconds) {
 void Animat::Process(float timeSinceLastFrame) {
 	if (m_doingFixedRotation) {
 		float nextStep = this->m_rotationScale * timeSinceLastFrame;
-		this->m_rotationLast += Ogre::Math::TWO_PI * nextStep;
-		while (this->m_rotationLast >= Ogre::Math::TWO_PI) this->m_rotationLast -= Ogre::Math::TWO_PI;
+		float nextIncrement = Ogre::Math::TWO_PI * nextStep;
+		while (nextIncrement >= Ogre::Math::TWO_PI) nextIncrement -= Ogre::Math::TWO_PI;
 		Ogre::Quaternion newRotation;
-		newRotation.FromAngleAxis(Ogre::Radian(this->m_rotationLast), this->m_rotationAxis);
+		newRotation.FromAngleAxis(Ogre::Radian(nextIncrement), this->m_rotationAxis);
 		try {
 			Ogre::SceneNode* node = LG::RendererOgre::Instance()->m_sceneMgr->getSceneNode(this->SceneNodeName);
-			node->setOrientation(newRotation);
+			node->setOrientation(newRotation * node->getOrientation());
 		}
 		catch (...) {
 			LG::Log("Animat::Process: exception getting scene node");

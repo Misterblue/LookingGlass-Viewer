@@ -54,6 +54,13 @@ OLMeshTracker* OLMeshTracker::m_instance = NULL;
 OLMeshTracker::OLMeshTracker() {
 	MeshTrackerLock = LGLOCK_ALLOCATE_MUTEX("OLMeshTracker");
 	m_cacheDir = LG::GetParameter("Renderer.Ogre.CacheDir");
+
+	// This routine can do fancy queuing and delayed loading and loading of meshes if
+	// the next variable is 'true'. If the variable is 'false', all operations are done
+	// immediately. I have found that the queuing creates delays in display without
+	// appreciatably speeding processing up.
+	m_shouldQueueMeshOperations = LG::GetParameterBool("Renderer.Ogre.ShouldQueueMeshOperations");
+
 	m_meshesToLoad = new MeshWorkQueue("MeshesToLoad", LG::StatMeshTrackerLoadQueued);
 	m_meshesToUnload = new MeshWorkQueue("MeshesToUnload", LG::StatMeshTrackerUnloadQueued);
 	m_meshesToSerialize = new MeshWorkQueue("MeshesToSerialize", LG::StatMeshTrackerSerializedQueued);
@@ -308,6 +315,12 @@ void OLMeshTracker::RequestMesh(Ogre::String meshName, Ogre::String context) {
 // we do the prepare operation (file IO) on our own thread. Once the IO is complete,
 // we schedule a refresh resource to add the mesh to the scene.
 void OLMeshTracker::MakeLoaded(Ogre::String meshName, Ogre::String contextEntity, Ogre::String stringParam, Ogre::Entity* entityParam) {
+	if (!m_shouldQueueMeshOperations) {
+		MakeMeshLoadedQm* mmlq = new MakeMeshLoadedQm(10, meshName, contextEntity, stringParam, entityParam);
+		mmlq->Process();
+		delete(mmlq);
+		return;
+	}
 	LGLOCK_ALOCK trackerLock;
 	// LGLOCK_LOCK(MeshTrackerLock);
 	trackerLock.Lock(MeshTrackerLock);
@@ -336,6 +349,12 @@ void OLMeshTracker::MakeLoaded(Ogre::String meshName, Ogre::String contextEntity
 // forces a load of the mesh. This does the load on the other thread and then
 // creates the entity.
 void OLMeshTracker::MakeLoaded(Ogre::SceneNode* sceneNode, Ogre::String meshName, Ogre::String entityName) {
+	if (!m_shouldQueueMeshOperations) {
+		MakeMeshLoaded2Qm* mmlq = new MakeMeshLoaded2Qm(10, meshName, sceneNode, meshName, entityName);
+		mmlq->Process();
+		delete(mmlq);
+		return;
+	}
 	LGLOCK_ALOCK trackerLock;
 	// LGLOCK_LOCK(MeshTrackerLock);
 	trackerLock.Lock(MeshTrackerLock);
@@ -404,6 +423,12 @@ void OLMeshTracker::DoReload(Ogre::String meshName) {
 }
 
 void OLMeshTracker::DoReload(Ogre::MeshPtr meshP) {
+	if (!m_shouldQueueMeshOperations) {
+		ReloadMeshQm* rmq = new ReloadMeshQm(10, meshP);
+		rmq->Process();
+		delete(rmq);
+		return;
+	}
 	LGLOCK_ALOCK trackerLock;
 	// LGLOCK_LOCK(MeshTrackerLock);
 	trackerLock.Lock(MeshTrackerLock);
@@ -435,6 +460,12 @@ void OLMeshTracker::DoReload(Ogre::MeshPtr meshP) {
 // ===============================================================================
 // Serialize the mesh to it's file on our own thread.
 void OLMeshTracker::MakePersistant(Ogre::String meshName, Ogre::String entName, Ogre::String stringParm, Ogre::Entity* entityParm) {
+	if (!m_shouldQueueMeshOperations) {
+		MakeMeshSerializedQm* msq = new MakeMeshSerializedQm(10, meshName, entName, stringParm, entityParm);
+		msq->Process();
+		delete(msq);
+		return;
+	}
 	LGLOCK_ALOCK trackerLock;
 	// LGLOCK_LOCK(MeshTrackerLock);
 	trackerLock.Lock(MeshTrackerLock);
