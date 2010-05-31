@@ -26,6 +26,7 @@
 #include "AnimTracker.h"
 #include "Animat.h"
 #include "AnimatFixedRotation.h"
+#include "AnimatPosition.h"
 
 namespace LG {
 AnimTracker* AnimTracker::m_instance = NULL;
@@ -45,54 +46,84 @@ bool AnimTracker::frameStarted(const Ogre::FrameEvent& evt) {
 
 	std::list<Animat*>::iterator li;
 	for (li = m_animations.begin(); li != m_animations.end(); li++) {
-		(*li)->Process(evt.timeSinceLastFrame);
+		try {
+			if (!(*li)->Process(evt.timeSinceLastFrame)) {
+				m_removeAnimations.push_back(*li);
+			}
+		}
+		catch (...) {
+			LG::Log("AnimTracker::frameStarted EXCEPTION calling Process on t=%d, s=%s", 
+				(*li)->AnimatType, (*li)->SceneNodeName.c_str());
+		}
 	}
 
 	// if any of the animations asked to be removed, remove them now
 	// (done since we can't delete it out of the list while iterating to call Process())
-	for (li = m_removeAnimations.begin(); li != m_removeAnimations.end(); li++) {
-		Animat* anim = *li;
-		delete anim;
-	}
-	m_removeAnimations.clear();
+	EmptyRemoveAnimationList();
 
 	animLock.Unlock();
 	return true;
 }
 
+// delete animations of a certain type for this scenenode
+void AnimTracker::RemoveAnimations(Ogre::String sceneNodeName, int typ) {
+	LGLOCK_ALOCK animLock;	// a lock that will be released if we have an exception
+	animLock.Lock(m_animationsMutex);
+
+	std::list<Animat*>::iterator li;
+	for (li = m_animations.begin(); li != m_animations.end(); li++) {
+		if ( !((*li)->SceneNodeName.empty()) ) {
+			if ((typ == AnimatTypeAny) || ((*li)->AnimatType == typ)) {
+				if ((*li)->SceneNodeName == sceneNodeName) {
+					// m_animations.erase(li);
+					m_removeAnimations.push_back(*li);
+				}
+			}
+		}
+	}
+	EmptyRemoveAnimationList();
+	animLock.Unlock();
+}
+
+// Delete all animations for this scene node
+void AnimTracker::RemoveAnimations(Ogre::String sceneNodeName) {
+	RemoveAnimations(sceneNodeName, AnimatTypeAny);
+}
+
+// note: assumes the list is protected by a lock
+void AnimTracker::EmptyRemoveAnimationList() {
+	std::list<Animat*>::iterator li;
+	for (li = m_removeAnimations.begin(); li != m_removeAnimations.end(); li++) {
+		Animat* anim = *li;
+		m_animations.remove(anim);
+		delete anim;
+	}
+	m_removeAnimations.clear();
+}
+
+// =======================================================================
 // Do a fixed rotation at some rate around some axis
 void AnimTracker::RotateSceneNode(Ogre::String sceneNodeName, Ogre::Vector3 axis, float rate) {
 	LG::Log("AnimTracker::RotateSceneNode for %s", sceneNodeName.c_str());
 	LGLOCK_ALOCK animLock;	// a lock that will be released if we have an exception
-	RemoveAnimations(sceneNodeName);
+	// Remove any outstanding animations of this type on this scenenode
+	RemoveAnimations(sceneNodeName, AnimatTypeFixedRotation);
 	animLock.Lock(m_animationsMutex);
-	AnimatFixedRotation* anim = new AnimatFixedRotation(sceneNodeName);
+	AnimatFixedRotation* anim = new AnimatFixedRotation(sceneNodeName, axis, rate);
 	m_animations.push_back((Animat*)anim);
 	animLock.Unlock();
-	anim->Rotation(axis, rate);
 }
 
-void AnimTracker::RemoveAnimations(Ogre::String sceneNodeName) {
+// =======================================================================
+void AnimTracker::MoveToPosition(Ogre::String sceneNodeName, Ogre::Vector3 newPos, float duration) {
+	// LG::Log("AnimTracker::MoveToPosition for %s, d=%f", sceneNodeName.c_str(), duration);
 	LGLOCK_ALOCK animLock;	// a lock that will be released if we have an exception
+	// Remove any outstanding animations of this type on this scenenode
+	RemoveAnimations(sceneNodeName, AnimatTypePosition);
 	animLock.Lock(m_animationsMutex);
-	// LGLOCK_LOCK(m_animationsMutex);
-	std::list<Animat*>::iterator li;
-	for (li = m_animations.begin(); li != m_animations.end(); li++) {
-		if ( !((*li)->SceneNodeName.empty()) ) {
-			if ((*li)->SceneNodeName == sceneNodeName) {
-				m_animations.erase(li);
-				m_removeAnimations.push_back(*li);
-			}
-		}
-	}
-	// LGLOCK_UNLOCK(m_animationsMutex);
+	AnimatPosition* anim = new AnimatPosition(sceneNodeName, newPos, duration);
+	m_animations.push_back((Animat*)anim);
 	animLock.Unlock();
-}
-
-// Called by an animation to say it is complete. This will cause the animat to
-// be deleted after processing is complete.
-void AnimTracker::AnimationComplete(Animat* anim) {
-	m_removeAnimations.push_back(anim);
 }
 
 }

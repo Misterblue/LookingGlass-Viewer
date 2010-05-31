@@ -48,10 +48,13 @@ public:
 
 	// schedule a constant rotation to a scene node
 	void RotateSceneNode(Ogre::String sceneNodeName, Ogre::Vector3 axis, float rate);
+	// schedule a move to a new position
+	void MoveToPosition(Ogre::String sceneNodeName, Ogre::Vector3 newPos, float duration);
+
 	// remove all animations associated with a scene node
 	void RemoveAnimations(Ogre::String sceneNodeName);
-	// called by an animation to say it's complete and to delete the animation object
-	void AnimationComplete(Animat*);
+	// remove all animations associated with a scene node of a specific type
+	void RemoveAnimations(Ogre::String sceneNodeName, int typ);
 
 	// Ogre::FrameListener
 	bool frameStarted(const Ogre::FrameEvent&);
@@ -62,5 +65,7 @@ private:
 	LGLOCK_MUTEX m_animationsMutex;
 	std::list<Animat*> m_animations;
 	std::list<Animat*> m_removeAnimations;
+
+	void EmptyRemoveAnimationList();
 };
 }

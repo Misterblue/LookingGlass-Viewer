@@ -20,47 +20,25 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include "StdAfx.h"
+#pragma once
+
+#include "LGOCommon.h"
 #include "Animat.h"
-#include "AnimatFixedRotation.h"
-#include "LookingGlassOgre.h"
-#include "RendererOgre.h"
-#include "AnimTracker.h"
 
 namespace LG {
+	class AnimatPosition : public Animat {
+	public:
+		AnimatPosition();
+		AnimatPosition(Ogre::String nodeName, Ogre::Vector3 newPos, float duration);
+		~AnimatPosition();
 
-AnimatFixedRotation::AnimatFixedRotation() {
-	this->SceneNodeName.clear();
+		bool Process(float);
+
+	private:
+		Ogre::Vector3 m_originalPosition;
+		Ogre::Vector3 m_targetPosition;
+		Ogre::Vector3 m_distanceVector;
+		float m_durationSeconds;
+		float m_progress;		// 0..1
 };
-AnimatFixedRotation::AnimatFixedRotation(Ogre::String sNodeName, Ogre::Vector3 axis, float rotationsPerSecond) {
-	this->SceneNodeName = sNodeName;
-	this->AnimatType = AnimatTypeFixedRotation;
-
-	this->m_rotationScale = rotationsPerSecond;
-	this->m_rotationAxis = axis;
-	LG::Log("Animat::Rotation: setting rotation %f animation for %s", 
-				(double)this->m_rotationScale, this->SceneNodeName.c_str());
-	return;
-};
-AnimatFixedRotation::~AnimatFixedRotation() {
-};
-
-bool AnimatFixedRotation::Process(float timeSinceLastFrame) {
-	bool ret = true;
-	float nextStep = this->m_rotationScale * timeSinceLastFrame;
-	float nextIncrement = Ogre::Math::TWO_PI * nextStep;
-	while (nextIncrement >= Ogre::Math::TWO_PI) nextIncrement -= Ogre::Math::TWO_PI;
-	Ogre::Quaternion newRotation;
-	newRotation.FromAngleAxis(Ogre::Radian(nextIncrement), this->m_rotationAxis);
-	try {
-		Ogre::SceneNode* node = LG::RendererOgre::Instance()->m_sceneMgr->getSceneNode(this->SceneNodeName);
-		node->setOrientation(newRotation * node->getOrientation());
-	}
-	catch (...) {
-		LG::Log("Animat::Process: exception getting scene node");
-	}
-	return ret;
-} 
-
-
 }

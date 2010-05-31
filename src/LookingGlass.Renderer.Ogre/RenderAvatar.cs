@@ -143,10 +143,10 @@ class RenderAvatar : IRenderEntity {
             m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: Updating position/rotation for {0}", entitySceneNodeName);
             Ogr.UpdateSceneNodeBF(priority, entitySceneNodeName,
                 ((what & UpdateCodes.Position) != 0),
-                m_ent.RegionPosition.X, m_ent.RegionPosition.Y, m_ent.RegionPosition.Z, 1f,
+                m_ent.RegionPosition.X, m_ent.RegionPosition.Y, m_ent.RegionPosition.Z, 0.25f,
                 false, 1f, 1f, 1f, 1f,  // don't pass scale yet
                 ((what & UpdateCodes.Rotation) != 0),
-                m_ent.Heading.W, m_ent.Heading.X, m_ent.Heading.Y, m_ent.Heading.Z, 1f);
+                m_ent.Heading.W, m_ent.Heading.X, m_ent.Heading.Y, m_ent.Heading.Z, 0.25f);
         }
     }
 }

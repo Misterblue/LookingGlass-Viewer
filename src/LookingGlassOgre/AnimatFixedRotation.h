@@ -29,12 +29,10 @@ namespace LG {
 	class AnimatFixedRotation : public Animat {
 	public:
 		AnimatFixedRotation();
-		AnimatFixedRotation(Ogre::String);
+		AnimatFixedRotation(Ogre::String, Ogre::Vector3 axis, float rotationsPerSecond);
 		~AnimatFixedRotation();
 
-		void Process(float);
-
-		void Rotation(Ogre::Vector3 axis, float rotationsPerSecond);
+		bool Process(float);
 
 	private:
 		Ogre::Vector3 m_rotationAxis;	// axis doing rotation around

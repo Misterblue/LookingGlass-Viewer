@@ -28,8 +28,8 @@
 
 namespace LG {
 
-void Animat::Process(float timeSinceLastFrame) {
-	return;
+bool Animat::Process(float timeSinceLastFrame) {
+	return true;
 } 
 
 

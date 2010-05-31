@@ -22,39 +22,45 @@
  */
 #include "StdAfx.h"
 #include "Animat.h"
-#include "AnimatFixedRotation.h"
+#include "AnimatPosition.h"
 #include "LookingGlassOgre.h"
 #include "RendererOgre.h"
 #include "AnimTracker.h"
 
 namespace LG {
 
-AnimatFixedRotation::AnimatFixedRotation() {
+AnimatPosition::AnimatPosition() {
 	this->SceneNodeName.clear();
 };
-AnimatFixedRotation::AnimatFixedRotation(Ogre::String sNodeName, Ogre::Vector3 axis, float rotationsPerSecond) {
+AnimatPosition::AnimatPosition(Ogre::String sNodeName, Ogre::Vector3 newPos, float durationSeconds) {
 	this->SceneNodeName = sNodeName;
-	this->AnimatType = AnimatTypeFixedRotation;
+	this->AnimatType = AnimatTypePosition;
 
-	this->m_rotationScale = rotationsPerSecond;
-	this->m_rotationAxis = axis;
-	LG::Log("Animat::Rotation: setting rotation %f animation for %s", 
-				(double)this->m_rotationScale, this->SceneNodeName.c_str());
-	return;
+	Ogre::SceneNode* node = LG::RendererOgre::Instance()->m_sceneMgr->getSceneNode(this->SceneNodeName);
+	m_originalPosition = node->getPosition();
+	m_targetPosition = newPos;
+	m_durationSeconds = durationSeconds;
+	m_distanceVector = m_targetPosition - m_originalPosition;
+	m_progress = 0.0f;
 };
-AnimatFixedRotation::~AnimatFixedRotation() {
+AnimatPosition::~AnimatPosition() {
 };
 
-bool AnimatFixedRotation::Process(float timeSinceLastFrame) {
+bool AnimatPosition::Process(float timeSinceLastFrame) {
 	bool ret = true;
-	float nextStep = this->m_rotationScale * timeSinceLastFrame;
-	float nextIncrement = Ogre::Math::TWO_PI * nextStep;
-	while (nextIncrement >= Ogre::Math::TWO_PI) nextIncrement -= Ogre::Math::TWO_PI;
-	Ogre::Quaternion newRotation;
-	newRotation.FromAngleAxis(Ogre::Radian(nextIncrement), this->m_rotationAxis);
+	float thisProgress = timeSinceLastFrame / m_durationSeconds;
+	m_progress += thisProgress;
 	try {
 		Ogre::SceneNode* node = LG::RendererOgre::Instance()->m_sceneMgr->getSceneNode(this->SceneNodeName);
-		node->setOrientation(newRotation * node->getOrientation());
+		if (node != NULL) {
+			if (m_progress > 1.0f) {
+				node->setPosition(m_targetPosition);
+				ret = false;	// return false to say animation is done and should be deleted
+			}
+			else {
+				node->setPosition(m_originalPosition + m_distanceVector * m_progress);
+			}
+		}
 	}
 	catch (...) {
 		LG::Log("Animat::Process: exception getting scene node");

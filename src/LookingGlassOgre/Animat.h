@@ -31,7 +31,8 @@ namespace LG {
 		// Animat(Ogre::String);
 		// ~Animat();
 
-		virtual void Process(float);
+		// returns true if happy, false if animation is done and should be deleted
+		virtual bool Process(float);
 
 		Ogre::String SceneNodeName;
 		int AnimatType;
