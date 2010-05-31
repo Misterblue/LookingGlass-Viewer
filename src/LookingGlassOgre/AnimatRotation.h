@@ -23,24 +23,20 @@
 #pragma once
 
 #include "LGOCommon.h"
+#include "Animat.h"
 
 namespace LG {
-	class Animat {
+	class AnimatRotation : public Animat {
 	public:
-		// Animat();
-		// Animat(Ogre::String);
-		// ~Animat();
+		AnimatRotation();
+		AnimatRotation(Ogre::String nodeName, Ogre::Quaternion newRot, float duration);
+		~AnimatRotation();
 
-		// returns true if happy, false if animation is done and should be deleted
-		virtual bool Process(float);
-
-		Ogre::String SceneNodeName;
-		int AnimatType;
-#define AnimatTypeAny			0
-#define AnimatTypeFixedRotation 1
-#define AnimatTypeRotation		2
-#define AnimatTypePosition		3
+		bool Process(float);
 
 	private:
+		float m_progress;		// 0..1
+		float m_durationSeconds;
+		Ogre::Quaternion m_targetRotation;
 };
 }

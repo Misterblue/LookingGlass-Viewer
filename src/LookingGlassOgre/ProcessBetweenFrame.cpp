@@ -451,7 +451,7 @@ public:
 	}
 	void Process() {
 		Ogre::Vector3 axis = Ogre::Vector3(this->vx, this->vy, this->vz);
-		LG::AnimTracker::Instance()->RotateSceneNode(this->sceneNodeName, axis, this->revPerSec);
+		LG::AnimTracker::Instance()->FixedRotationSceneNode(this->sceneNodeName, axis, this->revPerSec);
 		return;
 	}
 };

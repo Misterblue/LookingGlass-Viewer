@@ -47,9 +47,11 @@ public:
 	}
 
 	// schedule a constant rotation to a scene node
-	void RotateSceneNode(Ogre::String sceneNodeName, Ogre::Vector3 axis, float rate);
+	void FixedRotationSceneNode(Ogre::String sceneNodeName, Ogre::Vector3 axis, float rate);
 	// schedule a move to a new position
 	void MoveToPosition(Ogre::String sceneNodeName, Ogre::Vector3 newPos, float duration);
+	// schedule a rotation
+	void Rotate(Ogre::String sceneNodeName, Ogre::Quaternion newRot, float duration);
 
 	// remove all animations associated with a scene node
 	void RemoveAnimations(Ogre::String sceneNodeName);

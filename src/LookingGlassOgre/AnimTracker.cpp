@@ -27,6 +27,7 @@
 #include "Animat.h"
 #include "AnimatFixedRotation.h"
 #include "AnimatPosition.h"
+#include "AnimatRotation.h"
 
 namespace LG {
 AnimTracker* AnimTracker::m_instance = NULL;
@@ -103,7 +104,7 @@ void AnimTracker::EmptyRemoveAnimationList() {
 
 // =======================================================================
 // Do a fixed rotation at some rate around some axis
-void AnimTracker::RotateSceneNode(Ogre::String sceneNodeName, Ogre::Vector3 axis, float rate) {
+void AnimTracker::FixedRotationSceneNode(Ogre::String sceneNodeName, Ogre::Vector3 axis, float rate) {
 	LG::Log("AnimTracker::RotateSceneNode for %s", sceneNodeName.c_str());
 	LGLOCK_ALOCK animLock;	// a lock that will be released if we have an exception
 	// Remove any outstanding animations of this type on this scenenode
@@ -122,6 +123,18 @@ void AnimTracker::MoveToPosition(Ogre::String sceneNodeName, Ogre::Vector3 newPo
 	RemoveAnimations(sceneNodeName, AnimatTypePosition);
 	animLock.Lock(m_animationsMutex);
 	AnimatPosition* anim = new AnimatPosition(sceneNodeName, newPos, duration);
+	m_animations.push_back((Animat*)anim);
+	animLock.Unlock();
+}
+
+// =======================================================================
+void AnimTracker::Rotate(Ogre::String sceneNodeName, Ogre::Quaternion newRot, float duration) {
+	// LG::Log("AnimTracker::MoveToPosition for %s, d=%f", sceneNodeName.c_str(), duration);
+	LGLOCK_ALOCK animLock;	// a lock that will be released if we have an exception
+	// Remove any outstanding animations of this type on this scenenode
+	RemoveAnimations(sceneNodeName, AnimatTypeRotation);
+	animLock.Lock(m_animationsMutex);
+	AnimatRotation* anim = new AnimatRotation(sceneNodeName, newRot, duration);
 	m_animations.push_back((Animat*)anim);
 	animLock.Unlock();
 }

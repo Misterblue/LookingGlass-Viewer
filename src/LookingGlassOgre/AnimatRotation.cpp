@@ -20,27 +20,52 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#pragma once
-
-#include "LGOCommon.h"
+#include "StdAfx.h"
+#include "Animat.h"
+#include "AnimatRotation.h"
+#include "LookingGlassOgre.h"
+#include "RendererOgre.h"
 
 namespace LG {
-	class Animat {
-	public:
-		// Animat();
-		// Animat(Ogre::String);
-		// ~Animat();
 
-		// returns true if happy, false if animation is done and should be deleted
-		virtual bool Process(float);
-
-		Ogre::String SceneNodeName;
-		int AnimatType;
-#define AnimatTypeAny			0
-#define AnimatTypeFixedRotation 1
-#define AnimatTypeRotation		2
-#define AnimatTypePosition		3
-
-	private:
+AnimatRotation::AnimatRotation() {
+	this->SceneNodeName.clear();
 };
+AnimatRotation::AnimatRotation(Ogre::String sNodeName, Ogre::Quaternion newRot, float durationSeconds) {
+	this->SceneNodeName = sNodeName;
+	this->AnimatType = AnimatTypeRotation;
+
+	m_progress = 0.0f;
+	m_durationSeconds = durationSeconds;
+	m_targetRotation = newRot;
+};
+AnimatRotation::~AnimatRotation() {
+};
+
+bool AnimatRotation::Process(float timeSinceLastFrame) {
+	bool ret = true;
+	float thisProgress = timeSinceLastFrame / m_durationSeconds;
+	m_progress += thisProgress;
+	try {
+		Ogre::SceneNode* node = LG::RendererOgre::Instance()->m_sceneMgr->getSceneNode(this->SceneNodeName);
+		if (node != NULL) {
+			if (m_progress > 1.0f) {
+				// to full rotation. Set and exit animation.
+				node->setOrientation(m_targetRotation);
+				ret = false;
+			}
+			else {
+				Ogre::Quaternion newRotation = Ogre::Quaternion::Slerp(m_progress, 
+									node->getOrientation(), m_targetRotation, true);
+				node->setOrientation(newRotation);
+			}
+		}
+	}
+	catch (...) {
+		LG::Log("Animat::Process: exception getting scene node");
+	}
+	return ret;
+} 
+
+
 }

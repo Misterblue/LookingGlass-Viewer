@@ -589,8 +589,10 @@ namespace LG {
 				sceneNode->setScale(sx, sy, sz);
 			}
 			if (updateRotation) {
-				LG::Log("RendererOgre::UpdateSceneNode: update rotation: w%f, x%f, y%f, z%f", ow, ox, oy, oz);
-				sceneNode->setOrientation(ow, ox, oy, oz);
+				// LG::Log("RendererOgre::UpdateSceneNode: update rotation: w%f, x%f, y%f, z%f", ow, ox, oy, oz);
+				// sceneNode->setOrientation(ow, ox, oy, oz);
+				LG::AnimTracker::Instance()->Rotate(Ogre::String(entName), 
+							Ogre::Quaternion(ow, ox, oy, oz), oduration);
 			}
 			sceneNode->needUpdate(true);
 		}

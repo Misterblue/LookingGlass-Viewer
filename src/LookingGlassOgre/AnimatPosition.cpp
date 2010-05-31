@@ -25,7 +25,6 @@
 #include "AnimatPosition.h"
 #include "LookingGlassOgre.h"
 #include "RendererOgre.h"
-#include "AnimTracker.h"
 
 namespace LG {
 

@@ -88,7 +88,7 @@ void LGCamera::AdvanceCamera(const Ogre::FrameEvent& evt) {
 				this->getOrientation(), m_desiredCameraOrientation, true);
 			this->setOrientation(newOrientation); // XXXX
 			this->setPosition( this->getPosition() // XXXX
-				+ ((m_desiredPosition - this->getPosition()) * (1.0f - m_desiredCameraOrientationProgress))); // XXXX
+				+ ((m_desiredPosition - this->getPosition()) * m_desiredCameraOrientationProgress)); // XXXX
 			LG::RendererOgre::Instance()->m_visCalc->RecalculateVisibility(); // XXXX
 		}
 		else {
