@@ -35,7 +35,7 @@ public class LookingGlassBase : IInstance<LookingGlassBase> {
     // static things that are accessed very early (mostly by logger)
     private static string m_applicationName = "LookingGlass";
     public static string ApplicationName { get { return m_applicationName; } }
-    private static string m_applicationVersion = "V0.5.3";
+    private static string m_applicationVersion = "V0.5.4";
     public static string ApplicationVersion { get { return m_applicationVersion; } }
 
     ILog m_log = LogManager.GetLogger("LookingGlassBase");
