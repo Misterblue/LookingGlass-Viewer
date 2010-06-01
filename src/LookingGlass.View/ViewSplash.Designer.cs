@@ -26,6 +26,7 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ViewSplash));
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
+            this.splashState = new System.Windows.Forms.TextBox();
             this.WindowSplash = new System.Windows.Forms.TextBox();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -47,29 +48,40 @@
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(74)))), ((int)(((byte)(85)))), ((int)(((byte)(109)))));
+            this.splitContainer1.Panel2.Controls.Add(this.splashState);
             this.splitContainer1.Panel2.Controls.Add(this.WindowSplash);
-            this.splitContainer1.Size = new System.Drawing.Size(573, 264);
-            this.splitContainer1.SplitterDistance = 191;
+            this.splitContainer1.Size = new System.Drawing.Size(644, 285);
+            this.splitContainer1.SplitterDistance = 183;
             this.splitContainer1.TabIndex = 0;
             // 
             // pictureBox1
             // 
             this.pictureBox1.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox1.Image")));
-            this.pictureBox1.Location = new System.Drawing.Point(12, 3);
+            this.pictureBox1.Location = new System.Drawing.Point(4, 12);
             this.pictureBox1.Name = "pictureBox1";
             this.pictureBox1.Size = new System.Drawing.Size(172, 259);
             this.pictureBox1.TabIndex = 0;
             this.pictureBox1.TabStop = false;
             // 
+            // splashState
+            // 
+            this.splashState.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(74)))), ((int)(((byte)(85)))), ((int)(((byte)(109)))));
+            this.splashState.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.splashState.ForeColor = System.Drawing.Color.White;
+            this.splashState.Location = new System.Drawing.Point(3, 260);
+            this.splashState.Name = "splashState";
+            this.splashState.Size = new System.Drawing.Size(442, 13);
+            this.splashState.TabIndex = 1;
+            // 
             // WindowSplash
             // 
             this.WindowSplash.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(74)))), ((int)(((byte)(85)))), ((int)(((byte)(109)))));
+            this.WindowSplash.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.WindowSplash.ForeColor = System.Drawing.Color.White;
             this.WindowSplash.Location = new System.Drawing.Point(3, 0);
             this.WindowSplash.Multiline = true;
             this.WindowSplash.Name = "WindowSplash";
-            this.WindowSplash.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.WindowSplash.Size = new System.Drawing.Size(375, 264);
+            this.WindowSplash.Size = new System.Drawing.Size(450, 254);
             this.WindowSplash.TabIndex = 0;
             // 
             // ViewSplash
@@ -77,8 +89,9 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(74)))), ((int)(((byte)(85)))), ((int)(((byte)(109)))));
-            this.ClientSize = new System.Drawing.Size(573, 264);
+            this.ClientSize = new System.Drawing.Size(644, 285);
             this.Controls.Add(this.splitContainer1);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "ViewSplash";
             this.Text = "LookingGlass -- Splash";
             this.splitContainer1.Panel1.ResumeLayout(false);
@@ -95,5 +108,6 @@
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.PictureBox pictureBox1;
         private System.Windows.Forms.TextBox WindowSplash;
+        private System.Windows.Forms.TextBox splashState;
     }
 }
