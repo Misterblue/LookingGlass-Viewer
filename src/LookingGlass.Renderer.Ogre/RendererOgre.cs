@@ -193,7 +193,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "Whether to use the new technique of using GPU shaders");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.CollectOgreStats", "true",
                     "Whether to collect detailed Ogre stats and make available to web");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.ShouldQueueMeshOperations", "false",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.ShouldQueueMeshOperations", "true",
                     "True if to try and use threads and delayed mesh load and unload operations");
 
         ModuleParams.AddDefaultParameter(m_moduleName + ".Avatar.Mesh.InfoDir", "./LookingGlassResources/openmetaverse_data",
@@ -270,6 +270,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         #region OGRE STATS
         // Setup the shared piece of memory that Ogre can place statistics in
         m_ogreStatsPinned = new int[Ogr.StatSize];
+        for (int ii = 0; ii < Ogr.StatSize; ii++) m_ogreStatsPinned[ii] = 0;
         if (ModuleParams.ParamBool("Renderer.Ogre.CollectOgreStats")) {
             m_ogreStatsHandle = GCHandle.Alloc(m_ogreStatsPinned, GCHandleType.Pinned);
             Ogr.SetStatsBlock(m_ogreStatsHandle.AddrOfPinnedObject());
@@ -371,6 +372,12 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         m_ogreStats.Add("MeshTrackerTotalQueued", delegate(string xx) {
                 return new OMVSD.OSDString(m_ogreStatsPinned[Ogr.StatMeshTrackerTotalQueued].ToString()); },
                 "Total mesh tracker requests queued");
+        m_ogreStats.Add("LockParity", delegate(string xx) {
+                return new OMVSD.OSDString(m_ogreStatsPinned[Ogr.StatLockParity].ToString()); },
+                "Parity of LG locks");
+        m_ogreStats.Add("RoutineInOut", delegate(string xx) {
+                return new OMVSD.OSDString(m_ogreStatsPinned[Ogr.StatInOut].ToString()); },
+                "Entry and exit of routines");
 
         // make the values accessable from outside
         m_ogreStatsHandler = new RestHandler("/stats/" + m_moduleName + "/ogreStats", m_ogreStats);

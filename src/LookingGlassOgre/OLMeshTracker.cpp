@@ -90,13 +90,13 @@ void OLMeshTracker::Shutdown() {
 // ====================================================================
 // we're between frames, on our own thread so we can do the work without locking
 bool OLMeshTracker::frameEnded(const Ogre::FrameEvent& evt) {
+	LG::StatIn(LG::InOutMeshTracker);
 	LGLOCK_ALOCK trackerLock;		// a lock that will be released if we have an exception
 	LG::OLMeshTracker* inst = LG::OLMeshTracker::Instance();
 	trackerLock.Lock(inst->MeshTrackerLock);
-	// LGLOCK_LOCK(inst->MeshTrackerLock);
 	ProcessWorkItems(100);
-	// LGLOCK_UNLOCK(inst->MeshTrackerLock);
 	trackerLock.Unlock();
+	LG::StatOut(LG::InOutMeshTracker);
 	return true;
 }
 
@@ -322,7 +322,6 @@ void OLMeshTracker::MakeLoaded(Ogre::String meshName, Ogre::String contextEntity
 		return;
 	}
 	LGLOCK_ALOCK trackerLock;
-	// LGLOCK_LOCK(MeshTrackerLock);
 	trackerLock.Lock(MeshTrackerLock);
 	// check to see if in unloaded list, if so, remove it and claim success
 	GenericQm* unloadEntry = m_meshesToUnload->Find(meshName);
@@ -338,7 +337,6 @@ void OLMeshTracker::MakeLoaded(Ogre::String meshName, Ogre::String contextEntity
 		MakeMeshLoadedQm* mmlq = new MakeMeshLoadedQm(10, meshName, contextEntity, stringParam, entityParam);
 		m_meshesToLoad->AddLast(mmlq);
 	}
-	// LGLOCK_UNLOCK(MeshTrackerLock);
 	trackerLock.Unlock();
 	LGLOCK_NOTIFY_ALL(MeshTrackerLock);
 }
@@ -356,7 +354,6 @@ void OLMeshTracker::MakeLoaded(Ogre::SceneNode* sceneNode, Ogre::String meshName
 		return;
 	}
 	LGLOCK_ALOCK trackerLock;
-	// LGLOCK_LOCK(MeshTrackerLock);
 	trackerLock.Lock(MeshTrackerLock);
 	// check to see if in unloaded list, if so, remove it and claim success
 	GenericQm* unloadEntry = m_meshesToUnload->Find(meshName);
@@ -372,7 +369,6 @@ void OLMeshTracker::MakeLoaded(Ogre::SceneNode* sceneNode, Ogre::String meshName
 		MakeMeshLoaded2Qm* mmlq = new MakeMeshLoaded2Qm(10, meshName, sceneNode, meshName, entityName);
 		m_meshesToLoad->AddLast(mmlq);
 	}
-	// LGLOCK_UNLOCK(MeshTrackerLock);
 	trackerLock.Unlock();
 	LGLOCK_NOTIFY_ALL(MeshTrackerLock);
 }
@@ -383,7 +379,6 @@ void OLMeshTracker::MakeLoaded(Ogre::SceneNode* sceneNode, Ogre::String meshName
 // unloads are quick
 void OLMeshTracker::MakeUnLoaded(Ogre::String meshName, Ogre::String stringParam, Ogre::Entity* entityParam) {
 	LGLOCK_ALOCK trackerLock;
-	// LGLOCK_LOCK(MeshTrackerLock);
 	trackerLock.Lock(MeshTrackerLock);
 	// see if in the loading list. Remove if  there.
 	GenericQm* loadEntry = m_meshesToLoad->Find(meshName);
@@ -407,7 +402,6 @@ void OLMeshTracker::MakeUnLoaded(Ogre::String meshName, Ogre::String stringParam
 			}
 		}
 	}
-	// LGLOCK_UNLOCK(MeshTrackerLock);
 	trackerLock.Unlock();
 	UpdateSceneNodesForMesh(meshName);
 }
@@ -430,7 +424,6 @@ void OLMeshTracker::DoReload(Ogre::MeshPtr meshP) {
 		return;
 	}
 	LGLOCK_ALOCK trackerLock;
-	// LGLOCK_LOCK(MeshTrackerLock);
 	trackerLock.Lock(MeshTrackerLock);
 	// check to see if in unloaded list, if so, remove it and claim success
 	Ogre::String meshName = meshP->getName();
@@ -438,13 +431,13 @@ void OLMeshTracker::DoReload(Ogre::MeshPtr meshP) {
 	if (reloadEntry != NULL) {
 		// if already being loaded, we're done
 		LG::Log("OLMeshTracker::DoReload: asked to reload but already loading: %s", meshName.c_str());
+		trackerLock.Unlock();
 		return;
 	}
 	// add this to the loading list
 	LG::Log("OLMeshTracker::DoReload: queuing reloading: %s", meshName.c_str());
 	ReloadMeshQm* rmq = new ReloadMeshQm(10, meshP);
 	m_meshesToLoad->AddLast(rmq);
-	// LGLOCK_UNLOCK(MeshTrackerLock);
 	trackerLock.Unlock();
 	LGLOCK_NOTIFY_ALL(MeshTrackerLock);
 	/*	OLD CODE
@@ -467,7 +460,6 @@ void OLMeshTracker::MakePersistant(Ogre::String meshName, Ogre::String entName, 
 		return;
 	}
 	LGLOCK_ALOCK trackerLock;
-	// LGLOCK_LOCK(MeshTrackerLock);
 	trackerLock.Lock(MeshTrackerLock);
 	// check to see if in unloaded list, if so, remove it
 	GenericQm* unloadEntry = m_meshesToUnload->Find(meshName);
@@ -479,7 +471,6 @@ void OLMeshTracker::MakePersistant(Ogre::String meshName, Ogre::String entName, 
 	LG::Log("OLMeshTracker::MakePersistant: queuing persistance for %s", meshName.c_str());
 	MakeMeshSerializedQm* msq = new MakeMeshSerializedQm(10, meshName, entName, stringParm, entityParm);
 	m_meshesToSerialize->AddLast(msq);
-	// LGLOCK_UNLOCK(MeshTrackerLock);
 	trackerLock.Unlock();
 	LGLOCK_NOTIFY_ALL(MeshTrackerLock);
 }

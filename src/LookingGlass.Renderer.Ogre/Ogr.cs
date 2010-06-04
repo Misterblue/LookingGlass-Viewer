@@ -74,6 +74,8 @@ static class Ogr {
     public const int StatTotalFrames = 18;
     public const int StatFramesPerSec = 19;
     public const int StatLastFrameMs = 20;
+    public const int StatLockParity = 31;
+    public const int StatInOut = 32;
 
     // the number of stat values (oversized for a fudge factor)
     public const int StatSize = 40;

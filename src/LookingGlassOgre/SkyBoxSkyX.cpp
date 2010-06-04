@@ -116,6 +116,8 @@ void SkyBoxSkyX::AddSkyPass(Ogre::MaterialPtr matP) {
 
 int sunPositionThrottle = 10;
 bool SkyBoxSkyX::frameStarted(const Ogre::FrameEvent &e) {
+	LG::StatIn(LG::InOutSkyBoxSkyX);
+
 // bool SkyBoxSkyX::frameRenderingQueued(const Ogre::FrameEvent &e) {
 	try {
 		/* Don't know what this code does
@@ -177,10 +179,11 @@ bool SkyBoxSkyX::frameStarted(const Ogre::FrameEvent &e) {
 				*/
 	}
 	catch (...) {
-		LG::Log("SkyBoxSkyX: EXCEPTION FRAMEENDED:");
+		LG::Log("SkyBoxSkyX: EXCEPTION FRAMESTARTED:");
 	}
 		
-        return true;
+	LG::StatOut(LG::InOutSkyBoxSkyX);
+    return true;
 
 }
 }

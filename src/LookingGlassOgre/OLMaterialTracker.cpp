@@ -179,7 +179,6 @@ void OLMaterialTracker::MarkMaterialModified(const Ogre::String materialName) {
 	LG::Log("OLMaterialTracker::MarkMaterialModified: queuing material modified");
 	LGLOCK_ALOCK modifiedLock;		// a lock that will be released if we have an exception
 	modifiedLock.Lock(m_modifiedMutex);
-	// LGLOCK_LOCK(this->m_modifiedMutex);
 	bool found = false;
 	std::list<Ogre::String>::const_iterator li;
 	for (li = m_materialsModified.begin(); li != m_materialsModified.end(); li++) {
@@ -191,7 +190,6 @@ void OLMaterialTracker::MarkMaterialModified(const Ogre::String materialName) {
 	if (!found) {
 		m_materialsModified.push_back(materialName);
 	}
-	// LGLOCK_UNLOCK(this->m_modifiedMutex);
 	modifiedLock.Unlock();
 }
 
@@ -208,7 +206,6 @@ void OLMaterialTracker::MarkMaterialModified(const Ogre::String materialName) {
 void OLMaterialTracker::MarkTextureModified(const Ogre::String materialName, bool hasTransparancy) {
 	LGLOCK_ALOCK modifiedLock;		// a lock that will be released if we have an exception
 	Ogre::String taggedName = (hasTransparancy ? "T" : " ") + materialName;
-	// LGLOCK_LOCK(this->m_modifiedMutex);
 	modifiedLock.Lock(m_modifiedMutex);
 	bool found = false;
 	std::list<Ogre::String>::const_iterator li;
@@ -221,12 +218,12 @@ void OLMaterialTracker::MarkTextureModified(const Ogre::String materialName, boo
 	if (!found) {
 		m_materialsModified.push_back(taggedName);
 	}
-	// LGLOCK_UNLOCK(this->m_modifiedMutex);
 	modifiedLock.Unlock();
 }
 
 // between frames, if there were material modified, refresh their containing entities
 bool OLMaterialTracker::frameEnded(const Ogre::FrameEvent&) {
+	LG::StatIn(LG::InOutMaterialTracker);
 	LGLOCK_ALOCK modifiedLock;		// a lock that will be released if we have an exception
 	if (this->m_slowCount-- < 0) {
 		if (m_materialsModified.size() > 0 || m_texturesModified.size() > 0) {
@@ -236,7 +233,6 @@ bool OLMaterialTracker::frameEnded(const Ogre::FrameEvent&) {
 		try {
 			this->m_slowCount = 30;
 			Ogre::String matName;
-			// LGLOCK_LOCK(this->m_modifiedMutex);
 			modifiedLock.Lock(m_modifiedMutex);
 			MeshPtrHashMap m_meshesToChange;
 			int cnt = 10;
@@ -254,7 +250,6 @@ bool OLMaterialTracker::frameEnded(const Ogre::FrameEvent&) {
 				GetMeshesToRefreshForTexture(&m_meshesToChange, texName.substr(1, texName.length()-1),
 						(transparancyFlag == 'T' ? true : false));
 			}
-			// LGLOCK_UNLOCK(this->m_modifiedMutex);
 			modifiedLock.Unlock();
 			if (m_meshesToChange.size() > 0) {
 				ReloadMeshes(&m_meshesToChange);
@@ -265,6 +260,7 @@ bool OLMaterialTracker::frameEnded(const Ogre::FrameEvent&) {
 			LG::Log("OLMaterialTracker: EXCEPTION PROCESSING:");
 		}
 	}
+	LG::StatOut(LG::InOutMaterialTracker);
 	return true;
 }
 

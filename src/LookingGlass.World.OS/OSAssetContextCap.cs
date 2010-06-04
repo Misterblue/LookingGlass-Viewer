@@ -199,6 +199,7 @@ public class OSAssetContextCap : AssetContextBase {
                     }
                 }
                 else {
+                    m_log.Log(LogLevel.DCOMMDETAIL, "ThrottleTextureMakeRequest: Non-OK status code");
                     OMV.Assets.AssetTexture at = new OMV.Assets.AssetTexture(binID, new byte[0]);
                     ProcessDownloadFinished(OMV.TextureRequestState.NotFound, at);
                 }

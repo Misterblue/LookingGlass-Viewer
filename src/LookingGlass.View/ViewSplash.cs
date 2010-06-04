@@ -40,6 +40,12 @@ namespace LookingGlass.View {
             this.WindowSplash.BringToFront();
         }
 
+        // Put text in the initialization progress place in the splash screen
+        public void InitializationProgress(String progress) {
+            this.splashState.Text = progress;
+            this.splashState.Refresh();
+        }
+
         public void Initialize() {
         }
 

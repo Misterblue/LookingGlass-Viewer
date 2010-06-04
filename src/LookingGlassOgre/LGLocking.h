@@ -26,6 +26,8 @@
 #define LGLOCK_BOOST
 
 #include "LGOCommon.h"
+#include "LookingGlassOgre.h"
+
 #ifdef LGLOCK_PTHREADS
 #include "pthreads.h"
 #endif
@@ -90,8 +92,8 @@ extern int LGLockingThreadInitializeCount;
 
 // LOCK and UNLOCK OPERATIONS
 #define LGLOCK_MUTEX LG::LGLock*
-#define LGLOCK_LOCK(mutex) (mutex)->Lock()
-#define LGLOCK_UNLOCK(mutex) (mutex)->Unlock()
+#define LGLOCK_LOCK(mutex) (mutex)->Lock(); LG::IncStat(LG::StatLockParity)
+#define LGLOCK_UNLOCK(mutex) LG::DecStat(LG::StatLockParity); (mutex)->Unlock()
 
 // WAIT and NOTIFY
 #ifdef LGLOCK_BOOST
@@ -135,7 +137,7 @@ extern int LGLockingThreadInitializeCount;
 // variable will unlock the mutex.
 class LGLOCK_ALOCK {
 public:
-	LGLOCK_ALOCK() { m_mutex = NULL; };
+	LGLOCK_ALOCK() { m_mutex = NULL; m_isLocked = false;};
 	~LGLOCK_ALOCK() {
 		if (m_isLocked && m_mutex != NULL) {
 			LGLOCK_UNLOCK(m_mutex);
@@ -152,7 +154,9 @@ public:
 		m_isLocked = true;
 	}
 	void Unlock() {
-		if (m_isLocked) LGLOCK_UNLOCK(m_mutex);
+		if (m_isLocked) { 
+			LGLOCK_UNLOCK(m_mutex); 
+		}
 		m_isLocked = false;
 	}
 private:

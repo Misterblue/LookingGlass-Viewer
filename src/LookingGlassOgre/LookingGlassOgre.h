@@ -80,6 +80,21 @@ static const int StatMeshTrackerLoadQueued = 25;
 static const int StatMeshTrackerUnloadQueued = 26;
 static const int StatMeshTrackerSerializedQueued = 27;
 static const int StatMeshTrackerTotalQueued = 28;
+static const int StatLockParity = 31;
+static const int StatInOut = 32;
+
+static const int InOutNone					= 0x00000000;
+static const int InOutMaterialTracker		= 0x00000001;
+static const int InOutMeshTracker			= 0x00000002;
+static const int InOutProcessBetweenFrames	= 0x00000004;
+static const int InOutRendererOgre			= 0x00000008;
+static const int InOutRendererOgreStarted	= 0x00000010;
+static const int InOutVisCalcFrustDist		= 0x00000020;
+static const int InOutAnimTracker			= 0x00000040;
+static const int InOutSkyBoxSkyX			= 0x00000080;
+static const int InOutPBFMaterial			= 0x00000100;
+static const int InOutPBFCamera				= 0x00000200;
+static const int InOutPBFWorkItems			= 0x00000400;
 
 typedef enum {
 	RegionRezCodeHigh,
@@ -102,6 +117,9 @@ typedef enum {
 extern void SetStat(int, int);
 extern void IncStat(int);
 extern void DecStat(int);
+extern void StatIn(int);
+extern void StatOut(int);
+
 extern void AssertNonNull(void*, const char*);
 extern const bool isTrue(const char*);
 extern void Log(const char*, ...);

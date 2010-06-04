@@ -249,6 +249,18 @@ void LG::DecStat(int cod) {
 	}
 }
 
+void LG::StatIn(int cod) {
+	if (LG::statsBlock != NULL) {
+		LG::statsBlock[StatInOut] |= cod;
+	}
+}
+
+void LG::StatOut(int cod) {
+	if (LG::statsBlock != NULL) {
+		LG::statsBlock[StatInOut] &= ~cod;
+	}
+}
+
 // Routine which calls back into the managed world to fetch a string/value configuration
 // parameter.
 const char* LG::GetParameter(const char* paramName) {

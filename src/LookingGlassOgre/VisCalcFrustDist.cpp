@@ -74,6 +74,7 @@ void VisCalcFrustDist::RecalculateVisibility() {
 
 // we're between frames, on our own thread so we can do the work without locking
 bool VisCalcFrustDist::frameEnded(const Ogre::FrameEvent& evt) {
+	LG::StatIn(LG::InOutVisCalcFrustDist);
 	try {
 		if (m_recalculateVisibility) {
 			calculateEntityVisibility();
@@ -83,6 +84,7 @@ bool VisCalcFrustDist::frameEnded(const Ogre::FrameEvent& evt) {
 	catch (...) {
 		LG::Log("VisCalcFrustDist: EXCEPTION FRAMEENDED:");
 	}
+	LG::StatOut(LG::InOutVisCalcFrustDist);
 	return true;
 }
 

@@ -42,6 +42,7 @@ AnimTracker::~AnimTracker() {
 
 // Between frame, update all the animations
 bool AnimTracker::frameStarted(const Ogre::FrameEvent& evt) {
+	LG::StatIn(LG::InOutAnimTracker);
 	LGLOCK_ALOCK animLock;	// a lock that will be released if we have an exception
 	animLock.Lock(m_animationsMutex);
 
@@ -63,6 +64,7 @@ bool AnimTracker::frameStarted(const Ogre::FrameEvent& evt) {
 	EmptyRemoveAnimationList();
 
 	animLock.Unlock();
+	LG::StatOut(LG::InOutAnimTracker);
 	return true;
 }
 

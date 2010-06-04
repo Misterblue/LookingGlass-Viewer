@@ -455,7 +455,9 @@ namespace LG {
 
 	// ========== Ogre::FrameListener
 	bool RendererOgre::frameStarted(const Ogre::FrameEvent& evt) {
+		LG::StatIn(LG::InOutRendererOgreStarted);
 		if (m_camera) m_camera->AdvanceCamera(evt);
+		LG::StatOut(LG::InOutRendererOgreStarted);
 		return true;
 	}
 
@@ -465,13 +467,15 @@ namespace LG {
 
 	int betweenFrameCounter = 0;
 	bool RendererOgre::frameEnded(const Ogre::FrameEvent& evt) {
+		LG::StatIn(LG::InOutRendererOgre);
 		if (m_window->isClosed()) return false;	// if you close the window we leave
 		LG::IncStat(LG::StatTotalFrames);
 		betweenFrameCounter++;
 		if (LG::betweenFramesCallback != NULL) {
 			// the C# code uses this for terrain and regions so don't do it often
 			try {
-				if ((betweenFrameCounter % 10) == 0) {
+				if ((betweenFrameCounter % 50) == 0) {
+					LG::StatOut(LG::InOutRendererOgre);
 					return (*LG::betweenFramesCallback)();
 				}
 			}
@@ -479,6 +483,7 @@ namespace LG {
 				LG::Log("RendererOgre: EXCEPTION FRAMEENDED:");
 			}
 		}
+		LG::StatOut(LG::InOutRendererOgre);
 		return true;
 	}
 
