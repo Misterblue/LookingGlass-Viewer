@@ -327,9 +327,9 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
             m_client.Settings.ASSET_CACHE_DIR = ModuleParams.ParamString(ModuleName + ".Assets.CacheDir");
             OMV.Settings.RESOURCE_DIR = ModuleParams.ParamString(ModuleName + ".Assets.OMVResources");
             // Crank up the throttle on texture downloads
-            m_client.Throttle.Total = 2000000.0f;
+            m_client.Throttle.Total =  20000000.0f;
             m_client.Throttle.Texture = 2446000.0f;
-            m_client.Throttle.Asset = 2446000.0f;
+            m_client.Throttle.Asset =   2446000.0f;
             m_client.Settings.THROTTLE_OUTGOING_PACKETS = false;
 
             m_client.Network.LoginProgress += Network_LoginProgress;

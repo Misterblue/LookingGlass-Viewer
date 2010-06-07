@@ -80,9 +80,9 @@ protected IRenderProvider m_renderer;
         m_world = (IWorld)LGB.ModManager.Module(ModuleParams.ParamString(ModuleName + ".World.Name"));
         m_renderer = (IRenderProvider)LGB.ModManager.Module(ModuleParams.ParamString(ModuleName + ".Renderer.Name"));
         if (ModuleParams.ParamBool(ModuleName + ".Regions.Enable")) {
-            m_world.OnWorldRegionNew += new WorldRegionNewCallback(World_OneWorldRegionNew);
-            m_world.OnWorldRegionRemoved += new WorldRegionRemovedCallback(World_OneWorldRegionRemoved);
-            m_world.OnWorldRegionUpdated += new WorldRegionUpdatedCallback(World_OneWorldRegionUpdated);
+            m_world.OnWorldRegionNew += new WorldRegionNewCallback(World_OnWorldRegionNew);
+            m_world.OnWorldRegionRemoved += new WorldRegionRemovedCallback(World_OnWorldRegionRemoved);
+            m_world.OnWorldRegionUpdated += new WorldRegionUpdatedCallback(World_OnWorldRegionUpdated);
         }
 
         if (ModuleParams.ParamBool(ModuleName + ".Regions.Enable")) {
@@ -104,25 +104,25 @@ protected IRenderProvider m_renderer;
     // IModule.PrepareForUnload
     public virtual bool PrepareForUnload() {
         if (ModuleParams.ParamBool(ModuleName + ".Regions.Enable")) {
-            m_world.OnWorldRegionNew -= new WorldRegionNewCallback(World_OneWorldRegionNew);
-            m_world.OnWorldRegionRemoved -= new WorldRegionRemovedCallback(World_OneWorldRegionRemoved);
-            m_world.OnWorldRegionUpdated -= new WorldRegionUpdatedCallback(World_OneWorldRegionUpdated);
+            m_world.OnWorldRegionNew -= new WorldRegionNewCallback(World_OnWorldRegionNew);
+            m_world.OnWorldRegionRemoved -= new WorldRegionRemovedCallback(World_OnWorldRegionRemoved);
+            m_world.OnWorldRegionUpdated -= new WorldRegionUpdatedCallback(World_OnWorldRegionUpdated);
         }
         return false;
     }
 #endregion IMODULE
 
 #region EVENT PROCESSING
-    void World_OneWorldRegionNew(RegionContextBase rcontext) {
+    void World_OnWorldRegionNew(RegionContextBase rcontext) {
         // for the moment, any close by region is good enough for focus
         if (m_renderer != null) {
             LogManager.Log.Log(LogLevel.DWORLDDETAIL, "RegionTracker: setting focus region {0}", rcontext.Name);
             m_renderer.SetFocusRegion(rcontext);
         }
     }
-    void World_OneWorldRegionRemoved(RegionContextBase rcontext) {
+    void World_OnWorldRegionRemoved(RegionContextBase rcontext) {
     }
-    void World_OneWorldRegionUpdated(RegionContextBase rcontext, UpdateCodes what) {
+    void World_OnWorldRegionUpdated(RegionContextBase rcontext, UpdateCodes what) {
     }
 #endregion EVENT PROCESSING
 

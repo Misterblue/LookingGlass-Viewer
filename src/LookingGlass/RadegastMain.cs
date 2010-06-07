@@ -110,6 +110,7 @@ class RadegastMain : IRadegastPlugin {
         m_log.Log(LogLevel.DRADEGASTDETAIL, "RadegastMain: Network_OnSimConnected for {0}",
                         RadInstance.Client.Network.CurrentSim.Name);
         worldComm.Network_SimConnected(this, new OMV.SimConnectedEventArgs(RadInstance.Client.Network.CurrentSim));
+        worldComm.Network_EventQueueRunning(this, new OMV.EventQueueRunningEventArgs(RadInstance.Client.Network.CurrentSim));
             
         // if anything was queue for this sim, put them in the world
         LoadWorldObjects.LoadASim(RadInstance.Client.Network.CurrentSim, RadInstance.Client, worldComm);

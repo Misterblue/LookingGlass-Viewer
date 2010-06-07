@@ -68,6 +68,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     // If true, requesting a mesh causes the mesh to be rebuilt and written out
     // This makes sure cached copy is the same as server but is also slow
     protected bool m_shouldForceMeshRebuild = false;
+    protected bool m_shouldPrebuildMesh = false;
 
     // this shouldn't be here... this is a feature of the LL renderer
     protected float m_sceneMagnification;
@@ -433,6 +434,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
 
         m_shouldForceMeshRebuild = ModuleParams.ParamBool(m_moduleName + ".Ogre.ForceMeshRebuild");
         m_shouldRenderOnMainThread = ModuleParams.ParamBool(m_moduleName + ".ShouldRenderOnMainThread");
+        m_shouldPrebuildMesh = ModuleParams.ParamBool(ModuleName + ".Ogre.PrebuildMesh");
 
         // pick up a bunch of parameterized values
         m_betweenFrameTotalCost = ModuleParams.ParamInt(m_moduleName + ".Ogre.BetweenFrame.Costs.Total");
@@ -826,6 +828,10 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     }
 
     public void RequestMesh(EntityName contextEntity, string meshName) {
+        // In theory, if we are building the meshes early, these requests are just noise. 
+        if ( m_shouldPrebuildMesh ) {
+            return;
+        }
         m_log.Log(LogLevel.DRENDERDETAIL, "Request for mesh " + meshName);
         Object[] meshLaterParams = { meshName, contextEntity };
         m_workQueueReqMesh.DoLater(RequestMeshLater, (object)meshLaterParams);
