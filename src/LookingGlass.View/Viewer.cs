@@ -81,7 +81,6 @@ public class Viewer : ModuleBase, IViewProvider {
     #region IModule methods
     public override void OnLoad(string name, LookingGlassBase lgbase) {
         base.OnLoad(name, lgbase);
-        ModuleParams.AddDefaultParameter(m_moduleName + ".World.Name", "World", "Name of world module to connect to");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Renderer.Name", "Renderer", "");
         // todo: make this variable so there can be multiple viewers
 
@@ -162,14 +161,9 @@ public class Viewer : ModuleBase, IViewProvider {
     private IRenderProvider m_Renderer = null;
     public IRenderProvider Renderer { get { return m_Renderer; } set { m_Renderer = value; } }
 
-    private World.World m_world = null;
     public World.World TheWorld {
         get {
-            if (m_world == null) {
-                // there is only one world this viewer can be looking at
-                m_world = World.World.Instance;
-            }
-            return m_world;
+            return World.World.Instance;
         }
     }
 

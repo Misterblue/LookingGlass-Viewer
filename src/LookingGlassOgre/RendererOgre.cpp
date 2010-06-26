@@ -599,6 +599,7 @@ namespace LG {
 							Ogre::Quaternion(ow, ox, oy, oz), oduration);
 			}
 			sceneNode->needUpdate(true);
+		}
 		else {
 			LG::Log("RendererOgre::UpdateSceneNode: entity not found. Did not update entity %s", entName);
 		}

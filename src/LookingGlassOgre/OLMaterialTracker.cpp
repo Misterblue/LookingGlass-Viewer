@@ -437,6 +437,7 @@ void OLMaterialTracker::CreateMaterialResource2(const char* mName, const char* t
 
 		if ((parms[CreateMaterialColorR] + parms[CreateMaterialColorG] + 
 						parms[CreateMaterialColorB] + parms[CreateMaterialColorA]) != 4.0) {
+			// if some color was specified, add a pass to merge it with the texture
 			Ogre::TextureUnitState* tus2 = pass->createTextureUnitState();
 			tus2->setColourOperationEx(Ogre::LBX_MODULATE, Ogre::LBS_CURRENT, Ogre::LBS_MANUAL,
 					 	Ogre::ColourValue( parms[CreateMaterialColorR], parms[CreateMaterialColorG], 
@@ -445,7 +446,7 @@ void OLMaterialTracker::CreateMaterialResource2(const char* mName, const char* t
 			tus2->setAlphaOperation(Ogre::LBX_MODULATE, Ogre::LBS_TEXTURE, Ogre::LBS_CURRENT);
 		}
 
-		/*
+		/* Development note: an attempt at color combination that didn't work
 		tus->setColourOperationEx(Ogre::LBX_MODULATE, Ogre::LBS_TEXTURE, Ogre::LBS_CURRENT);
 		// tus->setAlphaOperation(Ogre::LBX_MODULATE, Ogre::LBS_TEXTURE, Ogre::LBS_CURRENT);
 		if (parms[CreateMaterialTransparancy] != 1.0) {

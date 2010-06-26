@@ -70,7 +70,6 @@
 
 // ====================================================
 // Viewer connects to the World and a Renderer
-"Viewer.World.Name": "World",
 "Viewer.Renderer.Name": "Renderer",
 
 // The Renderer needs to know what input system to use
@@ -82,11 +81,8 @@
 // The login REST interface needs to find  the comm system
 "CommLLLPRest.Comm.Name": "Comm",
 
-// The region trackers needs to know where to track the entities
-"RegionTracker.World.Name": "World",
-
-// The avatar tracker service connects to the world to track
-"AvatarTracker.World.Name": "World",
+// The region trackers needs the renderer to keep informed
+"RegionTracker.Renderer.Name": "Renderer",
 
 // The chat service needs the Comm
 "Chat.Comm.Name": "Comm",

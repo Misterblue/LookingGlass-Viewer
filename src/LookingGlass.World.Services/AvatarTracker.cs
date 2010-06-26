@@ -65,9 +65,6 @@ public class AvatarTracker : IAvatarTrackerService, IModule {
         m_lgb = lgbase;
 
         m_avatars = new Dictionary<string, IEntityAvatar>();
-
-        ModuleParams.AddDefaultParameter(m_moduleName + ".World.Name", "World",
-                    "Name of world to connect to");
     }
 
     // IModule.AfterAllModulesLoaded
@@ -75,9 +72,7 @@ public class AvatarTracker : IAvatarTrackerService, IModule {
         LogManager.Log.Log(LogLevel.DINIT, "AvatarTracker.AfterAllModulesLoaded()");
         m_restHandler = new RestHandler("/avatars", GetHandler, PostHandler);
 
-        // Find the world and connect to same to hear about all the avatars
-        String worldName = ModuleParams.ParamString(m_moduleName + ".World.Name");
-        m_world = (World)LGB.ModManager.Module(worldName);
+        m_world = World.Instance;   // there is only one world
         m_world.OnAgentNew += new WorldAgentNewCallback(World_OnAgentNew);
         m_world.OnAgentRemoved += new WorldAgentRemovedCallback(World_OnAgentRemoved);
         m_world.OnWorldEntityNew += new WorldEntityNewCallback(World_OnWorldEntityNew);

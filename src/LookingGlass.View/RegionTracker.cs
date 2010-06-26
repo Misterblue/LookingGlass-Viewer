@@ -67,8 +67,6 @@ protected IRenderProvider m_renderer;
         // set the parameter defaults
         ModuleParams.AddDefaultParameter(ModuleName + ".Regions.Enable", "true",
                     "Whether to make region information available");
-        ModuleParams.AddDefaultParameter(ModuleName + ".World.Name", "World",
-                    "Name of world module to track entities in");
         ModuleParams.AddDefaultParameter(ModuleName + ".Renderer.Name", "Renderer",
                     "Name of renderer module for display of region details");
     }
@@ -76,9 +74,10 @@ protected IRenderProvider m_renderer;
     // IModule.AfterAllModulesLoaded
     public virtual bool AfterAllModulesLoaded() {
         LogManager.Log.Log(LogLevel.DINIT, "EntityTracker.AfterAllModulesLoaded()");
-        // connect to the world and listen for entity events
-        m_world = (IWorld)LGB.ModManager.Module(ModuleParams.ParamString(ModuleName + ".World.Name"));
-        m_renderer = (IRenderProvider)LGB.ModManager.Module(ModuleParams.ParamString(ModuleName + ".Renderer.Name"));
+        // connect to the world and listen for entity events (there is only one world)
+        m_world = World.World.Instance;
+        string rendererName = ModuleParams.ParamString(ModuleName + ".Renderer.Name");
+        m_renderer = (IRenderProvider)LGB.ModManager.Module(rendererName);
         if (ModuleParams.ParamBool(ModuleName + ".Regions.Enable")) {
             m_world.OnWorldRegionNew += new WorldRegionNewCallback(World_OnWorldRegionNew);
             m_world.OnWorldRegionRemoved += new WorldRegionRemovedCallback(World_OnWorldRegionRemoved);

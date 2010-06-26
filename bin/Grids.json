@@ -7,13 +7,15 @@
         "WebSite": "http://osgrid.org/",
         "SupportURL": "http://osgrid.org",
         "AccountURL": "http://osgrid.org/index.php?page=create",
-        "PasswordURL": "http://osgrid.org/index.php?page=change"
+        "PasswordURL": "http://osgrid.org/index.php?page=change",
+        "Platform": "OpenSim"
         // ,"OS.AssetServer.V1": "http://assets.osgrid.org:8003"
         // ,"OS.AssetServer.V1.Request": "assetbase"    // "data" or "assetbase"
     },
 "ScienceSim.com": {
         "Name": "ScienceSim.com",
-        "LoginURL": "http://grid.sciencesim.com/"
+        "LoginURL": "http://grid.sciencesim.com/",
+        "Platform": "OpenSim"
         // ,"OS.AssetServer.V1": "http://grid.sciencesim.com:8004"
         // ,"OS.AssetServer.V1.Request": "data"    // "data" or "assetbase"
         // ,"OS.AssetServer.MaxRequests": "4"
