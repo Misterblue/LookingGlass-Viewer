@@ -57,17 +57,11 @@ public class EntityNameLL : EntityName {
         return new EntityNameLL(context, textureWorldID);
     }
 
-    // this are the same rules as in EntityNameOgre so the file ends up in the cache at the right location
-    // private const string EntityNameMatch = @"^(...)(...)(..)-(.)(.*)$";
-    // private const string OgreNameReplace = @"$1/$2/$3$4/$1$2$3-$4$5";
-    private const string EntityNameMatch = @"^(..)(.*)$";
-    private const string OgreNameReplace = @"$1/$1$2";
-
     // Return the cache filename for this entity. This is not based in the cache directory.
     // At the moment, closely tied to the Ogre resource storage structure
     public override string CacheFilename {
         get {
-            string entReplace = Regex.Replace(EntityPart, EntityNameMatch, OgreNameReplace);
+            string entReplace = Regex.Replace(EntityPart, EntityNameMatch, CachedNameReplace);
             // if the replacement didn't happen entReplace == entName
             string newName = base.CombineEntityName(HeaderPart, HostPart, entReplace);
             // LogManager.Log.Log(LogLevel.DRENDERDETAIL, "ConvertTextureEntityNameToCacheFilename: " + entName.ToString() + " => " + newName);

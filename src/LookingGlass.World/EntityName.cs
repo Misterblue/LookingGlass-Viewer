@@ -45,6 +45,26 @@ public class EntityName : IComparable {
     protected string m_host = "";   // host contains the terminating separator
     protected string m_entity = "";
 
+    // The following is here so there is one place to change everything.
+    // Entity names are rewritten for the underlying render system and to
+    // match the cached filenames. These are rules  for converting regular
+    // entity names into cached filenames and back.
+    // rules for two level cache names
+    // protected const string EntityNameMatch = @"^(...)(...)(..)-(.)(.*)$";
+    // protected const string CachedNameReplace = @"$1/$2/$3$4/$1$2$3-$4$5";
+    // protected const string CachedNameMatch = @"^(.*)/.../.../.../([^/]*)$";
+    // protected const string EntityNameReplace = @"$1/$2";
+    // Rules for two digit upper level cache dir
+    // protected const string EntityNameMatch = @"^(..)(.*)$";
+    // protected const string CachedNameReplace = @"$1/$1$2";
+    // protected const string CachedNameMatch = @"^(.*)/[0-9a-f][0-9a-f]/([^/]*)$";
+    // protected const string EntityNameReplace = @"$1/$2";
+    // Rules for one digit upper level cache dir
+    protected const string EntityNameMatch = @"^(.)(.*)$";
+    protected const string CachedNameReplace = @"$1/$1$2";
+    protected const string CachedNameMatch = @"^(.*)/[0-9a-f]/([^/]*)$";
+    protected const string EntityNameReplace = @"$1/$2";
+
     // just a raw string. We don't know it's orgins so we guess at it's structure
     // presuming it is "HOST/ENTITYID"
     public EntityName(string name) {

@@ -44,9 +44,6 @@ namespace LookingGlass.World.LL {
 public sealed class LLAssetContext : AssetContextBase {
     private ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
 
-    // private const string WorldIDMatch = "^(...)(...)(..)-(.)(.*)$";
-    // private const string WorldIDReplace = "Texture/$1/$2/$3$4/$1$2$3-$4$5";
-
     public LLAssetContext() : base("Unknown") {
     }
 

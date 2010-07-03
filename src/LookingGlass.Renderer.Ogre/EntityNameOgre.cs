@@ -70,16 +70,11 @@ public class EntityNameOgre : EntityName {
     // After here are conversion routines that are sometimes needed to link between
     // the Ogre resource names and regular entity names. Use at your peril.
 
-    // private const string EntityNameMatch = @"^(...)(...)(..)-(.)(.*)$";
-    // private const string OgreNameReplace = @"$1/$2/$3$4/$1$2$3-$4$5";
-    private const string EntityNameMatch = @"^(..)(.*)$";
-    private const string OgreNameReplace = @"$1/$1$2";
-
     // Ogre presumes that entity name will be the filename in the cache. Make the
     // entity name on the Ogre side have the cache filename format
     // Used for meshes, materials
     public static string ConvertToOgreNameX(EntityName entName, string extension) {
-        string entReplace = Regex.Replace(entName.EntityPart, EntityNameMatch, OgreNameReplace);
+        string entReplace = Regex.Replace(entName.EntityPart, EntityNameMatch, CachedNameReplace);
         // if the replacement didn't happen entReplace == entName
         string newName = entName.CombineEntityName(entName.HeaderPart, entName.HostPart, entReplace);
         if (extension != null) newName += extension;
@@ -88,7 +83,7 @@ public class EntityNameOgre : EntityName {
     }
 
     public static EntityName ConvertToOgreNameY(EntityName entName, string extension) {
-        string entReplace = Regex.Replace(entName.EntityPart, EntityNameMatch, OgreNameReplace);
+        string entReplace = Regex.Replace(entName.EntityPart, EntityNameMatch, CachedNameReplace);
         // if the replacement didn't happen entReplace == entName
         if (extension != null) entReplace += extension;
         EntityName newName = new EntityNameOgre(entName.HeaderPart, entName.HostPart, entReplace);
@@ -119,10 +114,6 @@ public class EntityNameOgre : EntityName {
         return "Entity/" + entName.Name;
     }
 
-    // private const string OgreNameMatch = @"^(.*)/.../.../.../([^/]*)$";
-    private const string OgreNameMatch = @"^(.*)/[0-9a-f][0-9a-f]/([^/]*)$";
-    private const string EntityNameReplace = @"$1/$2";
-
     // Ogre resources have been decorated with extensions and dash numbers which we remove
     // and then undo  the ConvertToOgreName to get back the origional entity namne
     public static string ConvertOgreResourceToEntityNameX(string resName) {
@@ -144,7 +135,7 @@ public class EntityNameOgre : EntityName {
         if (oldName.EndsWith(".gif")) oldName = oldName.Substring(0, oldName.Length - 4);
         if (oldName.EndsWith(".bmp")) oldName = oldName.Substring(0, oldName.Length - 4);
         if (oldName.EndsWith(".jpg")) oldName = oldName.Substring(0, oldName.Length - 4);
-        string newName = Regex.Replace(oldName, OgreNameMatch, EntityNameReplace);
+        string newName = Regex.Replace(oldName, CachedNameMatch, EntityNameReplace);
         // if the replacement does not happen, newName == oldName
         // LogManager.Log.Log(LogLevel.DRENDERDETAIL, "ConvertOgreResourceToEntity: " + resName.ToString() + " => " + newName);
         return newName;
