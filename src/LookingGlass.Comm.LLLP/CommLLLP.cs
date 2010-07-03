@@ -848,7 +848,8 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
 
     // return 'true' is the parent of this id exists in the world
     private bool ParentExists(LLRegionContext regionContext, uint parentID) {
-        if (parentID == 0) return true;
+        if (4 == 4) return true;    // DEBUG: disable to force work into renderer
+        if (parentID == 0) return true; // if no parent say we have the parent
         IEntity parentEntity = null;
         regionContext.TryGetEntityLocalID(parentID, out parentEntity);
         return (parentEntity != null);
@@ -1346,33 +1347,33 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
     public void RegionAction(CommActionCode cac, Object p1, Object p2, Object p3, Object p4) {
         switch (cac) {
             case CommActionCode.RegionStateChange:
-                m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: RegionStateChange");
+                // m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: RegionStateChange");
                 // NOTE that this goes straight to the status update routine
                 ((RegionContextBase)p1).Update((World.UpdateCodes)p2);
                 break;
             case CommActionCode.OnObjectUpdated:
-                m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: OnObjectUpdated");
+                // m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: OnObjectUpdated");
                 // Objects_OnObjectUpdated((OMV.Simulator)p1, (OMV.ObjectUpdate)p2, (ulong)p3, (ushort)p4);
                 Objects_ObjectUpdate(p1, (OMV.PrimEventArgs)p2);
                 break;
             case CommActionCode.TerseObjectUpdate:
-                m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: TerseObjectUpdate");
+                // m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: TerseObjectUpdate");
                 Objects_TerseObjectUpdate(p1, (OMV.TerseObjectUpdateEventArgs)p2);
                 break;
             case CommActionCode.OnAttachmentUpdate:
-                m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: OnAttachmentUpdated");
+                // m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: OnAttachmentUpdated");
                 Objects_AttachmentUpdate(p1, (OMV.PrimEventArgs)p2);
                 break;
             case CommActionCode.KillObject:
-                m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: KillObject");
+                // m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: KillObject");
                 Objects_KillObject(p1, (OMV.KillObjectEventArgs)p2);
                 break;
             case CommActionCode.OnAvatarUpdate:
-                m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: AvatarUpdate");
+                // m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: AvatarUpdate");
                 Objects_AvatarUpdate(p1, (OMV.AvatarUpdateEventArgs)p2);
                 break;
             case CommActionCode.OnAvatarAppearance:
-                m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: AvatarAppearance");
+                // m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: AvatarAppearance");
                 Avatars_AvatarAppearance(p1, (OMV.AvatarAppearanceEventArgs)p2);
                 break;
             default:
