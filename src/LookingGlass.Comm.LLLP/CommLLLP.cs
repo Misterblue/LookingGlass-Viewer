@@ -781,15 +781,12 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
             // assume somethings changed no matter what
             try {
                 if (rcontext.TryGetCreateEntityLocalID(args.Prim.LocalID, out updatedEntity, delegate() {
-                            IEntity newEnt = new LLEntityPhysical(rcontext.AssetContext,
-                                            rcontext, args.Simulator.Handle, args.Prim.LocalID, args.Prim);
                             updateFlags |= UpdateCodes.New;
-                            return newEnt;
+                            return new LLEntityPhysical(rcontext.AssetContext,
+                                            rcontext, args.Simulator.Handle, args.Prim.LocalID, args.Prim);
                         }) ) {
                     // new prim created
                 }
-                // if entity has a parent, set up the containers
-                ProcessEntityContainer(updatedEntity, rcontext, ref updateFlags, args.Prim.ParentID);
                 // if there are animations for this entity
                 ProcessEntityAnimation(updatedEntity, ref updateFlags, args.Prim.AngularVelocity);
                 // send updates for this entity updates
@@ -800,49 +797,6 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
             }
         }
 
-        return;
-    }
-
-    // For a new or existing entity, handle the parenting and containers that could hold
-    // this entity.
-    private void ProcessEntityContainer(IEntity ent, LLRegionContext regionContext, 
-                                                ref UpdateCodes updateFlags, uint parentID ) {
-        try {
-            // The way this is supposed to work is that entities have parents and parents have collections
-            // of entities as children. Occasionally we learn about children before we hear about
-            // the parent. This code just punts that problem. There is code over in Renderer.Ogre
-            // to hold the child until a parent is found. What should really happen is comm should
-            // hold the child until a parent is found. This would make parent/child relatioships 
-            // first class relations and hide any comm implmentation dependencies from the rest
-            // of the system.
-            if (parentID != 0 && ent.ContainingEntity == null) {
-                updateFlags |= UpdateCodes.ParentID;
-                IEntity parentEntity = null;
-                regionContext.TryGetEntityLocalID(parentID, out parentEntity);
-                if (parentEntity != null) {
-                    ent.ContainingEntity = parentEntity;
-                    parentEntity.AddEntityToContainer(ent);
-                    m_log.Log(LogLevel.DCOMMDETAIL, "ProcessEntityContainer: adding entity {0} to container {1}", 
-                                    ent.Name, parentEntity.Name);
-                }
-                else {
-                    m_log.Log(LogLevel.DCOMMDETAIL, "Can't assign parent. Entity not found. ent={0}", ent.Name);
-                }
-            }
-            if (parentID == 0 && ent.ContainingEntity != null) {
-                // the prim has been removed from it's parent
-                updateFlags |= UpdateCodes.ParentID;
-                ent.DisconnectFromContainer();
-            }
-            // if (args.Prim.NameValues != null) {
-            //     foreach (OMV.NameValue nv in args.Prim.NameValues) {
-            //         m_log.Log(LogLevel.DRENDERDETAIL, "NAMEVALUE: {0}={1} on {2}", nv.Name, nv.Value, ent.Name);
-            //     }
-            // }
-        }
-        catch (Exception e) {
-            m_log.Log(LogLevel.DBADERROR, "FAILED ProcessEntityContainer: " + e.ToString());
-        }
         return;
     }
 
@@ -1047,8 +1001,6 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
                     this.MainAgent.AssociatedAvatar = (IEntityAvatar)updatedEntity;
                 }
             }
-            // if avatar has a parent (sitting) deal with the containing containers
-            ProcessEntityContainer(updatedEntity, rcontext, ref updateFlags, args.Avatar.ParentID);
             // send updates for the updated entity
             ProcessEntityUpdates(updatedEntity, updateFlags);
         }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using LookingGlass.Framework.Logging;
 using OMV = OpenMetaverse;
 
 namespace LookingGlass.World.LL {
@@ -77,6 +78,46 @@ namespace LookingGlass.World.LL {
                     return base.GlobalPosition;
                 }
             }
+        }
+
+        /// <summary>
+        /// I am being updated. 
+        /// Make sure the parenting is correct before telling the world about any update.
+        /// </summary>
+        /// <param name="what"></param>
+        public override void Update(UpdateCodes what) {
+            // Make sure parenting is correct (we're in our parent's collection)
+            try {
+                if (this.Prim != null) {    // if no prim, no parent possible
+                    uint parentID = this.Prim.ParentID;
+                    if (parentID != 0 && this.ContainingEntity == null) {
+                        what |= UpdateCodes.ParentID;
+                        IEntity parentEntity = null;
+                        LLRegionContext rcontext = (LLRegionContext)this.RegionContext;
+                        rcontext.TryGetEntityLocalID(parentID, out parentEntity);
+                        if (parentEntity != null) {
+                            this.ContainingEntity = parentEntity;
+                            parentEntity.AddEntityToContainer(this);
+                            LogManager.Log.Log(LogLevel.DCOMMDETAIL, "ProcessEntityContainer: adding entity {0} to container {1}",
+                                             this.Name, parentEntity.Name);
+                        }
+                        else {
+                            LogManager.Log.Log(LogLevel.DCOMMDETAIL, "Can't assign parent. Entity not found. ent={0}", this.Name);
+                        }
+                    }
+                    if (parentID == 0 && this.ContainingEntity != null) {
+                        // the prim has been removed from it's parent
+                        what |= UpdateCodes.ParentID;
+                        this.DisconnectFromContainer();
+                    }
+                }
+            }
+            catch (Exception e) {
+                LogManager.Log.Log(LogLevel.DBADERROR, "FAILED ProcessEntityContainer: " + e);
+            }
+
+            // tell the world about our updating
+            base.Update(what);
         }
     }
 }
