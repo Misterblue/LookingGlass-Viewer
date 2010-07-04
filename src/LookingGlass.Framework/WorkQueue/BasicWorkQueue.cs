@@ -43,7 +43,7 @@ public class BasicWorkQueue : IWorkQueue {
     private Queue<DoLaterBase> m_workItems;
     private int m_activeWorkProcessors;
     public int ActiveWorkProcessors { get { return m_activeWorkProcessors; } }
-    private int m_workProcessorsMax = 10;
+    private int m_workProcessorsMax = 4;
     public int MaxWorkProcessors { get { return m_workProcessorsMax; } set { m_workProcessorsMax = value; } }
 
     // IWorkQueue.CurrentQueued()
@@ -169,19 +169,14 @@ public class BasicWorkQueue : IWorkQueue {
                 }
             }
         }
-        m_activeWorkProcessors--;
+        lock (m_workItems) {
+            m_activeWorkProcessors--;   // not sure if this is atomic
+        }
     }
 
     /// <summary>
-    /// A horrible kludge (there has to be a standard library for this) that
-    /// captures one thread to do the waiting and requeuing for DoLaterBase objects.
-    /// If an DoLaterBase object cannot be completed now, it has a time interval to
-    /// wait before trying again. This routine puts all the waiting objects into
-    /// a list and counts down their wait time. When wait time is up, the object
-    /// is requeued into the ThreadPool.
-    /// This is done this way because we only want one thread hanging in here
-    /// doing the Thread.Sleep(). If I just did a sleep for each delayed object,
-    /// we could have a situation where all the threads from the pool are waiting.
+    /// Queue the operation to happen later. There is a thread who's job
+    /// is waiting to run these work items.
     /// </summary>
     private List<DoLaterBase> m_doEvenLater = new List<DoLaterBase>();
     private Thread m_doEvenLaterThread = null;
@@ -227,7 +222,7 @@ public class BasicWorkQueue : IWorkQueue {
                         sleepTime = Math.Min(sleepTime, jj.remainingWait);
                     }
                     sleepTime -= now;
-                    if (sleepTime < 0) sleepTime = 100;
+                    sleepTime = Math.Max(sleepTime, 100);
                 }
             }
             // if there are some things done waiting, let them free outside the lock

@@ -67,6 +67,7 @@ public sealed class LLRegionContext : RegionContextBase {
     public void RequestLocalID(uint localID) {
         int now = System.Environment.TickCount & 0x3fffffff;
         uint requestID = 0;
+        // First some code that reduces the frequency of repeat requests
         lock (m_recentLocalIDRequests) {
             if (m_recentLocalIDRequests.ContainsKey(localID)) {
                 // we've asked for this localID recently. See how recent.
@@ -76,7 +77,7 @@ public sealed class LLRegionContext : RegionContextBase {
                 }
             }
             if (!m_recentLocalIDRequests.ContainsKey(localID)) {
-                // remember the time when we should try again
+                // remember the time when we should try again. Once per 5 seconds
                 m_recentLocalIDRequests.Add(localID, now + (5 * 1000));
                 requestID = localID;
             }

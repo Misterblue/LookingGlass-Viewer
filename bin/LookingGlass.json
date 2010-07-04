@@ -9,7 +9,7 @@
 
 // ====================================================
 // "World.Parameters": "xx",
-"Framework.WorkQueue.MaxThreads": "10",
+"Framework.WorkQueue.MaxThreads": "8",
 
 // ====================================================
 // "Viewer.Parameters": "xx",
@@ -31,7 +31,7 @@
 // "Renderer.Ogre.Sky": "SkyX",
 
 // ====================================================
-"Comm.Texture.MaxRequests": "8",
+"Comm.Texture.MaxRequests": "15",
 "Comm.Settings.MultipleSims": "false",
 
 // ====================================================
