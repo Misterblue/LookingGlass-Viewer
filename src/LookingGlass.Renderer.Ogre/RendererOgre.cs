@@ -810,9 +810,9 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             case Ogr.ResourceTypeMesh:
                 m_statMeshesRequested.Event();
                 // if we are forcing mesh creation this should 1) never happen and 2) been take care of elsewhere
-                if (!m_shouldForceMeshRebuild) {
+                // if (!m_shouldForceMeshRebuild) {
                     RequestMesh(new EntityName(resourceContext), resourceName);
-                }
+                // }
                 break;
             case Ogr.ResourceTypeMaterial:
                 m_statMaterialsRequested.Event();
@@ -827,14 +827,20 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         return;
     }
 
+    Dictionary<string, string> m_requestedMeshes = new Dictionary<string, string>();
     public void RequestMesh(EntityName contextEntity, string meshName) {
         // In theory, if we are building the meshes early, these requests are just noise. 
-        if ( m_shouldPrebuildMesh ) {
-            return;
-        }
+        // if ( m_shouldPrebuildMesh ) {
+        //     return;
+        // }
         m_log.Log(LogLevel.DRENDERDETAIL, "Request for mesh " + meshName);
-        Object[] meshLaterParams = { meshName, contextEntity };
-        m_workQueueReqMesh.DoLater(RequestMeshLater, (object)meshLaterParams);
+        lock (m_requestedMeshes) {
+            if (!m_requestedMeshes.ContainsKey(meshName)) {
+                m_requestedMeshes.Add(meshName, meshName);
+                Object[] meshLaterParams = { meshName, contextEntity };
+                m_workQueueReqMesh.DoLater(RequestMeshLater, (object)meshLaterParams);
+            }
+        }
         return;
     }
 
@@ -852,6 +858,9 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             IEntity ent;
             if (!World.World.Instance.TryGetEntity(eName, out ent)) {
                 m_log.Log(LogLevel.DBADERROR, "RendererOgre.RequestMeshLater: could not find entity " + eName);
+                lock (m_requestedMeshes) {
+                    m_requestedMeshes.Remove(m_meshName);
+                }
                 return true;
             }
             // Create mesh resource. In this case its most likely a .mesh file in the cache
@@ -868,6 +877,9 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             m_log.Log(LogLevel.DRENDERDETAIL, "RendererOgre.RequestMeshLater: refresh for {0}. prio={1}", 
                     m_meshName, priority);
             Ogr.RefreshResourceBF(priority, Ogr.ResourceTypeMesh, m_meshName);
+            lock (m_requestedMeshes) {
+                m_requestedMeshes.Remove(m_meshName);
+            }
         }
         catch {
             // an oddity but not fatal
