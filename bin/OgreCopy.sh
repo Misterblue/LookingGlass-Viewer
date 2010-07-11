@@ -1,5 +1,6 @@
 #! /bin/bash
-OGREDIR=/cygdrive/c/dev/ogre-1.7.0-bld/Builds/Cthugha/
+#OGREDIR=/cygdrive/c/dev/ogre-1.7.0-bld/Builds/Cthugha/
+OGREDIR=/cygdrive/c/dev/ogre-1.7.0-bld/Builds/unthreaded/
 OGRESRCDIR=/cygdrive/c/dev/ogre-1.7.0-bld/Sources/Cthugha/
 DEPDIR=/cygdrive/c/dev/ogre-1.7.0-bld/Sources/Dependencies/
 
