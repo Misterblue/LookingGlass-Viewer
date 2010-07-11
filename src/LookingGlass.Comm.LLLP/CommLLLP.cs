@@ -72,7 +72,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
     public OMV.GridClient GridClient { get { return m_client;} }
 
     // list of the region information build for the simulator
-    protected List<LLRegionContext> m_regionList;
+    protected Dictionary<OMV.UUID, LLRegionContext> m_regionList;
 
     // while we wait for a region to be online, we queue requests here
     protected List<ParamBlock> m_waitTilOnline;
@@ -147,7 +147,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         m_isLoggingIn = false;
         m_isLoggingOut = false;
         m_connectionParams = new ParameterSet();
-        m_regionList = new List<LLRegionContext>();
+        m_regionList = new Dictionary<OMV.UUID, LLRegionContext>();
         m_waitTilOnline = new List<ParamBlock>();
         m_commStatistics = new ParameterSet();
         m_waitTilLater = new BasicWorkQueue("CommDoTilLater");
@@ -802,7 +802,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
 
     // return 'true' is the parent of this id exists in the world
     private bool ParentExists(LLRegionContext regionContext, uint parentID) {
-        if (4 == 4) return true;    // DEBUG: disable to force work into renderer
+        // if (4 == 4) return true;    // DEBUG: disable to force work into renderer
         if (parentID == 0) return true; // if no parent say we have the parent
         IEntity parentEntity = null;
         regionContext.TryGetEntityLocalID(parentID, out parentEntity);
@@ -1085,13 +1085,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         LLRegionContext ret = null;
         if (IsConnected) {
             lock (m_regionList) {
-                foreach (LLRegionContext reg in m_regionList) {
-                    if (reg.Simulator.ID == sim.ID) {
-                        ret = reg;
-                        break;
-                    }
-                }
-                if (ret == null) {
+                if (!m_regionList.TryGetValue(sim.ID, out ret)) {
                     // we are connected but doen't have a regionContext for this simulator. Build one.
                     AssetContextBase assetContext = SelectAssetContextForGrid(sim);
                     LLTerrainInfo llterr = new LLTerrainInfo(null, assetContext);
@@ -1104,7 +1098,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
                     ret.RegionContext = ret;    // since we don't know ourself before
                     ret.Comm = m_client;
                     ret.TerrainInfo.RegionContext = ret;
-                    m_regionList.Add(ret);
+                    m_regionList.Add(sim.ID, ret);
                     m_log.Log(LogLevel.DWORLD, "Creating region context for " + ret.Name);
                 }
             }
@@ -1116,9 +1110,9 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
     public LLRegionContext FindRegion(Predicate<LLRegionContext> pred) {
         LLRegionContext ret = null;
         lock (m_regionList) {
-            foreach (LLRegionContext rcb in m_regionList) {
-                if (pred(rcb)) {
-                    ret = rcb;
+            foreach (KeyValuePair<OMV.UUID, LLRegionContext> kvp in m_regionList) {
+                if (pred(kvp.Value)) {
+                    ret = kvp.Value;
                     break;
                 }
             }
