@@ -22,6 +22,7 @@ $(document).ready(function() {
     // Major divisions in the content accordioning
     $('.LGSectionContent').hide('slow');
     $('#LGLogin').show('slow');
+    $('#LGLoginFirst').focus();
     $('.LGSectionHeader').click(function() {
         $(this).next().slideToggle('slow');
         return false;
@@ -181,7 +182,7 @@ function TimerStatStuff() {
         <li>
             <span class="label">First</span>
             <span class="value">
-                <input type="text" tabindex="1" name="LOGINFIRST"/>
+                <input type="text" tabindex="1" name="LOGINFIRST" id="LGLoginFirst"/>
             </span>
         </li>
         <li>

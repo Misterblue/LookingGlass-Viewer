@@ -47,6 +47,7 @@ namespace LookingGlass.View {
             this.WindowAvatars.ScriptErrorsSuppressed = false;  // DEBUG
             this.WindowAvatars.Refresh();
             this.WindowAvatars.BringToFront();
+            this.WindowAvatars.Focus();
         }
 
         public void Initialize() {

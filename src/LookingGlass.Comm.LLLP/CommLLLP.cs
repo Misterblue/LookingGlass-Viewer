@@ -616,6 +616,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
 
         gc.Objects.ObjectPropertiesUpdated += Objects_ObjectPropertiesUpdated;
         gc.Objects.ObjectUpdate += Objects_ObjectUpdate;
+        gc.Objects.ObjectDataBlockUpdate += Objects_ObjectDataBlockUpdate;
         gc.Objects.ObjectProperties += Objects_ObjectProperties;
         gc.Objects.TerseObjectUpdate += Objects_TerseObjectUpdate;
         gc.Objects.AvatarUpdate += Objects_AvatarUpdate;
@@ -753,6 +754,11 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
             return;
         }
         regionContext.Update(World.UpdateCodes.Terrain);
+    }
+
+    // ===============================================================
+    public void Objects_ObjectDataBlockUpdate(Object sender, OMV.ObjectDataBlockUpdateEventArgs args) {
+        return;
     }
 
     // ===============================================================
@@ -915,16 +921,20 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         LLRegionContext rcontext = FindRegion(args.Simulator);
         OMV.ObjectMovementUpdate update = args.Update;
         this.m_statObjTerseUpdate++;
-        IEntity updatedEntity = null;
-        UpdateCodes updateFlags = UpdateCodes.Acceleration | UpdateCodes.AngularVelocity
-                    | UpdateCodes.Position | UpdateCodes.Rotation | UpdateCodes.Velocity;
-        lock (m_opLock) {
-            m_log.Log(LogLevel.DUPDATEDETAIL, "Object update: id={0}, p={1}, r={2}", 
+        UpdateCodes updateFlags = 0;
+        if (args.Prim.Acceleration != args.Update.Acceleration) updateFlags |= UpdateCodes.Acceleration;
+        if (args.Prim.Velocity != args.Update.Velocity) updateFlags |= UpdateCodes.Velocity;
+        if (args.Prim.AngularVelocity != args.Update.AngularVelocity) updateFlags |= UpdateCodes.AngularVelocity;
+        if (args.Prim.Position != args.Update.Position) updateFlags |= UpdateCodes.Position;
+        if (args.Prim.Rotation != args.Update.Rotation) updateFlags |= UpdateCodes.Rotation;
+        // assume somethings changed no matter what
+        if (update.Avatar) updateFlags |= UpdateCodes.CollisionPlane;
+        if (update.Textures != null) updateFlags |= UpdateCodes.Textures;
+        m_log.Log(LogLevel.DUPDATEDETAIL, "Object update: id={0}, p={1}, r={2}", 
                 update.LocalID, update.Position.ToString(), update.Rotation.ToString());
-            // assume somethings changed no matter what
-            if (update.Avatar) updateFlags |= UpdateCodes.CollisionPlane;
-            if (update.Textures != null) updateFlags |= UpdateCodes.Textures;
 
+        IEntity updatedEntity = null;
+        lock (m_opLock) {
             if (rcontext.TryGetEntityLocalID(update.LocalID, out updatedEntity)) {
                 if ((updateFlags & UpdateCodes.Position) != 0) {
                     updatedEntity.LocalPosition = update.Position;
@@ -1174,6 +1184,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
     // events until we're online.
     public enum CommActionCode {
         RegionStateChange,
+        OnObjectDataBlockUpdated,
         OnObjectUpdated,
         TerseObjectUpdate,
         OnAttachmentUpdate,
@@ -1296,6 +1307,10 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
                 // m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: RegionStateChange");
                 // NOTE that this goes straight to the status update routine
                 ((RegionContextBase)p1).Update((World.UpdateCodes)p2);
+                break;
+            case CommActionCode.OnObjectDataBlockUpdated:
+                // m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: OnObjectDataBlockUpdated");
+                Objects_ObjectDataBlockUpdate(p1, (OMV.ObjectDataBlockUpdateEventArgs)p2);
                 break;
             case CommActionCode.OnObjectUpdated:
                 // m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: OnObjectUpdated");

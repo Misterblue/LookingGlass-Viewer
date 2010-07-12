@@ -410,10 +410,10 @@ public:
 		this->uniq = uni + "/UpdateSceneNode";
 		this->entName = Ogre::String(entName);
 		this->setPosition = setPosition;
-		this->setScale = setScale;
-		this->setRotation = setRotation;
 		this->px = px; this->py = py; this->pz = pz; this->pduration = pduration;
+		this->setScale = setScale;
 		this->sx = sx; this->sy = sy; this->sz = sz; this->sduration = sduration;
+		this->setRotation = setRotation;
 		this->ow = ow; this->ox = ox; this->oy = oy; this->oz = oz; this->oduration = oduration;
 	}
 	~UpdateSceneNodeQc(void) {
