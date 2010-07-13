@@ -261,7 +261,7 @@ public:
 		if (this->stringParam == "unload") {
 			LG::Log("OLMeshTracker::MakePersistant: queuing unload after persistance");
 			// if we're supposed to unload after serializing, schedule that to happen
-			LG::OLMeshTracker::Instance()->MakeUnLoaded(this->meshName, Ogre::String(), NULL);
+			LG::OLMeshTracker::Instance()->MakeUnLoadedLocked(this->meshName, Ogre::String(), NULL);
 		}
 	}
 };
@@ -380,6 +380,12 @@ void OLMeshTracker::MakeLoaded(Ogre::SceneNode* sceneNode, Ogre::String meshName
 void OLMeshTracker::MakeUnLoaded(Ogre::String meshName, Ogre::String stringParam, Ogre::Entity* entityParam) {
 	LGLOCK_ALOCK trackerLock;
 	trackerLock.Lock(MeshTrackerLock);
+	MakeUnLoadedLocked(meshName, stringParam, entityParam);
+	trackerLock.Unlock();
+	UpdateSceneNodesForMesh(meshName);
+}
+// Call for an unload when list is already locked
+void OLMeshTracker::MakeUnLoadedLocked(Ogre::String meshName, Ogre::String stringParam, Ogre::Entity* entityParam) {
 	// see if in the loading list. Remove if  there.
 	GenericQm* loadEntry = m_meshesToLoad->Find(meshName);
 	if (loadEntry != NULL) {
@@ -402,10 +408,7 @@ void OLMeshTracker::MakeUnLoaded(Ogre::String meshName, Ogre::String stringParam
 			}
 		}
 	}
-	trackerLock.Unlock();
-	UpdateSceneNodesForMesh(meshName);
 }
-
 // ===============================================================================
 // Reload the mesh if we should
 // This is usually called when a resource needs to be refreshed

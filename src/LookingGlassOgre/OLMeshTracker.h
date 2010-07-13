@@ -198,6 +198,7 @@ public:
 	void MakeLoaded(Ogre::String meshName, Ogre::String, Ogre::String, Ogre::Entity*);
 	void MakeLoaded(Ogre::SceneNode* sceneNode, Ogre::String meshName, Ogre::String entityName);
 	void MakeUnLoaded(Ogre::String meshName, Ogre::String, Ogre::Entity*);
+	void MakeUnLoadedLocked(Ogre::String meshName, Ogre::String, Ogre::Entity*);
 	void DoReload(Ogre::MeshPtr meshP);
 	void DoReload(Ogre::String meshName);
 	void MakePersistant(Ogre::String meshName, Ogre::String entName, Ogre::String, Ogre::Entity*);

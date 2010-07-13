@@ -570,6 +570,7 @@ public:
 	}
 };
 
+// ====================================================================
 class SetRegionDetailQc : public GenericQc {
 public:
 	Ogre::String regionName;

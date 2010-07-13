@@ -172,7 +172,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.LL.EarlyMaterialCreate", "false",
                     "Create materials while creating mesh rather than waiting");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.LL.DefaultAvatarMesh", 
-                    "Preload/00000000-0000-2222-3333-112200000003",
+                    // "Preload/00000000-0000-2222-3333-112200000003",
+                    "", // read definition from LAD file
                     "Entity name of mesh to use for avatars");
 
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.BetweenFrame.WorkMilliSecondsMax", "300",

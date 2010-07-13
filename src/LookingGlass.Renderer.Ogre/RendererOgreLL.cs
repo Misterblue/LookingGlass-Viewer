@@ -408,17 +408,20 @@ public class RendererOgreLL : IWorldRenderConv {
     }
 
     /// <summary>
-    /// Create a mesh in the renderer.
+    /// Create a mesh for the avatar. We either use the specified avatar mesh or create the
+    /// mesh from the LAD definition file.
     /// </summary>
-    /// <param name="sMgr">the scene manager receiving  the mesh</param>
-    /// <param name="ent">The entity the mesh is coming from</param>
-    /// <param name="meshName">The name the mesh should take</param>
     public bool CreateAvatarMeshResource(float priority, IEntity ent, string meshName, EntityName contextEntity) {
+        if (m_defaultAvatarMesh != null && m_defaultAvatarMesh.Length > 0) {
+            return CreateAvatarMeshFromDefault(priority, ent, meshName, contextEntity);
+        }
+
         string meshInfoDir = LookingGlassBase.Instance.AppParams.ParamString("Renderer.Avatar.Mesh.InfoDir");
         string meshInfoDefn = LookingGlassBase.Instance.AppParams.ParamString("Renderer.Avatar.Mesh.Description");
         string meshDescriptionDir = LookingGlassBase.Instance.AppParams.ParamString("Renderer.Avatar.Mesh.DescriptionDir");
 
         Dictionary<string, OMVR.LindenMesh> meshTypes = new Dictionary<string, OMVR.LindenMesh>();
+
 
         XmlDocument lad = new XmlDocument();
         lad.Load(Path.Combine(meshInfoDir, meshInfoDefn));
@@ -624,6 +627,11 @@ public class RendererOgreLL : IWorldRenderConv {
             foreach (string mod in ent.ModuleInterfaceTypeNames()) modNames += " " + mod;
             m_log.Log(LogLevel.DBADERROR, "CreateAvatarTexture: REQUEST FOR TEXTURES FOR NON LL ENTITY. Mod={0}", modNames);
         }
+        return true;
+    }
+
+    public bool CreateAvatarMeshFromDefault(float priority, IEntity ent, string meshName, EntityName contextEntity) {
+        m_log.Log(LogLevel.DBADERROR, "CreateAvatarMeshFromDefault: NOT IMPLEMENTED!!");
         return true;
     }
 
