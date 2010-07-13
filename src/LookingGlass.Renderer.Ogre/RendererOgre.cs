@@ -94,6 +94,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     private ICounter m_statMeshesRequested;
     private ICounter m_statTexturesRequested;
     private ICounter m_statSharableTotal;
+    private ICounter m_statRequestedMeshes;
     private ICounter m_statShareInstances;
 
     private RestHandler m_ogreStatsHandler;
@@ -189,7 +190,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "True if to force the generation a mesh when first rendered (don't rely on cache)");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.PrebuildMesh", "true",
                     "True if to make sure the mesh exists before creating the scene node");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".ShouldShareMeshes", "true",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".ShouldShareMeshes", "false",
                     "True if to share meshes with similar characteristics");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.UseShaders", "true",
                     "Whether to use the new technique of using GPU shaders");
@@ -250,6 +251,10 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         m_statMeshesRequested = m_stats.GetCounter("MeshesRequested");
         m_statTexturesRequested = m_stats.GetCounter("TexturesRequested");
         m_statSharableTotal = m_stats.GetCounterValue("TotalMeshes", delegate() { return (long)prebuiltMeshes.Count; });
+        m_statRequestedMeshes = m_stats.GetCounterValue("RequestedMeshes", delegate() { return (long)m_requestedMeshes.Count; });
+        m_statRequestedMeshes = m_stats.GetCounterValue("RequestedMeshes", delegate() {
+            return (long)RenderPrim.prebuiltMeshes.Count;
+        });
         m_statShareInstances = m_stats.GetCounter("TotalSharedInstances");
 
         // renderer keeps rendering specific data in an entity's addition/subsystem slots
@@ -681,11 +686,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     /// <param name="ent"></param>
     /// <param name="what"></param>
     public void RenderUpdate(IEntity ent, UpdateCodes what) {
-        IRenderEntity rEntity;
-        if (ent.TryGet<IRenderEntity>(out rEntity)) {
-            // just a prim to update
-            rEntity.Update(what);
-        }
+        ent.Get<IRenderEntity>().Update(what);
         return;
     }
 
@@ -810,10 +811,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         switch (resourceType) {
             case Ogr.ResourceTypeMesh:
                 m_statMeshesRequested.Event();
-                // if we are forcing mesh creation this should 1) never happen and 2) been take care of elsewhere
-                // if (!m_shouldForceMeshRebuild) {
-                    RequestMesh(new EntityName(resourceContext), resourceName);
-                // }
+                RequestMesh(new EntityName(resourceContext), resourceName);
                 break;
             case Ogr.ResourceTypeMaterial:
                 m_statMaterialsRequested.Event();
@@ -828,7 +826,8 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         return;
     }
 
-    Dictionary<string, string> m_requestedMeshes = new Dictionary<string, string>();
+    Dictionary<string, int> m_requestedMeshes = new Dictionary<string, int>();
+    private int m_meshRememberTime = 10000;
     public void RequestMesh(EntityName contextEntity, string meshName) {
         // In theory, if we are building the meshes early, these requests are just noise. 
         // if ( m_shouldPrebuildMesh ) {
@@ -836,8 +835,13 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         // }
         m_log.Log(LogLevel.DRENDERDETAIL, "Request for mesh " + meshName);
         lock (m_requestedMeshes) {
+            if (m_requestedMeshes.ContainsKey(meshName)) {
+                if (m_requestedMeshes[meshName] < Utilities.TickCount()) {
+                    m_requestedMeshes.Remove(meshName);
+                }
+            }
             if (!m_requestedMeshes.ContainsKey(meshName)) {
-                m_requestedMeshes.Add(meshName, meshName);
+                m_requestedMeshes.Add(meshName, Utilities.TickCount() + m_meshRememberTime);
                 Object[] meshLaterParams = { meshName, contextEntity };
                 m_workQueueReqMesh.DoLater(RequestMeshLater, (object)meshLaterParams);
             }

@@ -44,7 +44,7 @@ class RenderPrim : IRenderEntity {
     RendererOgre m_renderer;
     IEntity m_ent;
 
-    static Dictionary<ulong, EntityName> prebuiltMeshes = new Dictionary<ulong, EntityName>();
+    public static Dictionary<ulong, EntityName> prebuiltMeshes = new Dictionary<ulong, EntityName>();
 
     public RenderPrim(RendererOgre contextRenderer, IEntity referenceEntity) {
         m_renderer = contextRenderer;
