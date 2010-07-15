@@ -216,16 +216,6 @@ public:
 	void Process() {
 		// LG::Log("OLMeshTracker::MakeLoaded2Qm: loading: %s", meshName.c_str());
 		Ogre::MeshManager::getSingleton().load(this->meshName, OLResourceGroupName);
-		LG::ProcessBetweenFrame::Instance()->AddLoadedMesh(0, Ogre::String(""), entityName, meshName, sceneNode);
-		/*
-		// functionality moved into between frame processing
-		Ogre::MovableObject* ent = LG::RendererOgre::Instance()->m_sceneMgr->createEntity(this->entityName, this->meshName);
-		// it's not scenery
-		ent->removeQueryFlags(Ogre::SceneManager::WORLD_GEOMETRY_TYPE_MASK);	
-		LG::RendererOgre::Instance()->Shadow->AddCasterShadow(ent);
-		this->sceneNode->attachObject(ent);
-		LG::RendererOgre::Instance()->m_visCalc->RecalculateVisibility();
-		*/
 	}
 };
 
@@ -295,14 +285,14 @@ void OLMeshTracker::RequestMesh(Ogre::String meshName, Ogre::String context) {
 	if (intr == m_requestedMeshes.end()) {
 		// we haven't seen this material before. Remember and request
 		m_requestedMeshes.insert(std::pair<Ogre::String,unsigned long>(meshName, now));
-		LG::RequestResource(meshName.c_str(), context.c_str(), LG::ResourceTypeMesh);
+		LG::RequestResource(context.c_str(), meshName.c_str(), LG::ResourceTypeMesh);
 	}
 	else {
 		// see if it's been 10 seconds since we asked for this material
 		if ((intr->second + 10000) > now) {
 			// been a while. Reset timer and ask for the material
 			intr->second = now;
-			LG::RequestResource(meshName.c_str(), context.c_str(), LG::ResourceTypeMesh);
+			LG::RequestResource(context.c_str(), meshName.c_str(), LG::ResourceTypeMesh);
 		}
 	}
 }

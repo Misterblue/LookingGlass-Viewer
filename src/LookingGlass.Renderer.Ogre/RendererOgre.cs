@@ -190,7 +190,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "True if to force the generation a mesh when first rendered (don't rely on cache)");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.PrebuildMesh", "true",
                     "True if to make sure the mesh exists before creating the scene node");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".ShouldShareMeshes", "false",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".ShouldShareMeshes", "true",
                     "True if to share meshes with similar characteristics");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.UseShaders", "true",
                     "Whether to use the new technique of using GPU shaders");

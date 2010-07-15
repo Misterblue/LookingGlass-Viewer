@@ -58,46 +58,49 @@ class RenderPrim : IRenderEntity {
         string entitySceneNodeName = EntityNameOgre.ConvertToOgreSceneNodeName(m_ent.Name);
 
         lock (m_ent) {
+            // create the rendering info if not created yet
+            if (ri == null) {
+                IWorldRenderConv conver;
+                if (m_ent.TryGet<IWorldRenderConv>(out conver)) {
+                    ri = conver.RenderingInfo(priority, m_renderer.m_sceneMgr, m_ent, retries);
+                    if (ri == null) {
+                        // The rendering info couldn't be built now. This is usually because
+                        // the parent of this object is not available so we don't know where to put it
+                        // m_renderer.m_log.Log(LogLevel.DRENDERDETAIL,
+                        //     "Delaying rendering. RenderingInfo not built for {0}", m_ent.Name.Name);
+                        return false;
+                    }
+                }
+                else {
+                    m_renderer.m_log.Log(LogLevel.DBADERROR, "DoRenderLater: NO WORLDRENDERCONV FOR PRIM {0}", 
+                                    m_ent.Name.Name);
+                    // this probably creates infinite retries but other things are clearly broken
+                    return false;
+                }
+            }
+
+            // Check to see if something of this mesh shape already exists. Use it if so.
+            EntityName entMeshName = (EntityName)ri.basicObject;
+            if (m_shouldShareMeshes && (ri.shapeHash != RenderableInfo.NO_HASH_SHARE)) {
+                lock (prebuiltMeshes) {
+                    if (prebuiltMeshes.TryGetValue(ri.shapeHash, out entMeshName)) {
+                        m_hasMesh = true;   // presume someone else created it
+                        // m_log.Log(LogLevel.DRENDERDETAIL, "DorRenderLater: using prebuilt {0}", entMeshName);
+                        // m_statShareInstances.Event();
+                    }
+                    else {
+                        // re-get mesh name since TryGet defaults it if not found
+                        entMeshName = (EntityName)ri.basicObject;
+                        // this is a new mesh. Remember that it has been built
+                        prebuiltMeshes.Add(ri.shapeHash, entMeshName);
+                    }
+                }
+            }
+
+            // see if this scene node has already been created
             if (RendererOgre.GetSceneNodeName(m_ent) == null) {
                 try {
                     // m_log.Log(LogLevel.DRENDERDETAIL, "Adding SceneNode to new entity " + m_ent.Name);
-                    if (ri == null) {
-                        IWorldRenderConv conver;
-                        if (m_ent.TryGet<IWorldRenderConv>(out conver)) {
-                            ri = conver.RenderingInfo(priority, m_renderer.m_sceneMgr, m_ent, retries);
-                            if (ri == null) {
-                                // The rendering info couldn't be built now. This is usually because
-                                // the parent of this object is not available so we don't know where to put it
-                                // m_renderer.m_log.Log(LogLevel.DRENDERDETAIL,
-                                //     "Delaying rendering. RenderingInfo not built for {0}", m_ent.Name.Name);
-                                return false;
-                            }
-                        }
-                        else {
-                            m_renderer.m_log.Log(LogLevel.DBADERROR, "DoRenderLater: NO WORLDRENDERCONV FOR PRIM {0}", 
-                                            m_ent.Name.Name);
-                            // this probably creates infinite retries but other things are clearly broken
-                            return false;
-                        }
-                    }
-
-                    // Check to see if something of this mesh shape already exists. Use it if so.
-                    EntityName entMeshName = (EntityName)ri.basicObject;
-                    if (m_shouldShareMeshes && (ri.shapeHash != RenderableInfo.NO_HASH_SHARE)) {
-                        lock (prebuiltMeshes) {
-                            if (prebuiltMeshes.TryGetValue(ri.shapeHash, out entMeshName)) {
-                                m_hasMesh = true;   // presume someone else created it
-                                // m_log.Log(LogLevel.DRENDERDETAIL, "DorRenderLater: using prebuilt {0}", entMeshName);
-                                // m_statShareInstances.Event();
-                            }
-                            else {
-                                // reget mesh name since TryGet defaults it if not found
-                                entMeshName = (EntityName)ri.basicObject;
-                                // this is a new mesh. Remember that it has been built
-                                prebuiltMeshes.Add(ri.shapeHash, entMeshName);
-                            }
-                        }
-                    }
 
                     // Find a handle to the parent for this node
                     string parentSceneNodeName = null;
@@ -146,10 +149,10 @@ class RenderPrim : IRenderEntity {
                     // and add the definition for the object on to the scene node
                     // This will cause the load function to be called and create all
                     //   the callbacks that will actually create the object
-                    // m_log.Log(LogLevel.DRENDERDETAIL, "DoRenderLater: mesh={0}, prio={1}", entMeshName.Name, priority);
+                    m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RenderPrim: ent={0}, mesh={1}", m_ent.Name, entMeshName.Name);
                     if (!m_renderer.m_sceneMgr.CreateMeshSceneNodeBF(priority,
-                                    entitySceneNodeName,
                                     parentSceneNodeName,
+                                    m_ent,
                                     entMeshName.Name,
                                     false, true,
                                     ri.position.X, ri.position.Y, ri.position.Z,
@@ -171,30 +174,6 @@ class RenderPrim : IRenderEntity {
             }
             else {
                 // the entity already has a scene node. We're just forcing the rebuild of the prim
-                if (ri == null) {
-                    IWorldRenderConv conver;
-                    m_ent.TryGet<IWorldRenderConv>(out conver);
-                    ri = conver.RenderingInfo(priority, m_renderer.m_sceneMgr, m_ent, retries);
-                    if (ri == null) {
-                        // The rendering info couldn't be built now. This is usually because
-                        // the parent of this object is not available so we don't know where to put it
-                        // m_renderer.m_log.Log(LogLevel.DRENDERDETAIL,
-                        //     "Delaying rendering with scene node RenderingInfo not built for {0}", m_ent.Name.Name);
-                        return false;
-                    }
-                }
-                // Find a handle to the parent for this node
-                string parentSceneNodeName = null;
-                if (ri.parentEntity != null) {
-                    // this entity has a parent entity. create scene node off his
-                    IEntity parentEnt = ri.parentEntity;
-                    parentSceneNodeName = EntityNameOgre.ConvertToOgreSceneNodeName(parentEnt.Name);
-                }
-                else {
-                    parentSceneNodeName = EntityNameOgre.ConvertToOgreSceneNodeName(m_ent.RegionContext.Name);
-                }
-
-                EntityName entMeshName = (EntityName)ri.basicObject;
                 m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "DoRenderLater: entity has scenenode. Rebuilding mesh: {0}", entMeshName);
                 m_renderer.RequestMesh(m_ent.Name, entMeshName.Name);
             }

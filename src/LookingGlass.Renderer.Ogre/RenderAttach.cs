@@ -81,8 +81,8 @@ class RenderAttach : IRenderEntity {
                     }
 
                     if (!m_renderer.m_sceneMgr.CreateMeshSceneNodeBF(priority,
-                                    entitySceneNodeName,
                                     parentSceneNodeName,
+                                    m_ent,
                                     entMeshName.Name,
                                     false, true,
                                     ri.position.X, ri.position.Y, ri.position.Z,

@@ -77,8 +77,8 @@ class RenderAvatar : IRenderEntity {
                 m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RenderAvatar.Create: mesh={0}, prio={1}", 
                             entMeshName.Name, priority);
                 if (!m_renderer.m_sceneMgr.CreateMeshSceneNodeBF(priority,
-                                entitySceneNodeName,
                                 parentSceneNodeName,
+                                m_ent,
                                 entMeshName.Name,
                                 false, true,
                                 av.RegionPosition.X, av.RegionPosition.Y, av.RegionPosition.Z,

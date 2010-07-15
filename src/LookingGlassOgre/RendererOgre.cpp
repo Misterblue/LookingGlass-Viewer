@@ -506,24 +506,14 @@ namespace LG {
 			// happens in the queued, non-between frame thread. When Ogre is compiled with
 			// threading on, this makes the loading happen on the other thread.
 			// The code in the 'if' is duplicated in OLMeshTracker.
-			/*
-			Ogre::ResourcePtr theMesh = Ogre::MeshManager::getSingleton().getByName(meshName);
-			if ((!theMesh.isNull()) && theMesh->isLoaded()) {
-				// LG::Log("RendererOgre::AddEntity: immediate create of %s", meshName.c_str());
-				Ogre::MovableObject* ent = sceneMgr->createEntity(entName, meshName);
-				// it's not scenery
-				ent->removeQueryFlags(Ogre::SceneManager::WORLD_GEOMETRY_TYPE_MASK);	
-				Shadow->AddCasterShadow(ent);
-				Shadow->AddReceiverShadow(ent);
-				sceneNode->attachObject(ent);
-				m_visCalc->RecalculateVisibility();
-			}
-			else {
-				// LG::Log("RendererOgre::AddEntity: request loading of %s", meshName.c_str());
-				LG::OLMeshTracker::Instance()->MakeLoaded(sceneNode, meshName, Ogre::String(entName));
-			}
-			*/
-			LG::OLMeshTracker::Instance()->MakeLoaded(sceneNode, meshName, Ogre::String(entName));
+			// LG::Log("RendererOgre::AddEntity: immediate create of %s", meshName.c_str());
+			Ogre::MovableObject* ent = sceneMgr->createEntity(entName, meshName);
+			// it's not scenery
+			ent->removeQueryFlags(Ogre::SceneManager::WORLD_GEOMETRY_TYPE_MASK);	
+			Shadow->AddCasterShadow(ent);
+			// Shadow->AddReceiverShadow(ent);
+			sceneNode->attachObject(ent);
+			m_visCalc->RecalculateVisibility();
 		}
 		catch (Ogre::Exception e) {
 			// we presume this is because the entity already exists

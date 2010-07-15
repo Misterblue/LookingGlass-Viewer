@@ -23,6 +23,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using LookingGlass.World;
 
 namespace LookingGlass.Renderer.Ogr {
     /// <summary>
@@ -51,15 +52,16 @@ namespace LookingGlass.Renderer.Ogr {
         // and actual node.
         public bool CreateMeshSceneNodeBF(
                 float priority,
-                string sceneNodeName,   // name of scene node to create
                 string parentNodeName,  // name of the parent to connect it to (or zero)
-                string meshName,      // name of the entity (mesh) to add to the scene node
+                IEntity ent,            // entity making the display node for
+                string meshName,        // name of the mesh to add to the scene node
                 bool scale, bool orientation,
                 float px, float py, float pz, float sx, float sy, float sz,
                 float rw, float rx, float ry, float rz) {
-            return Ogr.CreateMeshSceneNodeBF(priority, m_sceneMgr, sceneNodeName, parentNodeName, 
-                        // EntityNameOgre.ConvertToOgreEntityName(new EntityNameOgre(meshName)),
-                        EntityNameOgre.ConvertToOgreEntityName(new EntityNameOgre(sceneNodeName)),
+            return Ogr.CreateMeshSceneNodeBF(priority, m_sceneMgr, 
+                        EntityNameOgre.ConvertToOgreSceneNodeName(ent.Name),
+                        parentNodeName, 
+                        EntityNameOgre.ConvertToOgreEntityName(ent.Name),
                         meshName,
                         scale, orientation,
                         px, py, pz, sx, sy, sz, rw, rx, ry, rz);
