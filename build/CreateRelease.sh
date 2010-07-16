@@ -69,7 +69,6 @@ cat "$FILELIST" | while read filename ; do
     cp "../bin/$filename" "$TEMPDIR"
 done
 cp ../LICENSE.txt "$TEMPDIR"
-cp -r ../THIRDPARTYLICENSES "$TEMPDIR"
 rsync -r --exclude .svn ../THIRDPARTYLICENSES "$TEMPDIR"
 
 find "$TEMPDIR" -type f | xargs chmod --quiet 764
