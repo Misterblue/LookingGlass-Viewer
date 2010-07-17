@@ -91,8 +91,6 @@ public:
 					float px, float py, float pz,
 					float sx, float sy, float sz,
 					float ow, float ox, float oy, float oz);
-	void AddLoadedMesh(float priority, Ogre::String uniq,
-					Ogre::String entityName, Ogre::String meshName, Ogre::SceneNode* sceneNode);
 	void UpdateSceneNode(float, char* nodeName,
 					bool setPosition, float px, float py, float pz, float pd,
 					bool setScale, float sx, float sy, float sz, float sd,
