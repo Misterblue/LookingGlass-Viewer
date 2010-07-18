@@ -588,36 +588,42 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     // ==========================================================================
     // IRenderProvider.Render()
     public void Render(IEntity ent) {
-        // do we have a format converted for this entity?
-        IWorldRenderConv conver;
-        if (!ent.TryGet<IWorldRenderConv>(out conver)) {
-            // for the moment, we only know about LL stuff
-            // TODO: Figure out how to make this dynamic, extendable and runtime
-            ent.RegisterInterface<IWorldRenderConv>(RendererOgreLL.Instance);
-        }
-        // Depending on type, add a creation/management interface
-        IEntityAvatar av;
-        if (ent.TryGet<IEntityAvatar>(out av)) {
-            // if it is an avatar, add the management routines
-            ent.RegisterInterface<IRenderEntity>(new RenderAvatar(this, ent));
-        }
-        else {
-            IAttachment atch;
-            if (ent.TryGet<IAttachment>(out atch)) {
-                ent.RegisterInterface<IRenderEntity>(new RenderAttach(this, ent));
-            }
-            else {
-                // It's just a prim. Add it's management routines
-                RenderPrim rprim;
-                if (!ent.TryGet<RenderPrim>(out rprim)) {
-                    ent.RegisterInterface<IRenderEntity>(new RenderPrim(this, ent));
-                }
-            }
-        }
+        DecorateRenderEntity(ent);
         // We don't create the entity here because an update immediately follows the 'new'
         //    call. That update will create the entity with the new values.
         // DoRenderQueued(ent);
         return;
+    }
+
+    private void DecorateRenderEntity(IEntity ent) {
+        // do we have a format converted for this entity?
+        IWorldRenderConv conver;
+        lock (ent) {
+            if (!ent.TryGet<IWorldRenderConv>(out conver)) {
+                // for the moment, we only know about LL stuff
+                // TODO: Figure out how to make this dynamic, extendable and runtime
+                ent.RegisterInterface<IWorldRenderConv>(RendererOgreLL.Instance);
+            }
+            // Depending on type, add a creation/management interface
+            IEntityAvatar av;
+            if (ent.TryGet<IEntityAvatar>(out av)) {
+                // if it is an avatar, add the management routines
+                ent.RegisterInterface<IRenderEntity>(new RenderAvatar(this, ent));
+            }
+            else {
+                IAttachment atch;
+                if (ent.TryGet<IAttachment>(out atch)) {
+                    ent.RegisterInterface<IRenderEntity>(new RenderAttach(this, ent));
+                }
+                else {
+                    // It's just a prim. Add it's management routines
+                    RenderPrim rprim;
+                    if (!ent.TryGet<RenderPrim>(out rprim)) {
+                        ent.RegisterInterface<IRenderEntity>(new RenderPrim(this, ent));
+                    }
+                }
+            }
+        }
     }
 
     // wrapper routine for the queuing if rendering work for this entity
@@ -686,7 +692,14 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     /// <param name="ent"></param>
     /// <param name="what"></param>
     public void RenderUpdate(IEntity ent, UpdateCodes what) {
-        ent.Get<IRenderEntity>().Update(what);
+        // make sure entity has all the rendering information attached to it
+        DecorateRenderEntity(ent);
+        IRenderEntity rent;
+        // if the entity has a type specific renderer, pass the update there
+        // (note: terrain comes through here but there is no IRenderEntity for terrain)
+        if (ent.TryGet<IRenderEntity>(out rent)) {
+            rent.Update(what);
+        }
         return;
     }
 
@@ -772,11 +785,6 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     }
 
     // ==========================================================================
-    public RenderableInfo RenderingInfo(IEntity ent) {
-        return null;
-    }
-
-    // ==========================================================================
     public void UpdateTerrain(RegionContextBase rcontext) {
         m_log.Log(LogLevel.DRENDERDETAIL, "RenderOgre: UpdateTerrain: for region {0}", rcontext.Name.Name);
         try {
@@ -829,10 +837,6 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     Dictionary<string, int> m_requestedMeshes = new Dictionary<string, int>();
     private int m_meshRememberTime = 10000;
     public void RequestMesh(EntityName contextEntity, string meshName) {
-        // In theory, if we are building the meshes early, these requests are just noise. 
-        // if ( m_shouldPrebuildMesh ) {
-        //     return;
-        // }
         m_log.Log(LogLevel.DRENDERDETAIL, "Request for mesh " + meshName);
         lock (m_requestedMeshes) {
             if (m_requestedMeshes.ContainsKey(meshName)) {
@@ -870,18 +874,20 @@ public class RendererOgre : ModuleBase, IRenderProvider {
             }
             // Create mesh resource. In this case its most likely a .mesh file in the cache
             // The actual mesh creation is queued and done later between frames
-            float priority = CalculateInterestOrder(ent);
-            IWorldRenderConv conver;
-            ent.TryGet<IWorldRenderConv>(out conver);
-            if (!conver.CreateMeshResource(priority, ent, m_meshName, m_contextEntityName)) {
-                // we need to wait until some resource exists before we can complete this creation
-                return false;
-            }
+            lock (ent) {
+                float priority = CalculateInterestOrder(ent);
+                IWorldRenderConv conver;
+                ent.TryGet<IWorldRenderConv>(out conver);
+                if (!conver.CreateMeshResource(priority, ent, m_meshName, m_contextEntityName)) {
+                    // we need to wait until some resource exists before we can complete this creation
+                    return false;
+                }
 
-            // tell Ogre to refresh (reload) the resource
-            m_log.Log(LogLevel.DRENDERDETAIL, "RendererOgre.RequestMeshLater: refresh for {0}. prio={1}", 
-                    m_meshName, priority);
-            Ogr.RefreshResourceBF(priority, Ogr.ResourceTypeMesh, m_meshName);
+                // tell Ogre to refresh (reload) the resource
+                m_log.Log(LogLevel.DRENDERDETAIL, "RendererOgre.RequestMeshLater: refresh for {0}. prio={1}",
+                        m_meshName, priority);
+                Ogr.RefreshResourceBF(priority, Ogr.ResourceTypeMesh, m_meshName);
+            }
             lock (m_requestedMeshes) {
                 m_requestedMeshes.Remove(m_meshName);
             }
@@ -927,17 +933,19 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         try {
             IEntity ent;
             if (World.World.Instance.TryGetEntity(m_entName, out ent)) {
-                LogManager.Log.Log(LogLevel.DRENDERDETAIL, "RequestMaterialLater.DoIt(): converting {0}", m_entName);
-                IWorldRenderConv conver;
-                if (!ent.TryGet<IWorldRenderConv>(out conver)) {
-                    // the rendering context is not set up. Odd but not fatal
-                    // try again later
-                    return false;
-                }
-                else {
-                    // Create the material resource and then make the rendering redisplay
-                    conver.CreateMaterialResource(qInstance.priority, ent, m_matName);
-                    Ogr.RefreshResourceBF(qInstance.priority, Ogr.ResourceTypeMaterial, m_matName);
+                lock (ent) {
+                    LogManager.Log.Log(LogLevel.DRENDERDETAIL, "RequestMaterialLater.DoIt(): converting {0}", m_entName);
+                    IWorldRenderConv conver;
+                    if (!ent.TryGet<IWorldRenderConv>(out conver)) {
+                        // the rendering context is not set up. Odd but not fatal
+                        // try again later
+                        return false;
+                    }
+                    else {
+                        // Create the material resource and then make the rendering redisplay
+                        conver.CreateMaterialResource(qInstance.priority, ent, m_matName);
+                        Ogr.RefreshResourceBF(qInstance.priority, Ogr.ResourceTypeMaterial, m_matName);
+                    }
                 }
             }
             else {

@@ -191,79 +191,81 @@ class RenderPrim : IRenderEntity {
     public void Update(UpdateCodes what) {
         float priority = m_renderer.CalculateInterestOrder(m_ent);
         bool fullUpdate = false;    // true if a full update was done on this entity
-        if ((what & UpdateCodes.New) != 0) {
-            // new entity. Gets the full treatment
-            m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: New entity: {0}", m_ent.Name.Name);
-            m_renderer.DoRenderQueued(m_ent);
-            fullUpdate = true;
-        }
-        if ((what & UpdateCodes.New) == 0) {
-            // if not a new update, see what in particular is changing for this prim
-            if ((what & UpdateCodes.ParentID) != 0) {
-                // prim was detached or attached. Rerender if not the first update
-                m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: parentID changed");
-                if (!fullUpdate) m_renderer.DoRenderQueued(m_ent);
+        lock (m_ent) {
+            if ((what & UpdateCodes.New) != 0) {
+                // new entity. Gets the full treatment
+                m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: New entity: {0}", m_ent.Name.Name);
+                m_renderer.DoRenderQueued(m_ent);
                 fullUpdate = true;
             }
-            if ((what & UpdateCodes.Material) != 0) {
-                // the materials have changed on this entity. Cause materials to be recalcuated
-                m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: Material changed");
-            }
-            // if (((what & (UpdateCodes.PrimFlags | UpdateCodes.PrimData)) != 0))) {
-            if ((what & (UpdateCodes.PrimFlags | UpdateCodes.PrimData)) != 0) {
-                // the prim parameters were changed. Re-render if this is not the new creation request
-                m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: prim data changed");
-                if (!fullUpdate) m_renderer.DoRenderQueued(m_ent);
-                fullUpdate = true;
-            }
-            if ((what & UpdateCodes.Textures) != 0) {
-                // texure on the prim were updated. Refresh them if not the initial creation update
-                m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: textures changed");
-                // to get the textures to refresh, we must force the situation
-                IWorldRenderConv conver;
-                if (m_ent.TryGet<IWorldRenderConv>(out conver)) {
-                    conver.RebuildEntityMaterials(priority, m_ent);
-                    Ogr.RefreshResourceBF(priority, Ogr.ResourceTypeMesh, 
-                                EntityNameOgre.ConvertToOgreMeshName(m_ent.Name).Name);
+            if ((what & UpdateCodes.New) == 0) {
+                // if not a new update, see what in particular is changing for this prim
+                if ((what & UpdateCodes.ParentID) != 0) {
+                    // prim was detached or attached. Rerender if not the first update
+                    m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: parentID changed");
+                    if (!fullUpdate) m_renderer.DoRenderQueued(m_ent);
+                    fullUpdate = true;
+                }
+                if ((what & UpdateCodes.Material) != 0) {
+                    // the materials have changed on this entity. Cause materials to be recalcuated
+                    m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: Material changed");
+                }
+                // if (((what & (UpdateCodes.PrimFlags | UpdateCodes.PrimData)) != 0))) {
+                if ((what & (UpdateCodes.PrimFlags | UpdateCodes.PrimData)) != 0) {
+                    // the prim parameters were changed. Re-render if this is not the new creation request
+                    m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: prim data changed");
+                    if (!fullUpdate) m_renderer.DoRenderQueued(m_ent);
+                    fullUpdate = true;
+                }
+                if ((what & UpdateCodes.Textures) != 0) {
+                    // texure on the prim were updated. Refresh them if not the initial creation update
+                    m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: textures changed");
+                    // to get the textures to refresh, we must force the situation
+                    IWorldRenderConv conver;
+                    if (m_ent.TryGet<IWorldRenderConv>(out conver)) {
+                        conver.RebuildEntityMaterials(priority, m_ent);
+                        Ogr.RefreshResourceBF(priority, Ogr.ResourceTypeMesh,
+                                    EntityNameOgre.ConvertToOgreMeshName(m_ent.Name).Name);
+                    }
                 }
             }
-        }
-        if ((what & UpdateCodes.Animation) != 0) {
-            // the prim has changed its rotation animation
-            IAnimation anim;
-            if (m_ent.TryGet<IAnimation>(out anim)) {
-                IWorldRenderConv conver;
-                // Hopefully the interface with the details is attached
-                if (m_ent.TryGet<IWorldRenderConv>(out conver)) {
-                    m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: update animation");
-                    // since the entity might not have been rendererd yet, we need to queue this operstion
-                    Object[] parms = { 0f, m_ent, conver, anim };
-                    m_renderer.m_workQueueRender.DoLater(priority, DoUpdateAnimationLater, parms);
+            if ((what & UpdateCodes.Animation) != 0) {
+                // the prim has changed its rotation animation
+                IAnimation anim;
+                if (m_ent.TryGet<IAnimation>(out anim)) {
+                    IWorldRenderConv conver;
+                    // Hopefully the interface with the details is attached
+                    if (m_ent.TryGet<IWorldRenderConv>(out conver)) {
+                        m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: update animation");
+                        // since the entity might not have been rendererd yet, we need to queue this operstion
+                        Object[] parms = { 0f, m_ent, conver, anim };
+                        m_renderer.m_workQueueRender.DoLater(priority, DoUpdateAnimationLater, parms);
 
-                }
-                else {
-                    m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RenderPrim.Update: animation bit without animation details");
+                    }
+                    else {
+                        m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RenderPrim.Update: animation bit without animation details");
+                    }
                 }
             }
-        }
-        if ((what & UpdateCodes.Text) != 0) {
-            // text associated with the prim changed
-            m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: text changed");
-        }
-        if ((what & UpdateCodes.Particles) != 0) {
-            // particles associated with the prim changed
-            m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: particles changed");
-        }
-        if (!fullUpdate && (what & (UpdateCodes.Scale | UpdateCodes.Position | UpdateCodes.Rotation)) != 0) {
-            // world position has changed. Tell Ogre they have changed
-            string entitySceneNodeName = EntityNameOgre.ConvertToOgreSceneNodeName(m_ent.Name);
-            m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: Updating position/rotation for {0}", entitySceneNodeName);
-            Ogr.UpdateSceneNodeBF(priority, entitySceneNodeName,
-                ((what & UpdateCodes.Position) != 0),
-                m_ent.RegionPosition.X, m_ent.RegionPosition.Y, m_ent.RegionPosition.Z, 2f,
-                false, 1f, 1f, 1f, 2f, // don't pass scale yet
-                ((what & UpdateCodes.Rotation) != 0),
-                m_ent.Heading.W, m_ent.Heading.X, m_ent.Heading.Y, m_ent.Heading.Z, 2f);
+            if ((what & UpdateCodes.Text) != 0) {
+                // text associated with the prim changed
+                m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: text changed");
+            }
+            if ((what & UpdateCodes.Particles) != 0) {
+                // particles associated with the prim changed
+                m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: particles changed");
+            }
+            if (!fullUpdate && (what & (UpdateCodes.Scale | UpdateCodes.Position | UpdateCodes.Rotation)) != 0) {
+                // world position has changed. Tell Ogre they have changed
+                string entitySceneNodeName = EntityNameOgre.ConvertToOgreSceneNodeName(m_ent.Name);
+                m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: Updating position/rotation for {0}", entitySceneNodeName);
+                Ogr.UpdateSceneNodeBF(priority, entitySceneNodeName,
+                    ((what & UpdateCodes.Position) != 0),
+                    m_ent.RegionPosition.X, m_ent.RegionPosition.Y, m_ent.RegionPosition.Z, 2f,
+                    false, 1f, 1f, 1f, 2f, // don't pass scale yet
+                    ((what & UpdateCodes.Rotation) != 0),
+                    m_ent.Heading.W, m_ent.Heading.X, m_ent.Heading.Y, m_ent.Heading.Z, 2f);
+            }
         }
     }
 

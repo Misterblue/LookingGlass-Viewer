@@ -24,6 +24,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using LookingGlass.Framework.Logging;
+using LookingGlass.Framework.WorkQueue;
 using OMV = OpenMetaverse;
 
 namespace LookingGlass.World {
@@ -33,6 +34,8 @@ public class EntityCollection : IEntityCollection {
     public event EntityNewCallback OnEntityNew;
     public event EntityUpdateCallback OnEntityUpdate;
     public event EntityRemovedCallback OnEntityRemoved;
+
+    static BasicWorkQueue m_workQueueEvent = new BasicWorkQueue("EntityCollectionEvent");
 
     protected OMV.DoubleDictionary<string, ulong, IEntity> m_entityDictionary;
 
@@ -49,13 +52,36 @@ public class EntityCollection : IEntityCollection {
         if (TrackEntity(entity)) {
             // tell the viewer about this prim and let the renderer convert it
             //    into the format needed for display
-            if (OnEntityNew != null) OnEntityNew(entity);
+            // if (OnEntityNew != null) OnEntityNew(entity);
+            // disconnect this work from the caller -- use another thread
+            m_workQueueEvent.DoLater(DoEventLater, entity);
         }
+    }
+
+    private bool DoEventLater(DoLaterBase qInstance, object parm) {
+        EntityNewCallback enc = OnEntityNew;
+        if (enc != null) {
+            enc((IEntity)parm);
+        }
+        return true;
     }
 
     public void UpdateEntity(IEntity entity, UpdateCodes detail) {
         m_log.Log(LogLevel.DUPDATEDETAIL, "UpdateEntity: " + entity.Name);
-        if (OnEntityUpdate != null) OnEntityUpdate(entity, detail);
+        // if (OnEntityUpdate != null) OnEntityUpdate(entity, detail);
+        object[] parms = { entity, detail };
+        m_workQueueEvent.DoLater(DoUpdateLater, parms);
+    }
+
+    private bool DoUpdateLater(DoLaterBase qInstance, object parm) {
+        object[] parms = (object[])parm;
+        IEntity ent = (IEntity)parms[0];
+        UpdateCodes detail = (UpdateCodes)parms[1];
+        EntityUpdateCallback euc = OnEntityUpdate;
+        if (euc != null) {
+            euc(ent, detail);
+        }
+        return true;
     }
 
     public void RemoveEntity(IEntity entity) {

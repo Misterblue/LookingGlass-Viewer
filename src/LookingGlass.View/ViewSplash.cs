@@ -21,7 +21,7 @@ namespace LookingGlass.View {
             string[] ContentLines = new String[30];
             int line = 0;
             ContentLines[line++] = LookingGlassBase.ApplicationName + "  " + LookingGlassBase.ApplicationVersion
-                + "        http://lookingglassviewer.org/";
+                + "                      http://lookingglassviewer.org/";
             ContentLines[line++] = "";
             ContentLines[line++] = "Copyright (c) 2008-2010 Robert Adams (LookingGlass)";
             ContentLines[line++] = "Copyright (c) 2000-2006 Torus Knot Software Ltd (Ogre)";

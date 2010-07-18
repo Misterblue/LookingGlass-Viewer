@@ -102,7 +102,7 @@ public abstract class EntityBase : IEntity {
             Additions[ii] = null;
         }
         m_LGID = NextLGID();
-        m_worldContext = (World)LookingGlassBase.Instance.ModManager.Module("World");
+        m_worldContext = World.Instance;
         m_regionContext = rcontext;
         m_assetContext = acontext;
     }

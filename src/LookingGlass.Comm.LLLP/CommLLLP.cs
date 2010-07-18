@@ -780,14 +780,14 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
             this.m_statObjObjectUpdate++;
             IEntity updatedEntity = null;
             // a full update says everything changed
-            UpdateCodes updateFlags = UpdateCodes.Acceleration | UpdateCodes.AngularVelocity
-                    | UpdateCodes.Position | UpdateCodes.Rotation | UpdateCodes.Velocity;
+            UpdateCodes updateFlags = 0;
+            updateFlags |= UpdateCodes.Position | UpdateCodes.Rotation;
             m_log.Log(LogLevel.DUPDATEDETAIL, "Object update: id={0}, p={1}, r={2}", 
                 args.Prim.LocalID, args.Prim.Position.ToString(), args.Prim.Rotation.ToString());
-            // assume somethings changed no matter what
             try {
                 if (rcontext.TryGetCreateEntityLocalID(args.Prim.LocalID, out updatedEntity, delegate() {
                             updateFlags |= UpdateCodes.New;
+                            updateFlags |= UpdateCodes.Acceleration | UpdateCodes.AngularVelocity | UpdateCodes.Velocity;
                             return new LLEntityPhysical(rcontext.AssetContext,
                                             rcontext, args.Simulator.Handle, args.Prim.LocalID, args.Prim);
                         }) ) {
@@ -878,6 +878,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         this.m_statObjAttachmentUpdate++;
         m_log.Log(LogLevel.DUPDATEDETAIL, "OnNewAttachment: id={0}, lid={1}", args.Prim.ID.ToString(), args.Prim.LocalID);
         try {
+            // if new or not, assume everything about this entity has changed
             UpdateCodes updateFlags = UpdateCodes.FullUpdate;
             IEntity ent;
             if (rcontext.TryGetCreateEntityLocalID(args.Prim.LocalID, out ent, delegate() {
@@ -900,15 +901,11 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
                         att.AttachmentPoint = args.Prim.PrimData.AttachmentPoint;
                         return newEnt;
                     }) ) {
-                // if new or not, assume everything about this entity has changed
-                IEntityCollection coll;
-                if (rcontext.TryGet<IEntityCollection>(out coll)) {
-                    coll.UpdateEntity(ent, updateFlags);
-                }
             }
             else {
                 m_log.Log(LogLevel.DBADERROR, "FAILED CREATION OF NEW ATTACHMENT");
             }
+            ent.Update(updateFlags);
         }
         catch (Exception e) {
             m_log.Log(LogLevel.DBADERROR, "FAILED CREATION OF NEW ATTACHMENT: " + e.ToString());

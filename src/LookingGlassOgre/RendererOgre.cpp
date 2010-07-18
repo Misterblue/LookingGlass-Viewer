@@ -556,6 +556,16 @@ namespace LG {
 			node->rotate(rot);
 			node->setVisible(true);
 			node->setInitialState();
+			/*
+			if (px < 0 || px > 256
+				|| py < 0 || py > 256
+				|| pz < 0 || pz > 256
+				|| sx != 1.0 || sy != 1.0 || sz != 1.0
+				|| inheritScale
+				)
+				LG::Log("SCENENODE OUTSIDE RANGE: %s, <%f,%f,%f>", nodeName, px, py, pz);
+				*/
+				
 		}
 		catch (Ogre::Exception e) {
 			if (sceneMgr->hasSceneNode(nodeName)) {
@@ -576,8 +586,8 @@ namespace LG {
 		if (m_sceneMgr->hasSceneNode(entName)) {
 			Ogre::SceneNode* sceneNode = m_sceneMgr->getSceneNode(entName);
 			if (updatePosition) {
-				sceneNode->setPosition(px, py, pz);
-				// LG::AnimTracker::Instance()->MoveToPosition(Ogre::String(entName), Ogre::Vector3(px, py, pz), pduration);
+				// sceneNode->setPosition(px, py, pz);
+				LG::AnimTracker::Instance()->MoveToPosition(Ogre::String(entName), Ogre::Vector3(px, py, pz), pduration);
 			}
 			if (updateScale) {
 				sceneNode->setScale(sx, sy, sz);
