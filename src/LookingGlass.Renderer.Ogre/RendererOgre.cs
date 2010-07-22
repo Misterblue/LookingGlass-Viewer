@@ -595,6 +595,13 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         return;
     }
 
+    /// <summary>
+    /// The entity has classes hung off  it depending on its type. These classes
+    /// will be used to differentiate and render the entity.
+    /// Here we check to see if the decorating classes are on the entity and
+    /// add them if they are not present.
+    /// </summary>
+    /// <param name="ent"></param>
     private void DecorateRenderEntity(IEntity ent) {
         // do we have a format converted for this entity?
         IWorldRenderConv conver;

@@ -35,11 +35,15 @@ public class EntityCollection : IEntityCollection {
     public event EntityUpdateCallback OnEntityUpdate;
     public event EntityRemovedCallback OnEntityRemoved;
 
+    static bool m_shouldQueueEvent = true;
     static BasicWorkQueue m_workQueueEvent = new BasicWorkQueue("EntityCollectionEvent");
 
     protected OMV.DoubleDictionary<string, ulong, IEntity> m_entityDictionary;
 
-    public EntityCollection() {
+    protected string m_name;
+
+    public EntityCollection(string nam) {
+        m_name = nam;
         m_entityDictionary = new OMV.DoubleDictionary<string, ulong, IEntity>();
     }
 
@@ -48,13 +52,17 @@ public class EntityCollection : IEntityCollection {
     }
 
     public void AddEntity(IEntity entity) {
-        m_log.Log(LogLevel.DWORLDDETAIL, "AddEntity: n={0}, lid={1}", entity.Name, entity.LGID);
+        // m_log.Log(LogLevel.DWORLDDETAIL, "AddEntity.{0}: n={l}, lid={2}", m_name, entity.Name.Name, entity.LGID);
         if (TrackEntity(entity)) {
             // tell the viewer about this prim and let the renderer convert it
             //    into the format needed for display
-            // if (OnEntityNew != null) OnEntityNew(entity);
-            // disconnect this work from the caller -- use another thread
-            m_workQueueEvent.DoLater(DoEventLater, entity);
+            if (m_shouldQueueEvent) {
+                // disconnect this work from the caller -- use another thread
+                // m_workQueueEvent.DoLater(DoEventLater, entity);
+            }
+            else {
+                if (OnEntityNew != null) OnEntityNew(entity);
+            }
         }
     }
 
@@ -68,9 +76,13 @@ public class EntityCollection : IEntityCollection {
 
     public void UpdateEntity(IEntity entity, UpdateCodes detail) {
         m_log.Log(LogLevel.DUPDATEDETAIL, "UpdateEntity: " + entity.Name);
-        // if (OnEntityUpdate != null) OnEntityUpdate(entity, detail);
-        object[] parms = { entity, detail };
-        m_workQueueEvent.DoLater(DoUpdateLater, parms);
+        if (m_shouldQueueEvent) {
+            object[] parms = { entity, detail };
+            m_workQueueEvent.DoLater(DoUpdateLater, parms);
+        }
+        else {
+            if (OnEntityUpdate != null) OnEntityUpdate(entity, detail);
+        }
     }
 
     private bool DoUpdateLater(DoLaterBase qInstance, object parm) {

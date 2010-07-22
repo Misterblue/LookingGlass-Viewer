@@ -102,7 +102,7 @@ class RenderAvatar : IRenderEntity {
         bool fullUpdate = false;    // true if a full update was done on this entity
         if ((what & UpdateCodes.New) != 0) {
             // new entity. Gets the full treatment
-            m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: New entity: {0}", m_ent.Name.Name);
+            m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RenderAvatar.Update: New entity: {0}", m_ent.Name.Name);
             m_renderer.DoRenderQueued(m_ent);
             fullUpdate = true;
         }
@@ -110,24 +110,24 @@ class RenderAvatar : IRenderEntity {
             // if not a new update, see what in particular is changing for this prim
             if ((what & UpdateCodes.ParentID) != 0) {
                 // prim was detached or attached. Rerender if not the first update
-                m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: parentID changed");
+                m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RenderAvatar.Update: parentID changed");
                 if (!fullUpdate) m_renderer.DoRenderQueued(m_ent);
                 fullUpdate = true;
             }
             if ((what & UpdateCodes.Material) != 0) {
                 // the materials have changed on this entity. Cause materials to be recalcuated
-                m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: Material changed");
+                m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RenderAvatar.Update: Material changed");
             }
             // if (((what & (UpdateCodes.PrimFlags | UpdateCodes.PrimData)) != 0))) {
             if ((what & (UpdateCodes.PrimFlags | UpdateCodes.PrimData)) != 0) {
                 // the prim parameters were changed. Re-render if this is not the new creation request
-                m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: prim data changed");
+                m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RenderAvatar.Update: prim data changed");
                 if (!fullUpdate) m_renderer.DoRenderQueued(m_ent);
                 fullUpdate = true;
             }
             if ((what & UpdateCodes.Textures) != 0) {
                 // texure on the prim were updated. Refresh them if not the initial creation update
-                m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: textures changed");
+                m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RenderAvatar.Update: textures changed");
                 // to get the textures to refresh, we must force the situation
                 IWorldRenderConv conver;
                 if (m_ent.TryGet<IWorldRenderConv>(out conver)) {
@@ -140,7 +140,7 @@ class RenderAvatar : IRenderEntity {
         if (!fullUpdate && (what & (UpdateCodes.Scale | UpdateCodes.Position | UpdateCodes.Rotation)) != 0) {
             // world position has changed. Tell Ogre they have changed
             string entitySceneNodeName = EntityNameOgre.ConvertToOgreSceneNodeName(m_ent.Name);
-            m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: Updating position/rotation for {0}", entitySceneNodeName);
+            m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RenderAvatar.Update: Updating position/rotation for {0}", entitySceneNodeName);
             Ogr.UpdateSceneNodeBF(priority, entitySceneNodeName,
                 ((what & UpdateCodes.Position) != 0),
                 m_ent.RegionPosition.X, m_ent.RegionPosition.Y, m_ent.RegionPosition.Z, 0.25f,

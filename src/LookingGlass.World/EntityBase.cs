@@ -76,7 +76,7 @@ public abstract class EntityBase : IEntity {
     protected IEntityCollection m_entityCollection = null;
     public virtual void AddEntityToContainer(IEntity ent) {
         if (m_entityCollection == null) {
-            m_entityCollection = new EntityCollection();
+            m_entityCollection = new EntityCollection(this.Name.Name);
         }
         m_entityCollection.AddEntity(ent);
     }
