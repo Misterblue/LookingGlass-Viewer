@@ -21,7 +21,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 // #include "StdAfx.h"
+#ifdef WIN32
 #include <direct.h>
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
@@ -908,6 +910,7 @@ void RendererOgre::CreateParentDirectory(const Ogre::String filename) {
 void RendererOgre::MakeParentDir(const Ogre::String filename) {
 	Ogre::String::size_type lastSlash = filename.find_last_of('/');
 	Ogre::String dirName = filename.substr(0, lastSlash);
+#ifdef WIN32
 	int iResult = _mkdir(dirName.c_str());			// try to make the directory
 	if (iResult != 0) {							// if it couldn't be made
 		if (errno == ENOENT) {					// if it couldn't make because no parents
@@ -916,6 +919,16 @@ void RendererOgre::MakeParentDir(const Ogre::String filename) {
 			_mkdir(dirName.c_str());				// make the directory this time
 		}
 	}
+#else
+	int iResult = mkdir(dirName.c_str(), 0664);			// try to make the directory
+	if (iResult != 0) {							// if it couldn't be made
+		if (errno == ENOENT) {					// if it couldn't make because no parents
+			// LG::Log("RendererOgre::MakeParentDir: recursing for %s", dirName.c_str());
+			MakeParentDir(dirName);				// create the parent directory
+			mkdir(dirName.c_str(), 0664);		// make the directory this time
+		}
+	}
+#endif
 	return;
 }
 }
