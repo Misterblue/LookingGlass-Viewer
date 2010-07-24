@@ -231,31 +231,31 @@ Ogre::Root* GetOgreRoot() {
 }
 
 // ================================================================
-void LG::SetStat(int cod, int val) {
+void SetStat(int cod, int val) {
 	if (LG::statsBlock != NULL) {
 		LG::statsBlock[cod] = val;
 	}
 }
 
-void LG::IncStat(int cod) {
+void IncStat(int cod) {
 	if (LG::statsBlock != NULL) {
 		LG::statsBlock[cod]++;
 	}
 }
 
-void LG::DecStat(int cod) {
+void DecStat(int cod) {
 	if (LG::statsBlock != NULL) {
 		LG::statsBlock[cod]--;
 	}
 }
 
-void LG::StatIn(int cod) {
+void StatIn(int cod) {
 	if (LG::statsBlock != NULL) {
 		LG::statsBlock[StatInOut] |= cod;
 	}
 }
 
-void LG::StatOut(int cod) {
+void StatOut(int cod) {
 	if (LG::statsBlock != NULL) {
 		LG::statsBlock[StatInOut] &= ~cod;
 	}
@@ -263,7 +263,7 @@ void LG::StatOut(int cod) {
 
 // Routine which calls back into the managed world to fetch a string/value configuration
 // parameter.
-const char* LG::GetParameter(const char* paramName) {
+const char* GetParameter(const char* paramName) {
 	if (LG::fetchParameterCallback != NULL) {
 		return (*LG::fetchParameterCallback)(paramName);
 	}
@@ -273,7 +273,7 @@ const char* LG::GetParameter(const char* paramName) {
 	return NULL;
 }
 
-const int LG::GetParameterInt(const char* paramName) {
+const int GetParameterInt(const char* paramName) {
 	int inum = 0;
 	if (sscanf(GetParameter(paramName), "%d", &inum)) {
 		return inum;
@@ -281,11 +281,11 @@ const int LG::GetParameterInt(const char* paramName) {
 	return 0;
 }
 
-const bool LG::GetParameterBool(const char* paramName) {
+const bool GetParameterBool(const char* paramName) {
 	return isTrue(GetParameter(paramName));
 }
 
-const float LG::GetParameterFloat(const char* paramName) {
+const float GetParameterFloat(const char* paramName) {
 	float fnum = 0;
 	if (sscanf(GetParameter(paramName), "%f", &fnum)) {
 		return fnum;
@@ -293,7 +293,7 @@ const float LG::GetParameterFloat(const char* paramName) {
 	return 0.0;
 }
 
-const Ogre::ColourValue LG::GetParameterColor(const char* paramName) {
+const Ogre::ColourValue GetParameterColor(const char* paramName) {
 	float rnum;
 	float gnum;
 	float bnum;
@@ -305,21 +305,21 @@ const Ogre::ColourValue LG::GetParameterColor(const char* paramName) {
 
 // Print out a message of the pointer thing is null. At least the log will know
 // of the problem
-void LG::AssertNonNull(void* thing, const char* msg) {
+void AssertNonNull(void* thing, const char* msg) {
 	if (thing == NULL) {
 		LG::Log(msg);
 	}
 }
 
 // return 'true' if the passed text is either "true" or "yes". Return false otherwise.
-const bool LG::isTrue(const char* txt) {
+const bool isTrue(const char* txt) {
 	if ((stricmp(txt, "true") == 0) || (stricmp(txt, "yes") == 0)) return true;
 	return false;
 }
 
 
 // Call back into the managed world to output a log message with formatting
-void LG::Log(const char* msg, ...) {
+void Log(const char* msg, ...) {
 	char buff[2048];
 	if (LG::debugLogCallback != NULL) {
 		va_list args;
@@ -331,7 +331,7 @@ void LG::Log(const char* msg, ...) {
 }
 
 // call out to the main program and make sure we should keep running
-const bool LG::checkKeepRunning() {
+const bool checkKeepRunning() {
 	if (LG::checkKeepRunningCallback != NULL) {
 		return (*LG::checkKeepRunningCallback)();
 	}
@@ -339,7 +339,7 @@ const bool LG::checkKeepRunning() {
 }
 
 // Routine which calls back into the managed world to request a texture be loaded
-void LG::RequestResource(const char* contextEntName, const char* paramName, const int type) {
+void RequestResource(const char* contextEntName, const char* paramName, const int type) {
 	if (LG::requestResourceCallback != NULL) {
 		(*LG::requestResourceCallback)(contextEntName, paramName, type);
 	}
