@@ -175,7 +175,7 @@ namespace SkyX { namespace VClouds{
 			@param ny Y size
 			@param nz Z size
 		*/
-		void _copy3DCellArraysData(Cell ***or, Cell ***dest, const int& nx, const int& ny, const int& nz);
+		void _copy3DCellArraysData(Cell ***zor, Cell ***dest, const int& nx, const int& ny, const int& nz);
 
 		/** Perform celullar automata simulation
 		    @param nx X size

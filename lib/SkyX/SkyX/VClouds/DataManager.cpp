@@ -218,7 +218,7 @@ namespace SkyX { namespace VClouds
 		delete [] c;
 	}
 
-	void DataManager::_copy3DCellArraysData(Cell ***or, Cell ***dest, const int& nx, const int& ny, const int& nz)
+	void DataManager::_copy3DCellArraysData(Cell ***zor, Cell ***dest, const int& nx, const int& ny, const int& nz)
 	{
 		int u, v, w;
 
@@ -228,16 +228,16 @@ namespace SkyX { namespace VClouds
 			{
 				for (w = 0; w < nz; w++)
 				{
-					dest[u][v][w].act = or[u][v][w].act;
-					dest[u][v][w].cld = or[u][v][w].cld;
-					dest[u][v][w].hum = or[u][v][w].hum;
+					dest[u][v][w].act = zor[u][v][w].act;
+					dest[u][v][w].cld = zor[u][v][w].cld;
+					dest[u][v][w].hum = zor[u][v][w].hum;
 
-					dest[u][v][w].pact = or[u][v][w].pact;
-					dest[u][v][w].pext = or[u][v][w].pext;
-					dest[u][v][w].phum = or[u][v][w].phum;
+					dest[u][v][w].pact = zor[u][v][w].pact;
+					dest[u][v][w].pext = zor[u][v][w].pext;
+					dest[u][v][w].phum = zor[u][v][w].phum;
 
-					dest[u][v][w].dens = or[u][v][w].dens;
-					dest[u][v][w].light = or[u][v][w].light;
+					dest[u][v][w].dens = zor[u][v][w].dens;
+					dest[u][v][w].light = zor[u][v][w].light;
 				}
 			}
 		}

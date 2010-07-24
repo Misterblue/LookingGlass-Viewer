@@ -85,7 +85,7 @@ namespace LG {
 		//   frame rate up
 		int maxFPS = LG::GetParameterInt("Renderer.Ogre.FramePerSecMax");
 		if (maxFPS < 2 || maxFPS > 100) maxFPS = 20;
-		int msPerFrame = 1000 / maxFPS;
+		// int msPerFrame = 1000 / maxFPS;
 
 		unsigned long now = rendererTimeKeeper->getMilliseconds();
 		unsigned long timeStartedLastFrame = rendererTimeKeeper->getMilliseconds();
@@ -128,8 +128,8 @@ namespace LG {
 	// with any extra time.
 	bool RendererOgre::renderOneFrame(bool pump, int len) {
 		bool ret = true;
-		unsigned long now = rendererTimeKeeper->getMilliseconds();
-		unsigned long timeStartedLastFrame = rendererTimeKeeper->getMilliseconds();
+		// unsigned long now = rendererTimeKeeper->getMilliseconds();
+		// unsigned long timeStartedLastFrame = rendererTimeKeeper->getMilliseconds();
 		if (m_root != NULL) {
 			// LGLOCK_LOCK(m_sceneGraphLock);
 			if (++m_alreadyOneFrame > 1) return ret;
@@ -413,12 +413,13 @@ namespace LG {
 
 	void RendererOgre::createSky() {
 		LG::Log("RendererOgre::createsky");
+		m_sky = NULL;
 		const char* skyName = LG::GetParameter("Renderer.Ogre.Sky");
 		if (stricmp(skyName, "SkyX") == 0) {
 			LG::Log("RendererOgre::createSky: using SkyBoxSkyX");
 			m_sky = new LG::SkyBoxSkyX();
 		}
-		else {
+		if (m_sky == NULL) {
 			LG::Log("RendererOgre::createSky: using SkyBoxSimple");
 			m_sky = new LG::SkyBoxSimple();
 		}
