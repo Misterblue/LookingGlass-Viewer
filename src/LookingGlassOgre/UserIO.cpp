@@ -21,7 +21,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "StdAfx.h"
+// #include "StdAfx.h"
 #include "UserIO.h"
 #include "LookingGlassOgre.h"
 #include "RendererOgre.h"
