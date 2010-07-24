@@ -750,7 +750,8 @@ namespace LG {
 
 	Ogre::String RendererOgre::PrecomputedMaterialName(Ogre::String baseMaterialName, int iface) {
 		char faceName[10];
-		itoa(iface, faceName, 10);
+		// itoa(iface, faceName, 10);
+		sprintf(faceName, "%d", iface);
 		Ogre::String materialName = baseMaterialName + "-" + faceName + ".material";
 		return materialName;
 	}
