@@ -34,6 +34,8 @@
 #ifdef LGLOCK_BOOST
 #undef NOMINMAX
 #define NOMINMAX
+#include "boost/thread/thread.hpp"
+#include "boost/thread/xtime.hpp"
 #include "boost/thread/mutex.hpp"
 #include "boost/thread/condition.hpp"
 #endif
