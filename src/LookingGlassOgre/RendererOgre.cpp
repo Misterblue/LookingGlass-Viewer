@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include "LGLocking.h"
 #include "RendererOgre.h"
 #include "LookingGlassOgre.h"
@@ -324,7 +325,7 @@ namespace LG {
 		Ogre::String rsystem = LG::GetParameter("Renderer.Ogre.Renderer");
 		Ogre::RenderSystem* rs = m_root->getRenderSystemByName(rsystem);
 		if (rs == NULL) {
-			LG::Log("RendererOgre::configureOgreRenderingSystem: CANNOT INITIALIZE RENDERING SYSTEM '%s'", rsystem);
+			LG::Log("RendererOgre::configureOgreRenderingSystem: CANNOT INITIALIZE RENDERING SYSTEM '%s'", rsystem.c_str());
 			return;
 		}
 		m_root->setRenderSystem(rs);
@@ -920,12 +921,13 @@ void RendererOgre::MakeParentDir(const Ogre::String filename) {
 		}
 	}
 #else
-	int iResult = mkdir(dirName.c_str(), 0664);			// try to make the directory
+	// try to make the directory
+	int iResult = mkdir(dirName.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 	if (iResult != 0) {							// if it couldn't be made
 		if (errno == ENOENT) {					// if it couldn't make because no parents
 			// LG::Log("RendererOgre::MakeParentDir: recursing for %s", dirName.c_str());
 			MakeParentDir(dirName);				// create the parent directory
-			mkdir(dirName.c_str(), 0664);		// make the directory this time
+			mkdir(dirName.c_str(), S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH);// make the directory this time
 		}
 	}
 #endif
