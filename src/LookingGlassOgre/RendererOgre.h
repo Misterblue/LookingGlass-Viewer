@@ -68,11 +68,11 @@ public:
 	void AdvanceCamera(const Ogre::FrameEvent&);
 
 	void AddEntity(Ogre::SceneManager*, Ogre::SceneNode*, const char*, const char*);
-	Ogre::SceneNode* RendererOgre::CreateSceneNode(const char* nodeName,
+	Ogre::SceneNode* CreateSceneNode(const char* nodeName,
 					Ogre::SceneNode* parentNode, bool inheritScale, bool inheritOrientation,
 					float px, float py, float pz, float sx, float sy, float sz,
 					float ow, float ox, float oy, float oz);
-	Ogre::SceneNode* RendererOgre::CreateSceneNode(Ogre::SceneManager* sceneMgr, const char* nodeName,
+	Ogre::SceneNode* CreateSceneNode(Ogre::SceneManager* sceneMgr, const char* nodeName,
 					Ogre::SceneNode* parentNode, bool inheritScale, bool inheritOrientation,
 					float px, float py, float pz, float sx, float sy, float sz,
 					float ow, float ox, float oy, float oz);

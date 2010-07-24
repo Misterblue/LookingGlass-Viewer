@@ -182,7 +182,7 @@ void OLMaterialTracker::MarkMaterialModified(const Ogre::String materialName) {
 	bool found = false;
 	std::list<Ogre::String>::const_iterator li;
 	for (li = m_materialsModified.begin(); li != m_materialsModified.end(); li++) {
-		if (materialName == li._Ptr->_Myval) {
+		if (materialName == *li) {
 			found = true;
 			break;
 		}
@@ -210,7 +210,7 @@ void OLMaterialTracker::MarkTextureModified(const Ogre::String materialName, boo
 	bool found = false;
 	std::list<Ogre::String>::const_iterator li;
 	for (li = m_texturesModified.begin(); li != m_texturesModified.end(); li++) {
-		if (taggedName == li._Ptr->_Myval) {
+		if (taggedName == *li) {
 			found = true;
 			break;
 		}

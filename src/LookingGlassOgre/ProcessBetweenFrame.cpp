@@ -846,7 +846,7 @@ void ProcessBetweenFrame::ProcessWorkItems(int millisToProcess) {
 			/*
 			std::list<GenericQc*>::iterator li;
 			for (li = m_betweenFrameWork.begin(); li != m_betweenFrameWork.end(); li++) {
-				li._Ptr->_Myval->RecalculatePriority();
+				(*li)->RecalculatePriority();
 			}
 			*/
 			// sort the items so high priority is at the start

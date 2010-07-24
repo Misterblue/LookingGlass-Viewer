@@ -136,8 +136,8 @@ void ProcessAnyTime::QueueWork(GenericPc* wi) {
 		// There will be duplicate requests for things. If we already have a request, delete the old
 		std::list<GenericPc*>::iterator li;
 		for (li = m_work.begin(); li != m_work.end(); li++) {
-			if (li._Ptr->_Myval->uniq.length() != 0) {
-				if (wi->uniq == li._Ptr->_Myval->uniq) {
+			if ((*li)->uniq.length() != 0) {
+				if (wi->uniq == (*li)->uniq) {
 					m_work.erase(li);
 					LG::IncStat(LG::StatProcessAnyTimeDiscardedDups);
 				}

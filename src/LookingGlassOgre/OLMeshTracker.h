@@ -212,7 +212,9 @@ private:
 
 	bool m_shouldQueueMeshOperations;	// false if not to queue. Just do it.
 
+#if OGRE_THREAD_SUPPORT > 0
 	LGLOCK_THREAD m_processingThread;
+#endif
 	static void ProcessThreadRoutine();
 
 	Ogre::String m_cacheDir; 

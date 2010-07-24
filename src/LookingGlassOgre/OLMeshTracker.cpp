@@ -72,8 +72,8 @@ OLMeshTracker::OLMeshTracker() {
 	m_processingThread = LGLOCK_ALLOCATE_THREAD(&ProcessThreadRoutine);
 #else
 	LG::GetOgreRoot()->addFrameListener(this);
-	LGLOCK_THREAD_INITIALIZED;
 #endif
+	LGLOCK_THREAD_INITIALIZED;
 	LG::OLMeshTracker::KeepProcessing = true;
 }
 OLMeshTracker::~OLMeshTracker() {
