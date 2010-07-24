@@ -118,7 +118,7 @@ namespace LG {
 
 	// As an alternate to using the above rendering thread entry, the main
 	// program can call this to render each frame.
-	// Note that his also called the message pump to make screen resizing and
+	// Note that this also calls the message pump to make screen resizing and
 	// movement happen on the Ogre frame.
 	// If the passed parameter is 'true' we call the windows message pump
 	// and the number of ms this frame should take. We do between frame work
