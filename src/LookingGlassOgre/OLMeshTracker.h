@@ -127,8 +127,8 @@ public:
 		GenericQm* ret = NULL;
 		std::list<GenericQm*>::iterator li;
 		for (li = m_workQueue.begin(); li != m_workQueue.end(); li++) {
-			if (nam == li._Ptr->_Myval->uniq) {
-				ret = li._Ptr->_Myval;
+			if (nam == (*li)->uniq) {
+				ret = *li;
 				break;
 			}
 		}
@@ -140,8 +140,8 @@ public:
 	void Remove(Ogre::String nam) {
 		std::list<GenericQm*>::iterator li;
 		for (li = m_workQueue.begin(); li != m_workQueue.end(); li++) {
-			if (nam == li._Ptr->_Myval->uniq) {
-				GenericQm* found = li._Ptr->_Myval;
+			if (nam == (*li)->uniq) {
+				GenericQm* found = *li;
 				m_workQueue.erase(li);
 				delete(found);
 				break;
