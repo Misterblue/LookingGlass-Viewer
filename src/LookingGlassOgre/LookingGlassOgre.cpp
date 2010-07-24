@@ -23,7 +23,7 @@
 
 // LookingGlassOgre.cpp : Defines the exported functions for the DLL application.
 
-#include "stdafx.h"
+// #include "stdafx.h"
 #include <stdarg.h>
 #include "LookingGlassOgre.h"
 #include "RegionTracker.h"

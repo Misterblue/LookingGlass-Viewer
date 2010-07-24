@@ -29,7 +29,7 @@ the actual file access part of a mesh load (the call to mesh->prepare()) be
 done outside the frame rendering thread.
 */
 
-#include "stdafx.h"
+// #include "stdafx.h"
 #include <stdarg.h>
 #include "ProcessAnyTime.h"
 #include "LookingGlassOgre.h"
