@@ -229,7 +229,7 @@ public class RestHandler : IDisposable {
 
     private OMVSD.OSDMap MapizeTheBody(string body) {
         OMVSD.OSDMap retMap = new OMVSD.OSDMap();
-        if (body.Substring(0, 1).Equals("{")) { // kludge test for JSON formatted body
+        if (body.Length > 0 && body.Substring(0, 1).Equals("{")) { // kludge test for JSON formatted body
             try {
                 retMap = (OMVSD.OSDMap)OMVSD.OSDParser.DeserializeJson(body);
             }

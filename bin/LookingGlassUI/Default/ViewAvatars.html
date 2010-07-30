@@ -18,6 +18,7 @@ $(document).ready(function() {
     // other buttons cause their actions
     $("#LGNavTeleportButton").click(DoTeleport);
     $("#LGNavLogoutButton").click(DoLogout);
+    $("#LGNavExitButton").click(DoExit);
 
     // Major divisions in the content accordioning
     $('.LGSectionContent').hide('slow');
@@ -123,7 +124,7 @@ function TimerAvatarStuff() {
 }
 
 function DoTeleport() {
-    var teleParms = {};
+    var teleParms = new Object;
     teleParms['DESTINATION'] = $('#LGNavDestinationText').text;
     $.post(BASEURL + "/api/LLLP/connect/teleport", teleParms);
     return false;
@@ -131,6 +132,11 @@ function DoTeleport() {
 
 function DoLogout() {
     $.post(BASEURL + "/api/LLLP/connect/logout", {});
+    return false;
+}
+
+function DoExit() {
+    $.post(BASEURL + "/api/LLLP/connect/exit", {});
     return false;
 }
 
@@ -229,6 +235,7 @@ function TimerStatStuff() {
     <input id="LGNavDestinationText" type="text" name="DESTINATION" size="20"/>
     <input id="LGNavTeleportButton" type="button" value="Teleport"/>
     <input id="LGNavLogoutButton" type="button" value="Logout"/>
+    <input id="LGNavExitButton" type="button" value="Exit"/>
 </div>
 </form>
 </div>  <!-- LGNavigation -->

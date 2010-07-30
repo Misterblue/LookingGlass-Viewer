@@ -130,6 +130,9 @@ public class CommLLLPRest : ModuleBase, IRestUser {
             case "/logout":
                 ret = PostActionLogout(body);
                 break;
+            case "/exit":
+                ret = PostActionExit(body);
+                break;
             default:
                 m_log.Log(LogLevel.DBADERROR, "UNKNOWN ACTION: " + uri.ToString());
                 ret.Add(RestHandler.RESTREQUESTERRORCODE, new OMVSD.OSDInteger(1));
@@ -197,6 +200,12 @@ public class CommLLLPRest : ModuleBase, IRestUser {
     private OMVSD.OSDMap PostActionLogout(OMVSD.OSD body) {
         OMVSD.OSDMap ret = new OMVSD.OSDMap();
         m_comm.Disconnect();
+        return ret;
+    }
+
+    private OMVSD.OSDMap PostActionExit(OMVSD.OSD body) {
+        OMVSD.OSDMap ret = new OMVSD.OSDMap();
+        LGB.KeepRunning = false;
         return ret;
     }
 }
