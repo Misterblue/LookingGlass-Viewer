@@ -590,6 +590,7 @@ namespace LG {
 		if (m_sceneMgr->hasSceneNode(entName)) {
 			Ogre::SceneNode* sceneNode = m_sceneMgr->getSceneNode(entName);
 			if (updatePosition) {
+				// LG::Log("UpdateSceneNode: POSITION: <%f, %f, %f> %s", px, py, pz, entName);
 				// sceneNode->setPosition(px, py, pz);
 				LG::AnimTracker::Instance()->MoveToPosition(Ogre::String(entName), Ogre::Vector3(px, py, pz), pduration);
 			}

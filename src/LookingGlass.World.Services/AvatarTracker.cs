@@ -76,6 +76,7 @@ public class AvatarTracker : IAvatarTrackerService, IModule {
         m_world.OnAgentNew += new WorldAgentNewCallback(World_OnAgentNew);
         m_world.OnAgentRemoved += new WorldAgentRemovedCallback(World_OnAgentRemoved);
         m_world.OnWorldEntityNew += new WorldEntityNewCallback(World_OnWorldEntityNew);
+        m_world.OnWorldEntityUpdate += new WorldEntityUpdateCallback(World_OnWorldEntityUpdate);
         m_world.OnWorldEntityRemoved += new WorldEntityRemovedCallback(World_OnWorldEntityRemoved);
         return true;
     }
@@ -118,6 +119,21 @@ public class AvatarTracker : IAvatarTrackerService, IModule {
             // this new entity is an avatar. If we don't know it already, remember same
             lock (m_avatars) {
                 if (!m_avatars.ContainsKey(av.Name.Name)) {
+                    LogManager.Log.Log(LogLevel.DUPDATEDETAIL, "AvatarTracker. Tracking avatar {0}", av.Name.Name );
+                    m_avatars.Add(av.Name.Name, av);
+                }
+            }
+        }
+        return;
+    }
+
+    void World_OnWorldEntityUpdate(IEntity ent, UpdateCodes what) {
+        IEntityAvatar av;
+        if (ent.TryGet<IEntityAvatar>(out av)) {
+            // this new entity is an avatar. If we don't know it already, remember same
+            lock (m_avatars) {
+                if (!m_avatars.ContainsKey(av.Name.Name)) {
+                    LogManager.Log.Log(LogLevel.DUPDATEDETAIL, "AvatarTracker. Update Tracking avatar {0}", av.Name.Name );
                     m_avatars.Add(av.Name.Name, av);
                 }
             }
