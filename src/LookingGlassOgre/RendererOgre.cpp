@@ -556,7 +556,8 @@ namespace LG {
 			node->setInheritScale(inheritScale);
 			node->setInheritOrientation(inheritOrientation);
 			node->setScale(sx, sy, sz);
-			node->translate(px, py, pz);
+			node->setPosition(px, py, pz);
+			// node->translate(px, py, pz);
 			node->rotate(rot);
 			node->setVisible(true);
 			node->setInitialState();
@@ -595,10 +596,11 @@ namespace LG {
 				LG::AnimTracker::Instance()->MoveToPosition(Ogre::String(entName), Ogre::Vector3(px, py, pz), pduration);
 			}
 			if (updateScale) {
+				LG::Log("UpdateSceneNode: SCALE: <%f, %f, %f> %s", sx, sy, sz, entName);
 				sceneNode->setScale(sx, sy, sz);
 			}
 			if (updateRotation) {
-				// LG::Log("RendererOgre::UpdateSceneNode: update rotation: w%f, x%f, y%f, z%f", ow, ox, oy, oz);
+				// LG::Log("RendererOgre::UpdateSceneNode: ROTATION: w%f, x%f, y%f, z%f", ow, ox, oy, oz);
 				// sceneNode->setOrientation(ow, ox, oy, oz);
 				LG::AnimTracker::Instance()->Rotate(Ogre::String(entName), 
 							Ogre::Quaternion(ow, ox, oy, oz), oduration);

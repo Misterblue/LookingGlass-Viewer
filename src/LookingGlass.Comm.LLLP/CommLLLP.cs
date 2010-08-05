@@ -124,6 +124,9 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
     public const string FIELDPOSITIONY = "positiony";
     public const string FIELDPOSITIONZ = "positionz";
 
+    // If true, hold children objects until parent is available
+    protected bool m_shouldHoldChildren = false;
+
     protected IAgent m_myAgent = null;
     protected IAgent MainAgent {
         get {
@@ -268,6 +271,9 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         ModuleParams.AddDefaultParameter(ModuleName + ".Texture.MaxRequests", 
                     "4",
                     "Maximum number of outstanding textures requests");
+        ModuleParams.AddDefaultParameter(ModuleName + ".Settings.ShouldHoldChildren",
+                    "false",
+                    "Whether to hold objects if the parent doesn't exist");
         ModuleParams.AddDefaultParameter(ModuleName + ".Settings.MultipleSims",
                     "false",
                     "Wether to connect to multiple sims");
@@ -611,6 +617,8 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
     */
 
     public bool AfterAllModulesLoaded() {
+        m_shouldHoldChildren = ModuleParams.ParamBool(ModuleName + ".Settings.ShouldHoldChildren");
+
         // make my connections for the communication events
         OMV.GridClient gc = m_client;
 
@@ -808,8 +816,11 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
 
     // return 'true' is the parent of this id exists in the world
     private bool ParentExists(LLRegionContext regionContext, uint parentID) {
-        // if (4 == 4) return true;    // DEBUG: disable to force work into renderer
+        // if shouldn't be holding anything, fake like the parent is always here
+        if (!m_shouldHoldChildren) return true;
+        // if we don't need a parent no need to check
         if (parentID == 0) return true; // if no parent say we have the parent
+        // see if the parent is known
         IEntity parentEntity = null;
         regionContext.TryGetEntityLocalID(parentID, out parentEntity);
         return (parentEntity != null);
