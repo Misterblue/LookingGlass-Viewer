@@ -32,6 +32,10 @@ using LookingGlass.World;
 using OMV = OpenMetaverse;
 
 namespace LookingGlass.Renderer.Map {
+    /// <summary>
+    /// A renderer that will someday make map pages of the sim.
+    /// At the moment it's just a null renderer.
+    /// </summary>
 public class RendererMap : IModule, IRenderProvider {
     private ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
 

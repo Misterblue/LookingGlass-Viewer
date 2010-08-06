@@ -216,7 +216,7 @@ void OLMaterialTracker::MarkTextureModified(const Ogre::String materialName, boo
 		}
 	}
 	if (!found) {
-		m_materialsModified.push_back(taggedName);
+		m_texturesModified.push_back(taggedName);
 	}
 	modifiedLock.Unlock();
 }

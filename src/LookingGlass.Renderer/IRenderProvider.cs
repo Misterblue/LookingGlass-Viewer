@@ -57,7 +57,7 @@ namespace LookingGlass.Renderer {
             parentEntity = null;
             position = OMV.Vector3.Zero;
             rotation = new OMV.Quaternion(0f, 0f, 0f, 0f);
-            scale = OMV.Vector3.Zero;
+            scale = new OMV.Vector3(1f, 1f, 1f);
         }
     }
 

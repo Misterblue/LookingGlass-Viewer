@@ -40,9 +40,12 @@ namespace LookingGlass.Comm.LLLP {
     /// values as well as the current state of the connection.
     /// This handles the following REST operations:
     /// GET http://127.0.0.0:port/api/LLLP/ : returns the JSON of the comm parameter block
-    /// POST http://127.0.0.1:port/api/LLLP/connection/login : take JSON body as parameters to use to login
+    /// POST http://127.0.0.1:port/api/LLLP/connection/login    : take JSON body as parameters to use to login
     ///    parameters are: LOGINFIRST, LOGINLAST, LOGINPASS, LOGINGRID, LOGINSIM
-    /// POST http://127.0.0.1:port/api/LLLP/connection/logout : perform a logout
+    /// POST http://127.0.0.1:port/api/LLLP/connection/logout   : perform a logout
+    /// POST http://127.0.0.1:port/api/LLLP/connection/exit     : exit the application
+    /// POST http://127.0.0.1:port/api/LLLP/connection/teleport : teleport the user
+    ///    parameter is DESTINATION
     /// </summary>
 public class CommLLLPRest : ModuleBase, IRestUser {
     private ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);

@@ -417,6 +417,7 @@ void OLMeshTracker::DoReload(Ogre::MeshPtr meshP) {
 		return;
 	}
 	LGLOCK_ALOCK trackerLock;
+	meshP->unload();	// DEBUG
 	trackerLock.Lock(MeshTrackerLock);
 	// check to see if in unloaded list, if so, remove it and claim success
 	Ogre::String meshName = meshP->getName();

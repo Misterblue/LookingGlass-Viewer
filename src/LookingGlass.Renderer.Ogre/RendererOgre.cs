@@ -252,7 +252,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         m_statTexturesRequested = m_stats.GetCounter("TexturesRequested");
         m_statSharableTotal = m_stats.GetCounterValue("TotalMeshes", delegate() { return (long)prebuiltMeshes.Count; });
         m_statRequestedMeshes = m_stats.GetCounterValue("RequestedMeshes", delegate() { return (long)m_requestedMeshes.Count; });
-        m_statRequestedMeshes = m_stats.GetCounterValue("RequestedMeshes", delegate() {
+        m_statRequestedMeshes = m_stats.GetCounterValue("PrebuiltMeshes", delegate() {
             return (long)RenderPrim.prebuiltMeshes.Count;
         });
         m_statShareInstances = m_stats.GetCounter("TotalSharedInstances");
