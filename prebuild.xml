@@ -143,6 +143,7 @@
       <Reference name="OpenMetaverse.dll"/>
       <Reference name="OpenMetaverseTypes.dll"/>
       <Reference name="OpenMetaverse.StructuredData.dll"/>
+      <Reference name="CSJ2K.dll"/>
       <Files>
         <Match pattern="*.cs" recurse="false"/>
       </Files>
