@@ -612,21 +612,36 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                 ent.RegisterInterface<IWorldRenderConv>(RendererOgreLL.Instance);
             }
             // Depending on type, add a creation/management interface
-            IEntityAvatar av;
-            if (ent.TryGet<IEntityAvatar>(out av)) {
-                // if it is an avatar, add the management routines
-                ent.RegisterInterface<IRenderEntity>(new RenderAvatar(this, ent));
-            }
-            else {
-                IAttachment atch;
-                if (ent.TryGet<IAttachment>(out atch)) {
-                    ent.RegisterInterface<IRenderEntity>(new RenderAttach(this, ent));
+            // If it doesn't have a rendering entity, see about adding one
+            IRenderEntity re;
+            if (!ent.TryGet<IRenderEntity>(out re)) {
+                IEntityAvatar av;
+                if (ent.TryGet<IEntityAvatar>(out av)) {
+                    // if it is an avatar, add the management routines
+                    ent.RegisterInterface<IRenderEntity>(new RenderAvatar(this, ent));
                 }
                 else {
-                    // It's just a prim. Add it's management routines
-                    RenderPrim rprim;
-                    if (!ent.TryGet<RenderPrim>(out rprim)) {
-                        ent.RegisterInterface<IRenderEntity>(new RenderPrim(this, ent));
+                    IAttachment atch;
+                    if (ent.TryGet<IAttachment>(out atch)) {
+                        ent.RegisterInterface<IRenderEntity>(new RenderAttach(this, ent));
+                    }
+                    else {
+                        ISpecialRender sprend;
+                        if (ent.TryGet<ISpecialRender>(out sprend)) {
+                            if (sprend.Type == SpecialRenderTypes.Foliage) {
+                                ent.RegisterInterface<IRenderEntity>(new RenderFoliage(this, ent));
+                            }
+                            else {
+                                // ent.RegisterInterface<IRenderEntity>(new RenderParticles(this, ent));
+                            }
+                        }
+                        else {
+                            // It's just a prim. Add it's management routines
+                            RenderPrim rprim;
+                            if (!ent.TryGet<RenderPrim>(out rprim)) {
+                                ent.RegisterInterface<IRenderEntity>(new RenderPrim(this, ent));
+                            }
+                        }
                     }
                 }
             }

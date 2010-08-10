@@ -13,7 +13,7 @@
 
 // ====================================================
 // "Viewer.Parameters": "xx",
-"ViewerWindow.FramesPerSec": "15",
+"ViewerWindow.FramesPerSec": "25",
 
 // ====================================================
 "Renderer.Ogre.Renderer": "OpenGL Rendering Subsystem",
@@ -31,7 +31,7 @@
 // "Renderer.Ogre.Sky": "SkyX",
 
 // ====================================================
-"Comm.Texture.MaxRequests": "15",
+"Comm.Texture.MaxRequests": "32",
 "Comm.Settings.MultipleSims": "false",
 
 // ====================================================

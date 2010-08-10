@@ -794,15 +794,27 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
                 args.Prim.LocalID, args.Prim.Position.ToString(), args.Prim.Rotation.ToString());
             try {
                 if (rcontext.TryGetCreateEntityLocalID(args.Prim.LocalID, out updatedEntity, delegate() {
+                            // code called to create the entry if it's not found
                             updateFlags |= UpdateCodes.New;
                             updateFlags |= UpdateCodes.Acceleration | UpdateCodes.AngularVelocity | UpdateCodes.Velocity;
                             return new LLEntityPhysical(rcontext.AssetContext,
-                                            rcontext, args.Simulator.Handle, args.Prim.LocalID, args.Prim);
+                                             rcontext, args.Simulator.Handle, args.Prim.LocalID, args.Prim);
                         }) ) {
                     // new prim created
+                    // If this requires special rendering parameters add those parameters
+                    // At the moment, the only case is foliage
+                    if (args.Prim.PrimData.PCode == OpenMetaverse.PCode.Grass
+                                || args.Prim.PrimData.PCode == OpenMetaverse.PCode.Tree
+                                || args.Prim.PrimData.PCode == OpenMetaverse.PCode.NewTree) {
+                        LLSpecialRenderType srt = new LLSpecialRenderType();
+                        srt.Type = SpecialRenderTypes.Foliage;
+                        srt.FoliageType = args.Prim.PrimData.PCode;
+                        srt.TreeType = args.Prim.TreeSpecies;
+                        updatedEntity.RegisterInterface<ISpecialRender>(srt);
+                    }
+                    // if there are animations for this entity
+                    ProcessEntityAnimation(updatedEntity, ref updateFlags, args.Prim.AngularVelocity);
                 }
-                // if there are animations for this entity
-                ProcessEntityAnimation(updatedEntity, ref updateFlags, args.Prim.AngularVelocity);
                 // send updates for this entity updates
                 ProcessEntityUpdates(updatedEntity, updateFlags);
             }

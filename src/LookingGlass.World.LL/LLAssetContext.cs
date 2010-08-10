@@ -179,7 +179,7 @@ public sealed class LLAssetContext : AssetContextBase {
     }
     private bool ThrottleTextureMakeRequest(DoLaterBase qInstance, Object obinID) {
         OMV.UUID binID = (OMV.UUID)obinID;
-        m_comm.GridClient.Assets.RequestImage(binID, OMV.ImageType.Normal, 101300f, 0, 0, OnACDownloadFinished, false);
+        m_comm.GridClient.Assets.RequestImage(binID, OMV.ImageType.Normal, 1013000f, 0, 0, OnACDownloadFinished, false);
         return true;
     }
     private void ThrottleTextureRequestsComplete() {
