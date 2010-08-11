@@ -50,7 +50,6 @@
 
 // ====================================================
 // Viewer connects to the World and a Renderer
-"Viewer.World.Name": "World",
 "Viewer.Renderer.Name": "Renderer",
 
 // The Renderer needs to know what input system to use

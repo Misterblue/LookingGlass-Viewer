@@ -51,7 +51,6 @@ Plugins.cfg
 resources.cfg
 FreeImage.dll
 CSJ2K.dll
-OpenMetaverse.Http.dll
 OpenMetaverse.StructuredData.dll
 OpenMetaverse.Utilities.dll
 OpenMetaverse.dll
