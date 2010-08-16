@@ -839,21 +839,21 @@ void ProcessBetweenFrame::ProcessWorkItems(int millisToProcess) {
 	// This sort is intended to put the highest priority (ones with lowest numbers) at
 	//   the front of the list for processing first.
 	if (m_modified) {
+		// DEBUG: commented out to keep order of requests
+		/*
 		workItemLock.Lock();
 		if (--repriorityCount < 0) {
 			// periodically ask the items to recalc their priority
 			repriorityCount = 40;
-			/*
 			std::list<GenericQc*>::iterator li;
 			for (li = m_betweenFrameWork.begin(); li != m_betweenFrameWork.end(); li++) {
 				(*li)->RecalculatePriority();
 			}
-			*/
 			// sort the items so high priority is at the start
-			// DEBUG: commented out to keep order of requests
-			// m_betweenFrameWork.sort(XXCompareElements);
+			m_betweenFrameWork.sort(XXCompareElements);
 		}
 		workItemLock.Unlock();
+		*/
 		m_modified = false;
 	}
 	int loopCost = millisToProcess;

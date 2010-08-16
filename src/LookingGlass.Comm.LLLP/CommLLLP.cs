@@ -900,38 +900,40 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         }
         this.m_statObjAttachmentUpdate++;
         m_log.Log(LogLevel.DUPDATEDETAIL, "OnNewAttachment: id={0}, lid={1}", args.Prim.ID.ToString(), args.Prim.LocalID);
-        try {
-            // if new or not, assume everything about this entity has changed
-            UpdateCodes updateFlags = UpdateCodes.FullUpdate;
-            IEntity ent;
-            if (rcontext.TryGetCreateEntityLocalID(args.Prim.LocalID, out ent, delegate() {
-                        IEntity newEnt = new LLEntityPhysical(rcontext.AssetContext,
-                                        rcontext, args.Simulator.Handle, args.Prim.LocalID, args.Prim);
-                        updateFlags |= UpdateCodes.New;
-                        LLAttachment att = new LLAttachment();
-                        newEnt.RegisterInterface<LLAttachment>(att);
-                        string attachmentID = null;
-                        if (args.Prim.NameValues != null) {
-                            foreach (OMV.NameValue nv in args.Prim.NameValues) {
-                                m_log.Log(LogLevel.DCOMMDETAIL, "AttachmentUpdate: ent={0}, {1}->{2}", newEnt.Name, nv.Name, nv.Value);
-                                if (nv.Name == "AttachItemID") {
-                                    attachmentID = nv.Value.ToString();
-                                    break;
+        lock (m_opLock) {
+            try {
+                // if new or not, assume everything about this entity has changed
+                UpdateCodes updateFlags = UpdateCodes.FullUpdate;
+                IEntity ent;
+                if (rcontext.TryGetCreateEntityLocalID(args.Prim.LocalID, out ent, delegate() {
+                            IEntity newEnt = new LLEntityPhysical(rcontext.AssetContext,
+                                            rcontext, args.Simulator.Handle, args.Prim.LocalID, args.Prim);
+                            updateFlags |= UpdateCodes.New;
+                            LLAttachment att = new LLAttachment();
+                            newEnt.RegisterInterface<LLAttachment>(att);
+                            string attachmentID = null;
+                            if (args.Prim.NameValues != null) {
+                                foreach (OMV.NameValue nv in args.Prim.NameValues) {
+                                    m_log.Log(LogLevel.DCOMMDETAIL, "AttachmentUpdate: ent={0}, {1}->{2}", newEnt.Name, nv.Name, nv.Value);
+                                    if (nv.Name == "AttachItemID") {
+                                        attachmentID = nv.Value.ToString();
+                                        break;
+                                    }
                                 }
                             }
-                        }
-                        att.AttachmentID = attachmentID;
-                        att.AttachmentPoint = args.Prim.PrimData.AttachmentPoint;
-                        return newEnt;
-                    }) ) {
+                            att.AttachmentID = attachmentID;
+                            att.AttachmentPoint = args.Prim.PrimData.AttachmentPoint;
+                            return newEnt;
+                        }) ) {
+                }
+                else {
+                    m_log.Log(LogLevel.DBADERROR, "FAILED CREATION OF NEW ATTACHMENT");
+                }
+                ent.Update(updateFlags);
             }
-            else {
-                m_log.Log(LogLevel.DBADERROR, "FAILED CREATION OF NEW ATTACHMENT");
+            catch (Exception e) {
+                m_log.Log(LogLevel.DBADERROR, "FAILED CREATION OF NEW ATTACHMENT: " + e.ToString());
             }
-            ent.Update(updateFlags);
-        }
-        catch (Exception e) {
-            m_log.Log(LogLevel.DBADERROR, "FAILED CREATION OF NEW ATTACHMENT: " + e.ToString());
         }
         return;
     }
@@ -941,20 +943,19 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         LLRegionContext rcontext = FindRegion(args.Simulator);
         OMV.ObjectMovementUpdate update = args.Update;
         this.m_statObjTerseUpdate++;
-        UpdateCodes updateFlags = 0;
-        if (args.Prim.Acceleration != args.Update.Acceleration) updateFlags |= UpdateCodes.Acceleration;
-        if (args.Prim.Velocity != args.Update.Velocity) updateFlags |= UpdateCodes.Velocity;
-        if (args.Prim.AngularVelocity != args.Update.AngularVelocity) updateFlags |= UpdateCodes.AngularVelocity;
-        if (args.Prim.Position != args.Update.Position) updateFlags |= UpdateCodes.Position;
-        if (args.Prim.Rotation != args.Update.Rotation) updateFlags |= UpdateCodes.Rotation;
-        // assume somethings changed no matter what
-        if (update.Avatar) updateFlags |= UpdateCodes.CollisionPlane;
-        if (update.Textures != null) updateFlags |= UpdateCodes.Textures;
-        m_log.Log(LogLevel.DUPDATEDETAIL, "Object update: id={0}, p={1}, r={2}", 
-                update.LocalID, update.Position.ToString(), update.Rotation.ToString());
-
         IEntity updatedEntity = null;
+        UpdateCodes updateFlags = 0;
         lock (m_opLock) {
+            if (args.Prim.Acceleration != args.Update.Acceleration) updateFlags |= UpdateCodes.Acceleration;
+            if (args.Prim.Velocity != args.Update.Velocity) updateFlags |= UpdateCodes.Velocity;
+            if (args.Prim.AngularVelocity != args.Update.AngularVelocity) updateFlags |= UpdateCodes.AngularVelocity;
+            if (args.Prim.Position != args.Update.Position) updateFlags |= UpdateCodes.Position;
+            if (args.Prim.Rotation != args.Update.Rotation) updateFlags |= UpdateCodes.Rotation;
+            if (update.Avatar) updateFlags |= UpdateCodes.CollisionPlane;
+            if (update.Textures != null) updateFlags |= UpdateCodes.Textures;
+            m_log.Log(LogLevel.DUPDATEDETAIL, "Object update: id={0}, p={1}, r={2}", 
+                    update.LocalID, update.Position.ToString(), update.Rotation.ToString());
+
             if (rcontext.TryGetEntityLocalID(update.LocalID, out updatedEntity)) {
                 if ((updateFlags & UpdateCodes.Position) != 0) {
                     updatedEntity.LocalPosition = update.Position;
@@ -966,14 +967,14 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
             else {
                 m_log.Log(LogLevel.DUPDATE, "OnObjectUpdated: can't find local ID {0}. NOT UPDATING", update.LocalID);
             }
-        }
-        if (updatedEntity != null) {
-            if (updatedEntity == this.MainAgent.AssociatedAvatar) {
-                // special update for the agent so it knows there is new info from the network
-                // The real logic to push the update through happens in the IEntityAvatar.Update()
-                this.MainAgent.DataUpdate(updateFlags);
+            if (updatedEntity != null) {
+                if (updatedEntity == this.MainAgent.AssociatedAvatar) {
+                    // special update for the agent so it knows there is new info from the network
+                    // The real logic to push the update through happens in the IEntityAvatar.Update()
+                    this.MainAgent.DataUpdate(updateFlags);
+                }
+                updatedEntity.Update(updateFlags);
             }
-            updatedEntity.Update(updateFlags);
         }
 
         return;
@@ -1246,6 +1247,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
     /// <param name="p3"></param>
     /// <param name="p4"></param>
     private void QueueTilLater(OMV.Simulator sim, CommActionCode cac, Object p1, Object p2, Object p3, Object p4) {
+        // m_log.Log(LogLevel.DCOMMDETAIL, "QueueTilLater: c={0}", cac);
         Object[] parms = { sim, cac, p1, p2, p3, p4 };
         m_waitTilLater.DoLaterInitialDelay(QueueTilLaterDoIt, parms);
         return;
@@ -1254,6 +1256,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
     private bool QueueTilLaterDoIt(DoLaterBase dlb, Object p) {
         Object[] parms = (Object[])p;
         CommActionCode cac = (CommActionCode)parms[1];
+        // m_log.Log(LogLevel.DCOMMDETAIL, "QueueTilLaterDoIt: c={0}", cac);
         RegionAction(cac, parms[2], parms[3], parms[4], parms[5]);
         return true;
     }
@@ -1322,43 +1325,48 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
     }
 
     public void RegionAction(CommActionCode cac, Object p1, Object p2, Object p3, Object p4) {
-        switch (cac) {
-            case CommActionCode.RegionStateChange:
-                // m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: RegionStateChange");
-                // NOTE that this goes straight to the status update routine
-                ((RegionContextBase)p1).Update((World.UpdateCodes)p2);
-                break;
-            case CommActionCode.OnObjectDataBlockUpdated:
-                // m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: OnObjectDataBlockUpdated");
-                Objects_ObjectDataBlockUpdate(p1, (OMV.ObjectDataBlockUpdateEventArgs)p2);
-                break;
-            case CommActionCode.OnObjectUpdated:
-                // m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: OnObjectUpdated");
-                // Objects_OnObjectUpdated((OMV.Simulator)p1, (OMV.ObjectUpdate)p2, (ulong)p3, (ushort)p4);
-                Objects_ObjectUpdate(p1, (OMV.PrimEventArgs)p2);
-                break;
-            case CommActionCode.TerseObjectUpdate:
-                // m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: TerseObjectUpdate");
-                Objects_TerseObjectUpdate(p1, (OMV.TerseObjectUpdateEventArgs)p2);
-                break;
-            case CommActionCode.OnAttachmentUpdate:
-                // m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: OnAttachmentUpdated");
-                Objects_AttachmentUpdate(p1, (OMV.PrimEventArgs)p2);
-                break;
-            case CommActionCode.KillObject:
-                // m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: KillObject");
-                Objects_KillObject(p1, (OMV.KillObjectEventArgs)p2);
-                break;
-            case CommActionCode.OnAvatarUpdate:
-                // m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: AvatarUpdate");
-                Objects_AvatarUpdate(p1, (OMV.AvatarUpdateEventArgs)p2);
-                break;
-            case CommActionCode.OnAvatarAppearance:
-                // m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: AvatarAppearance");
-                Avatars_AvatarAppearance(p1, (OMV.AvatarAppearanceEventArgs)p2);
-                break;
-            default:
-                break;
+        try {
+            switch (cac) {
+                case CommActionCode.RegionStateChange:
+                    // m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: RegionStateChange");
+                    // NOTE that this goes straight to the status update routine
+                    ((RegionContextBase)p1).Update((World.UpdateCodes)p2);
+                    break;
+                case CommActionCode.OnObjectDataBlockUpdated:
+                    // m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: OnObjectDataBlockUpdated");
+                    Objects_ObjectDataBlockUpdate(p1, (OMV.ObjectDataBlockUpdateEventArgs)p2);
+                    break;
+                case CommActionCode.OnObjectUpdated:
+                    // m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: OnObjectUpdated");
+                    // Objects_OnObjectUpdated((OMV.Simulator)p1, (OMV.ObjectUpdate)p2, (ulong)p3, (ushort)p4);
+                    Objects_ObjectUpdate(p1, (OMV.PrimEventArgs)p2);
+                    break;
+                case CommActionCode.TerseObjectUpdate:
+                    // m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: TerseObjectUpdate");
+                    Objects_TerseObjectUpdate(p1, (OMV.TerseObjectUpdateEventArgs)p2);
+                    break;
+                case CommActionCode.OnAttachmentUpdate:
+                    // m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: OnAttachmentUpdated");
+                    Objects_AttachmentUpdate(p1, (OMV.PrimEventArgs)p2);
+                    break;
+                case CommActionCode.KillObject:
+                    // m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: KillObject");
+                    Objects_KillObject(p1, (OMV.KillObjectEventArgs)p2);
+                    break;
+                case CommActionCode.OnAvatarUpdate:
+                    // m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: AvatarUpdate");
+                    Objects_AvatarUpdate(p1, (OMV.AvatarUpdateEventArgs)p2);
+                    break;
+                case CommActionCode.OnAvatarAppearance:
+                    // m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: AvatarAppearance");
+                    Avatars_AvatarAppearance(p1, (OMV.AvatarAppearanceEventArgs)p2);
+                    break;
+                default:
+                    break;
+            }
+        }
+        catch (Exception e) {
+            m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: FAILURE PROCESSING {0}", cac);
         }
     }
     #endregion DELAYED REGION MANAGEMENT

@@ -117,7 +117,7 @@ public class BasicWorkQueue : IWorkQueue {
     private class DoLaterDelegateCaller : DoLaterBase {
         DoLaterCallback m_dlcb;
         Object m_parameters;
-        public DoLaterDelegateCaller(DoLaterCallback dlcb, Object parms) {
+        public DoLaterDelegateCaller(DoLaterCallback dlcb, Object parms) : base() {
             m_dlcb = dlcb;
             m_parameters = parms;
         }

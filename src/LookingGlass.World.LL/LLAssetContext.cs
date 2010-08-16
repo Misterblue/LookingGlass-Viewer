@@ -59,6 +59,7 @@ public sealed class LLAssetContext : AssetContextBase {
     /// <param name="maxrequests"></param>
     public override void InitializeContextFinish() {
         m_comm.GridClient.Settings.MAX_CONCURRENT_TEXTURE_DOWNLOADS = m_maxRequests;
+        m_maxOutstandingTextureRequests = m_maxRequests;
         // m_client.Assets.OnImageReceived += new OMV.AssetManager.ImageReceivedCallback(OnImageReceived);
         m_comm.GridClient.Assets.Cache.ComputeAssetCacheFilename = ComputeTextureFilename;
 
@@ -153,7 +154,7 @@ public sealed class LLAssetContext : AssetContextBase {
     // some routines to throttle the number of outstand textures requetst to see if 
     //  libomv is getting overwhelmed by thousands of requests
     Queue<OMV.UUID> m_textureQueue = new Queue<OpenMetaverse.UUID>();
-    int m_maxOutstandingTextureRequests = 4;
+    int m_maxOutstandingTextureRequests = 32;
     int m_currentOutstandingTextureRequests = 0;
     BasicWorkQueue m_doThrottledTextureRequest = null;
     private void ThrottleTextureRequests(OMV.UUID binID) {

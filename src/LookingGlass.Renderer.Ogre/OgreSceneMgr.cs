@@ -23,6 +23,8 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using LookingGlass.Framework;
+using LookingGlass.Framework.Logging;
 using LookingGlass.World;
 
 namespace LookingGlass.Renderer.Ogr {
@@ -58,6 +60,10 @@ namespace LookingGlass.Renderer.Ogr {
                 bool scale, bool orientation,
                 float px, float py, float pz, float sx, float sy, float sz,
                 float rw, float rx, float ry, float rz) {
+            if (m_sceneMgr == System.IntPtr.Zero) {
+                LogManager.Log.Log(LogLevel.DBADERROR, "OgreSceneMgr.CreateMeshSceneNodeBF: FAIL WITH NO SCENE MANAGER");
+                return false;
+            }
             return Ogr.CreateMeshSceneNodeBF(priority, m_sceneMgr, 
                         EntityNameOgre.ConvertToOgreSceneNodeName(ent.Name),
                         parentNodeName, 
