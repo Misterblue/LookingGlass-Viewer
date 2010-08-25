@@ -154,14 +154,6 @@ public class AppParameters : IAppParameters, IParameterPersist {
         UpdateSilent(key, value);
     }
 
-    public void Update(string key, string value) {
-        UpdateSilent(key, new OMVSD.OSDString(value));
-    }
-
-    public void UpdateSilent(string key, string value) {
-        UpdateSilent(key, new OMVSD.OSDString(value));
-    }
-
     // Note that this does not do the update event thing
     public void UpdateSilent(string key, OMVSD.OSD value) {
         if (m_overrideParams.HasParameter(key)) {

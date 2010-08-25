@@ -64,7 +64,7 @@ namespace LookingGlass.World {
                 OMV.Quaternion xvec = OMV.Quaternion.CreateFromAxisAngle(OMV.Vector3.UnitX, X);
                 xvec.Normalize();
                 // some of the rotation is around Z
-                OMV.Quaternion zvec = OMV.Quaternion.CreateFromAxisAngle(OMV.Vector3.UnitY, Z);
+                OMV.Quaternion zvec = OMV.Quaternion.CreateFromAxisAngle(OMV.Vector3.UnitZ, Z);
                 zvec.Normalize();
                 m_heading = zvec * m_heading;
                 m_heading = m_heading * xvec;

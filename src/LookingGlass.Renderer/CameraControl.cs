@@ -23,6 +23,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using LookingGlass.Framework.Logging;
 using LookingGlass.World;
 using OMV = OpenMetaverse;
 
@@ -125,14 +126,14 @@ public class CameraControl {
     /// <param name="Z"></param>
     public void rotate(float X, float Y, float Z) {
         if (YawFixed) {
-            // some of the rotation is around X
-            OMV.Quaternion xvec = OMV.Quaternion.CreateFromAxisAngle(OMV.Vector3.UnitX, X);
-            xvec.Normalize();
+            // some of the rotation is around local X
+            OMV.Quaternion xvec = OMV.Quaternion.CreateFromAxisAngle(OMV.Vector3.UnitY, -X);
             // some of the rotation is around Z
             OMV.Quaternion zvec = OMV.Quaternion.CreateFromAxisAngle(OMV.Vector3.UnitZ, Z);
-            zvec.Normalize();
-            m_heading = zvec * m_heading;
-            m_heading = m_heading * xvec;
+            // m_heading = m_heading * xvec;
+            m_heading = xvec * m_heading * zvec;
+            // LogManager.Log.Log(LogLevel.DVIEWDETAIL, "CameraControl.rotate: xv={0}, zv={1}, h={2}",
+            //                     xvec, zvec, m_heading);
         }
         else {
             OMV.Quaternion rot = new OMV.Quaternion(X, Y, Z);

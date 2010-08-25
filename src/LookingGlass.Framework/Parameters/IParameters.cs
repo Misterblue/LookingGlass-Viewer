@@ -114,7 +114,6 @@ public interface IParameters {
     /// <param name="key"></param>
     /// <param name="value"></param>
     void Update(string key, OMVSD.OSD value);
-    void Update(string key, string value);
 
     /// <summary>
     /// Update a previously added parameter. This looks for the key
@@ -124,7 +123,6 @@ public interface IParameters {
     /// <param name="key"></param>
     /// <param name="value"></param>
     void UpdateSilent(string key, OMVSD.OSD value);
-    void UpdateSilent(string key, string value);
 
     /// <summary>
     /// Return a string value for a parameter

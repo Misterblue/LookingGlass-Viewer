@@ -62,7 +62,7 @@ public class OSAssetContextCap : AssetContextBase {
         try {
             string maxRequests = World.Instance.Grids.GridParameter(Grids.Current, "OS.AssetServer.MaxRequests");
             if (maxRequests == null) {
-                m_maxOutstandingTextureRequests = 4;
+                m_maxOutstandingTextureRequests = 10;
             }
             else {
                 m_maxOutstandingTextureRequests = Int32.Parse(maxRequests);

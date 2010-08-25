@@ -64,7 +64,7 @@ public class Viewer : ModuleBase, IViewProvider {
         
     // mouse control
     private int m_lastMouseMoveTime = System.Environment.TickCount;
-    private float m_cameraSpeed = 100f;     // world units per second to move
+    private float m_cameraSpeed = 5f;     // world units per second to move
     private float m_cameraRotationSpeed = 0.1f;     // degrees to rotate
     private float m_agentCameraBehind;
     private float m_agentCameraAbove;
@@ -84,7 +84,7 @@ public class Viewer : ModuleBase, IViewProvider {
         ModuleParams.AddDefaultParameter(m_moduleName + ".Renderer.Name", "Renderer", "");
         // todo: make this variable so there can be multiple viewers
 
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Camera.Speed", "10", "Units per second to move camera");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Camera.Speed", "5", "Units per second to move camera");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Camera.RotationSpeed", "0.100", "Degrees to rotate camera");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Camera.ServerFar", "300.0", "Far distance sent to server");
 
@@ -261,7 +261,6 @@ public class Viewer : ModuleBase, IViewProvider {
                     && ((Renderer.UserInterface.LastKeyCode & Keys.Alt) != 0)) {
                 m_log.Log(LogLevel.DVIEWDETAIL, "OnMouseMove: ALT: ");
             }
-                /*
             else if ( ((Renderer.UserInterface.LastKeyCode & Keys.Control) != 0)
                     && ((Renderer.UserInterface.LastKeyCode & Keys.Alt) != 0) ) {
                 // if ALT+CNTL is held down, movement is on view plain
@@ -279,7 +278,6 @@ public class Viewer : ModuleBase, IViewProvider {
                 OMV.Vector3d movement = new OMV.Vector3d( yMove, xMove, 0f);
                 m_mainCamera.GlobalPosition -= movement;
             }
-                 */
             else if ((Renderer.UserInterface.LastMouseButtons & MouseButtons.Left) != 0) {
                     // move the camera around the horizontal (X) and vertical (Z) axis
                     float xMove = (-x * m_cameraRotationSpeed * Constants.DEGREETORADIAN) % Constants.TWOPI;

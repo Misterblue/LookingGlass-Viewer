@@ -136,7 +136,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "File that lists Ogre plugins to load");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.ResourcesFilename", "resources.cfg",
                     "File that lists the Ogre resources to load");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.DefaultNumMipmaps", "4",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.DefaultNumMipmaps", "2",
                     "Default number of mip maps created for a texture (usually 6)");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.CacheDir", Utilities.GetDefaultApplicationStorageDir(null),
                     "Directory to store cached meshs, textures, etc");
@@ -190,7 +190,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                     "True if to force the generation a mesh when first rendered (don't rely on cache)");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.PrebuildMesh", "true",
                     "True if to make sure the mesh exists before creating the scene node");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".ShouldShareMeshes", "true",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".ShouldShareMeshes", "false",
                     "True if to share meshes with similar characteristics");
         ModuleParams.AddDefaultParameter(m_moduleName + ".Ogre.UseShaders", "true",
                     "Whether to use the new technique of using GPU shaders");

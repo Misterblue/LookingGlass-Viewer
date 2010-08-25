@@ -255,7 +255,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         ModuleParams.AddDefaultParameter(ModuleName + ".Assets.CacheDir", 
                     Utilities.GetDefaultApplicationStorageDir(null),
                     "Filesystem location to build the texture cache");
-        ModuleParams.AddDefaultParameter(ModuleName + ".Assets.EnableCaps", "false",
+        ModuleParams.AddDefaultParameter(ModuleName + ".Assets.EnableCaps", "true",
                     "Whether to use the caps asset system if available");
         ModuleParams.AddDefaultParameter(ModuleName + ".Assets.OMVResources",
                     "./LookingGlassResources/openmetaverse_data",
@@ -269,7 +269,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         ModuleParams.AddDefaultParameter(ModuleName + ".Assets.ConvertPNG", "true",
                     "whether to convert incoming JPEG2000 files to PNG files in the cache");
         ModuleParams.AddDefaultParameter(ModuleName + ".Texture.MaxRequests", 
-                    "4",
+                    "10",
                     "Maximum number of outstanding textures requests");
         ModuleParams.AddDefaultParameter(ModuleName + ".Settings.ShouldHoldChildren",
                     "false",
@@ -584,7 +584,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
         this.m_statNetLoginProgress++;
         if (args.Status == OMV.LoginStatus.Success) {
             m_log.Log(LogLevel.DCOMM, "Successful login: {0}", args.Message);
-            m_isConnected = true;
+            // m_isConnected = true;
             m_isLoggedIn = true;
             m_isLoggingIn = false;
             m_loginMsg = args.Message;

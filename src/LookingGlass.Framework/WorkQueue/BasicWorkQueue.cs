@@ -183,9 +183,9 @@ public class BasicWorkQueue : IWorkQueue {
     private void DoItEvenLater(DoLaterBase w) {
         w.timesRequeued++;
         lock (m_doEvenLater) {
-            int nextTime = Math.Min(w.requeueWait * w.timesRequeued, 10000);
+            int nextTime = Math.Min(w.requeueWait * w.timesRequeued, 2000);
             nextTime = Math.Max(nextTime, 100);     // never less than this
-            w.remainingWait = (System.Environment.TickCount  & 0x3fffffff) + nextTime;
+            w.remainingWait = Utilities.TickCount() + nextTime;
             m_doEvenLater.Add(w);
         }
     }
@@ -195,7 +195,7 @@ public class BasicWorkQueue : IWorkQueue {
         while (LookingGlassBase.Instance.KeepRunning) {
             List<DoLaterBase> doneWaiting = null;
             int sleepTime = 200;
-            int now = System.Environment.TickCount & 0x3fffffff;
+            int now = Utilities.TickCount();
             lock (m_doEvenLater) {
                 if (m_doEvenLater.Count > 0) {
                     // remove the last waiting time from each waiter
@@ -223,6 +223,7 @@ public class BasicWorkQueue : IWorkQueue {
                     }
                     sleepTime -= now;
                     sleepTime = Math.Max(sleepTime, 100);
+                    sleepTime = Math.Min(sleepTime, 1000);
                 }
             }
             // if there are some things done waiting, let them free outside the lock

@@ -79,19 +79,10 @@ public class ParameterSet : IParameters, IDisplayable {
         return ret;
     }
 
-
-    public void Update(string key, string value) {
-        Update(key, new OMVSD.OSDString(value));
-    }
-
     public void Update(string key, OMVSD.OSD value) {
         if (InternalUpdate(key, value)) {
             if (OnModifiedCallback != null) OnModifiedCallback(this, key, value);
         }
-    }
-
-    public void UpdateSilent(string key, string value) {
-        UpdateSilent(key, new OMVSD.OSDString(value));
     }
 
     public void UpdateSilent(string key, OMVSD.OSD value) {

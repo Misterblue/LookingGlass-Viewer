@@ -70,6 +70,26 @@ public class MeshmerizerR : OMVR.IRendering {
     }
 
     /// <summary>
+    /// Generates a sculpt mesh structure from a primitive
+    /// </summary>
+    /// <param name="prim">Primitive to generate the mesh from</param>
+    /// <param name="lod">Level of detail to generate the mesh at</param>
+    /// <returns>The generated mesh</returns>
+    public OMVR.SimpleMesh GenerateSimpleSculptMesh(OMV.Primitive prim, Bitmap bits, OMVR.DetailLevel lod) {
+        return null;
+    }
+
+    /// <summary>
+    /// Generates a faced sculpt mesh structure from a primitive
+    /// </summary>
+    /// <param name="prim">Primitive to generate the mesh from</param>
+    /// <param name="lod">Level of detail to generate the mesh at</param>
+    /// <returns>The generated mesh</returns>
+    public OMVR.FacetedMesh GenerateFacetedSculptMesh(OMV.Primitive prim, Bitmap bits, OMVR.DetailLevel lod) {
+        return null;
+    }
+
+    /// <summary>
     /// Generates a a series of faces, each face containing a mesh and
     /// metadata
     /// </summary>
