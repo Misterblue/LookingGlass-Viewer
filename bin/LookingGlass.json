@@ -26,7 +26,7 @@
 "Renderer.Ogre.Visibility.MinDistance": "30",
 "Renderer.Ogre.Visibility.OnlyLargeAfter": "80",
 "Renderer.Ogre.Visibility.Large": "8",
-"Renderer.Ogre.Visibility.Cull.Distance": "true",
+"Renderer.Ogre.Visibility.Cull.Distance": "false",
 "Renderer.Ogre.Visibility.Cull.Frustrum": "false",
 // "Renderer.Ogre.Sky": "SkyX",
 
