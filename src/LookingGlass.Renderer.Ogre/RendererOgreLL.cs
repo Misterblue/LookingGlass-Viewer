@@ -689,8 +689,14 @@ public class RendererOgreLL : IWorldRenderConv {
 
     private void CreateMaterialParameters(IEntity ent, OMV.Primitive prim, int pBase, ref float[] textureParams,
                     int faceNum, out String texName) {
-        OMV.Primitive.TextureEntryFace textureFace = prim.Textures.GetFace((uint)faceNum);
-        CreateMaterialParameters(textureFace, ent, prim, pBase, ref textureParams, faceNum, out texName);
+        try {
+            OMV.Primitive.TextureEntryFace textureFace = prim.Textures.GetFace((uint)faceNum);
+            CreateMaterialParameters(textureFace, ent, prim, pBase, ref textureParams, faceNum, out texName);
+        }
+        catch (Exception e) {
+            m_log.Log(LogLevel.DRENDER, "Exception on face {0} of {1}: {2}", faceNum, prim.ID, e);
+            texName = EntityNameOgre.ConvertToOgreNameX(new EntityName(ent, OMV.Primitive.TextureEntry.WHITE_TEXTURE.ToString()), null);
+        }
         return;
     }
 
