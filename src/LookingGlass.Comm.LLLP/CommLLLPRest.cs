@@ -68,7 +68,7 @@ public class CommLLLPRest : ModuleBase, IRestUser {
     public override void Start() {
         string commName = ModuleParams.ParamString(ModuleName + ".Comm.Name");
         try {
-            m_comm = (CommLLLP)LGB.ModManager.Module(commName);
+            m_comm = (CommLLLP)ModuleManager.Instance.Module(commName);
         }
         catch (Exception e) {
             m_log.Log(LogLevel.DBADERROR, "CommLLLPRest COULD NOT CONNECT TO COMM MODULE NAMED " + commName);

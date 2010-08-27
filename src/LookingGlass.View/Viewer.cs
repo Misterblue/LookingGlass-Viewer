@@ -97,7 +97,7 @@ public class Viewer : ModuleBase, IViewProvider {
     override public bool AfterAllModulesLoaded() {
         m_log.Log(LogLevel.DINIT, "entered AfterAllModulesLoaded()");
 
-        Renderer = (IRenderProvider)LGB.ModManager.Module(ModuleParams.ParamString(m_moduleName + ".Renderer.Name"));
+        Renderer = (IRenderProvider)ModuleManager.Instance.Module(ModuleParams.ParamString(m_moduleName + ".Renderer.Name"));
         if (Renderer == null) {
             m_log.Log(LogLevel.DBADERROR, "UNABLE TO FIND RENDERER!!!! ");
             return false;
@@ -329,8 +329,9 @@ public class Viewer : ModuleBase, IViewProvider {
                 case Keys.Escape:
                     // force the camera to the client position
                     m_log.Log(LogLevel.DVIEWDETAIL, "OnKeypress: ESC: restoring camera position");
-                    m_mainCamera.GlobalPosition = m_trackedAgent.GlobalPosition;
+                    // m_mainCamera.GlobalPosition = m_trackedAgent.GlobalPosition;
                     m_cameraMode = CameraMode.TrackingAgent;
+                    UpdateMainCameraToAgentTracking();
                     break;
             }
         }
@@ -349,10 +350,11 @@ public class Viewer : ModuleBase, IViewProvider {
         m_log.Log(LogLevel.DVIEWDETAIL, "OnAgentNew: ");
         m_trackedAgent = agnt;
         if (m_mainCamera != null) {
-            m_mainCamera.GlobalPosition = agnt.GlobalPosition;
+            m_cameraMode = CameraMode.TrackingAgent;
+            m_mainCamera.AssociatedAgent = agnt;
+            UpdateMainCameraToAgentTracking();
             m_log.Log(LogLevel.DVIEWDETAIL, "OnAgentNew: Camera to {0}, {1}, {2}",
                 m_mainCamera.GlobalPosition.X, m_mainCamera.GlobalPosition.Y, m_mainCamera.GlobalPosition.Z);
-            m_Renderer.UpdateCamera(m_mainCamera);
         }
         return;
     }
@@ -360,37 +362,12 @@ public class Viewer : ModuleBase, IViewProvider {
     private void World_OnAgentUpdate(IAgent agnt, UpdateCodes what) {
         // m_log.Log(LogLevel.DVIEWDETAIL, "OnAgentUpdate: p={0}, h={1}", agnt.GlobalPosition.ToString(), agnt.Heading.ToString());
         if ((what & (UpdateCodes.Rotation | UpdateCodes.Position)) != 0) {
+            // if changing position, update the camera position
             if (m_cameraMode == CameraMode.TrackingAgent) {
                 if ((agnt != null) && (m_mainCamera != null)) {
-                    m_mainCamera.AssociatedAgent = agnt;
+                    // m_mainCamera.AssociatedAgent = agnt;
                     // vector for camera position behind the avatar
-                    /*
-                    // note: coordinates are in LL form: Z up
-                    OMV.Vector3 cameraOffset = new OMV.Vector3(-m_agentCameraBehind, 0, m_agentCameraAbove);
-                    OMV.Quaternion invertHeading = OMV.Quaternion.Inverse(agnt.Heading);
-                    // rotate the vector in the direction the agent is pointing
-                    OMV.Vector3 cameraBehind = cameraOffset * invertHeading;
-                    // create the global offset from the agent's position
-                    OMV.Vector3d globalOffset = new OMV.Vector3d(cameraBehind.X, cameraBehind.Y, cameraBehind.Z);
-                    m_log.Log(LogLevel.DVIEWDETAIL, "OnAgentUpdate: offset={0}, behind={1}, goffset={2}, gpos={3}",
-                        cameraOffset.ToString(), cameraBehind.ToString(), 
-                        globalOffset.ToString(), agnt.GlobalPosition.ToString());
-                    m_mainCamera.Update(agnt.GlobalPosition + globalOffset, agnt.Heading);
-                     */
-                    // OMV.Vector3 cameraOffset = new OMV.Vector3(0, m_agentCameraBehind, m_agentCameraAbove);
-                    OMV.Vector3 cameraOffset = new OMV.Vector3(m_agentCameraBehind, 0, m_agentCameraAbove);
-                    // OMV.Vector3 rotatedOffset = Utilities.RotateVector(agnt.Heading, cameraOffset);
-                    OMV.Vector3 rotatedOffset = cameraOffset * OMV.Quaternion.Inverse(agnt.Heading);
-                    OMV.Vector3d globalRotatedOffset = new OMV.Vector3d(-rotatedOffset.X, rotatedOffset.Y, rotatedOffset.Z);
-                    // 'kludgeOffset' exists because the above calculation doesn't give the right camera position
-                    // Don't know why, but this extra offset is needed
-                    OMV.Vector3d kludgeOffset = new OMV.Vector3d(10d, 10d, 0d);
-                    OMV.Vector3d desiredCameraPosition = agnt.GlobalPosition + globalRotatedOffset + kludgeOffset;
-
-                    m_log.Log(LogLevel.DVIEWDETAIL, "OnAgentUpdate: offset={0}, goffset={1}, cpos={2}, apos={3}",
-                        cameraOffset, globalRotatedOffset, desiredCameraPosition, agnt.GlobalPosition);
-
-                    m_mainCamera.Update(desiredCameraPosition, agnt.Heading);
+                    UpdateMainCameraToAgentTracking();
                 }
             }
         }
@@ -398,6 +375,43 @@ public class Viewer : ModuleBase, IViewProvider {
             m_log.Log(LogLevel.DVIEWDETAIL, "OnAgentUpdate: update code not pos or rot: {0}", what);
         }
         return;
+    }
+
+    private void UpdateMainCameraToAgentTracking() {
+        try {
+            if (m_mainCamera != null && m_mainCamera.AssociatedAgent != null) {
+                IAgent agnt = m_mainCamera.AssociatedAgent;
+                /*
+                // note: coordinates are in LL form: Z up
+                OMV.Vector3 cameraOffset = new OMV.Vector3(-m_agentCameraBehind, 0, m_agentCameraAbove);
+                OMV.Quaternion invertHeading = OMV.Quaternion.Inverse(agnt.Heading);
+                // rotate the vector in the direction the agent is pointing
+                OMV.Vector3 cameraBehind = cameraOffset * invertHeading;
+                // create the global offset from the agent's position
+                OMV.Vector3d globalOffset = new OMV.Vector3d(cameraBehind.X, cameraBehind.Y, cameraBehind.Z);
+                m_log.Log(LogLevel.DVIEWDETAIL, "OnAgentUpdate: offset={0}, behind={1}, goffset={2}, gpos={3}",
+                    cameraOffset.ToString(), cameraBehind.ToString(), 
+                    globalOffset.ToString(), agnt.GlobalPosition.ToString());
+                m_mainCamera.Update(agnt.GlobalPosition + globalOffset, agnt.Heading);
+                 */
+                // OMV.Vector3 cameraOffset = new OMV.Vector3(0, m_agentCameraBehind, m_agentCameraAbove);
+                OMV.Vector3 cameraOffset = new OMV.Vector3(m_agentCameraBehind, 0, m_agentCameraAbove);
+                // OMV.Vector3 rotatedOffset = Utilities.RotateVector(agnt.Heading, cameraOffset);
+                OMV.Vector3 rotatedOffset = cameraOffset * OMV.Quaternion.Inverse(agnt.Heading);
+                OMV.Vector3d globalRotatedOffset = new OMV.Vector3d(-rotatedOffset.X, rotatedOffset.Y, rotatedOffset.Z);
+                // 'kludgeOffset' exists because the above calculation doesn't give the right camera position
+                // Don't know why, but this extra offset is needed
+                OMV.Vector3d kludgeOffset = new OMV.Vector3d(10d, 10d, 0d);
+                OMV.Vector3d desiredCameraPosition = agnt.GlobalPosition + globalRotatedOffset + kludgeOffset;
+
+                m_log.Log(LogLevel.DVIEWDETAIL, "UpdateMainCameraToAgentTracking: offset={0}, goffset={1}, cpos={2}, apos={3}",
+                    cameraOffset, globalRotatedOffset, desiredCameraPosition, agnt.GlobalPosition);
+
+                m_mainCamera.Update(desiredCameraPosition, agnt.Heading);
+            }
+        }
+        catch (Exception e) {
+        }
     }
 
     private void World_OnAgentRemoved(IAgent agnt) {

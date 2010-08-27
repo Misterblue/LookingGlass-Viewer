@@ -396,7 +396,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
         if (uiModule != null && uiModule.Length > 0) {
             try {
                 m_log.Log(LogLevel.DRENDER, "Loading UI processor '{0}'", uiModule);
-                m_userInterface = (IUserInterfaceProvider)LGB.ModManager.Module(uiModule);
+                m_userInterface = (IUserInterfaceProvider)ModuleManager.Instance.Module(uiModule);
                 if (m_userInterface == null) {
                     m_log.Log(LogLevel.DBADERROR, "FATAL: Could not find user interface class {0}", uiModule);
                     return false;

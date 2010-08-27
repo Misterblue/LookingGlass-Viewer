@@ -1397,7 +1397,7 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
             }
         }
         catch (Exception e) {
-            m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: FAILURE PROCESSING {0}", cac);
+            m_log.Log(LogLevel.DCOMMDETAIL, "RegionAction: FAILURE PROCESSING {0}: {1}", cac, e);
         }
     }
     #endregion DELAYED REGION MANAGEMENT

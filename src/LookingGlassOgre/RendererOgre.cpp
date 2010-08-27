@@ -548,7 +548,7 @@ namespace LG {
 
 		try {
 			if (parentNode == 0) {
-				node = sceneMgr->getRootSceneNode()->createChildSceneNode(nodeName);
+				node = m_sceneMgr->getRootSceneNode()->createChildSceneNode(nodeName);
 			}
 			else {
 				node = parentNode->createChildSceneNode(nodeName);

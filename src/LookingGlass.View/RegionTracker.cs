@@ -77,7 +77,7 @@ protected IRenderProvider m_renderer;
         // connect to the world and listen for entity events (there is only one world)
         m_world = World.World.Instance;
         string rendererName = ModuleParams.ParamString(ModuleName + ".Renderer.Name");
-        m_renderer = (IRenderProvider)LGB.ModManager.Module(rendererName);
+        m_renderer = (IRenderProvider)ModuleManager.Instance.Module(rendererName);
         if (ModuleParams.ParamBool(ModuleName + ".Regions.Enable")) {
             m_world.OnWorldRegionNew += new WorldRegionNewCallback(World_OnWorldRegionNew);
             m_world.OnWorldRegionRemoved += new WorldRegionRemovedCallback(World_OnWorldRegionRemoved);

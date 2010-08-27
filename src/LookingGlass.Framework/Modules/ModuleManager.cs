@@ -30,13 +30,19 @@ using OMVSD = OpenMetaverse.StructuredData;
 
 namespace LookingGlass.Framework.Modules {
 
-public class ModuleManager {
+public class ModuleManager : IInstance<ModuleManager> {
     private Dictionary<string, IModule> m_modules;
     private ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
 
     LookingGlassBase m_lgb = null;
 
+    private static ModuleManager m_instance = null;
+    public static ModuleManager Instance {
+        get { return m_instance; }
+    }
+
     public ModuleManager(LookingGlassBase lgbase) {
+        m_instance = this;
         m_modules = new Dictionary<string, IModule>();
         m_lgb = lgbase;
     }

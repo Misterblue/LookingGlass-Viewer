@@ -104,7 +104,7 @@ public class LLChat : IChatProvider, IModule {
 
             // Find the world and connect to same to hear about all the avatars
             String commName = ModuleParams.ParamString(m_moduleName + ".Comm.Name");
-            m_comm = (CommLLLP)LGB.ModManager.Module(commName);
+            m_comm = (CommLLLP)ModuleManager.Instance.Module(commName);
         }
         catch (Exception e) {
             m_log.Log(LogLevel.DBADERROR, "EXCEPTION CONNECTING TO SERVICES: {0}", e);
