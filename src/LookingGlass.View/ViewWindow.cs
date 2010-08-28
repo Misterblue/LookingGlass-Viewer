@@ -99,8 +99,9 @@ public partial class ViewWindow : Form {
     public void LGWindow_Paint(object sender, PaintEventArgs e) {
         try {
             if (this.InvokeRequired) {
-                BeginInvoke((MethodInvoker)delegate() { m_renderer.RenderOneFrame(false, m_frameAllowanceMs); });
-                m_log.Log(LogLevel.DVIEW, "LGWindow_Paint: did BeginInvoke");
+                return; // just wait for the next tick
+                // BeginInvoke((MethodInvoker)delegate() { m_renderer.RenderOneFrame(false, m_frameAllowanceMs); });
+                // m_log.Log(LogLevel.DVIEW, "LGWindow_Paint: did BeginInvoke");
             }
             else {
                 m_renderer.RenderOneFrame(false, m_frameAllowanceMs);
@@ -161,14 +162,14 @@ public partial class ViewWindow : Form {
 
     private void LGWindow_KeyDown(object sender, KeyEventArgs e) {
         if (m_UILink != null) {
-            LogManager.Log.Log(LogLevel.DVIEWDETAIL, "ViewWindow.LGWindow_KeyDown: k={0}", e.KeyCode);
+            // LogManager.Log.Log(LogLevel.DVIEWDETAIL, "ViewWindow.LGWindow_KeyDown: k={0}", e.KeyCode);
             m_UILink.ReceiveUserIO(ReceiveUserIOInputEventTypeCode.KeyPress, (int)e.KeyCode, 0f, 0f);
         }
     }
 
     private void LGWindow_KeyUp(object sender, KeyEventArgs e) {
         if (m_UILink != null) {
-            LogManager.Log.Log(LogLevel.DVIEWDETAIL, "ViewWindow.LGWindow_KeyUp: k={0}", e.KeyCode);
+            // LogManager.Log.Log(LogLevel.DVIEWDETAIL, "ViewWindow.LGWindow_KeyUp: k={0}", e.KeyCode);
             m_UILink.ReceiveUserIO(ReceiveUserIOInputEventTypeCode.KeyRelease, (int)e.KeyCode, 0f, 0f);
         }
     }
