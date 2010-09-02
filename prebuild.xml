@@ -319,6 +319,32 @@
       </Files>
     </Project>
 
+    <Project name="LookingGlass.Renderer.OGL" path="src/LookingGlass.Renderer.OGL" type="Library" frameworkVersion="v3_5">
+      <Configuration name="Debug">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+
+      <ReferencePath>../../bin/</ReferencePath>
+      <Reference name="System"/>
+      <Reference name="System.Core"/>
+      <Reference name="LookingGlass.Framework"/>
+      <Reference name="LookingGlass.Renderer"/>
+      <Reference name="LookingGlass.World"/>
+      <Reference name="OpenMetaverse.dll"/>
+      <Reference name="OpenMetaverse.StructuredData.dll"/>
+      <Reference name="OpenMetaverseTypes.dll"/>
+      <Files>
+        <Match pattern="*.cs" recurse="false"/>
+      </Files>
+    </Project>
+
 
     <Project name="LookingGlass.View" path="src/LookingGlass.View" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">

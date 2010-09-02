@@ -861,6 +861,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     public void RequestMesh(EntityName contextEntity, string meshName) {
         m_log.Log(LogLevel.DRENDERDETAIL, "Request for mesh " + meshName);
         lock (m_requestedMeshes) {
+            // if this mesh was requested was requested more than some time ago, request again
             if (m_requestedMeshes.ContainsKey(meshName)) {
                 if (m_requestedMeshes[meshName] < Utilities.TickCount()) {
                     m_requestedMeshes.Remove(meshName);
@@ -910,9 +911,10 @@ public class RendererOgre : ModuleBase, IRenderProvider {
                         m_meshName, priority);
                 Ogr.RefreshResourceBF(priority, Ogr.ResourceTypeMesh, m_meshName);
             }
-            lock (m_requestedMeshes) {
-                m_requestedMeshes.Remove(m_meshName);
-            }
+            // following code commented out to leave the mesh in the list and let it time out
+            // lock (m_requestedMeshes) {
+            //     m_requestedMeshes.Remove(m_meshName);
+            // }
         }
         catch {
             // an oddity but not fatal

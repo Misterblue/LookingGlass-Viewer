@@ -546,9 +546,15 @@ namespace LG {
 		Ogre::SceneNode* node = NULL;
 		Ogre::Quaternion rot = Ogre::Quaternion(ow, ox, oy, oz);
 
+		if (sceneMgr == 0 || strlen(nodeName) == 0) {
+			// do some asserts
+			LG::Log("NULL SCENEMGR OR NODENAME!! %d", strlen(nodeName));
+			return 0;
+		}
+
 		try {
 			if (parentNode == 0) {
-				node = m_sceneMgr->getRootSceneNode()->createChildSceneNode(nodeName);
+				node = sceneMgr->getRootSceneNode()->createChildSceneNode(nodeName);
 			}
 			else {
 				node = parentNode->createChildSceneNode(nodeName);

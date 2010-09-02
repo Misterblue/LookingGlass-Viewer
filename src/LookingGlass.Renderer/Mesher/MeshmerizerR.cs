@@ -207,7 +207,7 @@ public class MeshmerizerR : OMVR.IRendering {
                 vf.uv3.U = (vf.uv3.U - 0.5f) * 2.0f;
             }
         }
-        if (m_shouldScale) {
+        if (ShouldScaleMesh) {
             newPrim.Scale(prim.Scale.X, prim.Scale.Y, prim.Scale.Z);
         }
 
