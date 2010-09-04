@@ -30,13 +30,14 @@ using System.Threading;
 using System.Windows.Forms;
 using LookingGlass;
 using LookingGlass.Framework.Logging;
+using LookingGlass.Framework.Modules;
+using LookingGlass.Framework.Parameters;
 using LookingGlass.Renderer;
 
 namespace LookingGlass.View {
-public partial class ViewWindow : Form {
+public partial class ViewWindow : Form, IModule, IViewWindow {
     private ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
 
-    private LookingGlassBase m_lgb;
     // private Panel m_renderPanel;
     private IRenderProvider m_renderer;
     private System.Threading.Timer m_refreshTimer;
@@ -48,6 +49,80 @@ public partial class ViewWindow : Form {
     private bool m_MouseIn = false;     // true if mouse is over our window
     private float m_MouseLastX = -3456f;
     private float m_MouseLastY = -3456f;
+
+    #region IModule
+    protected string m_moduleName;
+    public string ModuleName { get { return m_moduleName; } set { m_moduleName = value; } }
+
+    protected LookingGlassBase m_lgb = null;
+    public LookingGlassBase LGB { get { return m_lgb; } }
+
+    public IAppParameters ModuleParams { get { return m_lgb.AppParams; } }
+
+    public ViewWindow() {
+        // default to the class name. The module code can set it to something else later.
+        m_moduleName = System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name;
+    }
+
+    // IModule.OnLoad
+    public virtual void OnLoad(string modName, LookingGlassBase lgbase) {
+        LogManager.Log.Log(LogLevel.DINIT, ModuleName + ".OnLoad()");
+        m_moduleName = modName;
+        m_lgb = lgbase;
+
+        m_lgb.AppParams.AddDefaultParameter("ViewerWindow.Renderer.Name", "Renderer", "The renderer we will get UI from");
+        m_lgb.AppParams.AddDefaultParameter("ViewerWindow.FramesPerSec", "15", "The rate to throttle frame rendering");
+
+        InitializeComponent();
+
+        // find the window and put the handle into the parameters so the rendering system can find it
+        Control[] subControls = this.Controls.Find("LGWindow", true);
+        if (subControls.Length == 1) {
+            Control windowPanel = subControls[0];
+            string wHandle = windowPanel.Handle.ToString();
+            m_log.Log(LogLevel.DRADEGASTDETAIL, "Connecting to external window {0}, w={1}, h={2}",
+                wHandle, windowPanel.Width, windowPanel.Height);
+            LGB.AppParams.AddDefaultParameter("Renderer.Ogre.ExternalWindow.Handle",
+                windowPanel.Handle.ToString(),
+                "The window handle to use for our rendering");
+            LGB.AppParams.AddDefaultParameter("Renderer.Ogre.ExternalWindow.Width",
+                windowPanel.Width.ToString(), "width of external window");
+            LGB.AppParams.AddDefaultParameter("Renderer.Ogre.ExternalWindow.Height",
+                windowPanel.Height.ToString(), "Height of external window");
+        }
+        else {
+            m_log.Log(LogLevel.DBADERROR, "Could not find window control on dialog");
+            throw new Exception("Could not find window control on dialog");
+        }
+    }
+
+    // IModule.AfterAllModulesLoaded
+    public virtual bool AfterAllModulesLoaded() {
+        LogManager.Log.Log(LogLevel.DINIT, ModuleName + ".AfterAllModulesLoaded()");
+        return true;
+    }
+
+    // IModule.Start
+    public virtual void Start() {
+        LogManager.Log.Log(LogLevel.DINIT, "ControlViews.Start(): Initializing ViewWindow");
+        Initialize();
+        Visible = true;
+        Show();
+        return;
+    }
+
+    // IModule.Stop
+    public virtual void Stop() {
+        LogManager.Log.Log(LogLevel.DINIT, "ControlViews.Stop(): Stopping ViewWindow");
+        Shutdown();
+        return;
+    }
+
+    // IModule.PrepareForUnload
+    public virtual bool PrepareForUnload() {
+        return false;
+    }
+    #endregion IModule
 
     public ViewWindow(LookingGlassBase lgbase) {
         m_lgb = lgbase;

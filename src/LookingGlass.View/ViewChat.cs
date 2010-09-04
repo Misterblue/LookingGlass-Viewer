@@ -28,37 +28,80 @@ using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 using LookingGlass.Framework;
+using LookingGlass.Framework.Logging;
+using LookingGlass.Framework.Modules;
 using LookingGlass.Framework.Parameters;
 
 namespace LookingGlass.View {
-    public partial class ViewChat : Form {
-        LookingGlassBase LGB;
+    public partial class ViewChat : Form, IModule, IViewChat {
 
-        public ViewChat(LookingGlassBase llgb) {
-            LGB = llgb;
+    #region IModule
+    protected string m_moduleName;
+    public string ModuleName { get { return m_moduleName; } set { m_moduleName = value; } }
 
-            InitializeComponent();
-            Random rand = new Random();
+    protected LookingGlassBase m_lgb = null;
+    public LookingGlassBase LGB { get { return m_lgb; } }
 
-            string baseURL = LGB.AppParams.ParamString("RestManager.BaseURL");
-            string portNum = LGB.AppParams.ParamString("RestManager.Port");
-            string chatURL = baseURL + ":" + portNum + "/static/ViewChat.html?xx=" + rand.Next(1,999999).ToString();
-            this.WindowChat.Url = new Uri(chatURL);
-            this.WindowChat.ScriptErrorsSuppressed = false;  // DEBUG
-            this.WindowChat.Refresh();
-            this.WindowChat.BringToFront();
+    public IAppParameters ModuleParams { get { return m_lgb.AppParams; } }
+
+    public ViewChat() {
+        // default to the class name. The module code can set it to something else later.
+        m_moduleName = System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name;
+    }
+
+    // IModule.OnLoad
+    public virtual void OnLoad(string modName, LookingGlassBase lgbase) {
+        LogManager.Log.Log(LogLevel.DINIT, ModuleName + ".OnLoad()");
+        m_moduleName = modName;
+        m_lgb = lgbase;
+    }
+
+    // IModule.AfterAllModulesLoaded
+    public virtual bool AfterAllModulesLoaded() {
+        LogManager.Log.Log(LogLevel.DINIT, ModuleName + ".AfterAllModulesLoaded()");
+
+        InitializeComponent();
+        Random rand = new Random();
+
+        string baseURL = LGB.AppParams.ParamString("RestManager.BaseURL");
+        string portNum = LGB.AppParams.ParamString("RestManager.Port");
+        string chatURL = baseURL + ":" + portNum + "/static/ViewChat.html?xx=" + rand.Next(1,999999).ToString();
+        this.WindowChat.Url = new Uri(chatURL);
+        this.WindowChat.ScriptErrorsSuppressed = false;  // DEBUG
+        this.WindowChat.Refresh();
+        this.WindowChat.BringToFront();
+        return true;
+    }
+
+    // IModule.Start
+    public virtual void Start() {
+        this.Initialize();
+        this.Visible = true;
+        return;
+    }
+
+    // IModule.Stop
+    public virtual void Stop() {
+        this.Shutdown();
+        return;
+    }
+
+    // IModule.PrepareForUnload
+    public virtual bool PrepareForUnload() {
+        return false;
+    }
+    #endregion IModule
+
+    public void Initialize() {
+    }
+
+    public void Shutdown() {
+        if (this.InvokeRequired) {
+            BeginInvoke((MethodInvoker)delegate() { this.Close(); });
         }
-
-        public void Initialize() {
-        }
-
-        public void Shutdown() {
-            if (this.InvokeRequired) {
-                BeginInvoke((MethodInvoker)delegate() { this.Close(); });
-            }
-            else {
-                this.Close();
-            }
+        else {
+            this.Close();
         }
     }
+}
 }

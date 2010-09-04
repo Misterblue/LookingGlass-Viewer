@@ -33,8 +33,7 @@ using OMV = OpenMetaverse;
 
 namespace LookingGlass.Renderer.OGL {
     /// <summary>
-    /// A renderer that will someday make map pages of the sim.
-    /// At the moment it's just a null renderer.
+    /// A renderer that renders straight to OpenGL
     /// </summary>
 public class RendererOGL : IModule, IRenderProvider {
     private ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
@@ -58,12 +57,42 @@ public class RendererOGL : IModule, IRenderProvider {
         LogManager.Log.Log(LogLevel.DINIT, ModuleName + ".OnLoad()");
         m_moduleName = modName;
         m_lgb = lgbase;
+        ModuleParams.AddDefaultParameter(m_moduleName + "InputSystem.Name", "WindowUI",
+                    "Name of the input module");
+
+        // parameters used by Control view for selection of dialogs to display
+        // these views should really be modules... TODO someday
+        m_lgb.AppParams.AddDefaultParameter("ControlView.SplashScreen.Enable", "true", "Splash in Radegast");
+        m_lgb.AppParams.AddDefaultParameter("ControlView.WorldView.Enable", "false", "View the world in Radegast");
+        m_lgb.AppParams.AddDefaultParameter("ControlView.AvatarView.Enable", "true", "Disable avatar view in Radegast");
+        m_lgb.AppParams.AddDefaultParameter("ControlView.ChatView.Enable", "true", "Disable avatar view in Radegast");
     }
 
     // IModule.AfterAllModulesLoaded
     public virtual bool AfterAllModulesLoaded() {
         LogManager.Log.Log(LogLevel.DINIT, ModuleName + ".AfterAllModulesLoaded()");
-        m_userInterface = new UserInterfaceNull();
+        // Load the input system we're supposed to be using
+        // The input system is a module tha we get given the name of. Go find it and link it in.
+        String uiModule = ModuleParams.ParamString(m_moduleName + ".InputSystem.Name");
+        if (uiModule != null && uiModule.Length > 0) {
+            try {
+                m_log.Log(LogLevel.DRENDER, "Loading UI processor '{0}'", uiModule);
+                m_userInterface = (IUserInterfaceProvider)ModuleManager.Instance.Module(uiModule);
+                if (m_userInterface == null) {
+                    m_log.Log(LogLevel.DBADERROR, "FATAL: Could not find user interface class {0}", uiModule);
+                    return false;
+                }
+            }
+            catch (Exception e) {
+                m_log.Log(LogLevel.DBADERROR, "FATAL: Could not load user interface class {0}: {1}", uiModule, e.ToString());
+                return false;
+            }
+        }
+        else {
+            m_log.Log(LogLevel.DBADERROR, "Using null user interfare");
+            m_userInterface = new UserInterfaceNull();
+        }
+
         return true;
     }
 

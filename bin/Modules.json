@@ -44,9 +44,24 @@
     },
     // Multiple dialogs are presented to the user. This manages them.
     {   "Assembly": "LookingGlass.View.dll",
-        "Interface": "LookingGlass.View.IControlViewProvider",
-        "Name": "ControlViews",
-        "Order": 80
+        "Interface": "LookingGlass.View.IViewSplash",
+        "Name": "ViewSplash",
+        "Order": 82
+    },
+    {   "Assembly": "LookingGlass.View.dll",
+        "Interface": "LookingGlass.View.IViewAvatar",
+        "Name": "ViewAvatar",
+        "Order": 83
+    },
+    {   "Assembly": "LookingGlass.View.dll",
+        "Interface": "LookingGlass.View.IViewChat",
+        "Name": "ViewChat",
+        "Order": 84
+    },
+    {   "Assembly": "LookingGlass.View.dll",
+        "Interface": "LookingGlass.View.IViewWindow",
+        "Name": "ViewWindow",
+        "Order": 85
     },
     // Regions are tracked for their LOD and loadedness
     {   "Assembly": "LookingGlass.View.dll",
@@ -81,7 +96,7 @@
 // The login REST interface needs to find  the comm system
 "CommLLLPRest.Comm.Name": "Comm",
 
-// The region trackers needs the renderer to keep informed
+// The region trackers needs to know where to track the entities
 "RegionTracker.Renderer.Name": "Renderer",
 
 // The chat service needs the Comm
