@@ -124,13 +124,6 @@ public partial class ViewWindow : Form, IModule, IViewWindow {
     }
     #endregion IModule
 
-    public ViewWindow(LookingGlassBase lgbase) {
-        m_lgb = lgbase;
-        m_lgb.AppParams.AddDefaultParameter("ViewerWindow.Renderer.Name", "Renderer", "The renderer we will get UI from");
-        m_lgb.AppParams.AddDefaultParameter("ViewerWindow.FramesPerSec", "15", "The rate to throttle frame rendering");
-        InitializeComponent();
-    }
-
     // Called after LookingGlass is initialized
     public void Initialize() {
         try {
