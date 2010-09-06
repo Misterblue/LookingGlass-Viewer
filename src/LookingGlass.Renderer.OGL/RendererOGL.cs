@@ -52,7 +52,6 @@ public class RendererOGL : IModule, IRenderProvider {
 
     //Terrain
     public float MaxHeight = 0.1f;
-    public HeightmapLookupValue[] LookupHeightTable;
     public OMV.TerrainPatch[,] Heightmap;
 
     public bool m_wireFrame = false;
@@ -76,7 +75,7 @@ public class RendererOGL : IModule, IRenderProvider {
         LogManager.Log.Log(LogLevel.DINIT, ModuleName + ".OnLoad()");
         m_moduleName = modName;
         m_lgb = lgbase;
-        ModuleParams.AddDefaultParameter(m_moduleName + "InputSystem.Name", "WindowUI",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".InputSystem.Name", "WindowUI",
                     "Name of the input module");
     }
 
@@ -144,12 +143,14 @@ public class RendererOGL : IModule, IRenderProvider {
     public void Render(IEntity ent) {
         if (ent is LLEntityBase) {
             lock (ent) {
+                CreateNewPrim((LLEntityBase)ent);
             }
         }
         return;
     }
 
     private void CreateNewPrim(LLEntityBase ent) {
+        m_log.Log(LogLevel.DRENDERDETAIL, "Create new prim {0}", ent.Name.Name);
         OMV.Primitive prim = ent.Prim;
         if (prim.PrimData.PCode == OMV.PCode.Grass 
                     || prim.PrimData.PCode == OMV.PCode.Tree 
@@ -197,6 +198,9 @@ public class RendererOGL : IModule, IRenderProvider {
                 data.TexCoords[k * 2 + 1] = face.Vertices[k].TexCoord.Y;
             }
 
+            // m_log.Log(LogLevel.DRENDERDETAIL, "CreateNewPrim: v={0}, i={1}, t={2}",
+            //     data.Vertices.GetLength(0), data.Indices.GetLength(0), data.TexCoords.GetLength(0));
+
             // Texture for this face
             if (teFace.TextureID != OMV.UUID.Zero &&
                         teFace.TextureID != OMV.Primitive.TextureEntry.WHITE_TEXTURE) {
@@ -220,16 +224,19 @@ public class RendererOGL : IModule, IRenderProvider {
     }
 
     private void OnTextureDownloadFinished(string textureEntityName, bool hasTransparancy) {
+        m_log.Log(LogLevel.DRENDERDETAIL, "OnTextureDownloadFinished {0}", textureEntityName);
         EntityName entName = new EntityName(textureEntityName);
         OMV.UUID id = new OMV.UUID(entName.ExtractEntityFromEntityName());
 
         TextureInfo info;
-        if (!Textures.TryGetValue(id, out info)) {
-            // Put initial info into the texture list to say it is in the cache
-            // The id of zero will say that the mipmaps need to be generated before the texture is used
-            Textures.Add(id, new TextureInfo(0, hasTransparancy));
+        lock (Textures) {
+            if (!Textures.TryGetValue(id, out info)) {
+                // Put initial info into the texture list to say it is in the cache
+                // The id of zero will say that the mipmaps need to be generated before the texture is used
+                m_log.Log(LogLevel.DRENDERDETAIL, "Adding TextureInfo for {0}:{1}", entName.Name, id.ToString());
+                Textures.Add(id, new TextureInfo(0, hasTransparancy));
+            }
         }
-
 
         try {
             /*
@@ -293,6 +300,12 @@ public class RendererOGL : IModule, IRenderProvider {
     }
 
     public void RenderUpdate(IEntity ent, UpdateCodes what) {
+        m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: {0} for {1}", ent.Name.Name, what);
+        if (ent is LLEntityBase && ((what & UpdateCodes.New) != 0)) {
+            lock (ent) {
+                CreateNewPrim((LLEntityBase)ent);
+            }
+        }
         return;
     }
     public void UnRender(IEntity ent) {

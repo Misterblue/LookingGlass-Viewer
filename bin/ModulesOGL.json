@@ -1,0 +1,108 @@
+{
+"Modules": [
+    // The external control and status interface to the viewer
+    {   "Assembly": "LookingGlass.Rest.dll",
+        "Interface": "LookingGlass.Framework.Modules.IModule",
+        "Name": "RestManager",
+        "Order": 10
+    },
+    // Comm is to LL compatible systems
+    {   "Assembly": "LookingGlass.Comm.LLLP.dll",
+        "Interface": "LookingGlass.Comm.ICommProvider",
+        "Name": "Comm",
+        "Order": 20
+    },
+    // The world. This doesn't change.
+    {   "Assembly": "LookingGlass.World.dll",
+        "Interface": "LookingGlass.World.IWorld",
+        "Name": "World",
+        "Order": 30
+    },
+    // Use the standard viewer of  the world
+    {   "Assembly": "LookingGlass.View.dll",
+        "Interface": "LookingGlass.View.IViewProvider",
+        "Name": "Viewer",
+        "Order": 40
+    },
+    // The user interface used by the 3D view of the world
+    {   "Assembly": "LookingGlass.View.dll",
+        "Interface": "LookingGlass.Renderer.IUserInterfaceProvider",
+        "Name": "WindowUI",
+        "Order": 50
+    },
+    // Use the Ogre renderer
+    {   "Assembly": "LookingGlass.Renderer.OGL.dll",
+        "Interface": "LookingGlass.Renderer.IRenderProvider",
+        "Name": "Renderer",
+        "Order": 60
+    },
+    // The comm provider has a rest interface for logging in, etc
+    {   "Assembly": "LookingGlass.Comm.LLLP.dll",
+        "Interface": "LookingGlass.Rest.IRestUser",
+        "Name": "CommLLLPRest",
+        "Order": 70
+    },
+    // Multiple dialogs are presented to the user. This manages them.
+    {   "Assembly": "LookingGlass.View.dll",
+        "Interface": "LookingGlass.View.IViewSplash",
+        "Name": "ViewSplash",
+        "Order": 82
+    },
+    {   "Assembly": "LookingGlass.View.dll",
+        "Interface": "LookingGlass.View.IViewAvatar",
+        "Name": "ViewAvatar",
+        "Order": 83
+    },
+    {   "Assembly": "LookingGlass.View.dll",
+        "Interface": "LookingGlass.View.IViewChat",
+        "Name": "ViewChat",
+        "Order": 84
+    },
+    {   "Assembly": "LookingGlass.Renderer.OGL.dll",
+        "Interface": "LookingGlass.View.IViewOGL",
+        "Name": "ViewWindow",
+        "Order": 85
+    },
+    // Regions are tracked for their LOD and loadedness
+    {   "Assembly": "LookingGlass.View.dll",
+        "Interface": "LookingGlass.View.IRegionTrackerProvider",
+        "Name": "RegionTracker",
+        "Order": 90
+    },
+    // Information about the avatars in the region
+    {   "Assembly": "LookingGlass.World.Services.dll",
+        "Interface": "LookingGlass.World.Services.IAvatarTrackerService",
+        "Name": "AvatarTracker",
+        "Order": 100
+    },
+    // Chat is made available via a rest interface. This is via LLLP
+    {   "Assembly": "LookingGlass.Comm.LLLP.dll",
+        "Interface": "LookingGlass.Comm.IChatProvider",
+        "Name": "Chat",
+        "Order": 110
+    }
+],
+
+// ====================================================
+// Viewer connects to the World and a Renderer
+"Viewer.Renderer.Name": "Renderer",
+
+// The Renderer needs to know what input system to use
+"Renderer.InputSystem.Name": "WindowUI",
+
+// The view windows needs to connect to the Renderer,
+"ViewerOGL.Renderer.Name": "Renderer",
+
+// The login REST interface needs to find  the comm system
+"CommLLLPRest.Comm.Name": "Comm",
+
+// The region trackers needs to know where to track the entities
+"RegionTracker.Renderer.Name": "Renderer",
+
+// The chat service needs the Comm
+"Chat.Comm.Name": "Comm",
+
+// ====================================================
+"ParameterWithoutAComma2": "Last"
+}
+
