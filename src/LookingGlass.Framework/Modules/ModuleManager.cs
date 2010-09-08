@@ -235,11 +235,7 @@ public class ModuleManager : IInstance<ModuleManager> {
 
         try {
             if (successFlag && AfterAllModulesLoaded()) {
-                Start();
-                successFlag = true;
-            }
-            else {
-                successFlag = false;
+                successFlag = Start();
             }
         }
         catch (Exception e) {
