@@ -333,10 +333,16 @@
       <ReferencePath>../../bin/</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Core"/>
+      <Reference name="System.Data"/>
+      <Reference name="System.Drawing"/>
+      <Reference name="System.Windows.Forms"/>
       <Reference name="LookingGlass.Framework"/>
       <Reference name="LookingGlass.Renderer"/>
       <Reference name="LookingGlass.World"/>
       <Reference name="LookingGlass.World.LL"/>
+      <Reference name="OpenTK.dll"/>
+      <Reference name="OpenTK.Compatibility.dll"/>
+      <Reference name="OpenTK.GLControl.dll"/>
       <Reference name="OpenMetaverse.dll"/>
       <Reference name="OpenMetaverse.StructuredData.dll"/>
       <Reference name="OpenMetaverseTypes.dll"/>
