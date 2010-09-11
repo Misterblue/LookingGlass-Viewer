@@ -53,6 +53,7 @@ public class RendererOGL : IModule, IRenderProvider {
     //Terrain
     public float MaxHeight = 0.1f;
     public OMV.TerrainPatch[,] Heightmap;
+    RegionContextBase m_focusRegion = null;
 
     public bool m_wireFrame = false;
 
@@ -162,6 +163,7 @@ public class RendererOGL : IModule, IRenderProvider {
 
         RenderablePrim render = new RenderablePrim();
         render.Prim = prim;
+        render.acontext = ent.AssetContext;
 
         // FIXME: Handle sculpted prims by calling Render.Plugin.GenerateFacetedSculptMesh() instead
         if (m_meshMaker == null) {
@@ -206,6 +208,8 @@ public class RendererOGL : IModule, IRenderProvider {
                         teFace.TextureID != OMV.Primitive.TextureEntry.WHITE_TEXTURE) {
                 lock (Textures) {
                     if (!Textures.ContainsKey(teFace.TextureID)) {
+                        // temporarily add the entry to the table so we don't request it multiple times
+                        Textures.Add(teFace.TextureID, new TextureInfo(0, true));
                         // We haven't constructed this image in OpenGL yet, get ahold of it
                         AssetContextBase.RequestTextureLoad(
                             EntityNameLL.ConvertTextureWorldIDToEntityName(ent.AssetContext, teFace.TextureID),
@@ -231,71 +235,10 @@ public class RendererOGL : IModule, IRenderProvider {
         TextureInfo info;
         lock (Textures) {
             if (!Textures.TryGetValue(id, out info)) {
-                // Put initial info into the texture list to say it is in the cache
                 // The id of zero will say that the mipmaps need to be generated before the texture is used
                 m_log.Log(LogLevel.DRENDERDETAIL, "Adding TextureInfo for {0}:{1}", entName.Name, id.ToString());
-                Textures.Add(id, new TextureInfo(0, hasTransparancy));
+                info.Alpha = hasTransparancy;
             }
-        }
-
-        try {
-            /*
-            // Load the image off the disk
-            if (success) {
-                //ImageDownload download = TextureDownloader.GetTextureToRender(id);
-                if (OpenJPEG.DecodeToImage(asset.AssetData, out imgData)) {
-                    raw = imgData.ExportRaw();
-
-                    if ((imgData.Channels & OMVI.ManagedImage.ImageChannels.Alpha) != 0)
-                        alpha = true;
-                }
-                else {
-                    success = false;
-                    m_log.Log(LogLevel.DRENDER, "Failed to decode texture {0}", textureEntityName);
-                }
-            }
-
-            // Make sure the OpenGL commands run on the main thread
-            BeginInvoke(
-                   (MethodInvoker)delegate() {
-                       if (success) {
-                           int textureID = 0;
-
-                           try {
-                               Gl.glGenTextures(1, out textureID);
-                               Gl.glBindTexture(Gl.GL_TEXTURE_2D, textureID);
-
-                               Gl.glTexParameteri(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_MIN_FILTER, Gl.GL_LINEAR_MIPMAP_NEAREST); //Gl.GL_NEAREST);
-                               Gl.glTexParameteri(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_MAG_FILTER, Gl.GL_LINEAR);
-                               Gl.glTexParameteri(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_WRAP_S, Gl.GL_REPEAT);
-                               Gl.glTexParameteri(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_WRAP_T, Gl.GL_REPEAT);
-                               Gl.glTexParameteri(Gl.GL_TEXTURE_2D, Gl.GL_GENERATE_MIPMAP, Gl.GL_TRUE); //Gl.GL_FALSE);
-
-                               //Gl.glTexImage2D(Gl.GL_TEXTURE_2D, 0, Gl.GL_RGBA, bitmap.Width, bitmap.Height, 0, Gl.GL_BGRA, Gl.GL_UNSIGNED_BYTE,
-                               //    bitmapData.Scan0);
-                               //int error = Gl.glGetError();
-
-                               int error = Glu.gluBuild2DMipmaps(Gl.GL_TEXTURE_2D, Gl.GL_RGBA, imgData.Width, imgData.Height, Gl.GL_BGRA,
-                                   Gl.GL_UNSIGNED_BYTE, raw);
-
-                               if (error == 0) {
-                                   Textures[id] = new TextureInfo(textureID, alpha);
-                                   m_log.Log(LogLevel.DRENDERDETAIL, "Created OpenGL texture for {0}", id);
-                               }
-                               else {
-                                   Textures[id] = new TextureInfo(0, false);
-                                   m_log.Log(LogLevel.DRENDER, "Error creating OpenGL texture: {0}", error);
-                               }
-                           }
-                           catch (Exception ex) {
-                               Console.WriteLine(ex);
-                           }
-                       }
-                   });
-            */
-        }
-        catch (Exception ex) {
-            m_log.Log(LogLevel.DRENDER, "EXCEPTION decoding texture: {0}", ex);
         }
     }
 
@@ -314,6 +257,12 @@ public class RendererOGL : IModule, IRenderProvider {
 
     // tell the renderer about the camera position
     public void UpdateCamera(CameraControl cam) {
+        if (m_focusRegion != null) {
+            Camera.Position.X = (float)(cam.GlobalPosition.X - m_focusRegion.GlobalPosition.X);
+            Camera.Position.Y = (float)(cam.GlobalPosition.Y - m_focusRegion.GlobalPosition.Y);
+            Camera.Position.Z = (float)(cam.GlobalPosition.Z - m_focusRegion.GlobalPosition.Z);
+            Camera.FocalPoint = new OMV.Vector3(1f, 0f, 0f) * cam.Heading;
+        }
         return;
     }
     public void UpdateEnvironmentalLights(EntityLight sun, EntityLight moon) {
@@ -332,6 +281,7 @@ public class RendererOGL : IModule, IRenderProvider {
 
     // Set one region as the focus of display
     public void SetFocusRegion(RegionContextBase rcontext) {
+        m_focusRegion = rcontext;
         return;
     }
 

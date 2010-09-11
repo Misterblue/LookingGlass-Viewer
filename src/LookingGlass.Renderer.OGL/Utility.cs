@@ -22,6 +22,7 @@
  */
 using System;
 using System.Collections.Generic;
+using LookingGlass.World;
 using OMV = OpenMetaverse;
 using OMVR = OpenMetaverse.Rendering;
 
@@ -37,7 +38,7 @@ namespace LookingGlass.Renderer.OGL {
         // TODO: Normals
     }
 
-    public struct TextureInfo
+    public class TextureInfo
     {
         /// <summary>OpenGL Texture ID</summary>
         public int ID;
@@ -72,6 +73,7 @@ namespace LookingGlass.Renderer.OGL {
     {
         public OMV.Primitive Prim;
         public OMVR.FacetedMesh Mesh;
+        public AssetContextBase acontext;
 
         public readonly static RenderablePrim Empty = new RenderablePrim();
     }

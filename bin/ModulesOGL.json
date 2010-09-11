@@ -59,7 +59,7 @@
         "Order": 84
     },
     {   "Assembly": "LookingGlass.Renderer.OGL.dll",
-        "Interface": "LookingGlass.View.IViewOGL",
+        "Interface": "LookingGlass.Renderer.OGL.IViewOGL",
         "Name": "ViewWindow",
         "Order": 85
     },
@@ -88,7 +88,7 @@
 "Viewer.Renderer.Name": "Renderer",
 
 // The Renderer needs to know what input system to use
-"Renderer.InputSystem.Name": "WindowUI",
+"Renderer.Ogre.InputSystem.Name": "WindowUI",
 
 // The view windows needs to connect to the Renderer,
 "ViewerOGL.Renderer.Name": "Renderer",

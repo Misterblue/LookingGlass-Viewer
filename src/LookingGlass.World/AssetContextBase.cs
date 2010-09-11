@@ -204,13 +204,12 @@ public abstract class AssetContextBase : IDisposable {
     /// get the cached name of teh file. There is also a check for the hostname 'preload'
     /// to see if it is something known to exist in the preloaded directory.
     /// </summary>
-    /// <param name="ent">Context entity</param>
     /// <param name="resource">Name of resource to check</param>
     /// <returns>true if cached, false otherwise</returns>
-    public virtual bool CheckIfCached(IEntity contextEntity, EntityName resource) {
+    public virtual bool CheckIfCached(EntityName resource) {
         bool ret = false;
         try {
-            string meshFilename = Path.Combine(contextEntity.AssetContext.CacheDirBase, resource.CacheFilename);
+            string meshFilename = Path.Combine(this.CacheDirBase, resource.CacheFilename);
             if (File.Exists(meshFilename)) {
                 ret = true;
             }

@@ -118,7 +118,7 @@ class RenderPrim : IRenderEntity {
                     // we're forcing the build.
                     if ((m_shouldPrebuildMesh || m_shouldForceMeshRebuild) && !m_hasMesh) {
                         // way kludgy... but we see if the cached mesh file exists and, if so, we don't need to rebuild
-                        if (!m_shouldForceMeshRebuild && m_ent.AssetContext.CheckIfCached(m_ent, entMeshName)) {
+                        if (!m_shouldForceMeshRebuild && m_ent.AssetContext.CheckIfCached(entMeshName)) {
                             // if we just want the mesh built, if the file exists that's enough prebuilding
                             m_renderer.m_log.Log(LogLevel.DRENDERDETAIL, "RendererOgre.DorRenderLater: mesh file exists: {0}", 
                                                 m_ent.Name.CacheFilename);

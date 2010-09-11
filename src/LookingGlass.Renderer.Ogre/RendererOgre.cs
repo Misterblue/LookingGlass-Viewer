@@ -1004,7 +1004,7 @@ public class RendererOgre : ModuleBase, IRenderProvider {
     private bool RequestTextureLater(DoLaterBase qInstance, Object parm) {
         EntityNameOgre m_entName = (EntityNameOgre)parm;
         // note the super kludge since we don't know the real asset context
-        // This information is hopefully coded into the entity name
+        // This information is coded into the entity name
         // The callback can (and will) be called multiple times as the texture gets better resolution
         AssetContextBase.RequestTextureLoad(m_entName, AssetContextBase.AssetType.Texture, TextureLoadedCallback);
         return true;
