@@ -252,9 +252,11 @@ namespace LookingGlass.Renderer.OGL {
             GL.LoadIdentity();
             GL.EnableClientState(ArrayCap.VertexArray);
             GL.EnableClientState(ArrayCap.TextureCoordArray);
+            GL.EnableClientState(ArrayCap.NormalArray);
 
             // Setup wireframe or solid fill drawing mode
-            GL.PolygonMode(MaterialFace.Front, PolygonMode.Line);
+            // GL.PolygonMode(MaterialFace.Front, PolygonMode.Line);
+            GL.PolygonMode(MaterialFace.Front, PolygonMode.Fill);
 
             // Position the camera
             Glu.gluLookAt(
@@ -268,10 +270,11 @@ namespace LookingGlass.Renderer.OGL {
 
             RenderTerrain();
             RenderPrims();
-            RenderAvatars();
+            // RenderAvatars();
 
             GL.PopMatrix();
 
+            GL.DisableClientState(ArrayCap.NormalArray);
             GL.DisableClientState(ArrayCap.TextureCoordArray);
             GL.DisableClientState(ArrayCap.VertexArray);
 
@@ -450,7 +453,9 @@ namespace LookingGlass.Renderer.OGL {
                         #region Texturing
 
                         TextureInfo info;
-                        if (m_renderer.Textures.TryGetValue(face.TextureFace.TextureID, out info)) {
+                        if (face.TextureFace.TextureID != OMV.UUID.Zero
+                                    && face.TextureFace.TextureID != OMV.Primitive.TextureEntry.WHITE_TEXTURE
+                                    && m_renderer.Textures.TryGetValue(face.TextureFace.TextureID, out info)) {
                             if (info.Alpha) alpha = true;
 
                             textureID = info.ID;
@@ -483,10 +488,11 @@ namespace LookingGlass.Renderer.OGL {
                             }
 
                             // Bind the texture
-                            GL.BindTexture(TextureTarget.Texture2D, textureID);
+                            if (textureID != 0) GL.BindTexture(TextureTarget.Texture2D, textureID);
 
                             GL.TexCoordPointer(2, TexCoordPointerType.Float, 0, data.TexCoords);
                             GL.VertexPointer(3, VertexPointerType.Float, 0, data.Vertices);
+                            GL.NormalPointer(NormalPointerType.Float, 0, data.Normals);
                             GL.DrawElements(BeginMode.Triangles, data.Indices.Length, DrawElementsType.UnsignedShort, data.Indices);
                         }
 
@@ -524,21 +530,27 @@ namespace LookingGlass.Renderer.OGL {
         int id = GL.GenTexture();
         // GL.BindTexture(TextureTarget.Texture2D, id);
 
-        using (Bitmap bmp = acontext.GetTexture(textureEntityName)) {
-            // Bitmap bmp = new Bitmap(textureEntityName.CacheFilename);
-            BitmapData bmp_data = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+        try {
+            using (Bitmap bmp = acontext.GetTexture(textureEntityName)) {
+                // Bitmap bmp = new Bitmap(textureEntityName.CacheFilename);
+                BitmapData bmp_data = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
 
-            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, bmp_data.Width, bmp_data.Height, 0,
-                OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, bmp_data.Scan0);
+                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, bmp_data.Width, bmp_data.Height, 0,
+                    OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, bmp_data.Scan0);
 
-            bmp.UnlockBits(bmp_data);
+                bmp.UnlockBits(bmp_data);
+            }
+
+            // We haven't uploaded mipmaps, so disable mipmapping (otherwise the texture will not appear).
+            // On newer video cards, we can use GL.GenerateMipmaps() or GL.Ext.GenerateMipmaps() to create
+            // mipmaps automatically. In that case, use TextureMinFilter.LinearMipmapLinear to enable them.
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
         }
-
-        // We haven't uploaded mipmaps, so disable mipmapping (otherwise the texture will not appear).
-        // On newer video cards, we can use GL.GenerateMipmaps() or GL.Ext.GenerateMipmaps() to create
-        // mipmaps automatically. In that case, use TextureMinFilter.LinearMipmapLinear to enable them.
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
+        catch (Exception e) {
+            m_log.Log(LogLevel.DBADERROR, "Failed binding texture id={0}, uuid={1}: {2}", id, textureUUID, e);
+            textureID = 0;
+        }
 
         textureID = id;
         return;

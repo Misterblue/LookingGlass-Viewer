@@ -32,6 +32,7 @@ namespace LookingGlass.Renderer.OGL {
     {
         public float[] Vertices;
         public ushort[] Indices;
+        public float[] Normals;
         public float[] TexCoords;
         public int TexturePointer;
         public System.Drawing.Image Texture;

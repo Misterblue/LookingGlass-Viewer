@@ -165,12 +165,30 @@ public class RendererOGL : IModule, IRenderProvider {
         render.Prim = prim;
         render.acontext = ent.AssetContext;
 
-        // FIXME: Handle sculpted prims by calling Render.Plugin.GenerateFacetedSculptMesh() instead
         if (m_meshMaker == null) {
             m_meshMaker = new Renderer.Mesher.MeshmerizerR();
-            m_meshMaker.ShouldScaleMesh = true;
+            m_meshMaker.ShouldScaleMesh = false;
         }
-        render.Mesh = m_meshMaker.GenerateFacetedMesh(prim, OMVR.DetailLevel.High);
+
+        if (prim.Sculpt != null) {
+            EntityNameLL textureEnt = EntityNameLL.ConvertTextureWorldIDToEntityName(ent.AssetContext, prim.Sculpt.SculptTexture);
+            System.Drawing.Bitmap textureBitmap = ent.AssetContext.GetTexture(textureEnt);
+            if (textureBitmap == null) {
+                // the texture is not available. Request it.
+                // Note that we just call this routine again when it is available. Hope it's not recursive
+                ent.AssetContext.DoTextureLoad(textureEnt, AssetContextBase.AssetType.SculptieTexture, 
+                            delegate(string name, bool trans) {
+                                CreateNewPrim(ent);
+                                return; 
+                            }
+                );
+            }
+            render.Mesh = m_meshMaker.GenerateSculptMesh(textureBitmap, prim, OMVR.DetailLevel.Medium);
+            textureBitmap.Dispose();
+        }
+        else {
+            render.Mesh = m_meshMaker.GenerateFacetedMesh(prim, OMVR.DetailLevel.High);
+        }
 
         // Create a FaceData struct for each face that stores the 3D data
         // in a Tao.OpenGL friendly format
@@ -199,6 +217,14 @@ public class RendererOGL : IModule, IRenderProvider {
                 data.TexCoords[k * 2 + 0] = face.Vertices[k].TexCoord.X;
                 data.TexCoords[k * 2 + 1] = face.Vertices[k].TexCoord.Y;
             }
+
+            data.Normals = new float[face.Vertices.Count * 3];
+            for (int k = 0; k < face.Vertices.Count; k++) {
+                data.Normals[k * 3 + 0] = face.Vertices[k].Normal.X;
+                data.Normals[k * 3 + 1] = face.Vertices[k].Normal.Y;
+                data.Normals[k * 3 + 2] = face.Vertices[k].Normal.Z;
+            }
+
 
             // m_log.Log(LogLevel.DRENDERDETAIL, "CreateNewPrim: v={0}, i={1}, t={2}",
             //     data.Vertices.GetLength(0), data.Indices.GetLength(0), data.TexCoords.GetLength(0));
@@ -261,7 +287,8 @@ public class RendererOGL : IModule, IRenderProvider {
             Camera.Position.X = (float)(cam.GlobalPosition.X - m_focusRegion.GlobalPosition.X);
             Camera.Position.Y = (float)(cam.GlobalPosition.Y - m_focusRegion.GlobalPosition.Y);
             Camera.Position.Z = (float)(cam.GlobalPosition.Z - m_focusRegion.GlobalPosition.Z);
-            Camera.FocalPoint = new OMV.Vector3(1f, 0f, 0f) * cam.Heading;
+            OMV.Vector3 dir = new OMV.Vector3(1f, 0f, 0f);
+            Camera.FocalPoint = (dir * cam.Heading) + Camera.Position;
         }
         return;
     }
