@@ -35,13 +35,15 @@
             this.glControl.TabIndex = 0;
             this.glControl.VSync = false;
             this.glControl.Load += new System.EventHandler(this.GLWindow_Load);
+            this.glControl.MouseLeave += new System.EventHandler(this.GLWindow_MouseLeave);
             this.glControl.Paint += new System.Windows.Forms.PaintEventHandler(this.GLWindow_Paint);
             this.glControl.MouseMove += new System.Windows.Forms.MouseEventHandler(this.GLWindow_MouseMove);
             this.glControl.KeyUp += new System.Windows.Forms.KeyEventHandler(this.GLWindow_KeyUp);
             this.glControl.MouseDown += new System.Windows.Forms.MouseEventHandler(this.GLWindow_MouseDown);
             this.glControl.Resize += new System.EventHandler(this.GLWindow_Resize);
-            this.glControl.MouseUp += new System.Windows.Forms.MouseEventHandler(this.GLWindow_MouseUp);
             this.glControl.KeyDown += new System.Windows.Forms.KeyEventHandler(this.GLWindow_KeyDown);
+            this.glControl.MouseUp += new System.Windows.Forms.MouseEventHandler(this.GLWindow_MouseUp);
+            this.glControl.MouseEnter += new System.EventHandler(this.GLWindow_MouseEnter);
             // 
             // ViewOGL
             // 

@@ -55,6 +55,7 @@ namespace LookingGlass.Renderer.OGL {
 
     private IUserInterfaceProvider m_UILink = null;
     private bool m_MouseIn = false;     // true if mouse is over our window
+    private bool m_keyDown = false;     // true if key is pressed
     private float m_MouseLastX = -3456f;
     private float m_MouseLastY = -3456f;
 
@@ -81,7 +82,7 @@ namespace LookingGlass.Renderer.OGL {
         m_lgb = lgbase;
 
         m_lgb.AppParams.AddDefaultParameter("ViewOGL.Renderer.Name", "Renderer", "The renderer we will get UI from");
-        m_lgb.AppParams.AddDefaultParameter("ViewOGL.FramesPerSec", "6", "The rate to throttle frame rendering");
+        m_lgb.AppParams.AddDefaultParameter("ViewOGL.FramesPerSec", "12", "The rate to throttle frame rendering");
 
         InitializeComponent();
         // glControl.InitializeContexts();
@@ -399,6 +400,7 @@ namespace LookingGlass.Renderer.OGL {
     private void RenderPrims() {
         uint LastHit = 0;   // disable some of the selection stuff
         if (m_renderer.RenderPrimList != null && m_renderer.RenderPrimList.Count > 0) {
+            GL.Enable(EnableCap.DepthTest);
             GL.Enable(EnableCap.Texture2D);
 
             lock (m_renderer.RenderPrimList) {
@@ -488,7 +490,13 @@ namespace LookingGlass.Renderer.OGL {
                             }
 
                             // Bind the texture
-                            if (textureID != 0) GL.BindTexture(TextureTarget.Texture2D, textureID);
+                            if (textureID != 0) {
+                                // GL.Enable(EnableCap.Texture2D);
+                                GL.BindTexture(TextureTarget.Texture2D, textureID);
+                            }
+                            else {
+                                // GL.Disable(EnableCap.Texture2D);
+                            }
 
                             GL.TexCoordPointer(2, TexCoordPointerType.Float, 0, data.TexCoords);
                             GL.VertexPointer(3, VertexPointerType.Float, 0, data.Vertices);
@@ -507,7 +515,7 @@ namespace LookingGlass.Renderer.OGL {
                     firstPass = false;
                     GL.Enable(EnableCap.Blend);
                     GL.BlendFunc(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha);
-                    GL.Disable(EnableCap.DepthTest);
+                    // GL.Disable(EnableCap.DepthTest);
 
                     goto StartRender;
                 }
@@ -528,7 +536,7 @@ namespace LookingGlass.Renderer.OGL {
         }
 
         int id = GL.GenTexture();
-        // GL.BindTexture(TextureTarget.Texture2D, id);
+        GL.BindTexture(TextureTarget.Texture2D, id);
 
         try {
             using (Bitmap bmp = acontext.GetTexture(textureEntityName)) {
@@ -615,8 +623,10 @@ namespace LookingGlass.Renderer.OGL {
         }
     }
 
+    // private void GLWindow_KeyPress(object sender, System.Windows.Forms.KeyPressEventArgs e) {
     private void GLWindow_KeyDown(object sender, KeyEventArgs e) {
         if (m_UILink != null) {
+            m_keyDown = true;
             // LogManager.Log.Log(LogLevel.DVIEWDETAIL, "ViewWindow.GLWindow_KeyDown: k={0}", e.KeyCode);
             m_UILink.ReceiveUserIO(ReceiveUserIOInputEventTypeCode.KeyPress, (int)e.KeyCode, 0f, 0f);
         }
@@ -626,8 +636,12 @@ namespace LookingGlass.Renderer.OGL {
         if (m_UILink != null) {
             // LogManager.Log.Log(LogLevel.DVIEWDETAIL, "ViewWindow.GLWindow_KeyUp: k={0}", e.KeyCode);
             // debug == we're only getting key ups
-            m_UILink.ReceiveUserIO(ReceiveUserIOInputEventTypeCode.KeyPress, (int)e.KeyCode, 0f, 0f);
+            if (!m_keyDown) {
+                // for some reason, some keys don't give us a down to go with the up
+                m_UILink.ReceiveUserIO(ReceiveUserIOInputEventTypeCode.KeyPress, (int)e.KeyCode, 0f, 0f);
+            }
             m_UILink.ReceiveUserIO(ReceiveUserIOInputEventTypeCode.KeyRelease, (int)e.KeyCode, 0f, 0f);
+            m_keyDown = false;
         }
     }
 
