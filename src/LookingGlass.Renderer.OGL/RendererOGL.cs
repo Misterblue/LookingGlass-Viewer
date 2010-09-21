@@ -53,6 +53,7 @@ public class RendererOGL : IModule, IRenderProvider {
     //Terrain
     public float MaxHeight = 0.1f;
     public OMV.TerrainPatch[,] Heightmap;
+    public List<RegionContextBase> m_trackedRegions;
     RegionContextBase m_focusRegion = null;
 
     public bool m_wireFrame = false;
@@ -69,6 +70,7 @@ public class RendererOGL : IModule, IRenderProvider {
     public RendererOGL() {
         // default to the class name. The module code can set it to something else later.
         m_moduleName = System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name;
+        m_trackedRegions = new List<RegionContextBase>();
     }
 
     // IModule.OnLoad
@@ -164,6 +166,7 @@ public class RendererOGL : IModule, IRenderProvider {
         RenderablePrim render = new RenderablePrim();
         render.Prim = prim;
         render.acontext = ent.AssetContext;
+        render.rcontext = ent.RegionContext;
 
         if (m_meshMaker == null) {
             m_meshMaker = new Renderer.Mesher.MeshmerizerR();
@@ -179,7 +182,7 @@ public class RendererOGL : IModule, IRenderProvider {
                 ent.AssetContext.DoTextureLoad(textureEnt, AssetContextBase.AssetType.SculptieTexture, 
                             delegate(string name, bool trans) {
                                 CreateNewPrim(ent);
-                                return; 
+                                return;
                             }
                 );
             }
@@ -286,7 +289,8 @@ public class RendererOGL : IModule, IRenderProvider {
         if (m_focusRegion != null) {
             Camera.Position.X = (float)(cam.GlobalPosition.X - m_focusRegion.GlobalPosition.X);
             Camera.Position.Y = (float)(cam.GlobalPosition.Y - m_focusRegion.GlobalPosition.Y);
-            Camera.Position.Z = (float)(cam.GlobalPosition.Z - m_focusRegion.GlobalPosition.Z);
+            // another kludge camera offset. Pairs with position kludge in Viewer.
+            Camera.Position.Z = (float)(cam.GlobalPosition.Z - m_focusRegion.GlobalPosition.Z) + 10f;
             OMV.Vector3 dir = new OMV.Vector3(1f, 0f, 0f);
             Camera.FocalPoint = (dir * cam.Heading) + Camera.Position;
         }
@@ -303,6 +307,9 @@ public class RendererOGL : IModule, IRenderProvider {
 
     // rendering specific information for placing in  the view
     public void MapRegionIntoView(RegionContextBase rcontext) {
+        if (!m_trackedRegions.Contains(rcontext)) {
+            m_trackedRegions.Add(rcontext);
+        }
         return;
     }
 

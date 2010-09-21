@@ -305,27 +305,17 @@ public class Viewer : ModuleBase, IViewProvider {
                     m_log.Log(LogLevel.DVIEW, "UserInterfase_OnKeypress: CNTL-C. Setting KeepRunning to FALSE");
                     LGB.KeepRunning = false;
                     break;
-                case Keys.Right:
-                    m_trackedAgent.TurnRight(updown);
-                    break;
-                case Keys.Left:
-                    m_trackedAgent.TurnLeft(updown);
-                    break;
-                case Keys.Up:
-                    m_trackedAgent.MoveForward(updown);
-                    break;
-                case Keys.Down:
-                    m_trackedAgent.MoveBackward(updown);
-                    break;
-                case Keys.Home:
-                    m_trackedAgent.Fly(updown);
-                    break;
-                case Keys.PageUp:
-                    m_trackedAgent.MoveUp(updown);
-                    break;
-                case Keys.PageDown:
-                    m_trackedAgent.MoveDown(updown);
-                    break;
+                case Keys.Right:    m_trackedAgent.TurnRight(updown); break;
+                case Keys.L:        m_trackedAgent.TurnRight(updown); break;
+                case Keys.Left:     m_trackedAgent.TurnLeft(updown); break;
+                case Keys.H:        m_trackedAgent.TurnLeft(updown); break;
+                case Keys.Up:       m_trackedAgent.MoveForward(updown); break;
+                case Keys.K:        m_trackedAgent.MoveForward(updown); break;
+                case Keys.Down:     m_trackedAgent.MoveBackward(updown); break;
+                case Keys.J:        m_trackedAgent.MoveBackward(updown); break;
+                case Keys.Home:     m_trackedAgent.Fly(updown); break;
+                case Keys.PageUp:   m_trackedAgent.MoveUp(updown); break;
+                case Keys.PageDown: m_trackedAgent.MoveDown(updown); break;
                 case Keys.Escape:
                     // force the camera to the client position
                     m_log.Log(LogLevel.DVIEWDETAIL, "OnKeypress: ESC: restoring camera position");

@@ -74,7 +74,8 @@ namespace LookingGlass.Renderer.OGL {
     {
         public OMV.Primitive Prim;
         public OMVR.FacetedMesh Mesh;
-        public AssetContextBase acontext;
+        public RegionContextBase rcontext;  // used for positioning in displayed world
+        public AssetContextBase acontext;   // used for finding textures for Prim
 
         public readonly static RenderablePrim Empty = new RenderablePrim();
     }

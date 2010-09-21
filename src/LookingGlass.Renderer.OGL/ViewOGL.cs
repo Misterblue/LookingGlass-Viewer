@@ -166,6 +166,7 @@ namespace LookingGlass.Renderer.OGL {
         GL.DepthMask(true);
         GL.DepthFunc(DepthFunction.Lequal);
         GL.Hint(HintTarget.PerspectiveCorrectionHint, HintMode.Nicest);
+        GL.TexEnv(TextureEnvTarget.TextureEnv, TextureEnvParameter.TextureEnvMode, (int)All.Modulate);
     }
 
     private void InitHeightmap()
@@ -271,7 +272,7 @@ namespace LookingGlass.Renderer.OGL {
 
             RenderTerrain();
             RenderPrims();
-            // RenderAvatars();
+            RenderAvatars();
 
             GL.PopMatrix();
 
@@ -623,13 +624,16 @@ namespace LookingGlass.Renderer.OGL {
         }
     }
 
-    // private void GLWindow_KeyPress(object sender, System.Windows.Forms.KeyPressEventArgs e) {
-    private void GLWindow_KeyDown(object sender, KeyEventArgs e) {
+    private void GLWindow_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e) {
         if (m_UILink != null) {
             m_keyDown = true;
             // LogManager.Log.Log(LogLevel.DVIEWDETAIL, "ViewWindow.GLWindow_KeyDown: k={0}", e.KeyCode);
             m_UILink.ReceiveUserIO(ReceiveUserIOInputEventTypeCode.KeyPress, (int)e.KeyCode, 0f, 0f);
         }
+    }
+
+    private void GLWindow_KeyDown(object sender, KeyEventArgs e) {
+
     }
 
     private void GLWindow_KeyUp(object sender, KeyEventArgs e) {
@@ -651,6 +655,5 @@ namespace LookingGlass.Renderer.OGL {
         if ((inCode & MouseButtons.Middle) != 0) return (int)ReceiveUserIOMouseButtonCode.Middle;
         return 0;
     }
-
 }
 }
