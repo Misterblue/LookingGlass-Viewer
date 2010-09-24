@@ -54,7 +54,7 @@ public class RendererOGL : IModule, IRenderProvider {
     public float MaxHeight = 0.1f;
     public OMV.TerrainPatch[,] Heightmap;
     public List<RegionContextBase> m_trackedRegions;
-    RegionContextBase m_focusRegion = null;
+    public RegionContextBase m_focusRegion = null;
 
     public bool m_wireFrame = false;
 

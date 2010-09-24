@@ -153,8 +153,10 @@ namespace LookingGlass.Renderer.OGL {
         else {
             this.Close();
         }
+        if (m_refreshTimer != null) {
+            m_refreshTimer.Dispose();
+        }
     }
-
 
     private void InitOpenGL()
     {
@@ -169,22 +171,18 @@ namespace LookingGlass.Renderer.OGL {
         GL.TexEnv(TextureEnvTarget.TextureEnv, TextureEnvParameter.TextureEnvMode, (int)All.Modulate);
     }
 
-    private void InitHeightmap()
-    {
+    private void InitHeightmap() {
         // Initialize the heightmap
         m_renderer.Heightmap = new OMV.TerrainPatch[16, 16];
-        for (int y = 0; y < 16; y++)
-        {
-            for (int x = 0; x < 16; x++)
-            {
+        for (int y = 0; y < 16; y++) {
+            for (int x = 0; x < 16; x++) {
                 m_renderer.Heightmap[y, x] = new OMV.TerrainPatch();
                 m_renderer.Heightmap[y, x].Data = new float[16 * 16];
             }
         }
     }
 
-    private void InitCamera()
-    {
+    private void InitCamera() {
         m_renderer.Camera = new Camera();
         m_renderer.Camera.Position = new OMV.Vector3(128f, -192f, 90f);
         m_renderer.Camera.FocalPoint = new OMV.Vector3(128f, 128f, 0f);
@@ -252,9 +250,6 @@ namespace LookingGlass.Renderer.OGL {
         try {
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             GL.LoadIdentity();
-            GL.EnableClientState(ArrayCap.VertexArray);
-            GL.EnableClientState(ArrayCap.TextureCoordArray);
-            GL.EnableClientState(ArrayCap.NormalArray);
 
             // Setup wireframe or solid fill drawing mode
             // GL.PolygonMode(MaterialFace.Front, PolygonMode.Line);
@@ -439,6 +434,9 @@ namespace LookingGlass.Renderer.OGL {
                     GL.MultMatrix(Math3D.CreateTranslationMatrix(prim.Position));
                     GL.MultMatrix(Math3D.CreateRotationMatrix(prim.Rotation));
 
+                    // apply region offset
+                    GL.MultMatrix(Math3D.CreateTranslationMatrix(CalcRegionOffset(render.rcontext)));
+
                     // Scale the prim
                     GL.Scale(prim.Scale.X, prim.Scale.Y, prim.Scale.Z);
 
@@ -499,6 +497,10 @@ namespace LookingGlass.Renderer.OGL {
                                 // GL.Disable(EnableCap.Texture2D);
                             }
 
+                            GL.EnableClientState(ArrayCap.TextureCoordArray);
+                            GL.EnableClientState(ArrayCap.VertexArray);
+                            GL.EnableClientState(ArrayCap.NormalArray);
+
                             GL.TexCoordPointer(2, TexCoordPointerType.Float, 0, data.TexCoords);
                             GL.VertexPointer(3, VertexPointerType.Float, 0, data.Vertices);
                             GL.NormalPointer(NormalPointerType.Float, 0, data.Normals);
@@ -522,7 +524,7 @@ namespace LookingGlass.Renderer.OGL {
                 }
             }
 
-            GL.Enable(EnableCap.DepthTest);
+            // GL.Enable(EnableCap.DepthTest);
             GL.Disable(EnableCap.Texture2D);
         }
     }
@@ -563,6 +565,22 @@ namespace LookingGlass.Renderer.OGL {
 
         textureID = id;
         return;
+    }
+
+        /// <summary>
+        /// When multiple regions are displayed, there is a focus region (the one the main avatar
+        /// is in) and other regions that are offset from that focus region. Here we come up with
+        /// that offset.
+        /// </summary>
+        /// <param name="rcontext"></param>
+        /// <returns></returns>
+    private OMV.Vector3 CalcRegionOffset(RegionContextBase rcontext) {
+        if (rcontext == m_renderer.m_focusRegion) return OMV.Vector3.Zero;
+        OMV.Vector3 ret = new OMV.Vector3();
+        ret.X = (float)(m_renderer.m_focusRegion.GlobalPosition.X - rcontext.GlobalPosition.X);
+        ret.Y = (float)(m_renderer.m_focusRegion.GlobalPosition.Y - rcontext.GlobalPosition.Y);
+        ret.Z = (float)(m_renderer.m_focusRegion.GlobalPosition.Z - rcontext.GlobalPosition.Z);
+        return ret;
     }
 
     private void RenderAvatars()
