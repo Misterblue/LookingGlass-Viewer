@@ -278,7 +278,8 @@ namespace LookingGlass.Renderer.OGL {
             GL.Flush();
             glControl.SwapBuffers();
         }
-        catch (Exception) {
+        catch (Exception e ) {
+            m_log.Log(LogLevel.DBADERROR, "Exception rendering frame: {0}", e);
         }
     }
 
@@ -319,7 +320,77 @@ namespace LookingGlass.Renderer.OGL {
         //Gl.glTranslatef(0f, 0f, 0f);
     }
 
+    float[] terrainVertices;
+    float[] terrainTexCoord;
+    float[] terrainNormal;
+    float terrainWidth = -1f;
+    float terrainLength = -1f;
+    UInt16[] terrainIndices;
     private void RenderTerrain() {
+        foreach (RegionContextBase rcontext in m_renderer.m_trackedRegions) {
+            TerrainInfoBase ti = rcontext.TerrainInfo;
+            if (rcontext.TerrainInfo.HeightMapLength != terrainLength
+                        || rcontext.TerrainInfo.HeightMapWidth != terrainWidth) {
+                // the indices and vertices don't match the previous time's dimensions. Recalc
+                terrainVertices = new float[3 * ti.HeightMapLength * ti.HeightMapWidth];
+                terrainTexCoord = new float[2 * ti.HeightMapLength * ti.HeightMapWidth];
+                terrainNormal = new float[3 * ti.HeightMapLength * ti.HeightMapWidth];
+                int nextVert = 0;
+                int nextTex = 0;
+                int nextNorm = 0;
+                for (int xx=0; xx < ti.HeightMapLength; xx++) {
+                    for (int yy = 0; yy < ti.HeightMapWidth; yy++ ) {
+                        terrainVertices[nextVert + 0] = (float)xx / ti.HeightMapLength * rcontext.Size.X;
+                        terrainVertices[nextVert + 1] = (float)yy / ti.HeightMapWidth * rcontext.Size.Y;
+                        terrainVertices[nextVert + 2] = ti.HeightMap[xx, yy];
+                        nextVert += 3;
+                        terrainTexCoord[nextTex + 0] = xx / ti.HeightMapLength;
+                        terrainTexCoord[nextTex + 1] = yy / ti.HeightMapWidth;
+                        nextTex += 2;
+                        terrainNormal[nextNorm + 0] = 0f;   // simple normal pointing up
+                        terrainNormal[nextNorm + 1] = 1f;
+                        terrainNormal[nextNorm + 2] = 0f;
+                        nextNorm += 3;
+                    }
+                }
+                // Create the quads which make up the terrain
+                terrainIndices = new UInt16[4 * ti.HeightMapLength * ti.HeightMapWidth];
+                int nextInd = 0;
+                for (int xx=0; xx < ti.HeightMapLength-1; xx++) {
+                    for (int yy = 0; yy < ti.HeightMapWidth-1; yy++ ) {
+                        terrainIndices[nextInd + 0] = (UInt16)((yy + 0) + (xx + 0)* ti.HeightMapLength);
+                        terrainIndices[nextInd + 1] = (UInt16)((yy + 1) + (xx + 0)* ti.HeightMapLength);
+                        terrainIndices[nextInd + 2] = (UInt16)((yy + 1) + (xx + 1)* ti.HeightMapLength);
+                        terrainIndices[nextInd + 3] = (UInt16)((yy + 0) + (xx + 1)* ti.HeightMapLength);
+                        nextInd += 4;
+                    }
+                }
+                // We remember the static stuff we generated so we don't hve to gen again if
+                // it's the same size next time.
+                terrainWidth = ti.HeightMapWidth;
+                terrainLength = ti.HeightMapLength;
+            }
+            // indices and vertexed are generated. Add height info
+            int nextVrt = 0;
+            for (int xx=0; xx < ti.HeightMapLength; xx++) {
+                for (int yy = 0; yy < ti.HeightMapWidth; yy++ ) {
+                    terrainVertices[nextVrt + 2] = ti.HeightMap[xx, yy];
+                    nextVrt += 3;
+                }
+            }
+            // everything built. Display the terrain
+            GL.EnableClientState(ArrayCap.VertexArray);
+            GL.EnableClientState(ArrayCap.TextureCoordArray);
+            GL.EnableClientState(ArrayCap.NormalArray);
+
+            GL.TexCoordPointer(2, TexCoordPointerType.Float, 0, terrainTexCoord);
+            GL.VertexPointer(3, VertexPointerType.Float, 0, terrainVertices);
+            GL.NormalPointer(NormalPointerType.Float, 0, terrainNormal);
+            GL.DrawElements(BeginMode.Quads, terrainIndices.Length, DrawElementsType.UnsignedShort, terrainIndices);
+        }
+    }
+
+    private void OldRenderTerrain() {
         bool selected = false;  // don't throw out the selected code but ignore selection
         if (m_renderer.Heightmap != null) {
             int i = 0;
@@ -490,11 +561,11 @@ namespace LookingGlass.Renderer.OGL {
 
                             // Bind the texture
                             if (textureID != 0) {
-                                // GL.Enable(EnableCap.Texture2D);
+                                GL.Enable(EnableCap.Texture2D);
                                 GL.BindTexture(TextureTarget.Texture2D, textureID);
                             }
                             else {
-                                // GL.Disable(EnableCap.Texture2D);
+                                GL.Disable(EnableCap.Texture2D);
                             }
 
                             GL.EnableClientState(ArrayCap.TextureCoordArray);
