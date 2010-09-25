@@ -58,20 +58,34 @@ namespace LookingGlass.Renderer.OGL {
         public ushort Index;
         public float Value;
 
-        public HeightmapLookupValue(ushort index, float value)
-        {
+        public HeightmapLookupValue(ushort index, float value) {
             Index = index;
             Value = value;
         }
 
-        public int CompareTo(HeightmapLookupValue val)
-        {
+        public int CompareTo(HeightmapLookupValue val) {
             return Value.CompareTo(val.Value);
         }
     }
 
-    public struct RenderablePrim
-    {
+    // This routine converts and  places the rendering information for each region
+    // into RegionRenderInfo structs that are stuck onto  the rcontext's as
+    // an interface.
+    public class RegionRenderInfo {
+        public RegionRenderInfo() {
+            this.renderFoliageList = new Dictionary<uint, OMV.Primitive>();
+            this.renderPrimList = new Dictionary<uint, RenderablePrim>();
+            this.renderAvatarList = new Dictionary<uint, RenderableAvatar>();
+        }
+        public Dictionary<uint, OMV.Primitive> renderFoliageList;
+        public Dictionary<uint, RenderablePrim> renderPrimList;
+        public Dictionary<uint, RenderableAvatar> renderAvatarList;
+    }
+
+    public struct RenderableAvatar {
+    }
+
+    public struct RenderablePrim {
         public OMV.Primitive Prim;
         public OMVR.FacetedMesh Mesh;
         public RegionContextBase rcontext;  // used for positioning in displayed world
@@ -80,8 +94,7 @@ namespace LookingGlass.Renderer.OGL {
         public readonly static RenderablePrim Empty = new RenderablePrim();
     }
 
-    public struct Camera
-    {
+    public struct Camera {
         public OMV.Vector3 Position;
         public OMV.Vector3 FocalPoint;
         public double Zoom;

@@ -42,8 +42,6 @@ public class RendererOGL : IModule, IRenderProvider {
     private ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
 
     public Camera Camera;
-    public Dictionary<uint, OMV.Primitive> RenderFoliageList = new Dictionary<uint, OMV.Primitive>();
-    public Dictionary<uint, RenderablePrim> RenderPrimList = new Dictionary<uint, RenderablePrim>();
 
     private Mesher.MeshmerizerR m_meshMaker = null;
     
@@ -155,13 +153,15 @@ public class RendererOGL : IModule, IRenderProvider {
     private void CreateNewPrim(LLEntityBase ent) {
         m_log.Log(LogLevel.DRENDERDETAIL, "Create new prim {0}", ent.Name.Name);
         OMV.Primitive prim = ent.Prim;
+        /* don't do foliage yet
         if (prim.PrimData.PCode == OMV.PCode.Grass 
                     || prim.PrimData.PCode == OMV.PCode.Tree 
                     || prim.PrimData.PCode == OMV.PCode.NewTree) {
-            lock (RenderFoliageList)
-                RenderFoliageList[prim.LocalID] = prim;
+            lock (renderFoliageList)
+                renderFoliageList[prim.LocalID] = prim;
             return;
         }
+         */
 
         RenderablePrim render = new RenderablePrim();
         render.Prim = prim;
@@ -253,7 +253,15 @@ public class RendererOGL : IModule, IRenderProvider {
             render.Mesh.Faces[j] = face;
         }
 
-        lock (RenderPrimList) RenderPrimList[prim.LocalID] = render;
+        // entity render info is kept per region. Get the region prim structure
+        RegionRenderInfo rri;
+        if (!ent.RegionContext.TryGet<RegionRenderInfo>(out rri)) {
+            rri = new RegionRenderInfo();
+            ent.RegionContext.RegisterInterface<RegionRenderInfo>(rri);
+        }
+        lock (rri.renderPrimList) {
+            rri.renderPrimList[prim.LocalID] = render;
+        }
     }
 
     private void OnTextureDownloadFinished(string textureEntityName, bool hasTransparancy) {
@@ -273,13 +281,16 @@ public class RendererOGL : IModule, IRenderProvider {
 
     public void RenderUpdate(IEntity ent, UpdateCodes what) {
         m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: {0} for {1}", ent.Name.Name, what);
+        bool fullUpdate = false;
         if (ent is LLEntityBase && ((what & UpdateCodes.New) != 0)) {
             lock (ent) {
                 CreateNewPrim((LLEntityBase)ent);
+                fullUpdate = true;
             }
         }
         return;
     }
+
     public void UnRender(IEntity ent) {
         return;
     }

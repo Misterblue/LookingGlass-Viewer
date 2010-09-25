@@ -158,17 +158,35 @@ namespace LookingGlass.Renderer.OGL {
         }
     }
 
-    private void InitOpenGL()
-    {
-        GL.ShadeModel(ShadingModel.Smooth);
+    private void InitOpenGL() {
         GL.ClearColor(0f, 0f, 0f, 0f);
 
         GL.ClearDepth(1.0f);
         GL.Enable(EnableCap.DepthTest);
         GL.DepthMask(true);
         GL.DepthFunc(DepthFunction.Lequal);
+
         GL.Hint(HintTarget.PerspectiveCorrectionHint, HintMode.Nicest);
         GL.TexEnv(TextureEnvTarget.TextureEnv, TextureEnvParameter.TextureEnvMode, (int)All.Modulate);
+    }
+
+    private void InitLighting() {
+        GL.ShadeModel(ShadingModel.Smooth);
+        GL.Enable(EnableCap.Lighting);
+
+        float[] globalAmbient = { 0.2f, 0.2f, 0.2f, 1.0f };
+        GL.LightModel(LightModelParameter.LightModelAmbient, globalAmbient);
+
+        // set up the sun (Light0)
+        GL.Enable(EnableCap.Light0);
+        float[] sunAmbient = { 0.2f, 0.2f, 0.2f, 1.0f };
+        float[] sunDiffuse = { 1.0f, 1.0f, 1.0f, 1.0f };
+        float[] sunSpecular = { 0.8f, 0.8f, 0.8f, 1.0f };
+        float[] sunPosition = { 500.0f, 500.0f, 500.0f, 1.0f };
+        GL.Light(LightName.Light0, LightParameter.Ambient, sunAmbient);
+        GL.Light(LightName.Light0, LightParameter.Diffuse, sunDiffuse);
+        GL.Light(LightName.Light0, LightParameter.Specular, sunSpecular);
+        GL.Light(LightName.Light0, LightParameter.Position, sunPosition);
     }
 
     private void InitHeightmap() {
@@ -233,6 +251,7 @@ namespace LookingGlass.Renderer.OGL {
         m_log.Log(LogLevel.DRENDERDETAIL, "GLWindow_Load");
 
         InitOpenGL();
+        InitLighting();
         InitHeightmap();
         InitCamera();
 
@@ -320,73 +339,114 @@ namespace LookingGlass.Renderer.OGL {
         //Gl.glTranslatef(0f, 0f, 0f);
     }
 
-    float[] terrainVertices;
-    float[] terrainTexCoord;
-    float[] terrainNormal;
-    float terrainWidth = -1f;
-    float terrainLength = -1f;
-    UInt16[] terrainIndices;
+    private class OGLTerrainInfo {
+        public float[] terrainVertices;
+        public float[] terrainTexCoord;
+        public float[] terrainNormal;
+        public UInt16[] terrainIndices;
+        public float terrainWidth = -1f;
+        public float terrainLength = -1f;
+    }
     private void RenderTerrain() {
         foreach (RegionContextBase rcontext in m_renderer.m_trackedRegions) {
-            TerrainInfoBase ti = rcontext.TerrainInfo;
-            if (rcontext.TerrainInfo.HeightMapLength != terrainLength
-                        || rcontext.TerrainInfo.HeightMapWidth != terrainWidth) {
-                // the indices and vertices don't match the previous time's dimensions. Recalc
-                terrainVertices = new float[3 * ti.HeightMapLength * ti.HeightMapWidth];
-                terrainTexCoord = new float[2 * ti.HeightMapLength * ti.HeightMapWidth];
-                terrainNormal = new float[3 * ti.HeightMapLength * ti.HeightMapWidth];
-                int nextVert = 0;
-                int nextTex = 0;
-                int nextNorm = 0;
-                for (int xx=0; xx < ti.HeightMapLength; xx++) {
-                    for (int yy = 0; yy < ti.HeightMapWidth; yy++ ) {
-                        terrainVertices[nextVert + 0] = (float)xx / ti.HeightMapLength * rcontext.Size.X;
-                        terrainVertices[nextVert + 1] = (float)yy / ti.HeightMapWidth * rcontext.Size.Y;
-                        terrainVertices[nextVert + 2] = ti.HeightMap[xx, yy];
-                        nextVert += 3;
-                        terrainTexCoord[nextTex + 0] = xx / ti.HeightMapLength;
-                        terrainTexCoord[nextTex + 1] = yy / ti.HeightMapWidth;
-                        nextTex += 2;
-                        terrainNormal[nextNorm + 0] = 0f;   // simple normal pointing up
-                        terrainNormal[nextNorm + 1] = 1f;
-                        terrainNormal[nextNorm + 2] = 0f;
-                        nextNorm += 3;
-                    }
-                }
-                // Create the quads which make up the terrain
-                terrainIndices = new UInt16[4 * ti.HeightMapLength * ti.HeightMapWidth];
-                int nextInd = 0;
-                for (int xx=0; xx < ti.HeightMapLength-1; xx++) {
-                    for (int yy = 0; yy < ti.HeightMapWidth-1; yy++ ) {
-                        terrainIndices[nextInd + 0] = (UInt16)((yy + 0) + (xx + 0)* ti.HeightMapLength);
-                        terrainIndices[nextInd + 1] = (UInt16)((yy + 1) + (xx + 0)* ti.HeightMapLength);
-                        terrainIndices[nextInd + 2] = (UInt16)((yy + 1) + (xx + 1)* ti.HeightMapLength);
-                        terrainIndices[nextInd + 3] = (UInt16)((yy + 0) + (xx + 1)* ti.HeightMapLength);
-                        nextInd += 4;
-                    }
-                }
-                // We remember the static stuff we generated so we don't hve to gen again if
-                // it's the same size next time.
-                terrainWidth = ti.HeightMapWidth;
-                terrainLength = ti.HeightMapLength;
+            GL.PushMatrix();
+
+            OGLTerrainInfo oglti;
+            if (!rcontext.TryGet<OGLTerrainInfo>(out oglti)) {
+                // The terrain info has not been built for this region. Build same.
+                oglti = new OGLTerrainInfo();
+                rcontext.RegisterInterface<OGLTerrainInfo>(oglti);
+                UpdateRegionTerrainMesh(rcontext, oglti);
             }
-            // indices and vertexed are generated. Add height info
-            int nextVrt = 0;
-            for (int xx=0; xx < ti.HeightMapLength; xx++) {
-                for (int yy = 0; yy < ti.HeightMapWidth; yy++ ) {
-                    terrainVertices[nextVrt + 2] = ti.HeightMap[xx, yy];
-                    nextVrt += 3;
-                }
-            }
+
+            // apply region offset
+            GL.MultMatrix(Math3D.CreateTranslationMatrix(CalcRegionOffset(rcontext)));
+
             // everything built. Display the terrain
             GL.EnableClientState(ArrayCap.VertexArray);
             GL.EnableClientState(ArrayCap.TextureCoordArray);
             GL.EnableClientState(ArrayCap.NormalArray);
 
-            GL.TexCoordPointer(2, TexCoordPointerType.Float, 0, terrainTexCoord);
-            GL.VertexPointer(3, VertexPointerType.Float, 0, terrainVertices);
-            GL.NormalPointer(NormalPointerType.Float, 0, terrainNormal);
-            GL.DrawElements(BeginMode.Quads, terrainIndices.Length, DrawElementsType.UnsignedShort, terrainIndices);
+            GL.TexCoordPointer(2, TexCoordPointerType.Float, 0, oglti.terrainTexCoord);
+            GL.VertexPointer(3, VertexPointerType.Float, 0, oglti.terrainVertices);
+            GL.NormalPointer(NormalPointerType.Float, 0, oglti.terrainNormal);
+            GL.DrawElements(BeginMode.Quads, oglti.terrainIndices.Length, DrawElementsType.UnsignedShort, oglti.terrainIndices);
+
+            GL.PopMatrix();
+        }
+    }
+
+    private void UpdateRegionTerrainMesh(RegionContextBase rcontext, OGLTerrainInfo oglti) {
+        TerrainInfoBase ti = rcontext.TerrainInfo;
+        oglti.terrainVertices = new float[3 * ti.HeightMapLength * ti.HeightMapWidth];
+        oglti.terrainTexCoord = new float[2 * ti.HeightMapLength * ti.HeightMapWidth];
+        oglti.terrainNormal = new float[3 * ti.HeightMapLength * ti.HeightMapWidth];
+        int nextVert = 0;
+        int nextTex = 0;
+        int nextNorm = 0;
+        for (int xx=0; xx < ti.HeightMapLength; xx++) {
+            for (int yy = 0; yy < ti.HeightMapWidth; yy++ ) {
+                oglti.terrainVertices[nextVert + 0] = (float)xx / ti.HeightMapLength * rcontext.Size.X;
+                oglti.terrainVertices[nextVert + 1] = (float)yy / ti.HeightMapWidth * rcontext.Size.Y;
+                oglti.terrainVertices[nextVert + 2] = ti.HeightMap[xx, yy];
+                nextVert += 3;
+                oglti.terrainTexCoord[nextTex + 0] = xx / ti.HeightMapLength;
+                oglti.terrainTexCoord[nextTex + 1] = yy / ti.HeightMapWidth;
+                nextTex += 2;
+                oglti.terrainNormal[nextNorm + 0] = 0f;   // simple normal pointing up
+                oglti.terrainNormal[nextNorm + 1] = 1f;
+                oglti.terrainNormal[nextNorm + 2] = 0f;
+                nextNorm += 3;
+            }
+        }
+        // Create the quads which make up the terrain
+        oglti.terrainIndices = new UInt16[4 * ti.HeightMapLength * ti.HeightMapWidth];
+        int nextInd = 0;
+        for (int xx=0; xx < ti.HeightMapLength-1; xx++) {
+            for (int yy = 0; yy < ti.HeightMapWidth-1; yy++ ) {
+                oglti.terrainIndices[nextInd + 0] = (UInt16)((yy + 0) + (xx + 0)* ti.HeightMapLength);
+                oglti.terrainIndices[nextInd + 1] = (UInt16)((yy + 1) + (xx + 0)* ti.HeightMapLength);
+                oglti.terrainIndices[nextInd + 2] = (UInt16)((yy + 1) + (xx + 1)* ti.HeightMapLength);
+                oglti.terrainIndices[nextInd + 3] = (UInt16)((yy + 0) + (xx + 1)* ti.HeightMapLength);
+                nextInd += 4;
+            }
+        }
+        oglti.terrainWidth = ti.HeightMapWidth;
+        oglti.terrainLength = ti.HeightMapLength;
+
+        // Calculate normals
+        // Take three corners of each quad and calculate the normal for the vector
+        //   a--b--e--...
+        //   |  |  |
+        //   d--c--h--...
+        // The triangle a-b-d calculates the normal for a, etc
+        int nextQuad = 0;
+        int nextNrm = 0;
+        for (int xx=0; xx < ti.HeightMapLength-1; xx++) {
+            for (int yy = 0; yy < ti.HeightMapWidth-1; yy++ ) {
+                OMV.Vector3 aa, bb, cc;
+                int offset = oglti.terrainIndices[nextQuad + 0] * 3;
+                aa.X = oglti.terrainVertices[offset + 0];
+                aa.Y = oglti.terrainVertices[offset + 1];
+                aa.Z = oglti.terrainVertices[offset + 2];
+                offset = oglti.terrainIndices[nextQuad + 1] * 3;
+                bb.X = oglti.terrainVertices[offset + 0];
+                bb.Y = oglti.terrainVertices[offset + 1];
+                bb.Z = oglti.terrainVertices[offset + 2];
+                offset = oglti.terrainIndices[nextQuad + 3] * 3;
+                cc.X = oglti.terrainVertices[offset + 0];
+                cc.Y = oglti.terrainVertices[offset + 1];
+                cc.Z = oglti.terrainVertices[offset + 2];
+                OMV.Vector3 mm = aa - bb;
+                OMV.Vector3 nn = aa - cc;
+                OMV.Vector3 theNormal = OMV.Vector3.Cross(mm, nn);
+                theNormal.Normalize();
+                oglti.terrainNormal[nextNrm + 0] = theNormal.X;   // simple normal pointing up
+                oglti.terrainNormal[nextNrm + 1] = theNormal.Y;
+                oglti.terrainNormal[nextNrm + 2] = theNormal.Z;
+                nextNrm += 3;
+                nextQuad += 4;
+            }
         }
     }
 
@@ -465,138 +525,134 @@ namespace LookingGlass.Renderer.OGL {
     //};
 
     private void RenderPrims() {
-        uint LastHit = 0;   // disable some of the selection stuff
-        if (m_renderer.RenderPrimList != null && m_renderer.RenderPrimList.Count > 0) {
-            GL.Enable(EnableCap.DepthTest);
-            GL.Enable(EnableCap.Texture2D);
-
-            lock (m_renderer.RenderPrimList) {
-                bool firstPass = true;
-                GL.Disable(EnableCap.Blend);
+        foreach (RegionContextBase rcontext in m_renderer.m_trackedRegions) {
+            RegionRenderInfo rri = rcontext.Get<RegionRenderInfo>();
+            if (rcontext.TryGet<RegionRenderInfo>(out rri)) {
                 GL.Enable(EnableCap.DepthTest);
+                GL.Enable(EnableCap.Texture2D);
 
-            StartRender:
+                lock (rri.renderPrimList) {
+                    bool firstPass = true;
+                    GL.Disable(EnableCap.Blend);
+                    GL.Enable(EnableCap.DepthTest);
 
-                foreach (RenderablePrim render in m_renderer.RenderPrimList.Values) {
-                    RenderablePrim parentRender = RenderablePrim.Empty;
-                    OMV.Primitive prim = render.Prim;
+                StartRender:
 
-                    if (prim.ParentID != 0) {
-                        // Get the parent reference
-                        if (!m_renderer.RenderPrimList.TryGetValue(prim.ParentID, out parentRender)) {
-                            // Can't render a child with no parent prim, skip it
-                            continue;
-                        }
-                    }
+                    foreach (RenderablePrim render in rri.renderPrimList.Values) {
+                        RenderablePrim parentRender = RenderablePrim.Empty;
+                        OMV.Primitive prim = render.Prim;
 
-                    GL.PushName(prim.LocalID);
-                    GL.PushMatrix();
-
-                    if (prim.ParentID != 0) {
-                        // Child prim
-                        OMV.Primitive parent = parentRender.Prim;
-
-                        // Apply parent translation and rotation
-                        GL.MultMatrix(Math3D.CreateTranslationMatrix(parent.Position));
-                        GL.MultMatrix(Math3D.CreateRotationMatrix(parent.Rotation));
-                    }
-
-                    // Apply prim translation and rotation
-                    GL.MultMatrix(Math3D.CreateTranslationMatrix(prim.Position));
-                    GL.MultMatrix(Math3D.CreateRotationMatrix(prim.Rotation));
-
-                    // apply region offset
-                    GL.MultMatrix(Math3D.CreateTranslationMatrix(CalcRegionOffset(render.rcontext)));
-
-                    // Scale the prim
-                    GL.Scale(prim.Scale.X, prim.Scale.Y, prim.Scale.Z);
-
-                    // Draw the prim faces
-                    for (int j = 0; j < render.Mesh.Faces.Count; j++) {
-                        OMVR.Face face = render.Mesh.Faces[j];
-                        FaceData data = (FaceData)face.UserData;
-                        OMV.Color4 color = face.TextureFace.RGBA;
-                        bool alpha = false;
-                        int textureID = 0;
-
-                        if (color.A < 1.0f)
-                            alpha = true;
-
-                        #region Texturing
-
-                        TextureInfo info;
-                        if (face.TextureFace.TextureID != OMV.UUID.Zero
-                                    && face.TextureFace.TextureID != OMV.Primitive.TextureEntry.WHITE_TEXTURE
-                                    && m_renderer.Textures.TryGetValue(face.TextureFace.TextureID, out info)) {
-                            if (info.Alpha) alpha = true;
-
-                            textureID = info.ID;
-                            // if textureID has not been set, need to generate the mipmaps
-                            if (textureID == 0) {
-                                GenerateMipMaps(render.acontext, face.TextureFace.TextureID, out textureID);
-                                info.ID = textureID;
+                        if (prim.ParentID != 0) {
+                            // Get the parent reference
+                            if (!rri.renderPrimList.TryGetValue(prim.ParentID, out parentRender)) {
+                                // Can't render a child with no parent prim, skip it
+                                continue;
                             }
-
-                            // Enable texturing for this face
-                            GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
                         }
-                        else {
-                            if (face.TextureFace.TextureID == OMV.Primitive.TextureEntry.WHITE_TEXTURE ||
-                                            face.TextureFace.TextureID == OMV.UUID.Zero) {
-                                GL.PolygonMode(MaterialFace.Front, PolygonMode.Fill);
+
+                        GL.PushName(prim.LocalID);
+                        GL.PushMatrix();
+
+                        if (prim.ParentID != 0) {
+                            // Child prim
+                            OMV.Primitive parent = parentRender.Prim;
+
+                            // Apply parent translation and rotation
+                            GL.MultMatrix(Math3D.CreateTranslationMatrix(parent.Position));
+                            GL.MultMatrix(Math3D.CreateRotationMatrix(parent.Rotation));
+                        }
+
+                        // Apply prim translation and rotation
+                        GL.MultMatrix(Math3D.CreateTranslationMatrix(prim.Position));
+                        GL.MultMatrix(Math3D.CreateRotationMatrix(prim.Rotation));
+
+                        // apply region offset
+                        GL.MultMatrix(Math3D.CreateTranslationMatrix(CalcRegionOffset(render.rcontext)));
+
+                        // Scale the prim
+                        GL.Scale(prim.Scale.X, prim.Scale.Y, prim.Scale.Z);
+
+                        // Draw the prim faces
+                        for (int j = 0; j < render.Mesh.Faces.Count; j++) {
+                            OMVR.Face face = render.Mesh.Faces[j];
+                            FaceData data = (FaceData)face.UserData;
+                            OMV.Color4 color = face.TextureFace.RGBA;
+                            bool alpha = false;
+                            int textureID = 0;
+
+                            if (color.A < 1.0f)
+                                alpha = true;
+
+                            TextureInfo info;
+                            if (face.TextureFace.TextureID != OMV.UUID.Zero
+                                        && face.TextureFace.TextureID != OMV.Primitive.TextureEntry.WHITE_TEXTURE
+                                        && m_renderer.Textures.TryGetValue(face.TextureFace.TextureID, out info)) {
+                                if (info.Alpha) alpha = true;
+
+                                textureID = info.ID;
+                                // if textureID has not been set, need to generate the mipmaps
+                                if (textureID == 0) {
+                                    GenerateMipMaps(render.acontext, face.TextureFace.TextureID, out textureID);
+                                    info.ID = textureID;
+                                }
+
+                                // Enable texturing for this face
+                                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
                             }
                             else {
-                                GL.PolygonMode(MaterialFace.Front, PolygonMode.Line);
+                                if (face.TextureFace.TextureID == OMV.Primitive.TextureEntry.WHITE_TEXTURE ||
+                                                face.TextureFace.TextureID == OMV.UUID.Zero) {
+                                    GL.PolygonMode(MaterialFace.Front, PolygonMode.Fill);
+                                }
+                                else {
+                                    GL.PolygonMode(MaterialFace.Front, PolygonMode.Line);
+                                }
+                            }
+
+                            if (firstPass && !alpha || !firstPass && alpha) {
+                                // GL.Color4(color.R, color.G, color.B, color.A);
+                                float[] matDiffuse = { color.R, color.G, color.B, color.A };
+                                GL.Material(MaterialFace.FrontAndBack, MaterialParameter.Diffuse, matDiffuse);
+
+                                // Bind the texture
+                                if (textureID != 0) {
+                                    GL.Enable(EnableCap.Texture2D);
+                                    GL.BindTexture(TextureTarget.Texture2D, textureID);
+                                }
+                                else {
+                                    GL.Disable(EnableCap.Texture2D);
+                                }
+
+                                GL.Enable(EnableCap.Normalize);
+
+                                GL.EnableClientState(ArrayCap.TextureCoordArray);
+                                GL.EnableClientState(ArrayCap.VertexArray);
+                                GL.EnableClientState(ArrayCap.NormalArray);
+
+                                GL.TexCoordPointer(2, TexCoordPointerType.Float, 0, data.TexCoords);
+                                GL.VertexPointer(3, VertexPointerType.Float, 0, data.Vertices);
+                                GL.NormalPointer(NormalPointerType.Float, 0, data.Normals);
+                                GL.DrawElements(BeginMode.Triangles, data.Indices.Length, DrawElementsType.UnsignedShort, data.Indices);
                             }
                         }
 
-                        if (firstPass && !alpha || !firstPass && alpha) {
-                            // Color this prim differently based on whether it is selected or not
-                            if (LastHit == prim.LocalID || (LastHit != 0 && LastHit == prim.ParentID)) {
-                                GL.Color4(1f, color.G * 0.3f, color.B * 0.3f, color.A);
-                            }
-                            else {
-                                GL.Color4(color.R, color.G, color.B, color.A);
-                            }
-
-                            // Bind the texture
-                            if (textureID != 0) {
-                                GL.Enable(EnableCap.Texture2D);
-                                GL.BindTexture(TextureTarget.Texture2D, textureID);
-                            }
-                            else {
-                                GL.Disable(EnableCap.Texture2D);
-                            }
-
-                            GL.EnableClientState(ArrayCap.TextureCoordArray);
-                            GL.EnableClientState(ArrayCap.VertexArray);
-                            GL.EnableClientState(ArrayCap.NormalArray);
-
-                            GL.TexCoordPointer(2, TexCoordPointerType.Float, 0, data.TexCoords);
-                            GL.VertexPointer(3, VertexPointerType.Float, 0, data.Vertices);
-                            GL.NormalPointer(NormalPointerType.Float, 0, data.Normals);
-                            GL.DrawElements(BeginMode.Triangles, data.Indices.Length, DrawElementsType.UnsignedShort, data.Indices);
-                        }
-
-                        #endregion Texturing
+                        GL.PopMatrix();
+                        GL.PopName();
                     }
 
-                    GL.PopMatrix();
-                    GL.PopName();
+                    if (firstPass) {
+                        firstPass = false;
+                        GL.Enable(EnableCap.Blend);
+                        GL.BlendFunc(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha);
+                        // GL.Disable(EnableCap.DepthTest);
+
+                        goto StartRender;
+                    }
                 }
 
-                if (firstPass) {
-                    firstPass = false;
-                    GL.Enable(EnableCap.Blend);
-                    GL.BlendFunc(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha);
-                    // GL.Disable(EnableCap.DepthTest);
-
-                    goto StartRender;
-                }
+                // GL.Enable(EnableCap.DepthTest);
+                GL.Disable(EnableCap.Texture2D);
             }
-
-            // GL.Enable(EnableCap.DepthTest);
-            GL.Disable(EnableCap.Texture2D);
         }
     }
 
@@ -656,6 +712,15 @@ namespace LookingGlass.Renderer.OGL {
 
     private void RenderAvatars()
     {
+        foreach (RegionContextBase rcontext in m_renderer.m_trackedRegions) {
+            RegionRenderInfo rri = rcontext.Get<RegionRenderInfo>();
+            if (rcontext.TryGet<RegionRenderInfo>(out rri)) {
+                lock (rri.renderPrimList) {
+                    foreach (RenderablePrim render in rri.renderPrimList.Values) {
+                    }
+                }
+            }
+        }
         /*
         if (Client != null && Client.Network.CurrentSim != null) {
             GL.glColor3(0f, 1f, 0f);
