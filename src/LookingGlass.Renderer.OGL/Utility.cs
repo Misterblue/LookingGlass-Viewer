@@ -94,6 +94,18 @@ namespace LookingGlass.Renderer.OGL {
         public readonly static RenderablePrim Empty = new RenderablePrim();
     }
 
+    // terrain info kept by renderer so it doesn't need to be rebuilt every frame
+    // Attached to rcontext of the region
+    public class OGLTerrainInfo {
+        public float[] terrainVertices;
+        public float[] terrainTexCoord;
+        public float[] terrainNormal;
+        public UInt16[] terrainIndices;
+        public float terrainWidth = -1f;
+        public float terrainLength = -1f;
+        public bool refreshTerrain;
+    }
+
     public struct Camera {
         public OMV.Vector3 Position;
         public OMV.Vector3 FocalPoint;

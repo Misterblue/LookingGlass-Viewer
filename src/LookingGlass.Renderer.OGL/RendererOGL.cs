@@ -331,7 +331,12 @@ public class RendererOGL : IModule, IRenderProvider {
     }
 
     // something about the terrain has changed, do some updating
-    public void UpdateTerrain(RegionContextBase wcontext) {
+    public void UpdateTerrain(RegionContextBase rcontext) {
+        OGLTerrainInfo oglti;
+        if (rcontext.TryGet<OGLTerrainInfo>(out oglti)) {
+            // making this true will case the low level renderer to rebuild the terrain
+            oglti.refreshTerrain = true;
+        }
         return;
     }
     #endregion IRenderProvider

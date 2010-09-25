@@ -179,14 +179,12 @@ namespace LookingGlass.Renderer.OGL {
 
         // set up the sun (Light0)
         GL.Enable(EnableCap.Light0);
-        float[] sunAmbient = { 0.2f, 0.2f, 0.2f, 1.0f };
+        float[] sunAmbient = { 0.8f, 0.8f, 0.8f, 1.0f };
         float[] sunDiffuse = { 1.0f, 1.0f, 1.0f, 1.0f };
         float[] sunSpecular = { 0.8f, 0.8f, 0.8f, 1.0f };
-        float[] sunPosition = { 500.0f, 500.0f, 500.0f, 1.0f };
         GL.Light(LightName.Light0, LightParameter.Ambient, sunAmbient);
         GL.Light(LightName.Light0, LightParameter.Diffuse, sunDiffuse);
         GL.Light(LightName.Light0, LightParameter.Specular, sunSpecular);
-        GL.Light(LightName.Light0, LightParameter.Position, sunPosition);
     }
 
     private void InitHeightmap() {
@@ -282,8 +280,11 @@ namespace LookingGlass.Renderer.OGL {
 
             RenderSkybox();
 
-            GL.PushMatrix();
+            float[] sunPosition = { 500.0f, 500.0f, 500.0f, 1.0f };
+            GL.Light(LightName.Light0, LightParameter.Position, sunPosition);
 
+            GL.PushMatrix();
+            
             RenderTerrain();
             RenderPrims();
             RenderAvatars();
@@ -339,14 +340,6 @@ namespace LookingGlass.Renderer.OGL {
         //Gl.glTranslatef(0f, 0f, 0f);
     }
 
-    private class OGLTerrainInfo {
-        public float[] terrainVertices;
-        public float[] terrainTexCoord;
-        public float[] terrainNormal;
-        public UInt16[] terrainIndices;
-        public float terrainWidth = -1f;
-        public float terrainLength = -1f;
-    }
     private void RenderTerrain() {
         foreach (RegionContextBase rcontext in m_renderer.m_trackedRegions) {
             GL.PushMatrix();
@@ -357,6 +350,12 @@ namespace LookingGlass.Renderer.OGL {
                 oglti = new OGLTerrainInfo();
                 rcontext.RegisterInterface<OGLTerrainInfo>(oglti);
                 UpdateRegionTerrainMesh(rcontext, oglti);
+            }
+
+            // if the terrain has changed, 
+            if (oglti.refreshTerrain) {
+                UpdateRegionTerrainMesh(rcontext, oglti);
+                oglti.refreshTerrain = false;
             }
 
             // apply region offset
