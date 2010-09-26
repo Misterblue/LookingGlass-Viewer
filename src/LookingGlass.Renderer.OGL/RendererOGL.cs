@@ -50,14 +50,13 @@ public class RendererOGL : IModule, IRenderProvider {
 
     //Terrain
     public float MaxHeight = 0.1f;
-    public OMV.TerrainPatch[,] Heightmap;
     public List<RegionContextBase> m_trackedRegions;
     public RegionContextBase m_focusRegion = null;
 
     public bool m_wireFrame = false;
 
     #region IModule
-    protected string m_moduleName;
+    public string m_moduleName;
     public string ModuleName { get { return m_moduleName; } set { m_moduleName = value; } }
 
     protected LookingGlassBase m_lgb = null;
@@ -78,6 +77,19 @@ public class RendererOGL : IModule, IRenderProvider {
         m_lgb = lgbase;
         ModuleParams.AddDefaultParameter(m_moduleName + ".InputSystem.Name", "WindowUI",
                     "Name of the input module");
+
+        ModuleParams.AddDefaultParameter(m_moduleName + ".OGL.Global.Ambient", "<0.2,0.2,0.2>",
+                    "Ambient lighting for the sun");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".OGL.Sun.Ambient", "<0.8,0.8,0.8>",
+                    "Ambient lighting for the sun");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".OGL.Sun.Specular", "<0.8,0.8,0.8>",
+                    "Ambient lighting for the sun");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".OGL.Sun.Diffuse", "<1.0,1.0,1.0>",
+                    "Ambient lighting for the sun");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".OGL.Avatar.Color", "<0.4,0.4,0.8>",
+                    "Color of avatar sphere");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".OGL.Avatar.Transparancy", "0.5",
+                    "Color of avatar sphere");
     }
 
     // IModule.AfterAllModulesLoaded
@@ -152,6 +164,21 @@ public class RendererOGL : IModule, IRenderProvider {
 
     private void CreateNewPrim(LLEntityBase ent) {
         m_log.Log(LogLevel.DRENDERDETAIL, "Create new prim {0}", ent.Name.Name);
+        IEntityAvatar av;
+        if (ent.TryGet<IEntityAvatar>(out av)) {
+            // if this entity is an avatar, just put it on the display list
+            RegionRenderInfo rri;
+            if (ent.RegionContext.TryGet<RegionRenderInfo>(out rri)) {
+                lock (rri.renderAvatarList) {
+                    if (!rri.renderAvatarList.ContainsKey(av.LGID)) {
+                        RenderableAvatar ravv = new RenderableAvatar();
+                        ravv.avatar = av;
+                        rri.renderAvatarList.Add(av.LGID, ravv);
+                    }
+                }
+            }
+            return;
+        }
         OMV.Primitive prim = ent.Prim;
         /* don't do foliage yet
         if (prim.PrimData.PCode == OMV.PCode.Grass 
@@ -254,13 +281,13 @@ public class RendererOGL : IModule, IRenderProvider {
         }
 
         // entity render info is kept per region. Get the region prim structure
-        RegionRenderInfo rri;
-        if (!ent.RegionContext.TryGet<RegionRenderInfo>(out rri)) {
-            rri = new RegionRenderInfo();
-            ent.RegionContext.RegisterInterface<RegionRenderInfo>(rri);
+        RegionRenderInfo rrii;
+        if (!ent.RegionContext.TryGet<RegionRenderInfo>(out rrii)) {
+            rrii = new RegionRenderInfo();
+            ent.RegionContext.RegisterInterface<RegionRenderInfo>(rrii);
         }
-        lock (rri.renderPrimList) {
-            rri.renderPrimList[prim.LocalID] = render;
+        lock (rrii.renderPrimList) {
+            rrii.renderPrimList[prim.LocalID] = render;
         }
     }
 

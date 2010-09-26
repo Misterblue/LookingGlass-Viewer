@@ -75,14 +75,15 @@ namespace LookingGlass.Renderer.OGL {
         public RegionRenderInfo() {
             this.renderFoliageList = new Dictionary<uint, OMV.Primitive>();
             this.renderPrimList = new Dictionary<uint, RenderablePrim>();
-            this.renderAvatarList = new Dictionary<uint, RenderableAvatar>();
+            this.renderAvatarList = new Dictionary<ulong, RenderableAvatar>();
         }
         public Dictionary<uint, OMV.Primitive> renderFoliageList;
         public Dictionary<uint, RenderablePrim> renderPrimList;
-        public Dictionary<uint, RenderableAvatar> renderAvatarList;
+        public Dictionary<ulong, RenderableAvatar> renderAvatarList;
     }
 
     public struct RenderableAvatar {
+        public IEntityAvatar avatar;
     }
 
     public struct RenderablePrim {

@@ -174,28 +174,21 @@ namespace LookingGlass.Renderer.OGL {
         GL.ShadeModel(ShadingModel.Smooth);
         GL.Enable(EnableCap.Lighting);
 
-        float[] globalAmbient = { 0.2f, 0.2f, 0.2f, 1.0f };
+        OMV.Vector3 ambientSpec = ParamVector(m_renderer.m_moduleName + ".OGL.Global.Ambient");
+        float[] globalAmbient = { ambientSpec.X, ambientSpec.Y, ambientSpec.Z, 1.0f };
         GL.LightModel(LightModelParameter.LightModelAmbient, globalAmbient);
 
         // set up the sun (Light0)
         GL.Enable(EnableCap.Light0);
-        float[] sunAmbient = { 0.8f, 0.8f, 0.8f, 1.0f };
-        float[] sunDiffuse = { 1.0f, 1.0f, 1.0f, 1.0f };
-        float[] sunSpecular = { 0.8f, 0.8f, 0.8f, 1.0f };
+        OMV.Vector3 sunSpec = ParamVector(m_renderer.m_moduleName + ".OGL.Sun.Ambient");
+        float[] sunAmbient = { sunSpec.X, sunSpec.Y, sunSpec.Z, 1.0f };
+        sunSpec = ParamVector(m_renderer.m_moduleName + ".OGL.Sun.Diffuse");
+        float[] sunDiffuse = { sunSpec.X, sunSpec.Y, sunSpec.Z, 1.0f };
+        sunSpec = ParamVector(m_renderer.m_moduleName + ".OGL.Sun.Specular");
+        float[] sunSpecular = { sunSpec.X, sunSpec.Y, sunSpec.Z, 1.0f };
         GL.Light(LightName.Light0, LightParameter.Ambient, sunAmbient);
         GL.Light(LightName.Light0, LightParameter.Diffuse, sunDiffuse);
         GL.Light(LightName.Light0, LightParameter.Specular, sunSpecular);
-    }
-
-    private void InitHeightmap() {
-        // Initialize the heightmap
-        m_renderer.Heightmap = new OMV.TerrainPatch[16, 16];
-        for (int y = 0; y < 16; y++) {
-            for (int x = 0; x < 16; x++) {
-                m_renderer.Heightmap[y, x] = new OMV.TerrainPatch();
-                m_renderer.Heightmap[y, x].Data = new float[16 * 16];
-            }
-        }
     }
 
     private void InitCamera() {
@@ -250,7 +243,6 @@ namespace LookingGlass.Renderer.OGL {
 
         InitOpenGL();
         InitLighting();
-        InitHeightmap();
         InitCamera();
 
         // Call the resizing function which sets up the GL drawing window
@@ -354,8 +346,8 @@ namespace LookingGlass.Renderer.OGL {
 
             // if the terrain has changed, 
             if (oglti.refreshTerrain) {
-                UpdateRegionTerrainMesh(rcontext, oglti);
                 oglti.refreshTerrain = false;
+                UpdateRegionTerrainMesh(rcontext, oglti);
             }
 
             // apply region offset
@@ -445,70 +437,6 @@ namespace LookingGlass.Renderer.OGL {
                 oglti.terrainNormal[nextNrm + 2] = theNormal.Z;
                 nextNrm += 3;
                 nextQuad += 4;
-            }
-        }
-    }
-
-    private void OldRenderTerrain() {
-        bool selected = false;  // don't throw out the selected code but ignore selection
-        if (m_renderer.Heightmap != null) {
-            int i = 0;
-
-            // No texture
-            GL.BindTexture(TextureTarget.Texture2D, 0);
-
-            for (int hy = 0; hy < 16; hy++) {
-                for (int hx = 0; hx < 16; hx++) {
-                    uint patchName = (uint)(TERRAIN_START + i);
-                    GL.PushName(patchName);
-                    ++i;
-
-                    for (int y = 0; y < 15; y++) {
-                        GL.Begin(BeginMode.TriangleStrip);
-
-                        for (int x = 0; x < 15; x++) {
-                            // Vertex 0
-                            float height = m_renderer.Heightmap[hy, hx].Data[y * 16 + x];
-                            float color = height / m_renderer.MaxHeight;
-                            float red = (selected) ? 1f : color;
-
-                            GL.Color3(red, color, color);
-                            GL.TexCoord2(0f, 0f);
-                            GL.Vertex3(hx * 16 + x, hy * 16 + y, height);
-
-                            // Vertex 1
-                            height = m_renderer.Heightmap[hy, hx].Data[y * 16 + (x + 1)];
-                            color = height / m_renderer.MaxHeight;
-                            red = (selected) ? 1f : color;
-
-                            GL.Color3(red, color, color);
-                            GL.TexCoord2(1f, 0f);
-                            GL.Vertex3(hx * 16 + x + 1, hy * 16 + y, height);
-
-                            // Vertex 2
-                            height = m_renderer.Heightmap[hy, hx].Data[(y + 1) * 16 + x];
-                            color = height / m_renderer.MaxHeight;
-                            red = (selected) ? 1f : color;
-
-                            GL.Color3(red, color, color);
-                            GL.TexCoord2(0f, 1f);
-                            GL.Vertex3(hx * 16 + x, hy * 16 + y + 1, height);
-
-                            // Vertex 3
-                            height = m_renderer.Heightmap[hy, hx].Data[(y + 1) * 16 + (x + 1)];
-                            color = height / m_renderer.MaxHeight;
-                            red = (selected) ? 1f : color;
-
-                            GL.Color3(red, color, color);
-                            GL.TexCoord2(1f, 1f);
-                            GL.Vertex3(hx * 16 + x + 1, hy * 16 + y + 1, height);
-                        }
-
-                        GL.End();
-                    }
-
-                    GL.PopName();
-                }
             }
         }
     }
@@ -622,7 +550,7 @@ namespace LookingGlass.Renderer.OGL {
                                     GL.Disable(EnableCap.Texture2D);
                                 }
 
-                                GL.Enable(EnableCap.Normalize);
+                                // GL.Enable(EnableCap.Normalize);
 
                                 GL.EnableClientState(ArrayCap.TextureCoordArray);
                                 GL.EnableClientState(ArrayCap.VertexArray);
@@ -714,8 +642,23 @@ namespace LookingGlass.Renderer.OGL {
         foreach (RegionContextBase rcontext in m_renderer.m_trackedRegions) {
             RegionRenderInfo rri = rcontext.Get<RegionRenderInfo>();
             if (rcontext.TryGet<RegionRenderInfo>(out rri)) {
-                lock (rri.renderPrimList) {
-                    foreach (RenderablePrim render in rri.renderPrimList.Values) {
+                lock (rri.renderAvatarList) {
+                    foreach (RenderableAvatar rav in rri.renderAvatarList.Values) {
+                        GL.PushMatrix();
+                        GL.Translate(rav.avatar.RegionPosition.X, 
+                            rav.avatar.RegionPosition.Y, 
+                            rav.avatar.RegionPosition.Z);
+
+                        OMV.Vector3 avatarColor = ParamVector(m_renderer.m_moduleName + ".OGL.Avatar.Color");
+                        float avatarTransparancy = ModuleParams.ParamFloat(m_renderer.m_moduleName + ".OGL.Avatar.Transparancy");
+                        float[] matColor = {avatarColor.X, avatarColor.Y, avatarColor.Z, avatarTransparancy};
+                        GL.Material(MaterialFace.FrontAndBack, MaterialParameter.Diffuse, matColor);
+                        GL.Disable(EnableCap.Texture2D);
+                        Glu.GLUquadric quad = Glu.gluNewQuadric();
+                        Glu.gluSphere(quad, 0.5d, 10, 10);
+                        Glu.gluDeleteQuadric(quad);
+
+                        GL.PopMatrix();
                     }
                 }
             }
@@ -740,6 +683,15 @@ namespace LookingGlass.Renderer.OGL {
             GL.Color3(1f, 1f, 1f);
         }
          */
+    }
+
+    private OMV.Vector3 ParamVector(string paramName) {
+        OMV.Vector3 ret = OMV.Vector3.Zero;
+        string parm = ModuleParams.ParamString(paramName);
+        if (OMV.Vector3.TryParse(parm, out ret)) {
+            return ret;
+        }
+        return OMV.Vector3.Zero;
     }
 
     private void GLWindow_MouseDown(object sender, MouseEventArgs e) {
