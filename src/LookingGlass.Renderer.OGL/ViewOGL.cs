@@ -174,17 +174,17 @@ namespace LookingGlass.Renderer.OGL {
         GL.ShadeModel(ShadingModel.Smooth);
         GL.Enable(EnableCap.Lighting);
 
-        OMV.Vector3 ambientSpec = ParamVector(m_renderer.m_moduleName + ".OGL.Global.Ambient");
+        OMV.Vector3 ambientSpec = ParamVector3(m_renderer.m_moduleName + ".OGL.Global.Ambient");
         float[] globalAmbient = { ambientSpec.X, ambientSpec.Y, ambientSpec.Z, 1.0f };
         GL.LightModel(LightModelParameter.LightModelAmbient, globalAmbient);
 
         // set up the sun (Light0)
         GL.Enable(EnableCap.Light0);
-        OMV.Vector3 sunSpec = ParamVector(m_renderer.m_moduleName + ".OGL.Sun.Ambient");
+        OMV.Vector3 sunSpec = ParamVector3(m_renderer.m_moduleName + ".OGL.Sun.Ambient");
         float[] sunAmbient = { sunSpec.X, sunSpec.Y, sunSpec.Z, 1.0f };
-        sunSpec = ParamVector(m_renderer.m_moduleName + ".OGL.Sun.Diffuse");
+        sunSpec = ParamVector3(m_renderer.m_moduleName + ".OGL.Sun.Diffuse");
         float[] sunDiffuse = { sunSpec.X, sunSpec.Y, sunSpec.Z, 1.0f };
-        sunSpec = ParamVector(m_renderer.m_moduleName + ".OGL.Sun.Specular");
+        sunSpec = ParamVector3(m_renderer.m_moduleName + ".OGL.Sun.Specular");
         float[] sunSpecular = { sunSpec.X, sunSpec.Y, sunSpec.Z, 1.0f };
         GL.Light(LightName.Light0, LightParameter.Ambient, sunAmbient);
         GL.Light(LightName.Light0, LightParameter.Diffuse, sunDiffuse);
@@ -438,6 +438,10 @@ namespace LookingGlass.Renderer.OGL {
                 nextNrm += 3;
                 nextQuad += 4;
             }
+            oglti.terrainNormal[nextNrm + 0] = 1.0f;
+            oglti.terrainNormal[nextNrm + 1] = 0.0f;
+            oglti.terrainNormal[nextNrm + 2] = 0.0f;
+            nextNrm += 3;
         }
     }
 
@@ -642,6 +646,11 @@ namespace LookingGlass.Renderer.OGL {
         foreach (RegionContextBase rcontext in m_renderer.m_trackedRegions) {
             RegionRenderInfo rri = rcontext.Get<RegionRenderInfo>();
             if (rcontext.TryGet<RegionRenderInfo>(out rri)) {
+
+                OMV.Vector3 avatarColor = ParamVector3(m_renderer.m_moduleName + ".OGL.Avatar.Color");
+                float avatarTransparancy = ModuleParams.ParamFloat(m_renderer.m_moduleName + ".OGL.Avatar.Transparancy");
+                float[] m_avatarMaterialColor = {avatarColor.X, avatarColor.Y, avatarColor.Z, avatarTransparancy};
+
                 lock (rri.renderAvatarList) {
                     foreach (RenderableAvatar rav in rri.renderAvatarList.Values) {
                         GL.PushMatrix();
@@ -649,10 +658,7 @@ namespace LookingGlass.Renderer.OGL {
                             rav.avatar.RegionPosition.Y, 
                             rav.avatar.RegionPosition.Z);
 
-                        OMV.Vector3 avatarColor = ParamVector(m_renderer.m_moduleName + ".OGL.Avatar.Color");
-                        float avatarTransparancy = ModuleParams.ParamFloat(m_renderer.m_moduleName + ".OGL.Avatar.Transparancy");
-                        float[] matColor = {avatarColor.X, avatarColor.Y, avatarColor.Z, avatarTransparancy};
-                        GL.Material(MaterialFace.FrontAndBack, MaterialParameter.Diffuse, matColor);
+                        GL.Material(MaterialFace.FrontAndBack, MaterialParameter.Diffuse, m_avatarMaterialColor);
                         GL.Disable(EnableCap.Texture2D);
                         Glu.GLUquadric quad = Glu.gluNewQuadric();
                         Glu.gluSphere(quad, 0.5d, 10, 10);
@@ -663,29 +669,9 @@ namespace LookingGlass.Renderer.OGL {
                 }
             }
         }
-        /*
-        if (Client != null && Client.Network.CurrentSim != null) {
-            GL.glColor3(0f, 1f, 0f);
-
-            Client.Network.CurrentSim.ObjectsAvatars.ForEach(
-                delegate(Avatar avatar) {
-                    GL.PushMatrix();
-                    GL.Translatef(avatar.Position.X, avatar.Position.Y, avatar.Position.Z);
-
-                    Glu.GLUquadric quad = Glu.gluNewQuadric();
-                    Glu.gluSphere(quad, 1.0d, 10, 10);
-                    Glu.gluDeleteQuadric(quad);
-
-                    GL.PopMatrix();
-                }
-            );
-
-            GL.Color3(1f, 1f, 1f);
-        }
-         */
     }
 
-    private OMV.Vector3 ParamVector(string paramName) {
+    private OMV.Vector3 ParamVector3(string paramName) {
         OMV.Vector3 ret = OMV.Vector3.Zero;
         string parm = ModuleParams.ParamString(paramName);
         if (OMV.Vector3.TryParse(parm, out ret)) {
