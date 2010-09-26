@@ -75,6 +75,8 @@ namespace LookingGlass.Renderer.OGL {
             this.renderFoliageList = new Dictionary<uint, OMV.Primitive>();
             this.renderPrimList = new Dictionary<uint, RenderablePrim>();
             this.renderAvatarList = new Dictionary<ulong, RenderableAvatar>();
+            this.oceanHeight = 0f;
+            this.terrainWidth = this.terrainLength = -1;
             this.refreshTerrain = true;     // force initial build
         }
         public Dictionary<uint, OMV.Primitive> renderFoliageList;
@@ -86,8 +88,9 @@ namespace LookingGlass.Renderer.OGL {
         public float[] terrainTexCoord;
         public float[] terrainNormal;
         public UInt16[] terrainIndices;
-        public float terrainWidth = -1f;
-        public float terrainLength = -1f;
+        public float terrainWidth;
+        public float terrainLength;
+        public float oceanHeight;
     }
 
     public struct RenderableAvatar {

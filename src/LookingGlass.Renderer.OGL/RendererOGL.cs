@@ -167,22 +167,15 @@ public class RendererOGL : IModule, IRenderProvider {
     private void CreateNewPrim(LLEntityBase ent) {
         m_log.Log(LogLevel.DRENDERDETAIL, "Create new prim {0}", ent.Name.Name);
         // entity render info is kept per region. Get the region prim structure
-        RegionRenderInfo rrii;
-        if (!ent.RegionContext.TryGet<RegionRenderInfo>(out rrii)) {
-            rrii = new RegionRenderInfo();
-            ent.RegionContext.RegisterInterface<RegionRenderInfo>(rrii);
-        }
+        RegionRenderInfo rri = GetRegionRenderInfo(ent.RegionContext);
         IEntityAvatar av;
         if (ent.TryGet<IEntityAvatar>(out av)) {
             // if this entity is an avatar, just put it on the display list
-            RegionRenderInfo rri;
-            if (ent.RegionContext.TryGet<RegionRenderInfo>(out rri)) {
-                lock (rri.renderAvatarList) {
-                    if (!rri.renderAvatarList.ContainsKey(av.LGID)) {
-                        RenderableAvatar ravv = new RenderableAvatar();
-                        ravv.avatar = av;
-                        rri.renderAvatarList.Add(av.LGID, ravv);
-                    }
+            lock (rri.renderAvatarList) {
+                if (!rri.renderAvatarList.ContainsKey(av.LGID)) {
+                    RenderableAvatar ravv = new RenderableAvatar();
+                    ravv.avatar = av;
+                    rri.renderAvatarList.Add(av.LGID, ravv);
                 }
             }
             return;
@@ -288,8 +281,8 @@ public class RendererOGL : IModule, IRenderProvider {
             render.Mesh.Faces[j] = face;
         }
 
-        lock (rrii.renderPrimList) {
-            rrii.renderPrimList[prim.LocalID] = render;
+        lock (rri.renderPrimList) {
+            rri.renderPrimList[prim.LocalID] = render;
         }
     }
 
@@ -350,12 +343,20 @@ public class RendererOGL : IModule, IRenderProvider {
         if (!m_trackedRegions.Contains(rcontext)) {
             m_trackedRegions.Add(rcontext);
         }
-        RegionRenderInfo rri;
-        if (!rcontext.TryGet<RegionRenderInfo>(out rri)) {
-            rri = new RegionRenderInfo();
-            rcontext.RegisterInterface<RegionRenderInfo>(rri);
-        }
+        // get the render info block to create it if it doesn't exist
+        RegionRenderInfo rri = GetRegionRenderInfo(rcontext);
         return;
+    }
+
+    // create and initialize the renderinfoblock
+    private RegionRenderInfo GetRegionRenderInfo(RegionContextBase rcontext) {
+        RegionRenderInfo ret = null;
+        if (!rcontext.TryGet<RegionRenderInfo>(out ret)) {
+            ret = new RegionRenderInfo();
+            rcontext.RegisterInterface<RegionRenderInfo>(ret);
+            ret.oceanHeight = rcontext.TerrainInfo.WaterHeight;
+        }
+        return ret;
     }
 
     // Set one region as the focus of display
@@ -366,11 +367,9 @@ public class RendererOGL : IModule, IRenderProvider {
 
     // something about the terrain has changed, do some updating
     public void UpdateTerrain(RegionContextBase rcontext) {
-        RegionRenderInfo rri;
-        if (rcontext.TryGet<RegionRenderInfo>(out rri)) {
-            // making this true will case the low level renderer to rebuild the terrain
-            rri.refreshTerrain = true;
-        }
+        RegionRenderInfo rri = GetRegionRenderInfo(rcontext);
+        // making this true will case the low level renderer to rebuild the terrain
+        rri.refreshTerrain = true;
         return;
     }
     #endregion IRenderProvider
