@@ -166,6 +166,12 @@ public class RendererOGL : IModule, IRenderProvider {
 
     private void CreateNewPrim(LLEntityBase ent) {
         m_log.Log(LogLevel.DRENDERDETAIL, "Create new prim {0}", ent.Name.Name);
+        // entity render info is kept per region. Get the region prim structure
+        RegionRenderInfo rrii;
+        if (!ent.RegionContext.TryGet<RegionRenderInfo>(out rrii)) {
+            rrii = new RegionRenderInfo();
+            ent.RegionContext.RegisterInterface<RegionRenderInfo>(rrii);
+        }
         IEntityAvatar av;
         if (ent.TryGet<IEntityAvatar>(out av)) {
             // if this entity is an avatar, just put it on the display list
@@ -282,12 +288,6 @@ public class RendererOGL : IModule, IRenderProvider {
             render.Mesh.Faces[j] = face;
         }
 
-        // entity render info is kept per region. Get the region prim structure
-        RegionRenderInfo rrii;
-        if (!ent.RegionContext.TryGet<RegionRenderInfo>(out rrii)) {
-            rrii = new RegionRenderInfo();
-            ent.RegionContext.RegisterInterface<RegionRenderInfo>(rrii);
-        }
         lock (rrii.renderPrimList) {
             rrii.renderPrimList[prim.LocalID] = render;
         }
@@ -350,6 +350,11 @@ public class RendererOGL : IModule, IRenderProvider {
         if (!m_trackedRegions.Contains(rcontext)) {
             m_trackedRegions.Add(rcontext);
         }
+        RegionRenderInfo rri;
+        if (!rcontext.TryGet<RegionRenderInfo>(out rri)) {
+            rri = new RegionRenderInfo();
+            rcontext.RegisterInterface<RegionRenderInfo>(rri);
+        }
         return;
     }
 
@@ -361,10 +366,10 @@ public class RendererOGL : IModule, IRenderProvider {
 
     // something about the terrain has changed, do some updating
     public void UpdateTerrain(RegionContextBase rcontext) {
-        OGLTerrainInfo oglti;
-        if (rcontext.TryGet<OGLTerrainInfo>(out oglti)) {
+        RegionRenderInfo rri;
+        if (rcontext.TryGet<RegionRenderInfo>(out rri)) {
             // making this true will case the low level renderer to rebuild the terrain
-            oglti.refreshTerrain = true;
+            rri.refreshTerrain = true;
         }
         return;
     }

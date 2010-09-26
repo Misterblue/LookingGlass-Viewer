@@ -68,18 +68,26 @@ namespace LookingGlass.Renderer.OGL {
         }
     }
 
-    // This routine converts and  places the rendering information for each region
-    // into RegionRenderInfo structs that are stuck onto  the rcontext's as
+    // Rendering information for each region that are stuck onto  the rcontext's as
     // an interface.
     public class RegionRenderInfo {
         public RegionRenderInfo() {
             this.renderFoliageList = new Dictionary<uint, OMV.Primitive>();
             this.renderPrimList = new Dictionary<uint, RenderablePrim>();
             this.renderAvatarList = new Dictionary<ulong, RenderableAvatar>();
+            this.refreshTerrain = true;     // force initial build
         }
         public Dictionary<uint, OMV.Primitive> renderFoliageList;
         public Dictionary<uint, RenderablePrim> renderPrimList;
         public Dictionary<ulong, RenderableAvatar> renderAvatarList;
+
+        public bool refreshTerrain;
+        public float[] terrainVertices;
+        public float[] terrainTexCoord;
+        public float[] terrainNormal;
+        public UInt16[] terrainIndices;
+        public float terrainWidth = -1f;
+        public float terrainLength = -1f;
     }
 
     public struct RenderableAvatar {
@@ -93,18 +101,6 @@ namespace LookingGlass.Renderer.OGL {
         public AssetContextBase acontext;   // used for finding textures for Prim
 
         public readonly static RenderablePrim Empty = new RenderablePrim();
-    }
-
-    // terrain info kept by renderer so it doesn't need to be rebuilt every frame
-    // Attached to rcontext of the region
-    public class OGLTerrainInfo {
-        public float[] terrainVertices;
-        public float[] terrainTexCoord;
-        public float[] terrainNormal;
-        public UInt16[] terrainIndices;
-        public float terrainWidth = -1f;
-        public float terrainLength = -1f;
-        public bool refreshTerrain;
     }
 
     public struct Camera {

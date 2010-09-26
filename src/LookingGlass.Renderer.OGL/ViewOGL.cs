@@ -337,18 +337,16 @@ namespace LookingGlass.Renderer.OGL {
         foreach (RegionContextBase rcontext in m_renderer.m_trackedRegions) {
             GL.PushMatrix();
 
-            OGLTerrainInfo oglti;
-            if (!rcontext.TryGet<OGLTerrainInfo>(out oglti)) {
-                // The terrain info has not been built for this region. Build same.
-                oglti = new OGLTerrainInfo();
-                rcontext.RegisterInterface<OGLTerrainInfo>(oglti);
-                UpdateRegionTerrainMesh(rcontext, oglti);
+            RegionRenderInfo rri;
+            if (!rcontext.TryGet<RegionRenderInfo>(out rri)) {
+                // this is not possible
+                return;
             }
 
             // if the terrain has changed, 
-            if (oglti.refreshTerrain) {
-                oglti.refreshTerrain = false;
-                UpdateRegionTerrainMesh(rcontext, oglti);
+            if (rri.refreshTerrain) {
+                rri.refreshTerrain = false;
+                UpdateRegionTerrainMesh(rcontext, rri);
             }
 
             // apply region offset
@@ -359,52 +357,52 @@ namespace LookingGlass.Renderer.OGL {
             GL.EnableClientState(ArrayCap.TextureCoordArray);
             GL.EnableClientState(ArrayCap.NormalArray);
 
-            GL.TexCoordPointer(2, TexCoordPointerType.Float, 0, oglti.terrainTexCoord);
-            GL.VertexPointer(3, VertexPointerType.Float, 0, oglti.terrainVertices);
-            GL.NormalPointer(NormalPointerType.Float, 0, oglti.terrainNormal);
-            GL.DrawElements(BeginMode.Quads, oglti.terrainIndices.Length, DrawElementsType.UnsignedShort, oglti.terrainIndices);
+            GL.TexCoordPointer(2, TexCoordPointerType.Float, 0, rri.terrainTexCoord);
+            GL.VertexPointer(3, VertexPointerType.Float, 0, rri.terrainVertices);
+            GL.NormalPointer(NormalPointerType.Float, 0, rri.terrainNormal);
+            GL.DrawElements(BeginMode.Quads, rri.terrainIndices.Length, DrawElementsType.UnsignedShort, rri.terrainIndices);
 
             GL.PopMatrix();
         }
     }
 
-    private void UpdateRegionTerrainMesh(RegionContextBase rcontext, OGLTerrainInfo oglti) {
+    private void UpdateRegionTerrainMesh(RegionContextBase rcontext, RegionRenderInfo rri) {
         TerrainInfoBase ti = rcontext.TerrainInfo;
-        oglti.terrainVertices = new float[3 * ti.HeightMapLength * ti.HeightMapWidth];
-        oglti.terrainTexCoord = new float[2 * ti.HeightMapLength * ti.HeightMapWidth];
-        oglti.terrainNormal = new float[3 * ti.HeightMapLength * ti.HeightMapWidth];
+        rri.terrainVertices = new float[3 * ti.HeightMapLength * ti.HeightMapWidth];
+        rri.terrainTexCoord = new float[2 * ti.HeightMapLength * ti.HeightMapWidth];
+        rri.terrainNormal = new float[3 * ti.HeightMapLength * ti.HeightMapWidth];
         int nextVert = 0;
         int nextTex = 0;
         int nextNorm = 0;
         for (int xx=0; xx < ti.HeightMapLength; xx++) {
             for (int yy = 0; yy < ti.HeightMapWidth; yy++ ) {
-                oglti.terrainVertices[nextVert + 0] = (float)xx / ti.HeightMapLength * rcontext.Size.X;
-                oglti.terrainVertices[nextVert + 1] = (float)yy / ti.HeightMapWidth * rcontext.Size.Y;
-                oglti.terrainVertices[nextVert + 2] = ti.HeightMap[xx, yy];
+                rri.terrainVertices[nextVert + 0] = (float)xx / ti.HeightMapLength * rcontext.Size.X;
+                rri.terrainVertices[nextVert + 1] = (float)yy / ti.HeightMapWidth * rcontext.Size.Y;
+                rri.terrainVertices[nextVert + 2] = ti.HeightMap[xx, yy];
                 nextVert += 3;
-                oglti.terrainTexCoord[nextTex + 0] = xx / ti.HeightMapLength;
-                oglti.terrainTexCoord[nextTex + 1] = yy / ti.HeightMapWidth;
+                rri.terrainTexCoord[nextTex + 0] = xx / ti.HeightMapLength;
+                rri.terrainTexCoord[nextTex + 1] = yy / ti.HeightMapWidth;
                 nextTex += 2;
-                oglti.terrainNormal[nextNorm + 0] = 0f;   // simple normal pointing up
-                oglti.terrainNormal[nextNorm + 1] = 1f;
-                oglti.terrainNormal[nextNorm + 2] = 0f;
+                rri.terrainNormal[nextNorm + 0] = 0f;   // simple normal pointing up
+                rri.terrainNormal[nextNorm + 1] = 1f;
+                rri.terrainNormal[nextNorm + 2] = 0f;
                 nextNorm += 3;
             }
         }
         // Create the quads which make up the terrain
-        oglti.terrainIndices = new UInt16[4 * ti.HeightMapLength * ti.HeightMapWidth];
+        rri.terrainIndices = new UInt16[4 * ti.HeightMapLength * ti.HeightMapWidth];
         int nextInd = 0;
         for (int xx=0; xx < ti.HeightMapLength-1; xx++) {
             for (int yy = 0; yy < ti.HeightMapWidth-1; yy++ ) {
-                oglti.terrainIndices[nextInd + 0] = (UInt16)((yy + 0) + (xx + 0)* ti.HeightMapLength);
-                oglti.terrainIndices[nextInd + 1] = (UInt16)((yy + 1) + (xx + 0)* ti.HeightMapLength);
-                oglti.terrainIndices[nextInd + 2] = (UInt16)((yy + 1) + (xx + 1)* ti.HeightMapLength);
-                oglti.terrainIndices[nextInd + 3] = (UInt16)((yy + 0) + (xx + 1)* ti.HeightMapLength);
+                rri.terrainIndices[nextInd + 0] = (UInt16)((yy + 0) + (xx + 0)* ti.HeightMapLength);
+                rri.terrainIndices[nextInd + 1] = (UInt16)((yy + 1) + (xx + 0)* ti.HeightMapLength);
+                rri.terrainIndices[nextInd + 2] = (UInt16)((yy + 1) + (xx + 1)* ti.HeightMapLength);
+                rri.terrainIndices[nextInd + 3] = (UInt16)((yy + 0) + (xx + 1)* ti.HeightMapLength);
                 nextInd += 4;
             }
         }
-        oglti.terrainWidth = ti.HeightMapWidth;
-        oglti.terrainLength = ti.HeightMapLength;
+        rri.terrainWidth = ti.HeightMapWidth;
+        rri.terrainLength = ti.HeightMapLength;
 
         // Calculate normals
         // Take three corners of each quad and calculate the normal for the vector
@@ -417,31 +415,31 @@ namespace LookingGlass.Renderer.OGL {
         for (int xx=0; xx < ti.HeightMapLength-1; xx++) {
             for (int yy = 0; yy < ti.HeightMapWidth-1; yy++ ) {
                 OMV.Vector3 aa, bb, cc;
-                int offset = oglti.terrainIndices[nextQuad + 0] * 3;
-                aa.X = oglti.terrainVertices[offset + 0];
-                aa.Y = oglti.terrainVertices[offset + 1];
-                aa.Z = oglti.terrainVertices[offset + 2];
-                offset = oglti.terrainIndices[nextQuad + 1] * 3;
-                bb.X = oglti.terrainVertices[offset + 0];
-                bb.Y = oglti.terrainVertices[offset + 1];
-                bb.Z = oglti.terrainVertices[offset + 2];
-                offset = oglti.terrainIndices[nextQuad + 3] * 3;
-                cc.X = oglti.terrainVertices[offset + 0];
-                cc.Y = oglti.terrainVertices[offset + 1];
-                cc.Z = oglti.terrainVertices[offset + 2];
+                int offset = rri.terrainIndices[nextQuad + 0] * 3;
+                aa.X = rri.terrainVertices[offset + 0];
+                aa.Y = rri.terrainVertices[offset + 1];
+                aa.Z = rri.terrainVertices[offset + 2];
+                offset = rri.terrainIndices[nextQuad + 1] * 3;
+                bb.X = rri.terrainVertices[offset + 0];
+                bb.Y = rri.terrainVertices[offset + 1];
+                bb.Z = rri.terrainVertices[offset + 2];
+                offset = rri.terrainIndices[nextQuad + 3] * 3;
+                cc.X = rri.terrainVertices[offset + 0];
+                cc.Y = rri.terrainVertices[offset + 1];
+                cc.Z = rri.terrainVertices[offset + 2];
                 OMV.Vector3 mm = aa - bb;
                 OMV.Vector3 nn = aa - cc;
                 OMV.Vector3 theNormal = OMV.Vector3.Cross(mm, nn);
                 theNormal.Normalize();
-                oglti.terrainNormal[nextNrm + 0] = theNormal.X;   // simple normal pointing up
-                oglti.terrainNormal[nextNrm + 1] = theNormal.Y;
-                oglti.terrainNormal[nextNrm + 2] = theNormal.Z;
+                rri.terrainNormal[nextNrm + 0] = theNormal.X;   // simple normal pointing up
+                rri.terrainNormal[nextNrm + 1] = theNormal.Y;
+                rri.terrainNormal[nextNrm + 2] = theNormal.Z;
                 nextNrm += 3;
                 nextQuad += 4;
             }
-            oglti.terrainNormal[nextNrm + 0] = 1.0f;
-            oglti.terrainNormal[nextNrm + 1] = 0.0f;
-            oglti.terrainNormal[nextNrm + 2] = 0.0f;
+            rri.terrainNormal[nextNrm + 0] = 1.0f;
+            rri.terrainNormal[nextNrm + 1] = 0.0f;
+            rri.terrainNormal[nextNrm + 2] = 0.0f;
             nextNrm += 3;
         }
     }
@@ -458,7 +456,7 @@ namespace LookingGlass.Renderer.OGL {
 
     private void RenderPrims() {
         foreach (RegionContextBase rcontext in m_renderer.m_trackedRegions) {
-            RegionRenderInfo rri = rcontext.Get<RegionRenderInfo>();
+            RegionRenderInfo rri;
             if (rcontext.TryGet<RegionRenderInfo>(out rri)) {
                 GL.Enable(EnableCap.DepthTest);
                 GL.Enable(EnableCap.Texture2D);
