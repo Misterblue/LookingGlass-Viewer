@@ -196,7 +196,8 @@ namespace LookingGlass.Renderer.OGL {
         m_renderer.Camera.Position = new OMV.Vector3(128f, -192f, 90f);
         m_renderer.Camera.FocalPoint = new OMV.Vector3(128f, 128f, 0f);
         m_renderer.Camera.Zoom = 1.0d;
-        m_renderer.Camera.Far = 512.0d;
+        // m_renderer.Camera.Far = 512.0d;
+        m_renderer.Camera.Far = (double)ModuleParams.ParamFloat(m_renderer.m_moduleName + ".OGL.Camera.Far");
     }
 
     #region GLControl Callbacks
