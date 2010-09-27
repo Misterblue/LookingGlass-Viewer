@@ -276,13 +276,19 @@ namespace LookingGlass.Renderer.OGL {
             float[] sunPosition = { 500.0f, 500.0f, 500.0f, 1.0f };
             GL.Light(LightName.Light0, LightParameter.Position, sunPosition);
 
-            GL.PushMatrix();
-            
-            RenderTerrain();
-            RenderPrims();
-            RenderAvatars();
+            foreach (RegionContextBase rcontext in m_renderer.m_trackedRegions) {
+                RegionRenderInfo rri;
+                if (rcontext.TryGet<RegionRenderInfo>(out rri)) {
+                    GL.PushMatrix();
 
-            GL.PopMatrix();
+                    RenderTerrain(rcontext, rri);
+                    RenderOcean(rcontext, rri);
+                    RenderPrims(rcontext, rri);
+                    RenderAvatars(rcontext, rri);
+
+                    GL.PopMatrix();
+                }
+            }
 
             GL.DisableClientState(ArrayCap.NormalArray);
             GL.DisableClientState(ArrayCap.TextureCoordArray);
@@ -296,74 +302,71 @@ namespace LookingGlass.Renderer.OGL {
         }
     }
 
-    static readonly OMV.Vector3[] SkyboxVerts = new OMV.Vector3[] {
-        // Right side
-        new OMV.Vector3(	 10.0f,		10.0f,		-10.0f	), //Top left
-        new OMV.Vector3(	 10.0f,		10.0f,		10.0f	), //Top right
-        new OMV.Vector3(	 10.0f,		-10.0f,		10.0f	), //Bottom right
-        new OMV.Vector3(	 10.0f,		-10.0f,		-10.0f	), //Bottom left
-        // Left side
-        new OMV.Vector3(	-10.0f,		10.0f,		10.0f	), //Top left
-        new OMV.Vector3(	-10.0f,		10.0f,		-10.0f	), //Top right
-        new OMV.Vector3(	-10.0f,		-10.0f,		-10.0f	), //Bottom right
-        new OMV.Vector3(	-10.0f,		-10.0f,		10.0f	), //Bottom left
-        // Top side
-        new OMV.Vector3(	-10.0f,		10.0f,		10.0f	), //Top left
-        new OMV.Vector3(	 10.0f,		10.0f,		10.0f	), //Top right
-        new OMV.Vector3(	 10.0f,		10.0f,		-10.0f	), //Bottom right
-        new OMV.Vector3(	-10.0f,		10.0f,		-10.0f	), //Bottom left
-        // Bottom side
-        new OMV.Vector3(	-10.0f,		-10.0f,		-10.0f	), //Top left
-        new OMV.Vector3(	 10.0f,		-10.0f,		-10.0f	), //Top right
-        new OMV.Vector3(	 10.0f,		-10.0f,		10.0f	), //Bottom right
-        new OMV.Vector3(	-10.0f,		-10.0f,		10.0f	), //Bottom left
-        // Front side
-        new OMV.Vector3(	-10.0f,		10.0f,		-10.0f	), //Top left
-        new OMV.Vector3(	 10.0f,		10.0f,		-10.0f	), //Top right
-        new OMV.Vector3(	 10.0f,		-10.0f,		-10.0f	), //Bottom right
-        new OMV.Vector3(	-10.0f,		-10.0f,		-10.0f	), //Bottom left
-        // Back side
-        new OMV.Vector3(	10.0f,		10.0f,		10.0f	), //Top left
-        new OMV.Vector3(	-10.0f,		10.0f,		10.0f	), //Top right
-        new OMV.Vector3(	-10.0f,		-10.0f,		10.0f	), //Bottom right
-        new OMV.Vector3(	 10.0f,		-10.0f,		10.0f	), //Bottom left
+    static readonly float[] SkyboxVerts = {
+              00.0f, 10.0f, 00.0f,
+              10.0f, 10.0f, 00.0f,
+              10.0f, 00.0f, 00.0f,
+              00.0f, 00.0f, 00.0f,
+              10.0f, 10.0f, 10.0f,
+              00.0f, 10.0f, 10.0f,
+              00.0f, 00.0f, 10.0f,
+              10.0f, 00.0f, 10.0f,
+    };
+    static readonly ushort[] SkyboxIndices = {
+                0, 1, 2,    // top
+                0, 2, 3,
+                4, 5, 6,    // bottom
+                4, 6, 7,
+                5, 0, 3,    // sides
+                5, 3, 6,
+                1, 0, 5,    // side 2
+                1, 5, 4,
+                7, 1, 4,    // side 3
+                7, 2, 1,
+                3, 2, 7,    // side 4
+                3, 7, 6
     };
 
+    static readonly string[] SkyboxTextures = {
+              "Preload/00000000-0000-0000-9999-9999000000UP",
+              "Preload/00000000-0000-0000-9999-9999000000DN",
+              "Preload/00000000-0000-0000-9999-9999000000BK",
+              "Preload/00000000-0000-0000-9999-9999000000LF",
+              "Preload/00000000-0000-0000-9999-9999000000FR",
+              "Preload/00000000-0000-0000-9999-9999000000RT",
+                                                  };
+
     private void RenderSkybox() {
-        //Gl.glTranslatef(0f, 0f, 0f);
+        /*
+        GL.Translate(0f, 0f, 0f);
+        GL.Disable(EnableCap.DepthTest);
+         */
+
     }
 
-    private void RenderTerrain() {
-        foreach (RegionContextBase rcontext in m_renderer.m_trackedRegions) {
-            GL.PushMatrix();
+    private void RenderTerrain(RegionContextBase rcontext, RegionRenderInfo rri) {
+        GL.PushMatrix();
 
-            RegionRenderInfo rri;
-            if (!rcontext.TryGet<RegionRenderInfo>(out rri)) {
-                // this is not possible
-                return;
-            }
-
-            // if the terrain has changed, 
-            if (rri.refreshTerrain) {
-                rri.refreshTerrain = false;
-                UpdateRegionTerrainMesh(rcontext, rri);
-            }
-
-            // apply region offset
-            GL.MultMatrix(Math3D.CreateTranslationMatrix(CalcRegionOffset(rcontext)));
-
-            // everything built. Display the terrain
-            GL.EnableClientState(ArrayCap.VertexArray);
-            GL.EnableClientState(ArrayCap.TextureCoordArray);
-            GL.EnableClientState(ArrayCap.NormalArray);
-
-            GL.TexCoordPointer(2, TexCoordPointerType.Float, 0, rri.terrainTexCoord);
-            GL.VertexPointer(3, VertexPointerType.Float, 0, rri.terrainVertices);
-            GL.NormalPointer(NormalPointerType.Float, 0, rri.terrainNormal);
-            GL.DrawElements(BeginMode.Quads, rri.terrainIndices.Length, DrawElementsType.UnsignedShort, rri.terrainIndices);
-
-            GL.PopMatrix();
+        // if the terrain has changed, 
+        if (rri.refreshTerrain) {
+            rri.refreshTerrain = false;
+            UpdateRegionTerrainMesh(rcontext, rri);
         }
+
+        // apply region offset
+        GL.MultMatrix(Math3D.CreateTranslationMatrix(CalcRegionOffset(rcontext)));
+
+        // everything built. Display the terrain
+        GL.EnableClientState(ArrayCap.VertexArray);
+        GL.EnableClientState(ArrayCap.TextureCoordArray);
+        GL.EnableClientState(ArrayCap.NormalArray);
+
+        GL.TexCoordPointer(2, TexCoordPointerType.Float, 0, rri.terrainTexCoord);
+        GL.VertexPointer(3, VertexPointerType.Float, 0, rri.terrainVertices);
+        GL.NormalPointer(NormalPointerType.Float, 0, rri.terrainNormal);
+        GL.DrawElements(BeginMode.Quads, rri.terrainIndices.Length, DrawElementsType.UnsignedShort, rri.terrainIndices);
+
+        GL.PopMatrix();
     }
 
     private void UpdateRegionTerrainMesh(RegionContextBase rcontext, RegionRenderInfo rri) {
@@ -444,6 +447,16 @@ namespace LookingGlass.Renderer.OGL {
         }
     }
 
+    private void RenderOcean(RegionContextBase rcontext, RegionRenderInfo rri) {
+        GL.PushMatrix();
+
+        // apply region offset
+        GL.MultMatrix(Math3D.CreateTranslationMatrix(CalcRegionOffset(rcontext)));
+
+        GL.PopMatrix();
+        return;
+    }
+
     //int[] CubeMapDefines = new int[]
     //{
     //    Gl.GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB,
@@ -454,136 +467,128 @@ namespace LookingGlass.Renderer.OGL {
     //    Gl.GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_ARB
     //};
 
-    private void RenderPrims() {
-        foreach (RegionContextBase rcontext in m_renderer.m_trackedRegions) {
-            RegionRenderInfo rri;
-            if (rcontext.TryGet<RegionRenderInfo>(out rri)) {
-                GL.Enable(EnableCap.DepthTest);
-                GL.Enable(EnableCap.Texture2D);
+    private void RenderPrims(RegionContextBase rcontext, RegionRenderInfo rri) {
+        GL.Enable(EnableCap.DepthTest);
+        GL.Enable(EnableCap.Texture2D);
 
-                lock (rri.renderPrimList) {
-                    bool firstPass = true;
-                    GL.Disable(EnableCap.Blend);
-                    GL.Enable(EnableCap.DepthTest);
+        lock (rri.renderPrimList) {
+            bool firstPass = true;
+            GL.Disable(EnableCap.Blend);
+            GL.Enable(EnableCap.DepthTest);
 
-                StartRender:
+        StartRender:
 
-                    foreach (RenderablePrim render in rri.renderPrimList.Values) {
-                        RenderablePrim parentRender = RenderablePrim.Empty;
-                        OMV.Primitive prim = render.Prim;
+            foreach (RenderablePrim rp in rri.renderPrimList.Values) {
+                RenderablePrim prp = RenderablePrim.Empty;
+                OMV.Primitive prim = rp.Prim;
 
-                        if (prim.ParentID != 0) {
-                            // Get the parent reference
-                            if (!rri.renderPrimList.TryGetValue(prim.ParentID, out parentRender)) {
-                                // Can't render a child with no parent prim, skip it
-                                continue;
-                            }
-                        }
-
-                        GL.PushName(prim.LocalID);
-                        GL.PushMatrix();
-
-                        if (prim.ParentID != 0) {
-                            // Child prim
-                            OMV.Primitive parent = parentRender.Prim;
-
-                            // Apply parent translation and rotation
-                            GL.MultMatrix(Math3D.CreateTranslationMatrix(parent.Position));
-                            GL.MultMatrix(Math3D.CreateRotationMatrix(parent.Rotation));
-                        }
-
-                        // Apply prim translation and rotation
-                        GL.MultMatrix(Math3D.CreateTranslationMatrix(prim.Position));
-                        GL.MultMatrix(Math3D.CreateRotationMatrix(prim.Rotation));
-
-                        // apply region offset
-                        GL.MultMatrix(Math3D.CreateTranslationMatrix(CalcRegionOffset(render.rcontext)));
-
-                        // Scale the prim
-                        GL.Scale(prim.Scale.X, prim.Scale.Y, prim.Scale.Z);
-
-                        // Draw the prim faces
-                        for (int j = 0; j < render.Mesh.Faces.Count; j++) {
-                            OMVR.Face face = render.Mesh.Faces[j];
-                            FaceData data = (FaceData)face.UserData;
-                            OMV.Color4 color = face.TextureFace.RGBA;
-                            bool alpha = false;
-                            int textureID = 0;
-
-                            if (color.A < 1.0f)
-                                alpha = true;
-
-                            TextureInfo info;
-                            if (face.TextureFace.TextureID != OMV.UUID.Zero
-                                        && face.TextureFace.TextureID != OMV.Primitive.TextureEntry.WHITE_TEXTURE
-                                        && m_renderer.Textures.TryGetValue(face.TextureFace.TextureID, out info)) {
-                                if (info.Alpha) alpha = true;
-
-                                textureID = info.ID;
-                                // if textureID has not been set, need to generate the mipmaps
-                                if (textureID == 0) {
-                                    GenerateMipMaps(render.acontext, face.TextureFace.TextureID, out textureID);
-                                    info.ID = textureID;
-                                }
-
-                                // Enable texturing for this face
-                                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
-                            }
-                            else {
-                                if (face.TextureFace.TextureID == OMV.Primitive.TextureEntry.WHITE_TEXTURE ||
-                                                face.TextureFace.TextureID == OMV.UUID.Zero) {
-                                    GL.PolygonMode(MaterialFace.Front, PolygonMode.Fill);
-                                }
-                                else {
-                                    GL.PolygonMode(MaterialFace.Front, PolygonMode.Line);
-                                }
-                            }
-
-                            if (firstPass && !alpha || !firstPass && alpha) {
-                                // GL.Color4(color.R, color.G, color.B, color.A);
-                                float[] matDiffuse = { color.R, color.G, color.B, color.A };
-                                GL.Material(MaterialFace.FrontAndBack, MaterialParameter.Diffuse, matDiffuse);
-
-                                // Bind the texture
-                                if (textureID != 0) {
-                                    GL.Enable(EnableCap.Texture2D);
-                                    GL.BindTexture(TextureTarget.Texture2D, textureID);
-                                }
-                                else {
-                                    GL.Disable(EnableCap.Texture2D);
-                                }
-
-                                // GL.Enable(EnableCap.Normalize);
-
-                                GL.EnableClientState(ArrayCap.TextureCoordArray);
-                                GL.EnableClientState(ArrayCap.VertexArray);
-                                GL.EnableClientState(ArrayCap.NormalArray);
-
-                                GL.TexCoordPointer(2, TexCoordPointerType.Float, 0, data.TexCoords);
-                                GL.VertexPointer(3, VertexPointerType.Float, 0, data.Vertices);
-                                GL.NormalPointer(NormalPointerType.Float, 0, data.Normals);
-                                GL.DrawElements(BeginMode.Triangles, data.Indices.Length, DrawElementsType.UnsignedShort, data.Indices);
-                            }
-                        }
-
-                        GL.PopMatrix();
-                        GL.PopName();
-                    }
-
-                    if (firstPass) {
-                        firstPass = false;
-                        GL.Enable(EnableCap.Blend);
-                        GL.BlendFunc(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha);
-                        // GL.Disable(EnableCap.DepthTest);
-
-                        goto StartRender;
+                if (prim.ParentID != 0) {
+                    // Get the parent reference
+                    if (!rri.renderPrimList.TryGetValue(prim.ParentID, out prp)) {
+                        // Can't render a child with no parent prim, skip it
+                        continue;
                     }
                 }
 
-                // GL.Enable(EnableCap.DepthTest);
-                GL.Disable(EnableCap.Texture2D);
+                GL.PushName(prim.LocalID);
+                GL.PushMatrix();
+
+                if (prim.ParentID != 0) {
+                    // Apply parent translation and rotation
+                    GL.MultMatrix(Math3D.CreateTranslationMatrix(prp.Position));
+                    GL.MultMatrix(Math3D.CreateRotationMatrix(prp.Rotation));
+                }
+
+                // Apply prim translation and rotation
+                GL.MultMatrix(Math3D.CreateTranslationMatrix(rp.Position));
+                GL.MultMatrix(Math3D.CreateRotationMatrix(rp.Rotation));
+
+                // apply region offset
+                GL.MultMatrix(Math3D.CreateTranslationMatrix(CalcRegionOffset(rp.rcontext)));
+
+                // Scale the prim
+                GL.Scale(prim.Scale.X, prim.Scale.Y, prim.Scale.Z);
+
+                // Draw the prim faces
+                for (int j = 0; j < rp.Mesh.Faces.Count; j++) {
+                    OMVR.Face face = rp.Mesh.Faces[j];
+                    FaceData data = (FaceData)face.UserData;
+                    OMV.Color4 color = face.TextureFace.RGBA;
+                    bool alpha = false;
+                    int textureID = 0;
+
+                    if (color.A < 1.0f)
+                        alpha = true;
+
+                    TextureInfo info;
+                    if (face.TextureFace.TextureID != OMV.UUID.Zero
+                                && face.TextureFace.TextureID != OMV.Primitive.TextureEntry.WHITE_TEXTURE
+                                && m_renderer.Textures.TryGetValue(face.TextureFace.TextureID, out info)) {
+                        if (info.Alpha) alpha = true;
+
+                        textureID = info.ID;
+                        // if textureID has not been set, need to generate the mipmaps
+                        if (textureID == 0) {
+                            GenerateMipMaps(rp.acontext, face.TextureFace.TextureID, out textureID);
+                            info.ID = textureID;
+                        }
+
+                        // Enable texturing for this face
+                        GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+                    }
+                    else {
+                        if (face.TextureFace.TextureID == OMV.Primitive.TextureEntry.WHITE_TEXTURE ||
+                                        face.TextureFace.TextureID == OMV.UUID.Zero) {
+                            GL.PolygonMode(MaterialFace.Front, PolygonMode.Fill);
+                        }
+                        else {
+                            GL.PolygonMode(MaterialFace.Front, PolygonMode.Line);
+                        }
+                    }
+
+                    if (firstPass && !alpha || !firstPass && alpha) {
+                        // GL.Color4(color.R, color.G, color.B, color.A);
+                        float[] matDiffuse = { color.R, color.G, color.B, color.A };
+                        GL.Material(MaterialFace.FrontAndBack, MaterialParameter.Diffuse, matDiffuse);
+
+                        // Bind the texture
+                        if (textureID != 0) {
+                            GL.Enable(EnableCap.Texture2D);
+                            GL.BindTexture(TextureTarget.Texture2D, textureID);
+                        }
+                        else {
+                            GL.Disable(EnableCap.Texture2D);
+                        }
+
+                        // GL.Enable(EnableCap.Normalize);
+
+                        GL.EnableClientState(ArrayCap.TextureCoordArray);
+                        GL.EnableClientState(ArrayCap.VertexArray);
+                        GL.EnableClientState(ArrayCap.NormalArray);
+
+                        GL.TexCoordPointer(2, TexCoordPointerType.Float, 0, data.TexCoords);
+                        GL.VertexPointer(3, VertexPointerType.Float, 0, data.Vertices);
+                        GL.NormalPointer(NormalPointerType.Float, 0, data.Normals);
+                        GL.DrawElements(BeginMode.Triangles, data.Indices.Length, DrawElementsType.UnsignedShort, data.Indices);
+                    }
+                }
+
+                GL.PopMatrix();
+                GL.PopName();
+            }
+
+            if (firstPass) {
+                firstPass = false;
+                GL.Enable(EnableCap.Blend);
+                GL.BlendFunc(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha);
+                // GL.Disable(EnableCap.DepthTest);
+
+                goto StartRender;
             }
         }
+
+        // GL.Enable(EnableCap.DepthTest);
+        GL.Disable(EnableCap.Texture2D);
     }
 
     private void GenerateMipMaps(AssetContextBase acontext, OMV.UUID textureUUID, out int textureID) {
@@ -600,7 +605,6 @@ namespace LookingGlass.Renderer.OGL {
 
         try {
             using (Bitmap bmp = acontext.GetTexture(textureEntityName)) {
-                // Bitmap bmp = new Bitmap(textureEntityName.CacheFilename);
                 BitmapData bmp_data = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
 
                 GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, bmp_data.Width, bmp_data.Height, 0,
@@ -640,32 +644,26 @@ namespace LookingGlass.Renderer.OGL {
         return ret;
     }
 
-    private void RenderAvatars()
+    private void RenderAvatars(RegionContextBase rcontext, RegionRenderInfo rri)
     {
-        foreach (RegionContextBase rcontext in m_renderer.m_trackedRegions) {
-            RegionRenderInfo rri = rcontext.Get<RegionRenderInfo>();
-            if (rcontext.TryGet<RegionRenderInfo>(out rri)) {
+        OMV.Vector3 avatarColor = ParamVector3(m_renderer.m_moduleName + ".OGL.Avatar.Color");
+        float avatarTransparancy = ModuleParams.ParamFloat(m_renderer.m_moduleName + ".OGL.Avatar.Transparancy");
+        float[] m_avatarMaterialColor = {avatarColor.X, avatarColor.Y, avatarColor.Z, avatarTransparancy};
 
-                OMV.Vector3 avatarColor = ParamVector3(m_renderer.m_moduleName + ".OGL.Avatar.Color");
-                float avatarTransparancy = ModuleParams.ParamFloat(m_renderer.m_moduleName + ".OGL.Avatar.Transparancy");
-                float[] m_avatarMaterialColor = {avatarColor.X, avatarColor.Y, avatarColor.Z, avatarTransparancy};
+        lock (rri.renderAvatarList) {
+            foreach (RenderableAvatar rav in rri.renderAvatarList.Values) {
+                GL.PushMatrix();
+                GL.Translate(rav.avatar.RegionPosition.X, 
+                    rav.avatar.RegionPosition.Y, 
+                    rav.avatar.RegionPosition.Z);
 
-                lock (rri.renderAvatarList) {
-                    foreach (RenderableAvatar rav in rri.renderAvatarList.Values) {
-                        GL.PushMatrix();
-                        GL.Translate(rav.avatar.RegionPosition.X, 
-                            rav.avatar.RegionPosition.Y, 
-                            rav.avatar.RegionPosition.Z);
+                GL.Material(MaterialFace.FrontAndBack, MaterialParameter.Diffuse, m_avatarMaterialColor);
+                GL.Disable(EnableCap.Texture2D);
+                Glu.GLUquadric quad = Glu.gluNewQuadric();
+                Glu.gluSphere(quad, 0.5d, 10, 10);
+                Glu.gluDeleteQuadric(quad);
 
-                        GL.Material(MaterialFace.FrontAndBack, MaterialParameter.Diffuse, m_avatarMaterialColor);
-                        GL.Disable(EnableCap.Texture2D);
-                        Glu.GLUquadric quad = Glu.gluNewQuadric();
-                        Glu.gluSphere(quad, 0.5d, 10, 10);
-                        Glu.gluDeleteQuadric(quad);
-
-                        GL.PopMatrix();
-                    }
-                }
+                GL.PopMatrix();
             }
         }
     }

@@ -103,6 +103,17 @@ namespace LookingGlass.Renderer.OGL {
         public RegionContextBase rcontext;  // used for positioning in displayed world
         public AssetContextBase acontext;   // used for finding textures for Prim
 
+        private OMV.Vector3 localPosition;
+        public OMV.Vector3 Position {
+            get { return localPosition; }
+            set { localPosition = value; }
+        }
+        private OMV.Quaternion localRotation;
+        public OMV.Quaternion Rotation {
+            get { return localRotation; }
+            set { localRotation = value; }
+        }
+
         public readonly static RenderablePrim Empty = new RenderablePrim();
     }
 

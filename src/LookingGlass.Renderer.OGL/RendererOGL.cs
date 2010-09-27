@@ -195,6 +195,8 @@ public class RendererOGL : IModule, IRenderProvider {
         render.Prim = prim;
         render.acontext = ent.AssetContext;
         render.rcontext = ent.RegionContext;
+        render.Position = prim.Position;
+        render.Rotation = prim.Rotation;
 
         if (m_meshMaker == null) {
             m_meshMaker = new Renderer.Mesher.MeshmerizerR();
@@ -303,11 +305,45 @@ public class RendererOGL : IModule, IRenderProvider {
 
     public void RenderUpdate(IEntity ent, UpdateCodes what) {
         m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: {0} for {1}", ent.Name.Name, what);
+        OMV.Primitive prim = null;
         bool fullUpdate = false;
-        if (ent is LLEntityBase && ((what & UpdateCodes.New) != 0)) {
-            lock (ent) {
+        lock (ent) {
+            if (ent is LLEntityBase && ((what & UpdateCodes.New) != 0)) {
                 CreateNewPrim((LLEntityBase)ent);
                 fullUpdate = true;
+            }
+            if ((what & UpdateCodes.Animation) != 0) {
+                // the prim has changed its rotation animation
+                IAnimation anim;
+                if (ent.TryGet<IAnimation>(out anim)) {
+                        m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: animation ");
+                }
+            }
+            if ((what & UpdateCodes.Text) != 0) {
+                // text associated with the prim changed
+                m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: text changed");
+            }
+            if ((what & UpdateCodes.Particles) != 0) {
+                // particles associated with the prim changed
+                m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: particles changed");
+            }
+            if (!fullUpdate && (what & (UpdateCodes.Scale | UpdateCodes.Position | UpdateCodes.Rotation)) != 0) {
+                // world position has changed. Tell Ogre they have changed
+                try {
+                    m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: Updating position/rotation for {0}", ent.Name.Name);
+                    RegionRenderInfo rri;
+                    if (ent.RegionContext.TryGet<RegionRenderInfo>(out rri)) {
+                        lock (rri.renderPrimList) {
+                            // exception if the casting does not work
+                            RenderablePrim rp = rri.renderPrimList[((LLEntityBase)ent).Prim.LocalID];
+                            rp.Position = new OMV.Vector3(ent.RegionPosition.X, ent.RegionPosition.Y, ent.RegionPosition.Z);
+                            rp.Rotation = new OMV.Quaternion(ent.Heading.X, ent.Heading.Y, ent.Heading.Z, ent.Heading.W);
+                        }
+                    }
+                }
+                catch (Exception e) {
+                    m_log.Log(LogLevel.DBADERROR, "RenderUpdate: FAIL updating pos/rot: {0}", e);
+                }
             }
         }
         return;
