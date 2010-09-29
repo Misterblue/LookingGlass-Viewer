@@ -23,6 +23,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using OMV = OpenMetaverse;
 using OMVSD = OpenMetaverse.StructuredData;
 
 namespace LookingGlass.Framework.Parameters {
@@ -154,6 +155,22 @@ public interface IParameters {
     /// <param name="key">parameter to get value</param>
     /// <returns>float representation of parmater value</returns>
     float ParamFloat(string key);
+
+    /// <summary>
+    /// Return a vector3 value for a parameter.
+    /// The underlying string must parse into an float.
+    /// </summary>
+    /// <param name="key">parameter to get value</param>
+    /// <returns>float representation of parmater value</returns>
+    OMV.Vector3 ParamVector3(string key);
+
+    /// <summary>
+    /// Return a vector4 value for a parameter.
+    /// The underlying string must parse into an float.
+    /// </summary>
+    /// <param name="key">parameter to get value</param>
+    /// <returns>float representation of parmater value</returns>
+    OMV.Vector4 ParamVector4(string key);
 
     /// <summary>
     /// Return a string value for a parameter

@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using LookingGlass.Framework.Logging;
+using OMV = OpenMetaverse;
 using OMVSD = OpenMetaverse.StructuredData;
 
 namespace LookingGlass.Framework.Parameters {
@@ -359,6 +360,76 @@ public class AppParameters : IAppParameters, IParameterPersist {
                     throw new ParameterException("float parameter '" + key + "' not found");
                 case paramErrorType.eNullValue:
                     ret = 0f;
+                    break;
+            }
+        }
+        return ret;
+    }
+
+    public OMV.Vector3 ParamVector3(string key) {
+        OMV.Vector3 ret = OMV.Vector3.Zero;
+        bool set = false;
+        if (m_overrideParams.HasParameter(key)) {
+            ret = m_overrideParams.ParamVector3(key);
+            set = true;
+        }
+        else if (m_userParams.HasParameter(key)) {
+            ret = m_userParams.ParamVector3(key);
+            set = true;
+        }
+        else if (m_iniParams.HasParameter(key)) {
+            ret = m_iniParams.ParamVector3(key);
+            set = true;
+        }
+        else if (m_defaultParams.HasParameter(key)) {
+            ret = m_defaultParams.ParamVector3(key);
+            set = true;
+        }
+        if (!set) {
+            LogManager.Log.Log(LogLevel.DBADERROR, "AppParameters: vector3 parameter '{0}' not found", key);
+            switch (ParamErrorMethod) {
+                case paramErrorType.eDefaultValue:
+                    ret = OMV.Vector3.Zero;
+                    break;
+                case paramErrorType.eException:
+                    throw new ParameterException("float parameter '" + key + "' not found");
+                case paramErrorType.eNullValue:
+                    ret = OMV.Vector3.Zero;
+                    break;
+            }
+        }
+        return ret;
+    }
+
+    public OMV.Vector4 ParamVector4(string key) {
+        OMV.Vector4 ret = OMV.Vector4.Zero;
+        bool set = false;
+        if (m_overrideParams.HasParameter(key)) {
+            ret = m_overrideParams.ParamVector4(key);
+            set = true;
+        }
+        else if (m_userParams.HasParameter(key)) {
+            ret = m_userParams.ParamVector4(key);
+            set = true;
+        }
+        else if (m_iniParams.HasParameter(key)) {
+            ret = m_iniParams.ParamVector4(key);
+            set = true;
+        }
+        else if (m_defaultParams.HasParameter(key)) {
+            ret = m_defaultParams.ParamVector4(key);
+            set = true;
+        }
+        if (!set) {
+            LogManager.Log.Log(LogLevel.DBADERROR, "AppParameters: vector4 parameter '{0}' not found", key);
+            switch (ParamErrorMethod) {
+                case paramErrorType.eDefaultValue:
+                    ret = OMV.Vector4.Zero;
+                    break;
+                case paramErrorType.eException:
+                    throw new ParameterException("float parameter '" + key + "' not found");
+                case paramErrorType.eNullValue:
+                    ret = OMV.Vector4.Zero;
                     break;
             }
         }

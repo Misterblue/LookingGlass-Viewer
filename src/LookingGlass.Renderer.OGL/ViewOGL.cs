@@ -174,17 +174,17 @@ namespace LookingGlass.Renderer.OGL {
         GL.ShadeModel(ShadingModel.Smooth);
         GL.Enable(EnableCap.Lighting);
 
-        OMV.Vector3 ambientSpec = ParamVector3(m_renderer.m_moduleName + ".OGL.Global.Ambient");
+        OMV.Vector3 ambientSpec = ModuleParams.ParamVector3(m_renderer.m_moduleName + ".OGL.Global.Ambient");
         float[] globalAmbient = { ambientSpec.X, ambientSpec.Y, ambientSpec.Z, 1.0f };
         GL.LightModel(LightModelParameter.LightModelAmbient, globalAmbient);
 
         // set up the sun (Light0)
         GL.Enable(EnableCap.Light0);
-        OMV.Vector3 sunSpec = ParamVector3(m_renderer.m_moduleName + ".OGL.Sun.Ambient");
+        OMV.Vector3 sunSpec = ModuleParams.ParamVector3(m_renderer.m_moduleName + ".OGL.Sun.Ambient");
         float[] sunAmbient = { sunSpec.X, sunSpec.Y, sunSpec.Z, 1.0f };
-        sunSpec = ParamVector3(m_renderer.m_moduleName + ".OGL.Sun.Diffuse");
+        sunSpec = ModuleParams.ParamVector3(m_renderer.m_moduleName + ".OGL.Sun.Diffuse");
         float[] sunDiffuse = { sunSpec.X, sunSpec.Y, sunSpec.Z, 1.0f };
-        sunSpec = ParamVector3(m_renderer.m_moduleName + ".OGL.Sun.Specular");
+        sunSpec = ModuleParams.ParamVector3(m_renderer.m_moduleName + ".OGL.Sun.Specular");
         float[] sunSpecular = { sunSpec.X, sunSpec.Y, sunSpec.Z, 1.0f };
         GL.Light(LightName.Light0, LightParameter.Ambient, sunAmbient);
         GL.Light(LightName.Light0, LightParameter.Diffuse, sunDiffuse);
@@ -501,10 +501,9 @@ namespace LookingGlass.Renderer.OGL {
 
                 // Apply prim translation and rotation
                 GL.MultMatrix(Math3D.CreateTranslationMatrix(rp.Position));
-                GL.MultMatrix(Math3D.CreateRotationMatrix(rp.Rotation));
-
-                // apply region offset
+                // apply region offset for multiple regions
                 GL.MultMatrix(Math3D.CreateTranslationMatrix(CalcRegionOffset(rp.rcontext)));
+                GL.MultMatrix(Math3D.CreateRotationMatrix(rp.Rotation));
 
                 // Scale the prim
                 GL.Scale(prim.Scale.X, prim.Scale.Y, prim.Scale.Z);
@@ -646,7 +645,7 @@ namespace LookingGlass.Renderer.OGL {
 
     private void RenderAvatars(RegionContextBase rcontext, RegionRenderInfo rri)
     {
-        OMV.Vector3 avatarColor = ParamVector3(m_renderer.m_moduleName + ".OGL.Avatar.Color");
+        OMV.Vector3 avatarColor = ModuleParams.ParamVector3(m_renderer.m_moduleName + ".OGL.Avatar.Color");
         float avatarTransparancy = ModuleParams.ParamFloat(m_renderer.m_moduleName + ".OGL.Avatar.Transparancy");
         float[] m_avatarMaterialColor = {avatarColor.X, avatarColor.Y, avatarColor.Z, avatarTransparancy};
 
@@ -668,6 +667,7 @@ namespace LookingGlass.Renderer.OGL {
         }
     }
 
+        /*
     private OMV.Vector3 ParamVector3(string paramName) {
         OMV.Vector3 ret = OMV.Vector3.Zero;
         string parm = ModuleParams.ParamString(paramName);
@@ -676,6 +676,7 @@ namespace LookingGlass.Renderer.OGL {
         }
         return OMV.Vector3.Zero;
     }
+         */
 
     private void GLWindow_MouseDown(object sender, MouseEventArgs e) {
         if (m_UILink != null && m_MouseIn) {

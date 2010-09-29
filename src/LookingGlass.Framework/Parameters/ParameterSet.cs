@@ -26,6 +26,7 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 using LookingGlass.Framework.Logging;
+using OMV = OpenMetaverse;
 using OMVSD = OpenMetaverse.StructuredData;
 
 namespace LookingGlass.Framework.Parameters {
@@ -337,6 +338,82 @@ public class ParameterSet : IParameters, IDisplayable {
                     throw new ParameterException("Float param '" + key + "' not found");
                 case paramErrorType.eNullValue:
                     ret = 0f;
+                    break;
+            }
+        }
+        return ret;
+    }
+
+    public OMV.Vector3 ParamVector3(string key) {
+        OMV.Vector3 ret = OMV.Vector3.Zero;
+        string lkey = key.ToLower();
+        bool success = false;
+        lock (m_params) {
+            try {
+                if (m_runtimeValues.ContainsKey(key)) {
+                    if (OMV.Vector3.TryParse(m_runtimeValues[lkey](lkey).AsString(), out ret)) {
+                        success = true;
+                    }
+                }
+                else {
+                    if (m_params.ContainsKey(lkey)) {
+                        if (OMV.Vector3.TryParse(m_params[lkey].AsString(), out ret)) {
+                            success = true;
+                        }
+                    }
+                }
+            }
+            catch {
+                success = false;
+            }
+        }
+        if (!success) {
+            switch (ParamErrorMethod) {
+                case paramErrorType.eDefaultValue:
+                    ret = OMV.Vector3.Zero;
+                    break;
+                case paramErrorType.eException:
+                    throw new ParameterException("Float param '" + key + "' not found");
+                case paramErrorType.eNullValue:
+                    ret = OMV.Vector3.Zero;
+                    break;
+            }
+        }
+        return ret;
+    }
+
+    public OMV.Vector4 ParamVector4(string key) {
+        OMV.Vector4 ret = OMV.Vector4.Zero;
+        string lkey = key.ToLower();
+        bool success = false;
+        lock (m_params) {
+            try {
+                if (m_runtimeValues.ContainsKey(key)) {
+                    if (OMV.Vector4.TryParse(m_runtimeValues[lkey](lkey).AsString(), out ret)) {
+                        success = true;
+                    }
+                }
+                else {
+                    if (m_params.ContainsKey(lkey)) {
+                        if (OMV.Vector4.TryParse(m_params[lkey].AsString(), out ret)) {
+                            success = true;
+                        }
+                    }
+                }
+            }
+            catch {
+                success = false;
+            }
+        }
+        if (!success) {
+            switch (ParamErrorMethod) {
+                case paramErrorType.eDefaultValue:
+                    ret = OMV.Vector4.Zero;
+                    break;
+                case paramErrorType.eException:
+                    throw new ParameterException("Float param '" + key + "' not found");
+                case paramErrorType.eNullValue:
+                    ret = OMV.Vector4.Zero;
                     break;
             }
         }
