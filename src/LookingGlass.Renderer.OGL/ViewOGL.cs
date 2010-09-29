@@ -256,7 +256,11 @@ namespace LookingGlass.Renderer.OGL {
 
     #endregion GLControl Callbacks
 
+    private int tickOfLastFrame = Utilities.TickCount();
     private void RenderScene() {
+        int tickBasis = Utilities.TickCountSubtract(tickOfLastFrame);
+        tickOfLastFrame = Utilities.TickCount();
+        float timeSinceLastFrame = (float)tickBasis / 1000f;    // seconds since last frame
         try {
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             GL.LoadIdentity();
@@ -283,6 +287,7 @@ namespace LookingGlass.Renderer.OGL {
 
                     RenderTerrain(rcontext, rri);
                     RenderOcean(rcontext, rri);
+                    // RenderAnimations(timeSinceLastFrame, rcontext, rri);
                     RenderPrims(rcontext, rri);
                     RenderAvatars(rcontext, rri);
 

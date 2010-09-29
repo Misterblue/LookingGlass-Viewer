@@ -80,7 +80,7 @@ public class RendererOGL : IModule, IRenderProvider {
 
         ModuleParams.AddDefaultParameter(m_moduleName + ".OGL.Camera.Far", "1024.0",
                     "Far clip for camera");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".OGL.Global.Ambient", "<0.2,0.2,0.2>",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".OGL.Global.Ambient", "<0.5,0.5,0.5>",
                     "Global ambient setting");
         ModuleParams.AddDefaultParameter(m_moduleName + ".OGL.Sun.Ambient", "<0.8,0.8,0.8>",
                     "Ambient lighting for the sun");
