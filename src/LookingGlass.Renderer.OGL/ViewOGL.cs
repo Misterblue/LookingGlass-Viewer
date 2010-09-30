@@ -171,12 +171,13 @@ namespace LookingGlass.Renderer.OGL {
     }
 
     private void InitLighting() {
-        GL.ShadeModel(ShadingModel.Smooth);
         GL.Enable(EnableCap.Lighting);
 
         OMV.Vector3 ambientSpec = ModuleParams.ParamVector3(m_renderer.m_moduleName + ".OGL.Global.Ambient");
         float[] globalAmbient = { ambientSpec.X, ambientSpec.Y, ambientSpec.Z, 1.0f };
         GL.LightModel(LightModelParameter.LightModelAmbient, globalAmbient);
+
+        GL.ShadeModel(ShadingModel.Smooth);
 
         // set up the sun (Light0)
         GL.Enable(EnableCap.Light0);
@@ -564,7 +565,7 @@ namespace LookingGlass.Renderer.OGL {
                             GL.Disable(EnableCap.Texture2D);
                         }
 
-                        // GL.Enable(EnableCap.Normalize);
+                        GL.Enable(EnableCap.Normalize);
 
                         GL.EnableClientState(ArrayCap.TextureCoordArray);
                         GL.EnableClientState(ArrayCap.VertexArray);
