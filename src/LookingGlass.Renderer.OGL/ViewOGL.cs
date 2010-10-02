@@ -53,6 +53,8 @@ namespace LookingGlass.Renderer.OGL {
     private int m_frameTimeMs;      // 1000/framesPerSec
     private int m_frameAllowanceMs; // maz(1000/framesPerSec - 30, 10) time allowed for frame plus extra work
 
+    private bool m_cameraModified;
+
     private IUserInterfaceProvider m_UILink = null;
     private bool m_MouseIn = false;     // true if mouse is over our window
     private bool m_keyDown = false;     // true if key is pressed
@@ -134,7 +136,7 @@ namespace LookingGlass.Renderer.OGL {
         try {
             // the link to the renderer for display is also a link to the user interface routines
             m_UILink = m_renderer.UserInterface;
-
+            m_cameraModified = true;
             
             m_refreshTimer = new System.Threading.Timer(delegate(Object param) {
                 this.glControl.Invalidate();
@@ -193,7 +195,7 @@ namespace LookingGlass.Renderer.OGL {
     }
 
     private void InitCamera() {
-        m_renderer.Camera = new Camera();
+        m_renderer.Camera = new CameraOGL();
         m_renderer.Camera.Position = new OMV.Vector3(128f, -192f, 90f);
         m_renderer.Camera.FocalPoint = new OMV.Vector3(128f, 128f, 0f);
         m_renderer.Camera.Zoom = 1.0d;
@@ -286,6 +288,11 @@ namespace LookingGlass.Renderer.OGL {
                 if (rcontext.TryGet<RegionRenderInfo>(out rri)) {
                     GL.PushMatrix();
 
+                    if (m_renderer.Camera.Updated) {
+                        m_renderer.Camera.Updated = false;
+                        ComputeVisibility(rcontext, rri);
+                    }
+
                     RenderTerrain(rcontext, rri);
                     RenderOcean(rcontext, rri);
                     // RenderAnimations(timeSinceLastFrame, rcontext, rri);
@@ -295,6 +302,8 @@ namespace LookingGlass.Renderer.OGL {
                     GL.PopMatrix();
                 }
             }
+
+            m_cameraModified = false;
 
             GL.DisableClientState(ArrayCap.NormalArray);
             GL.DisableClientState(ArrayCap.TextureCoordArray);
@@ -350,6 +359,16 @@ namespace LookingGlass.Renderer.OGL {
 
     }
 
+    private void ComputeVisibility(RegionContextBase rcontext, RegionRenderInfo rri) {
+        m_renderer.Camera.ComputeFrustum();
+        lock (rri.renderPrimList) {
+            foreach (uint ind in rri.renderPrimList.Keys) {
+                RenderablePrim rp = rri.renderPrimList[ind];
+                rp.isVisible = m_renderer.Camera.isVisible(rp.Position.X, rp.Position.Y, rp.Position.Z, 10f);
+            }
+        }
+        return;
+    }
     private void RenderTerrain(RegionContextBase rcontext, RegionRenderInfo rri) {
         GL.PushMatrix();
 
@@ -485,6 +504,9 @@ namespace LookingGlass.Renderer.OGL {
         StartRender:
 
             foreach (RenderablePrim rp in rri.renderPrimList.Values) {
+                // if this prim is not visible, just loop
+                if (!rp.isVisible) continue;
+
                 RenderablePrim prp = RenderablePrim.Empty;
                 OMV.Primitive prim = rp.Prim;
 
@@ -592,7 +614,7 @@ namespace LookingGlass.Renderer.OGL {
             }
         }
 
-        // GL.Enable(EnableCap.DepthTest);
+        GL.Enable(EnableCap.DepthTest);
         GL.Disable(EnableCap.Texture2D);
     }
 

@@ -102,6 +102,7 @@ namespace LookingGlass.Renderer.OGL {
         public OMVR.FacetedMesh Mesh;
         public RegionContextBase rcontext;  // used for positioning in displayed world
         public AssetContextBase acontext;   // used for finding textures for Prim
+        public bool isVisible;              // prim is visible from the current camera location
 
         private OMV.Vector3 localPosition;
         public OMV.Vector3 Position {
@@ -115,13 +116,6 @@ namespace LookingGlass.Renderer.OGL {
         }
 
         public readonly static RenderablePrim Empty = new RenderablePrim();
-    }
-
-    public struct Camera {
-        public OMV.Vector3 Position;
-        public OMV.Vector3 FocalPoint;
-        public double Zoom;
-        public double Far;
     }
 
     public static class Math3D

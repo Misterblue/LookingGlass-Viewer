@@ -34,6 +34,8 @@ XMLRPC.dll
 SkyX.dll
 LookingGlass.json
 Modules.json
+ModulesOGL.json*
+ModulesOgre.json*
 Grids.json
 OIS.dll
 OgreGUIRenderer.dll
@@ -58,6 +60,14 @@ OpenMetaverse.dll.config
 OpenMetaverseTypes.dll
 openjpeg-dotnet.dll
 openjpeg-dotnet-x86_64.dll
+OpenTK.Compatibility.dll
+OpenTK.Compatibility.dll.config
+OpenTK.Compatibility.xml
+OpenTK.GLControl.dll
+OpenTK.GLControl.xml
+OpenTK.dll
+OpenTK.dll.config
+OpenTK.xml
 EOLIST
 
 mkdir -p "$TEMPDIR"

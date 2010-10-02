@@ -41,7 +41,7 @@ namespace LookingGlass.Renderer.OGL {
 public class RendererOGL : IModule, IRenderProvider {
     private ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
 
-    public Camera Camera;
+    public CameraOGL Camera;
 
     private Mesher.MeshmerizerR m_meshMaker = null;
     
@@ -80,13 +80,19 @@ public class RendererOGL : IModule, IRenderProvider {
 
         ModuleParams.AddDefaultParameter(m_moduleName + ".OGL.Camera.Far", "1024.0",
                     "Far clip for camera");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".OGL.Global.Ambient", "<0.2,0.2,0.2>",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".OGL.Global.Ambient", "<0.5,0.5,0.5>",
                     "Global ambient setting");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".OGL.Sun.Ambient", "<0.5,0.5,0.5>",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".OGL.Sun.Ambient", "<0.8,0.8,0.8>",
                     "Ambient lighting for the sun");
         ModuleParams.AddDefaultParameter(m_moduleName + ".OGL.Sun.Specular", "<0.8,0.8,0.8>",
                     "Specular lighting for the sun");
         ModuleParams.AddDefaultParameter(m_moduleName + ".OGL.Sun.Diffuse", "<1.0,1.0,1.0>",
+                    "Diffuse lighting for the sun");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".OGL.Moon.Ambient", "<0.4,0.4,0.4>",
+                    "Ambient lighting for the sun");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".OGL.Moon.Specular", "<0.8,0.8,0.8>",
+                    "Specular lighting for the sun");
+        ModuleParams.AddDefaultParameter(m_moduleName + ".OGL.Moon.Diffuse", "<0.5, 0.5, 0.8>",
                     "Diffuse lighting for the sun");
         ModuleParams.AddDefaultParameter(m_moduleName + ".OGL.Avatar.Color", "<0.4,0.4,0.8>",
                     "Color of avatar sphere");
@@ -197,6 +203,7 @@ public class RendererOGL : IModule, IRenderProvider {
         render.rcontext = ent.RegionContext;
         render.Position = prim.Position;
         render.Rotation = prim.Rotation;
+        render.isVisible = true;    // initially assume visible
 
         if (m_meshMaker == null) {
             m_meshMaker = new Renderer.Mesher.MeshmerizerR();
@@ -335,9 +342,14 @@ public class RendererOGL : IModule, IRenderProvider {
                     if (ent.RegionContext.TryGet<RegionRenderInfo>(out rri)) {
                         lock (rri.renderPrimList) {
                             // exception if the casting does not work
-                            RenderablePrim rp = rri.renderPrimList[((LLEntityBase)ent).Prim.LocalID];
-                            rp.Position = new OMV.Vector3(ent.RegionPosition.X, ent.RegionPosition.Y, ent.RegionPosition.Z);
-                            rp.Rotation = new OMV.Quaternion(ent.Heading.X, ent.Heading.Y, ent.Heading.Z, ent.Heading.W);
+                            if (((LLEntityBase)ent).Prim != null) {
+                                uint localID = ((LLEntityBase)ent).Prim.LocalID;
+                                if (rri.renderPrimList.ContainsKey(localID)) {
+                                    RenderablePrim rp = rri.renderPrimList[localID];
+                                    rp.Position = new OMV.Vector3(ent.RegionPosition.X, ent.RegionPosition.Y, ent.RegionPosition.Z);
+                                    rp.Rotation = new OMV.Quaternion(ent.Heading.X, ent.Heading.Y, ent.Heading.Z, ent.Heading.W);
+                                }
+                            }
                         }
                     }
                 }
@@ -356,10 +368,12 @@ public class RendererOGL : IModule, IRenderProvider {
     // tell the renderer about the camera position
     public void UpdateCamera(CameraControl cam) {
         if (m_focusRegion != null) {
-            Camera.Position.X = (float)(cam.GlobalPosition.X - m_focusRegion.GlobalPosition.X);
-            Camera.Position.Y = (float)(cam.GlobalPosition.Y - m_focusRegion.GlobalPosition.Y);
+            OMV.Vector3 newPos = new OMV.Vector3();
+            newPos.X = (float)(cam.GlobalPosition.X - m_focusRegion.GlobalPosition.X);
+            newPos.Y = (float)(cam.GlobalPosition.Y - m_focusRegion.GlobalPosition.Y);
             // another kludge camera offset. Pairs with position kludge in Viewer.
-            Camera.Position.Z = (float)(cam.GlobalPosition.Z - m_focusRegion.GlobalPosition.Z) + 10f;
+            newPos.Z = (float)(cam.GlobalPosition.Z - m_focusRegion.GlobalPosition.Z) + 10f;
+            Camera.Position = newPos;
             OMV.Vector3 dir = new OMV.Vector3(1f, 0f, 0f);
             Camera.FocalPoint = (dir * cam.Heading) + Camera.Position;
         }

@@ -29,7 +29,7 @@
         "Name": "RadegastUI",
         "Order": 50
     },
-    {   "Assembly": "LookingGlass.Renderer.Ogre.dll",
+    {   "Assembly": "LookingGlass.Renderer.OGL.dll",
         "Interface": "LookingGlass.Renderer.IRenderProvider",
         "Name": "Renderer",
         "Order": 60
@@ -59,6 +59,8 @@
 
 // The Renderer needs to know what input system to use
 "Renderer.Ogre.InputSystem.Name": "RadegastUI",
+
+"ViewerOGL.Renderer.Name": "Renderer",
 
 // The Radegast viewer needs to connect to the Renderer
 //   the comm module and the proper UI system
