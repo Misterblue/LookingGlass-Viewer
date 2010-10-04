@@ -36,6 +36,11 @@ using OMVSD = OpenMetaverse.StructuredData;
 
 namespace LookingGlass.World.Services {
 
+    /// <summary>
+    /// Service (loaded as a module) that listens for avatars coming and going
+    /// from the world and presenting a web interface of avatar presence and
+    /// statistics.
+    /// </summary>
 public class AvatarTracker : IAvatarTrackerService, IModule {
 
     protected string m_moduleName;

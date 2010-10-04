@@ -41,6 +41,11 @@ namespace LookingGlass.Renderer.OGL {
             return false;   // false saying to delete
         }
 
+        /// <summary>
+        /// Loop through the list of animations for this region and call their "Process" routines
+        /// </summary>
+        /// <param name="timeSinceLastFrame">seconds since list frame</param>
+        /// <param name="rri">RegionRenderInfo for the region</param>
         public static void ProcessAnimations(float timeSinceLastFrame, RegionRenderInfo rri) {
             lock (rri) {
                 List<AnimatBase> removeAnimations = new List<AnimatBase>();
@@ -50,7 +55,7 @@ namespace LookingGlass.Renderer.OGL {
                             removeAnimations.Add(ab);   // remember so we can remove later
                         }
                     }
-                    catch (Exception e) {
+                    catch {
                     }
                 }
                 // since we can't remove animations while interating the list, do it now
@@ -60,6 +65,13 @@ namespace LookingGlass.Renderer.OGL {
             }
         }
 
+        /// <summary>
+        /// Given an IAnimation instance (passed from comm or world), build the animation
+        /// type needed.
+        /// </summary>
+        /// <param name="anim"></param>
+        /// <param name="id">localID of prim that looks up in RegionRenderInfo.renderPrimList</param>
+        /// <returns></returns>
         public static AnimatBase CreateAnimation(IAnimation anim, uint id) {
             if (anim.DoStaticRotation) {
                 // the only programmable animation we know how to do is fixed axis rotation

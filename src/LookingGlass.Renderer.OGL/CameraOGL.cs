@@ -27,6 +27,10 @@ using OpenTK.Graphics.OpenGL;
 using OMV = OpenMetaverse;
 
 namespace LookingGlass.Renderer.OGL {
+    /// <summary>
+    /// Camera for OpenGL. Besides holding position and rotation information, 
+    /// mostly contains code for computing visibility.
+    /// </summary>
 public sealed class CameraOGL {
     private bool m_updated = true;
     /// <summary>
@@ -52,13 +56,26 @@ public sealed class CameraOGL {
 
     private float[,] m_frustum;
 
+    /// <summary>
+    /// Compute the frustum. Called before calling any of the visibility
+    /// functions.
+    /// </summary>
     public void ComputeFrustum() {
         m_frustum = ExtractFrustum();
     }
 
+    /// <summary>
+    /// called after calling "ComputeFrustum" to see if an object at the
+    /// given location is within the frustum and thus visible.
+    /// </summary>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    /// <param name="z"></param>
+    /// <param name="radius"></param>
+    /// <returns></returns>
     public bool isVisible(float x, float y, float z, float radius) {
         // return SphereInFrustum(m_frustum, x, y, z, radius);
-        return true;
+        return true;    // DEBUG -- for the moment no visible calc
     }
 
     // http://www.crownandcutlass.com/features/technicaldetails/frustum.html

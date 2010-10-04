@@ -68,8 +68,11 @@ namespace LookingGlass.Renderer.OGL {
         }
     }
 
-    // Rendering information for each region that are stuck onto  the rcontext's as
-    // an interface.
+    /// <summary>
+    /// Rendering information for OpenGL in the region. This is attached the
+    /// rcontext as an interface. This holds all the per region information needed
+    /// to render the region.
+    /// </summary>
     public sealed class RegionRenderInfo {
         public RegionRenderInfo() {
             this.renderFoliageList = new Dictionary<uint, OMV.Primitive>();
@@ -96,13 +99,13 @@ namespace LookingGlass.Renderer.OGL {
         public float oceanHeight;
     }
 
-    public sealed class RenderableAvatar {
-        public IEntityAvatar avatar;
-    }
-
+    /// <summary>
+    /// Description of all the information for OpenGL to render the prim.
+    /// Kept in a list in the RegionRenderInfo for the region.
+    /// </summary>
     public sealed class RenderablePrim {
-        public OMV.Primitive Prim;
-        public OMVR.FacetedMesh Mesh;
+        public OMV.Primitive Prim;          // the prim underlying this
+        public OMVR.FacetedMesh Mesh;       // meshed prim
         public RegionContextBase rcontext;  // used for positioning in displayed world
         public AssetContextBase acontext;   // used for finding textures for Prim
         public bool isVisible;              // prim is visible from the current camera location
@@ -119,6 +122,10 @@ namespace LookingGlass.Renderer.OGL {
         }
 
         public readonly static RenderablePrim Empty = new RenderablePrim();
+    }
+
+    public sealed class RenderableAvatar {
+        public IEntityAvatar avatar;
     }
 
     public static class Math3D

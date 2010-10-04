@@ -27,11 +27,21 @@ using LookingGlass.World;
 using OMV = OpenMetaverse;
 
 namespace LookingGlass.Renderer.OGL {
+    /// <summary>
+    /// Class to do the "TargetOmega" fixed rotation.  Passed the parameters and does
+    /// the rotation as the Process routine is called.
+    /// </summary>
     public sealed class AnimatFixedRotation : AnimatBase {
         private uint m_infoID;
         private float m_rotationsPerSecond;
         private OMV.Vector3 m_rotationAxis;
 
+        /// <summary>
+        /// Create the animation. The passed animation block is expected
+        /// to contain a defintion of a fixed rotation. If not, bad things will happen.
+        /// </summary>
+        /// <param name="anim">The IAnimation block with the info.</param>
+        /// <param name="id">localID to lookup the prim in the RegionRenderInfo.renderPrimList</param>
         public AnimatFixedRotation(IAnimation anim, uint id)
                         : base(AnimatBase.AnimatTypeFixedRotation) {
             m_infoID = id;
@@ -46,6 +56,12 @@ namespace LookingGlass.Renderer.OGL {
             }
         }
 
+        /// <summary>
+        /// Called for each frame. Advance the rotation.
+        /// </summary>
+        /// <param name="timeSinceLastFrame">seconds since last frame display</param>
+        /// <param name="rri">RegionRenderInfo for region the animation is in</param>
+        /// <returns>true to say we never exit</returns>
         public override bool Process(float timeSinceLastFrame, RegionRenderInfo rri) {
             float nextStep = m_rotationsPerSecond * timeSinceLastFrame;
             float nextIncrement = Constants.TWOPI * nextStep;

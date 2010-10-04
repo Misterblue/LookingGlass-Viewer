@@ -36,7 +36,7 @@ using OMVI = OpenMetaverse.Imaging;
 
 namespace LookingGlass.Renderer.OGL {
     /// <summary>
-    /// A renderer that renders straight to OpenGL
+    /// A renderer that renders straight to OpenGL/OpenTK
     /// </summary>
 public sealed class RendererOGL : IModule, IRenderProvider {
     private ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
@@ -53,13 +53,11 @@ public sealed class RendererOGL : IModule, IRenderProvider {
     public List<RegionContextBase> m_trackedRegions;
     public RegionContextBase m_focusRegion = null;
 
-    public bool m_wireFrame = false;
-
     #region IModule
     public string m_moduleName;
     public string ModuleName { get { return m_moduleName; } set { m_moduleName = value; } }
 
-    protected LookingGlassBase m_lgb = null;
+    private LookingGlassBase m_lgb = null;
     public LookingGlassBase LGB { get { return m_lgb; } }
 
     public IAppParameters ModuleParams { get { return m_lgb.AppParams; } }

@@ -215,6 +215,7 @@ public abstract class EntityBase : IEntity {
                 // LogManager.Log.Log(LogLevel.DWORLDDETAIL, "EntityBase.RegionPosition: {0} relative to {1}",
                 //     this.LocalPosition, this.ContainingEntity.RegionPosition);
                 return this.LocalPosition;
+                // DEBUG: the following causes objects to drift off into space. Not sure why.
                 // return this.LocalPosition + this.ContainingEntity.RegionPosition;
             }
         }
