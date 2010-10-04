@@ -312,6 +312,7 @@ public class MeshmerizerR : OMVR.IRendering {
                         vert.Position = pos;
                         vert.TexCoord = new OMV.Vector2(vface.uv1.U, vface.uv1.V);
                         vert.Normal = new OMV.Vector3(vface.n1.X, vface.n1.Y, vface.n1.Z);
+                        vert.Normal.Normalize();
                         oface.Vertices.Add(vert);
                         indx = oface.Vertices.Count - 1;
                         vertexAccount.Add(pos, indx);
@@ -327,6 +328,7 @@ public class MeshmerizerR : OMVR.IRendering {
                         vert.Position = pos;
                         vert.TexCoord = new OMV.Vector2(vface.uv2.U, vface.uv2.V);
                         vert.Normal = new OMV.Vector3(vface.n2.X, vface.n2.Y, vface.n2.Z);
+                        vert.Normal.Normalize();
                         oface.Vertices.Add(vert);
                         indx = oface.Vertices.Count - 1;
                         vertexAccount.Add(pos, indx);
@@ -342,6 +344,7 @@ public class MeshmerizerR : OMVR.IRendering {
                         vert.Position = pos;
                         vert.TexCoord = new OMV.Vector2(vface.uv3.U, vface.uv3.V);
                         vert.Normal = new OMV.Vector3(vface.n3.X, vface.n3.Y, vface.n3.Z);
+                        vert.Normal.Normalize();
                         oface.Vertices.Add(vert);
                         indx = oface.Vertices.Count - 1;
                         vertexAccount.Add(pos, indx);

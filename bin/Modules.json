@@ -31,7 +31,7 @@
         "Order": 50
     },
     // Use the Ogre renderer
-    {   "Assembly": "LookingGlass.Renderer.Ogre.dll",
+    {   "Assembly": "LookingGlass.Renderer.OGL.dll",
         "Interface": "LookingGlass.Renderer.IRenderProvider",
         "Name": "Renderer",
         "Order": 60
@@ -58,8 +58,8 @@
         "Name": "ViewChat",
         "Order": 84
     },
-    {   "Assembly": "LookingGlass.View.dll",
-        "Interface": "LookingGlass.View.IViewWindow",
+    {   "Assembly": "LookingGlass.Renderer.OGL.dll",
+        "Interface": "LookingGlass.Renderer.OGL.IViewOGL",
         "Name": "ViewWindow",
         "Order": 85
     },
@@ -91,7 +91,7 @@
 "Renderer.Ogre.InputSystem.Name": "WindowUI",
 
 // The view windows needs to connect to the Renderer,
-"ViewerWindow.Renderer.Name": "Renderer",
+"ViewerOGL.Renderer.Name": "Renderer",
 
 // The login REST interface needs to find  the comm system
 "CommLLLPRest.Comm.Name": "Comm",

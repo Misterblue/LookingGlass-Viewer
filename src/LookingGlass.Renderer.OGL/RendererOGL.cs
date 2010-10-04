@@ -38,7 +38,7 @@ namespace LookingGlass.Renderer.OGL {
     /// <summary>
     /// A renderer that renders straight to OpenGL
     /// </summary>
-public class RendererOGL : IModule, IRenderProvider {
+public sealed class RendererOGL : IModule, IRenderProvider {
     private ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
 
     public CameraOGL Camera;
@@ -71,7 +71,7 @@ public class RendererOGL : IModule, IRenderProvider {
     }
 
     // IModule.OnLoad
-    public virtual void OnLoad(string modName, LookingGlassBase lgbase) {
+    public void OnLoad(string modName, LookingGlassBase lgbase) {
         LogManager.Log.Log(LogLevel.DINIT, ModuleName + ".OnLoad()");
         m_moduleName = modName;
         m_lgb = lgbase;
@@ -80,7 +80,7 @@ public class RendererOGL : IModule, IRenderProvider {
 
         ModuleParams.AddDefaultParameter(m_moduleName + ".OGL.Camera.Far", "1024.0",
                     "Far clip for camera");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".OGL.Global.Ambient", "<0.5,0.5,0.5>",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".OGL.Global.Ambient", "<0.4,0.4,0.4>",
                     "Global ambient setting");
         ModuleParams.AddDefaultParameter(m_moduleName + ".OGL.Sun.Ambient", "<0.8,0.8,0.8>",
                     "Ambient lighting for the sun");
@@ -101,7 +101,7 @@ public class RendererOGL : IModule, IRenderProvider {
     }
 
     // IModule.AfterAllModulesLoaded
-    public virtual bool AfterAllModulesLoaded() {
+    public bool AfterAllModulesLoaded() {
         LogManager.Log.Log(LogLevel.DINIT, ModuleName + ".AfterAllModulesLoaded()");
         // Load the input system we're supposed to be using
         // The input system is a module tha we get given the name of. Go find it and link it in.
@@ -129,17 +129,17 @@ public class RendererOGL : IModule, IRenderProvider {
     }
 
     // IModule.Start
-    public virtual void Start() {
+    public void Start() {
         return;
     }
 
     // IModule.Stop
-    public virtual void Stop() {
+    public void Stop() {
         return;
     }
 
     // IModule.PrepareForUnload
-    public virtual bool PrepareForUnload() {
+    public bool PrepareForUnload() {
         return false;
     }
     #endregion IModule
@@ -312,7 +312,6 @@ public class RendererOGL : IModule, IRenderProvider {
 
     public void RenderUpdate(IEntity ent, UpdateCodes what) {
         m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: {0} for {1}", ent.Name.Name, what);
-        OMV.Primitive prim = null;
         bool fullUpdate = false;
         lock (ent) {
             if (ent is LLEntityBase && ((what & UpdateCodes.New) != 0)) {
@@ -323,7 +322,13 @@ public class RendererOGL : IModule, IRenderProvider {
                 // the prim has changed its rotation animation
                 IAnimation anim;
                 if (ent.TryGet<IAnimation>(out anim)) {
-                        m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: animation ");
+                    m_log.Log(LogLevel.DRENDERDETAIL, "RenderUpdate: animation ");
+                    RegionRenderInfo rri;
+                    if (ent.RegionContext.TryGet<RegionRenderInfo>(out rri)) {
+                        lock (rri) {
+                            rri.animations.Add(AnimatBase.CreateAnimation(anim, ((LLEntityBase)ent).Prim.LocalID));
+                        }
+                    }
                 }
             }
             if ((what & UpdateCodes.Text) != 0) {

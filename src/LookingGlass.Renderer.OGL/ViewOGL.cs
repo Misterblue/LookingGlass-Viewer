@@ -51,7 +51,6 @@ namespace LookingGlass.Renderer.OGL {
     private System.Threading.Timer m_refreshTimer;
     private int m_framesPerSec;
     private int m_frameTimeMs;      // 1000/framesPerSec
-    private int m_frameAllowanceMs; // maz(1000/framesPerSec - 30, 10) time allowed for frame plus extra work
 
     private bool m_cameraModified;
 
@@ -99,9 +98,8 @@ namespace LookingGlass.Renderer.OGL {
             string rendererName = m_lgb.AppParams.ParamString("ViewOGL.Renderer.Name");
             m_framesPerSec = Math.Min(100, Math.Max(1, m_lgb.AppParams.ParamInt("ViewOGL.FramesPerSec")));
             m_frameTimeMs = 1000 / m_framesPerSec;
-            m_frameAllowanceMs = Math.Max(m_framesPerSec - 30, 10);
             m_renderer = (RendererOGL)m_lgb.ModManager.Module(rendererName);
-            m_log.Log(LogLevel.DVIEWDETAIL, "Initialize. Connecting to renderer {0} at {1}fps",
+            m_log.Log(LogLevel.DINIT, "Initialize. Connecting to renderer {0} at {1}fps",
                             m_renderer, m_framesPerSec);
 
         }
@@ -280,14 +278,14 @@ namespace LookingGlass.Renderer.OGL {
 
             RenderSkybox();
 
-            float[] sunPosition = { 500.0f, 500.0f, 500.0f, 1.0f };
-            GL.Light(LightName.Light0, LightParameter.Position, sunPosition);
+            PositionGlobalLights();
 
             foreach (RegionContextBase rcontext in m_renderer.m_trackedRegions) {
                 RegionRenderInfo rri;
                 if (rcontext.TryGet<RegionRenderInfo>(out rri)) {
                     GL.PushMatrix();
 
+                    // update visibility of objects in world (saves rendering)
                     if (m_renderer.Camera.Updated) {
                         m_renderer.Camera.Updated = false;
                         ComputeVisibility(rcontext, rri);
@@ -295,7 +293,7 @@ namespace LookingGlass.Renderer.OGL {
 
                     RenderTerrain(rcontext, rri);
                     RenderOcean(rcontext, rri);
-                    // RenderAnimations(timeSinceLastFrame, rcontext, rri);
+                    RenderAnimations(timeSinceLastFrame, rcontext, rri);
                     RenderPrims(rcontext, rri);
                     RenderAvatars(rcontext, rri);
 
@@ -315,6 +313,15 @@ namespace LookingGlass.Renderer.OGL {
         catch (Exception e ) {
             m_log.Log(LogLevel.DBADERROR, "Exception rendering frame: {0}", e);
         }
+    }
+
+    private void PositionGlobalLights() {
+        float[] sunPosition = { 500.0f, 500.0f, 500.0f, 1.0f };
+        GL.Light(LightName.Light0, LightParameter.Position, sunPosition);
+    }
+
+    private void RenderAnimations(float timeSinceLastFrame, RegionContextBase rcontext, RegionRenderInfo rri) {
+        AnimatBase.ProcessAnimations(timeSinceLastFrame, rri);
     }
 
     static readonly float[] SkyboxVerts = {
@@ -498,12 +505,27 @@ namespace LookingGlass.Renderer.OGL {
 
         lock (rri.renderPrimList) {
             bool firstPass = true;
-            GL.Disable(EnableCap.Blend);
+            // GL.Disable(EnableCap.Blend);
+            GL.Enable(EnableCap.Blend);
+            GL.BlendFunc(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha);
             GL.Enable(EnableCap.DepthTest);
+
+            GL.Enable(EnableCap.Normalize);
+
+            GL.EnableClientState(ArrayCap.TextureCoordArray);
+            GL.EnableClientState(ArrayCap.VertexArray);
+            GL.EnableClientState(ArrayCap.NormalArray);
+
 
         StartRender:
 
-            foreach (RenderablePrim rp in rri.renderPrimList.Values) {
+            List<RenderablePrim> rpList = new List<RenderablePrim>(rri.renderPrimList.Values);
+            // sort back to front
+            rpList.Sort(delegate(RenderablePrim rp1, RenderablePrim rp2) {
+                return (int)(((OMV.Vector3.Distance(m_renderer.Camera.Position, rp1.Prim.Position)) -
+                    (OMV.Vector3.Distance(m_renderer.Camera.Position, rp2.Prim.Position))) * 100f);
+            });
+            foreach (RenderablePrim rp in rpList) {
                 // if this prim is not visible, just loop
                 if (!rp.isVisible) continue;
 
@@ -573,7 +595,7 @@ namespace LookingGlass.Renderer.OGL {
                         }
                     }
 
-                    if (firstPass && !alpha || !firstPass && alpha) {
+                    // if (firstPass && !alpha || !firstPass && alpha) {
                         // GL.Color4(color.R, color.G, color.B, color.A);
                         float[] matDiffuse = { color.R, color.G, color.B, color.A };
                         GL.Material(MaterialFace.FrontAndBack, MaterialParameter.Diffuse, matDiffuse);
@@ -587,23 +609,18 @@ namespace LookingGlass.Renderer.OGL {
                             GL.Disable(EnableCap.Texture2D);
                         }
 
-                        GL.Enable(EnableCap.Normalize);
-
-                        GL.EnableClientState(ArrayCap.TextureCoordArray);
-                        GL.EnableClientState(ArrayCap.VertexArray);
-                        GL.EnableClientState(ArrayCap.NormalArray);
-
                         GL.TexCoordPointer(2, TexCoordPointerType.Float, 0, data.TexCoords);
                         GL.VertexPointer(3, VertexPointerType.Float, 0, data.Vertices);
                         GL.NormalPointer(NormalPointerType.Float, 0, data.Normals);
                         GL.DrawElements(BeginMode.Triangles, data.Indices.Length, DrawElementsType.UnsignedShort, data.Indices);
-                    }
+                    // }
                 }
 
                 GL.PopMatrix();
                 GL.PopName();
             }
 
+            /*
             if (firstPass) {
                 firstPass = false;
                 GL.Enable(EnableCap.Blend);
@@ -612,6 +629,7 @@ namespace LookingGlass.Renderer.OGL {
 
                 goto StartRender;
             }
+             */
         }
 
         GL.Enable(EnableCap.DepthTest);
@@ -632,13 +650,16 @@ namespace LookingGlass.Renderer.OGL {
 
         try {
             using (Bitmap bmp = acontext.GetTexture(textureEntityName)) {
-                BitmapData bmp_data = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+                BitmapData bmp_data = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height),
+                        ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
 
                 GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, bmp_data.Width, bmp_data.Height, 0,
-                    OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, bmp_data.Scan0);
+                        OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, bmp_data.Scan0);
 
                 bmp.UnlockBits(bmp_data);
             }
+            // GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
+            // GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.LinearMipmapLinear);
 
             // We haven't uploaded mipmaps, so disable mipmapping (otherwise the texture will not appear).
             // On newer video cards, we can use GL.GenerateMipmaps() or GL.Ext.GenerateMipmaps() to create

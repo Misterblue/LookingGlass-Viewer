@@ -272,8 +272,9 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
                     "10",
                     "Maximum number of outstanding textures requests");
         ModuleParams.AddDefaultParameter(ModuleName + ".Settings.ShouldHoldChildren",
-                    "false",
-                    "Whether to hold objects if the parent doesn't exist");
+                    "true",
+                    "Whether Comm should hold objects if the parent doesn't exist");
+
         ModuleParams.AddDefaultParameter(ModuleName + ".Settings.MultipleSims",
                     "false",
                     "Wether to connect to multiple sims");

@@ -39,7 +39,7 @@ namespace LookingGlass.Renderer.OGL {
         // TODO: Normals
     }
 
-    public class TextureInfo
+    public sealed class TextureInfo
     {
         /// <summary>OpenGL Texture ID</summary>
         public int ID;
@@ -70,11 +70,12 @@ namespace LookingGlass.Renderer.OGL {
 
     // Rendering information for each region that are stuck onto  the rcontext's as
     // an interface.
-    public class RegionRenderInfo {
+    public sealed class RegionRenderInfo {
         public RegionRenderInfo() {
             this.renderFoliageList = new Dictionary<uint, OMV.Primitive>();
             this.renderPrimList = new Dictionary<uint, RenderablePrim>();
             this.renderAvatarList = new Dictionary<ulong, RenderableAvatar>();
+            this.animations = new List<AnimatBase>();
             this.oceanHeight = 0f;
             this.terrainWidth = this.terrainLength = -1;
             this.refreshTerrain = true;     // force initial build
@@ -82,6 +83,8 @@ namespace LookingGlass.Renderer.OGL {
         public Dictionary<uint, OMV.Primitive> renderFoliageList;
         public Dictionary<uint, RenderablePrim> renderPrimList;
         public Dictionary<ulong, RenderableAvatar> renderAvatarList;
+
+        public List<AnimatBase> animations;
 
         public bool refreshTerrain;
         public float[] terrainVertices;
@@ -93,11 +96,11 @@ namespace LookingGlass.Renderer.OGL {
         public float oceanHeight;
     }
 
-    public struct RenderableAvatar {
+    public sealed class RenderableAvatar {
         public IEntityAvatar avatar;
     }
 
-    public struct RenderablePrim {
+    public sealed class RenderablePrim {
         public OMV.Primitive Prim;
         public OMVR.FacetedMesh Mesh;
         public RegionContextBase rcontext;  // used for positioning in displayed world

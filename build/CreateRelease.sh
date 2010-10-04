@@ -17,6 +17,7 @@ LookingGlass.Framework.dll
 LookingGlass.Framework.dll.log4net
 LookingGlass.Radegast.dll
 LookingGlass.Renderer.dll
+LookingGlass.Renderer.OGL.dll
 LookingGlass.Renderer.Ogre.dll
 LookingGlass.Rest.dll
 LookingGlass.View.dll
@@ -34,8 +35,8 @@ XMLRPC.dll
 SkyX.dll
 LookingGlass.json
 Modules.json
-ModulesOGL.json*
-ModulesOgre.json*
+ModulesOGL.json
+ModulesOgre.json
 Grids.json
 OIS.dll
 OgreGUIRenderer.dll

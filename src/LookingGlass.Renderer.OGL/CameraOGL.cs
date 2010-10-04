@@ -27,7 +27,7 @@ using OpenTK.Graphics.OpenGL;
 using OMV = OpenMetaverse;
 
 namespace LookingGlass.Renderer.OGL {
-public class CameraOGL {
+public sealed class CameraOGL {
     private bool m_updated = true;
     /// <summary>
     /// True of the camera position or lookat have been changed. The caller must
@@ -53,7 +53,7 @@ public class CameraOGL {
     private float[,] m_frustum;
 
     public void ComputeFrustum() {
-        // m_frustum = ExtractFrustum();
+        m_frustum = ExtractFrustum();
     }
 
     public bool isVisible(float x, float y, float z, float radius) {

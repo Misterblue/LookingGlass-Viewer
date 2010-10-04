@@ -214,7 +214,8 @@ public abstract class EntityBase : IEntity {
             else {
                 // LogManager.Log.Log(LogLevel.DWORLDDETAIL, "EntityBase.RegionPosition: {0} relative to {1}",
                 //     this.LocalPosition, this.ContainingEntity.RegionPosition);
-                return this.LocalPosition + this.ContainingEntity.RegionPosition;
+                return this.LocalPosition;
+                // return this.LocalPosition + this.ContainingEntity.RegionPosition;
             }
         }
     }
