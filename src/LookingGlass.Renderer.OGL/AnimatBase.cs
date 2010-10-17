@@ -31,7 +31,7 @@ namespace LookingGlass.Renderer.OGL {
         public const int AnimatTypeAny             = 0;
         public const int AnimatTypeFixedRotation   = 1;
         public const int AnimatTypeRotation        = 2;
-        public const int AnimatTypePostion         = 3;
+        public const int AnimatTypePosition        = 3;
 
         public AnimatBase(int type) {
             AnimatType = type;
