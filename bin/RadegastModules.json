@@ -29,7 +29,7 @@
         "Name": "RadegastUI",
         "Order": 50
     },
-    {   "Assembly": "LookingGlass.Renderer.OGL.dll",
+    {   "Assembly": "LookingGlass.Renderer.Ogre.dll",
         "Interface": "LookingGlass.Renderer.IRenderProvider",
         "Name": "Renderer",
         "Order": 60
