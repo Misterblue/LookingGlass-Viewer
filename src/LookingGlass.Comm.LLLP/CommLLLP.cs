@@ -704,19 +704,26 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
 
     // ===============================================================
     public virtual void Network_EventQueueRunning(Object sender, OMV.EventQueueRunningEventArgs args) {
-        // the sim isn't really up until the caps queue is running
-        m_isConnected = true;   // good enough reason to think we're connected
-        this.m_statNetEventQueueRunning++;
-        m_log.Log(LogLevel.DWORLD, "Network_EventQueueRunning: Simulator connected {0}", args.Simulator.Name);
+        LLRegionContext regionContext;
+        lock (m_opLock) {
+            // the sim isn't really up until the caps queue is running
+            m_isConnected = true;   // good enough reason to think we're connected
+            this.m_statNetEventQueueRunning++;
+            m_log.Log(LogLevel.DWORLD, "Network_EventQueueRunning: Simulator connected {0}", args.Simulator.Name);
 
-        LLRegionContext regionContext = FindRegion(args.Simulator);
-        if (regionContext == null) {
-            m_log.Log(LogLevel.DWORLD, "Network_EventQueueRunning: NO REGION CONTEXT FOR {0}", args.Simulator.Name);
-            return;
+            regionContext = FindRegion(args.Simulator);
+            if (regionContext == null) {
+                m_log.Log(LogLevel.DWORLD, "Network_EventQueueRunning: NO REGION CONTEXT FOR {0}", args.Simulator.Name);
+                return;
+            }
+
+            if (regionContext.State.State == RegionStateCode.Online) {
+                m_log.Log(LogLevel.DWORLD, "Network_EventQueueRunning: Region already online: {0}", args.Simulator.Name);
+                return;
+            }
+            // a kludge to handle race conditions. We lock the region state while we empty queues
+            regionContext.State.State = RegionStateCode.Online;
         }
-
-        // a kludge to handle race conditions. We lock the region state while we empty queues
-        regionContext.State.State = RegionStateCode.Online;
 
         // tell the world there is a new region
         World.World.Instance.AddRegion(regionContext);
@@ -892,16 +899,16 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
     // ===============================================================
     public void Objects_AttachmentUpdate(Object sender, OMV.PrimEventArgs args) {
         if (QueueTilOnline(args.Simulator, CommActionCode.OnAttachmentUpdate, sender, args)) return;
-        LLRegionContext rcontext = FindRegion(args.Simulator);
-        if (!ParentExists(rcontext, args.Prim.ParentID)) {
-            // if this requires a parent and the parent isn't here yet, queue this operation til later
-            rcontext.RequestLocalID(args.Prim.ParentID);
-            QueueTilLater(args.Simulator, CommActionCode.OnObjectUpdated, sender, args);
-            return;
-        }
-        this.m_statObjAttachmentUpdate++;
-        m_log.Log(LogLevel.DUPDATEDETAIL, "OnNewAttachment: id={0}, lid={1}", args.Prim.ID.ToString(), args.Prim.LocalID);
         lock (m_opLock) {
+            LLRegionContext rcontext = FindRegion(args.Simulator);
+            if (!ParentExists(rcontext, args.Prim.ParentID)) {
+                // if this requires a parent and the parent isn't here yet, queue this operation til later
+                rcontext.RequestLocalID(args.Prim.ParentID);
+                QueueTilLater(args.Simulator, CommActionCode.OnObjectUpdated, sender, args);
+                return;
+            }
+            this.m_statObjAttachmentUpdate++;
+            m_log.Log(LogLevel.DUPDATEDETAIL, "OnNewAttachment: id={0}, lid={1}", args.Prim.ID.ToString(), args.Prim.LocalID);
             try {
                 // if new or not, assume everything about this entity has changed
                 UpdateCodes updateFlags = UpdateCodes.FullUpdate;
