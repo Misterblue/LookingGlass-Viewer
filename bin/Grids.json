@@ -1,7 +1,7 @@
 {
 "OSGrid.org": {
         "Name": "OSGrid.org",
-        "LoginURL": "http://osgrid.org:8002/",
+        "LoginURL": "http://login.osgrid.org/",
         "LoginPage": "http://osgrid.org/loginscreen.php",
         "HelperURI": "http://osgrid.org/",
         "WebSite": "http://osgrid.org/",

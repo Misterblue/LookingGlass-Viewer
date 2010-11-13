@@ -35,7 +35,7 @@ public class LookingGlassBase : IInstance<LookingGlassBase> {
     // static things that are accessed very early (mostly by logger)
     private static string m_applicationName = "LookingGlass";
     public static string ApplicationName { get { return m_applicationName; } }
-    private static string m_applicationVersion = "V0.6.1";
+    private static string m_applicationVersion = "V0.6.2";
     public static string ApplicationVersion { get { return m_applicationVersion; } }
 
     ILog m_log = LogManager.GetLogger("LookingGlassBase");
@@ -69,6 +69,10 @@ public class LookingGlassBase : IInstance<LookingGlassBase> {
         set { m_keepRunning = value; } 
     }
 
+    /// <summary>
+    /// Reference to the ModuleManager as it is the base of finding all the loaded
+    /// modules.
+    /// </summary>
     private ModuleManager m_moduleManager = null;
     public ModuleManager ModManager {
         get {
@@ -88,7 +92,6 @@ public class LookingGlassBase : IInstance<LookingGlassBase> {
         get { return m_otherManager; }
         set { m_otherManager = value; }
     }
-    
 
     /// <summary>
     /// All of the parameters for the applicaiton are saved in this stucture
@@ -161,7 +164,7 @@ public class LookingGlassBase : IInstance<LookingGlassBase> {
         }
         m_log.Log(LogLevel.DINIT, "KEEPRUNNING OFF. SHUTTING DOWN");
         StopEverything();
-        // Rather blunt but sometime you just need a blunt weapon
+        // Rather rough but sometime you just need a blunt weapon
         System.Environment.Exit(0);
     }
     

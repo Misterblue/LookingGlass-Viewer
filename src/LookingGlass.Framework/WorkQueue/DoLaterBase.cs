@@ -28,7 +28,7 @@ namespace LookingGlass.Framework.WorkQueue {
     /// <summary>
     /// An object to do later. When a work item is to be executed later, an
     /// instance is created that implements this interface and then it is
-    /// enqueue in one of the queue systems. The "DoIt" method will be called
+    /// enqueued in one of the queue systems. The "DoIt" method will be called
     /// sometime later -- probably when a thread is available.
     /// </summary>
 
