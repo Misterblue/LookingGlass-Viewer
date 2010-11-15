@@ -376,6 +376,8 @@ public sealed class RendererOGL : IModule, IRenderProvider {
             newPos.Y = (float)(cam.GlobalPosition.Y - m_focusRegion.GlobalPosition.Y);
             // another kludge camera offset. Pairs with position kludge in Viewer.
             newPos.Z = (float)(cam.GlobalPosition.Z - m_focusRegion.GlobalPosition.Z) + 10f;
+            m_log.Log(LogLevel.DRENDERDETAIL, "UpdateCamera: g={0}, f={1}, n={2}",
+                cam.GlobalPosition.ToString(), m_focusRegion.GlobalPosition.ToString(), newPos.ToString());
             Camera.Position = newPos;
             OMV.Vector3 dir = new OMV.Vector3(1f, 0f, 0f);
             Camera.FocalPoint = (dir * cam.Heading) + Camera.Position;
