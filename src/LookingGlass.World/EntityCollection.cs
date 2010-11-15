@@ -58,7 +58,7 @@ public class EntityCollection : IEntityCollection {
             //    into the format needed for display
             if (m_shouldQueueEvent) {
                 // disconnect this work from the caller -- use another thread
-                // m_workQueueEvent.DoLater(DoEventLater, entity);
+                m_workQueueEvent.DoLater(DoEventLater, entity);
             }
             else {
                 if (OnEntityNew != null) OnEntityNew(entity);

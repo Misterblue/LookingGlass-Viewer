@@ -30,7 +30,7 @@
         "Name": "WindowUI",
         "Order": 50
     },
-    // Use the Ogre renderer
+    // The renderer
     {   "Assembly": "LookingGlass.Renderer.OGL.dll",
         "Interface": "LookingGlass.Renderer.IRenderProvider",
         "Name": "Renderer",

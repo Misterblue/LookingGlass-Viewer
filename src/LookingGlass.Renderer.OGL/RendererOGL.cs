@@ -76,11 +76,11 @@ public sealed class RendererOGL : IModule, IRenderProvider {
         ModuleParams.AddDefaultParameter(m_moduleName + ".InputSystem.Name", "WindowUI",
                     "Name of the input module");
 
-        ModuleParams.AddDefaultParameter(m_moduleName + ".OGL.Camera.Far", "1024.0",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".OGL.Camera.Far", "2048.0",
                     "Far clip for camera");
         ModuleParams.AddDefaultParameter(m_moduleName + ".OGL.Global.Ambient", "<0.4,0.4,0.4>",
                     "Global ambient setting");
-        ModuleParams.AddDefaultParameter(m_moduleName + ".OGL.Sun.Ambient", "<0.1,0.1,0.1>",
+        ModuleParams.AddDefaultParameter(m_moduleName + ".OGL.Sun.Ambient", "<0.4,0.4,0.4>",
                     "Ambient lighting for the sun");
         ModuleParams.AddDefaultParameter(m_moduleName + ".OGL.Sun.Specular", "<0.8,0.8,0.8>",
                     "Specular lighting for the sun");

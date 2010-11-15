@@ -464,7 +464,7 @@ namespace LookingGlass.Renderer.OGL {
                 cc.Z = rri.terrainVertices[offset + 2];
                 OMV.Vector3 mm = aa - bb;
                 OMV.Vector3 nn = aa - cc;
-                OMV.Vector3 theNormal = OMV.Vector3.Cross(mm, nn);
+                OMV.Vector3 theNormal = -OMV.Vector3.Cross(mm, nn);
                 theNormal.Normalize();
                 rri.terrainNormal[nextNrm + 0] = theNormal.X;   // simple normal pointing up
                 rri.terrainNormal[nextNrm + 1] = theNormal.Y;

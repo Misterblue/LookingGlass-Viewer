@@ -28,9 +28,6 @@ using LookingGlass.Framework.Logging;
 using OMVSD = OpenMetaverse.StructuredData;
 
 namespace LookingGlass.Framework.WorkQueue {
-    // An odd mish mash of dynamic and static. The idea is that different work
-    // queues can be build (priorities, ...). For the moment, they are all
-    // here using several static methods that implement the redo and scheduling.
 public class BasicWorkQueue : IWorkQueue {
     // IWorkQueue.TotalQueued()
     private long m_totalRequests = 0;
@@ -223,7 +220,7 @@ public class BasicWorkQueue : IWorkQueue {
                     }
                     sleepTime -= now;
                     sleepTime = Math.Max(sleepTime, 100);
-                    sleepTime = Math.Min(sleepTime, 1000);
+                    sleepTime = Math.Min(sleepTime, 3000);
                 }
             }
             // if there are some things done waiting, let them free outside the lock
