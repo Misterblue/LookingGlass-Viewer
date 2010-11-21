@@ -113,6 +113,20 @@ protected IRenderProvider m_renderer;
 
 #region EVENT PROCESSING
     void World_OnWorldRegionNew(RegionContextBase rcontext) {
+        /*
+        // we have a new region. Set the focus region to be where the main agent points
+        if (World.World.Instance.Agent != null) {
+            if (World.World.Instance.Agent.AssociatedAvatar != null) {
+                if (World.World.Instance.Agent.AssociatedAvatar.RegionContext != null) {
+                    if (m_renderer != null) {
+                        LogManager.Log.Log(LogLevel.DWORLDDETAIL, "RegionTracker: setting focus region {0}", 
+                            World.World.Instance.Agent.AssociatedAvatar.RegionContext.Name);
+                        m_renderer.SetFocusRegion(World.World.Instance.Agent.AssociatedAvatar.RegionContext);
+                    }
+                }
+            }
+        }
+         */
         // for the moment, any close by region is good enough for focus
         if (m_renderer != null) {
             LogManager.Log.Log(LogLevel.DWORLDDETAIL, "RegionTracker: setting focus region {0}", rcontext.Name);

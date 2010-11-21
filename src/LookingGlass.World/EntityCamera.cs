@@ -89,7 +89,7 @@ namespace LookingGlass.World {
         public EntityCamera(RegionContextBase rcontext, AssetContextBase acontext) 
                     : base(rcontext, acontext) {
             m_yawFixed = true;
-            m_globalPosition = new OMV.Vector3d(10f, 10f, 10f);
+            m_globalPosition = new OMV.Vector3d(40f, 40f, 30f);
             m_heading = new OMV.Quaternion(0f, 1f, 0f);
         }
 

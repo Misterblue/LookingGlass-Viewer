@@ -222,7 +222,7 @@ public abstract class EntityBase : IEntity {
     }
 
     // local coodinate position relative to a parent (if exists)
-    protected OMV.Vector3 m_localPosition = new OMV.Vector3(10f, 10f, 10f);
+    protected OMV.Vector3 m_localPosition = new OMV.Vector3(0f, 0f, 0f);
     virtual public OMV.Vector3 LocalPosition {
         get {
                 return m_localPosition;
@@ -242,7 +242,7 @@ public abstract class EntityBase : IEntity {
                     m_regionContext.WorldBase.Y + (double)regionRelative.Y,
                     m_regionContext.WorldBase.Z + (double)regionRelative.Z);
             }
-            return new OMV.Vector3d(10d, 10d, 10d);
+            return new OMV.Vector3d(20d, 20d, 20d);
         }
     }
     #endregion LOCATION

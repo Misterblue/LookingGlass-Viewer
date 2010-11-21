@@ -391,7 +391,10 @@ public class Viewer : ModuleBase, IViewProvider {
                 OMV.Vector3d globalRotatedOffset = new OMV.Vector3d(-rotatedOffset.X, rotatedOffset.Y, rotatedOffset.Z);
                 // 'kludgeOffset' exists because the above calculation doesn't give the right camera position
                 // Don't know why, but this extra offset is needed
-                OMV.Vector3d kludgeOffset = new OMV.Vector3d(10d, 10d, 0d);
+                // Found out why... EntityBase was defaulting to 10,10,10 which moved the region base
+                // but still some funny offset is needed.
+                // OMV.Vector3d kludgeOffset = new OMV.Vector3d(10d, 10d, 0d);
+                OMV.Vector3d kludgeOffset = new OMV.Vector3d(0d, 0d, -10d);
                 OMV.Vector3d desiredCameraPosition = agnt.GlobalPosition + globalRotatedOffset + kludgeOffset;
 
                 m_log.Log(LogLevel.DVIEWDETAIL, "UpdateMainCameraToAgentTracking: offset={0}, goffset={1}, cpos={2}, apos={3}",
