@@ -164,7 +164,9 @@ namespace LookingGlass.Renderer.OGL {
         GL.ClearDepth(1.0f);
         GL.Enable(EnableCap.DepthTest);
         GL.DepthMask(true);
-        GL.DepthFunc(DepthFunction.Lequal);
+        GL.DepthFunc(DepthFunction.Less);
+        GL.Frustum(1.0, -1.0, -1.0, 1.0, 1.0,
+            (double)ModuleParams.ParamFloat(m_renderer.ModuleName+".OGL.Camera.Far"));
 
         GL.Hint(HintTarget.PerspectiveCorrectionHint, HintMode.Nicest);
         GL.TexEnv(TextureEnvTarget.TextureEnv, TextureEnvParameter.TextureEnvMode, (int)All.Modulate);

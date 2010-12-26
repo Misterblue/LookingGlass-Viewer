@@ -229,7 +229,7 @@ public sealed class RendererOGL : IModule, IRenderProvider {
         }
 
         // Create a FaceData struct for each face that stores the 3D data
-        // in a Tao.OpenGL friendly format
+        // in an OpenGL friendly format
         for (int j = 0; j < render.Mesh.Faces.Count; j++) {
             OMVR.Face face = render.Mesh.Faces[j];
             FaceData data = new FaceData();
