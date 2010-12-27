@@ -128,7 +128,8 @@ public class BasicWorkQueue : IWorkQueue {
     // the pool to empty the queue.
     private void AddWorkItemToQueue(DoLaterBase w) {
         if ((m_totalRequests++ % 100) == 0) {
-            LogManager.Log.Log(LogLevel.DRENDERDETAIL, "{0}.DoLater: Queuing, c={1}", m_queueName, m_totalRequests);
+            LogManager.Log.Log(LogLevel.DRENDERDETAIL, "{0}.DoLater: Queuing, c={1}, l={2}", 
+                            m_queueName, m_totalRequests, m_workItems.Count);
         }
         lock (m_workItems) {
             m_workItems.Enqueue(w);

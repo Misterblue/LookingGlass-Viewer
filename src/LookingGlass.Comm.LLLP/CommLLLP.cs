@@ -883,12 +883,13 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
     // Entity has been updated. Tell the world about the updates.
     private void ProcessEntityUpdates(IEntity ent, UpdateCodes updateFlags) {
         try {
-            // special update for the agent so it knows there is new info from the network
-            // The real logic to push the update through happens in the IEntityAvatar.Update()
             if (ent != null) {
+                // special update for the agent so it knows there is new info from the network
+                // The real logic to push the update through happens in the IEntityAvatar.Update()
                 if (ent == this.MainAgent.AssociatedAvatar) {
                     this.MainAgent.DataUpdate(updateFlags);
                 }
+                // Tell the world the entity is updated
                 ent.Update(updateFlags);
             }
         }
@@ -993,27 +994,6 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
             catch (Exception e) {
                 m_log.Log(LogLevel.DBADERROR, "FAILED CREATION OF NEW PRIM: " + e.ToString());
             }
-            /*
-            if (rcontext.TryGetEntityLocalID(update.LocalID, out updatedEntity)) {
-                if ((updateFlags & UpdateCodes.Position) != 0) {
-                    updatedEntity.LocalPosition = update.Position;
-                }
-                if ((updateFlags & UpdateCodes.Rotation) != 0) {
-                    updatedEntity.Heading = update.Rotation;
-                }
-            }
-            else {
-                m_log.Log(LogLevel.DUPDATE, "OnObjectUpdated: can't find local ID {0}. NOT UPDATING", update.LocalID);
-            }
-            if (updatedEntity != null) {
-                if (updatedEntity == this.MainAgent.AssociatedAvatar) {
-                    // special update for the agent so it knows there is new info from the network
-                    // The real logic to push the update through happens in the IEntityAvatar.Update()
-                    this.MainAgent.DataUpdate(updateFlags);
-                }
-                updatedEntity.Update(updateFlags);
-            }
-             */
         }
 
         return;

@@ -220,12 +220,19 @@ public sealed class RendererOGL : IModule, IRenderProvider {
                                 return;
                             }
                 );
+                return;
             }
             render.Mesh = m_meshMaker.GenerateSculptMesh(textureBitmap, prim, OMVR.DetailLevel.Medium);
             textureBitmap.Dispose();
         }
         else {
             render.Mesh = m_meshMaker.GenerateFacetedMesh(prim, OMVR.DetailLevel.High);
+        }
+
+        if (render.Mesh == null) {
+            // mesh generation failed 
+            m_log.Log(LogLevel.DBADERROR, "FAILED MESH GENERATION: not generating new prim {0}", ent.Name.Name);
+            return;
         }
 
         // Create a FaceData struct for each face that stores the 3D data
