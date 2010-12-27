@@ -52,7 +52,7 @@ public class EntityCollection : IEntityCollection {
     }
 
     public void AddEntity(IEntity entity) {
-        // m_log.Log(LogLevel.DWORLDDETAIL, "AddEntity.{0}: n={l}, lid={2}", m_name, entity.Name.Name, entity.LGID);
+        // m_log.Log(LogLevel.DWORLDDETAIL, "AddEntity: {0}, n={1}", m_name, entity.Name.Name);
         if (TrackEntity(entity)) {
             // tell the viewer about this prim and let the renderer convert it
             //    into the format needed for display
@@ -152,6 +152,7 @@ public class EntityCollection : IEntityCollection {
     /// <param name="createIt"></param>
     /// <returns>true if we created a new entry</returns>
     public bool TryGetCreateEntity(EntityName entName, out IEntity ent, RegionCreateEntityCallback createIt) {
+        // m_log.Log(LogLevel.DWORLDDETAIL, "TryGetCreateEntity: n={0}", entName);
         try {
             lock (this) {
                 if (!TryGetEntity(entName, out ent)) {

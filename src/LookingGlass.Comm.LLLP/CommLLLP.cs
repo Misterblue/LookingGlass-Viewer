@@ -966,6 +966,10 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
                     update.LocalID, update.Position.ToString(), update.Rotation.ToString());
 
             try {
+                if (args.Prim.ID == OMV.UUID.Zero) {
+                    m_log.Log(LogLevel.DBADERROR, "TerseObjectUpdate: received prim with UUID zero");
+                    return;
+                }
                 if (rcontext.TryGetCreateEntityLocalID(args.Prim.LocalID, out updatedEntity, delegate() {
                             // code called to create the entry if it's not found
                             updateFlags |= UpdateCodes.New;
@@ -1054,15 +1058,6 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
             // send updates for the updated entity
             ProcessEntityUpdates(updatedEntity, updateFlags);
         }
-        /*
-        if (args.Avatar.LocalID == m_client.Self.LocalID) {
-            // an extra special update for the agent so it knows things have changed
-            this.MainAgent.DataUpdate(updateFlags);
-        }
-
-        // tell the entity it changed. Since this is an avatar entity it will update the agent if necessary.
-        if (updatedEntity != null) updatedEntity.Update(updateFlags);
-         */
         return;
     }
 
