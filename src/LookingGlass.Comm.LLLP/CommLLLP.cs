@@ -1050,6 +1050,8 @@ public class CommLLLP : IModule, LookingGlass.Comm.ICommProvider  {
                 updatedEntity.Heading = args.Avatar.Rotation;
                 // We check here if this avatar goes with the agent in the world
                 // If this av is with the agent, make the connection
+                m_log.Log(LogLevel.DUPDATEDETAIL, "AvatarUpdate: Alid={0}, Clid={1}",
+                                        args.Avatar.LocalID, m_client.Self.LocalID);
                 if (args.Avatar.LocalID == m_client.Self.LocalID) {
                     m_log.Log(LogLevel.DUPDATEDETAIL, "AvatarUpdate: associating agent with new avatar");
                     this.MainAgent.AssociatedAvatar = (IEntityAvatar)updatedEntity;
